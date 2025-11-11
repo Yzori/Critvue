@@ -182,3 +182,14 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* Hide scrollbar for mobile horizontal scrolling */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

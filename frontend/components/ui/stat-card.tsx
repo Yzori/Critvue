@@ -152,7 +152,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
       <div
         ref={ref}
         className={cn(
-          "group rounded-2xl border border-border bg-card p-6",
+          "group rounded-2xl border border-border bg-card p-3 sm:p-4 lg:p-6",
           "shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]",
           "transition-all duration-200 ease-in-out",
           "hover:shadow-[0_8px_16px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.04)]",
@@ -171,32 +171,36 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         } : undefined}
         {...props}
       >
-        <div className="flex items-start justify-between mb-4">
-          <div
-            className={cn(
-              "size-10 rounded-xl flex items-center justify-center",
-              "transition-transform duration-200 group-hover:scale-110",
-              bgColor
-            )}
-          >
-            {icon}
+        {/* Mobile: horizontal icon + label, Desktop: vertical */}
+        <div className="flex items-start justify-between mb-2 sm:mb-3">
+          <div className="flex items-center sm:flex-col sm:items-start gap-2 sm:gap-3 flex-1 min-w-0">
+            <div
+              className={cn(
+                "size-8 sm:size-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 [&>svg]:size-4 [&>svg]:sm:size-5",
+                "transition-transform duration-200 group-hover:scale-110",
+                bgColor
+              )}
+            >
+              {icon}
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-foreground-muted truncate">{label}</p>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground-muted">{label}</p>
-          <p className="text-3xl font-bold text-foreground tracking-tight">{value}</p>
+        <div className="space-y-1 sm:space-y-2">
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground tracking-tight">{value}</p>
 
           {(trend || comparison) && (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
               {trend && (
-                <span className={cn("inline-flex items-center gap-1 text-xs font-medium", getTrendColor())}>
+                <span className={cn("inline-flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs font-medium", getTrendColor())}>
                   <TrendIcon />
-                  {trend}
+                  <span className="hidden sm:inline">{trend}</span>
+                  <span className="sm:hidden">{trend.split(" ")[0]}</span>
                 </span>
               )}
               {comparison && (
-                <span className="text-xs text-foreground-muted">
+                <span className="text-[10px] sm:text-xs text-foreground-muted hidden sm:inline">
                   {comparison}
                 </span>
               )}
@@ -205,14 +209,15 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         </div>
 
         {trendData && trendData.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border-light">
+          <div className="mt-2 sm:mt-3 lg:mt-4 pt-2 sm:pt-3 lg:pt-4 border-t border-border-light">
             <Sparkline
               data={trendData}
-              height={32}
+              height={24}
               color={getSparklineColor()}
-              strokeWidth={2}
+              strokeWidth={1.5}
               showGradient
               smooth
+              className="sm:h-8"
             />
           </div>
         )}
