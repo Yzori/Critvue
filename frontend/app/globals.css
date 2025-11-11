@@ -20,6 +20,15 @@
   --border: oklch(0.922 0 0);
   --border-medium: #D1D5DB;
   --radius: 0.625rem;
+
+  /* Overlay & Glass Morphism */
+  --background-overlay: rgba(0, 0, 0, 0.5);
+  --background-glass: oklch(1 0 0 / 0.95);
+
+  /* Animation Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

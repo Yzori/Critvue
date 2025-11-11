@@ -37,37 +37,23 @@ import {
   Mic,
   Image as ImageIcon,
 } from "lucide-react";
-import { Suspense, useState, useRef, useEffect } from "react";
+import { Suspense, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getReviews, type CreateReviewResponse } from "@/lib/api/reviews";
+import { type CreateReviewResponse } from "@/lib/api/reviews";
+import { useReviews } from "@/hooks/useReviews";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
+  const prefersReducedMotion = useReducedMotion();
   const [mobileSection, setMobileSection] = useState<"overview" | "activity" | "account">("overview");
   const [accountExpanded, setAccountExpanded] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [reviews, setReviews] = useState<CreateReviewResponse[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(true);
 
-  // Fetch reviews on mount
-  useEffect(() => {
-    async function fetchReviews() {
-      try {
-        setReviewsLoading(true);
-        const data = await getReviews();
-        // Ensure data is an array
-        setReviews(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch reviews:", error);
-        setReviews([]); // Set empty array on error
-      } finally {
-        setReviewsLoading(false);
-      }
-    }
-    fetchReviews();
-  }, []);
+  // React Query hook for reviews with automatic caching & refetching
+  const { data: reviews = [], isLoading: reviewsLoading } = useReviews();
 
   // Calculate real stats from reviews
   const totalReviews = reviews.length;
@@ -86,7 +72,7 @@ function DashboardContent() {
       icon: <Plus className="size-6 text-white" />,
       title: "New Project",
       description: "Start a new creative project",
-      gradientClass: "from-accent-blue to-blue-600",
+      gradientClass: "from-accent-blue to-accent-blue/70",
       onClick: () => {
         // TODO: Navigate to new project page
       },
@@ -95,14 +81,14 @@ function DashboardContent() {
       icon: <MessageSquare className="size-6 text-white" />,
       title: "Request Feedback",
       description: "Get AI or human reviews",
-      gradientClass: "from-accent-peach to-orange-600",
+      gradientClass: "from-accent-peach to-accent-peach/70",
       onClick: () => router.push("/review/new"),
     },
     {
       icon: <FileText className="size-6 text-white" />,
       title: "View Reports",
       description: "See detailed analytics",
-      gradientClass: "from-accent-blue to-indigo-600",
+      gradientClass: "from-accent-blue via-accent-blue to-accent-blue/60",
       onClick: () => {
         // TODO: Navigate to reports page
       },
@@ -111,7 +97,7 @@ function DashboardContent() {
       icon: <Users className="size-6 text-white" />,
       title: "Manage Team",
       description: "Invite collaborators",
-      gradientClass: "from-accent-peach to-pink-600",
+      gradientClass: "from-accent-peach via-accent-peach to-accent-peach/60",
       onClick: () => {
         // TODO: Navigate to team page
       },
@@ -197,52 +183,66 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Desktop: Full stat cards grid with all details */}
+      {/* Desktop: Full stat cards grid with all details - Animated */}
       <div className="hidden lg:grid lg:grid-cols-4 gap-6">
-        <StatCard
-          icon={<FolderOpen className="text-accent-blue" />}
-          label="Total Reviews"
-          value={reviewsLoading ? "..." : String(totalReviews)}
-          trend={totalReviews > 0 ? `${totalReviews} total` : "Get started"}
-          trendDirection="neutral"
-          trendData={projectTrendData}
-          comparison="All time"
-          bgColor="bg-accent-blue/10"
-          sparklineColor="#3B82F6"
-        />
-        <StatCard
-          icon={<MessageSquare className="text-accent-peach" />}
-          label="In Progress"
-          value={reviewsLoading ? "..." : String(pendingReviews)}
-          trend={pendingReviews > 0 ? "Being reviewed" : "No pending"}
-          trendDirection="neutral"
-          trendData={pendingTrendData}
-          comparison="Current status"
-          bgColor="bg-accent-peach/10"
-          sparklineColor="#F97316"
-        />
-        <StatCard
-          icon={<CheckCircle2 className="text-green-600" />}
-          label="Completed"
-          value={reviewsLoading ? "..." : String(completedReviews)}
-          trend={completedReviews > 0 ? `${completedReviews} finished` : "None yet"}
-          trendDirection="up"
-          trendData={completedTrendData}
-          comparison="All time"
-          bgColor="bg-green-50"
-          sparklineColor="#10B981"
-        />
-        <StatCard
-          icon={<Clock className="text-amber-600" />}
-          label="Drafts"
-          value={reviewsLoading ? "..." : String(draftReviews)}
-          trend={draftReviews > 0 ? "Not submitted" : "All submitted"}
-          trendDirection="neutral"
-          trendData={[0, 0, 0, 0, 0, 0, draftReviews]}
-          comparison="Saved drafts"
-          bgColor="bg-amber-50"
-          sparklineColor="#F59E0B"
-        />
+        {[
+          {
+            icon: <FolderOpen className="text-accent-blue" />,
+            label: "Total Reviews",
+            value: reviewsLoading ? "..." : String(totalReviews),
+            trend: totalReviews > 0 ? `${totalReviews} total` : "Get started",
+            trendDirection: "neutral" as const,
+            trendData: projectTrendData,
+            comparison: "All time",
+            bgColor: "bg-accent-blue/10",
+            sparklineColor: "hsl(217 91% 60%)", // #3B82F6 in HSL
+          },
+          {
+            icon: <MessageSquare className="text-accent-peach" />,
+            label: "In Progress",
+            value: reviewsLoading ? "..." : String(pendingReviews),
+            trend: pendingReviews > 0 ? "Being reviewed" : "No pending",
+            trendDirection: "neutral" as const,
+            trendData: pendingTrendData,
+            comparison: "Current status",
+            bgColor: "bg-accent-peach/10",
+            sparklineColor: "hsl(27 94% 54%)", // #F97316 in HSL
+          },
+          {
+            icon: <CheckCircle2 className="text-green-600" />,
+            label: "Completed",
+            value: reviewsLoading ? "..." : String(completedReviews),
+            trend: completedReviews > 0 ? `${completedReviews} finished` : "None yet",
+            trendDirection: "up" as const,
+            trendData: completedTrendData,
+            comparison: "All time",
+            bgColor: "bg-green-50",
+            sparklineColor: "hsl(142 71% 45%)", // #10B981 in HSL
+          },
+          {
+            icon: <Clock className="text-amber-600" />,
+            label: "Drafts",
+            value: reviewsLoading ? "..." : String(draftReviews),
+            trend: draftReviews > 0 ? "Not submitted" : "All submitted",
+            trendDirection: "neutral" as const,
+            trendData: [0, 0, 0, 0, 0, 0, draftReviews],
+            comparison: "Saved drafts",
+            bgColor: "bg-amber-50",
+            sparklineColor: "hsl(38 92% 50%)", // #F59E0B in HSL
+          },
+        ].map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: prefersReducedMotion ? 0 : 0.4,
+              delay: prefersReducedMotion ? 0 : index * 0.15
+            }}
+          >
+            <StatCard {...stat} />
+          </motion.div>
+        ))}
       </div>
 
       {/* Mobile Section Tabs - Only visible on mobile */}
@@ -481,9 +481,23 @@ function DashboardContent() {
         ) : reviews.length > 0 ? (
           <>
             <div className="space-y-2 sm:space-y-3">
-              {reviews.slice(0, 4).map((review) => (
-                <ReviewItem key={review.id} review={review} />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {reviews.slice(0, 4).map((review, index) => (
+                  <motion.div
+                    key={review.id}
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
+                    transition={{
+                      duration: prefersReducedMotion ? 0 : 0.3,
+                      delay: prefersReducedMotion ? 0 : index * 0.05
+                    }}
+                    layout={!prefersReducedMotion}
+                  >
+                    <ReviewItem review={review} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
 
             {reviews.length > 4 && (

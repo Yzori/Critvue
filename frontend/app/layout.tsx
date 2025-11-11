@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { QueryProvider } from "@/contexts/QueryProvider";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,9 +33,28 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${ibmPlexMono.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '1rem',
+                fontSize: '0.875rem',
+                fontFamily: 'var(--font-inter)',
+              },
+              className: 'shadow-lg',
+              duration: 4000,
+            }}
+          />
+        </QueryProvider>
       </body>
     </html>
   );

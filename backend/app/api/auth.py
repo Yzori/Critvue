@@ -167,25 +167,27 @@ async def login(
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
 
-    # Set access token as httpOnly cookie (15 minutes)
+    # Set access token as httpOnly cookie
+    # max_age must match JWT expiration time from settings
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,           # Cannot be accessed by JavaScript
         secure=False,            # Set to True in production with HTTPS
         samesite="lax",          # CSRF protection
-        max_age=900,             # 15 minutes (900 seconds)
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert minutes to seconds
         path="/",                # Available to all routes
     )
 
-    # Set refresh token as httpOnly cookie (7 days)
+    # Set refresh token as httpOnly cookie
+    # max_age must match JWT expiration time from settings
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,           # Cannot be accessed by JavaScript
         secure=False,            # Set to True in production with HTTPS
         samesite="lax",          # CSRF protection
-        max_age=604800,          # 7 days (604800 seconds)
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         path="/api/v1/auth",     # Only sent to auth endpoints
     )
 
@@ -306,25 +308,27 @@ async def refresh_access_token(
     new_access_token = create_access_token(data=new_token_data)
     new_refresh_token = create_refresh_token(data=new_token_data)
 
-    # Set new access token as httpOnly cookie (15 minutes)
+    # Set new access token as httpOnly cookie
+    # max_age must match JWT expiration time from settings
     response.set_cookie(
         key="access_token",
         value=new_access_token,
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=900,             # 15 minutes
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert minutes to seconds
         path="/",
     )
 
-    # Set new refresh token as httpOnly cookie (7 days)
+    # Set new refresh token as httpOnly cookie
+    # max_age must match JWT expiration time from settings
     response.set_cookie(
         key="refresh_token",
         value=new_refresh_token,
         httponly=True,
         secure=False,
         samesite="lax",
-        max_age=604800,          # 7 days
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         path="/api/v1/auth",
     )
 

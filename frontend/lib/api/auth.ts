@@ -22,14 +22,14 @@ import type {
  * Returns only user data for frontend state management
  */
 export async function loginUser(credentials: LoginCredentials): Promise<User> {
-  const response = await apiClient.post<LoginResponse>("/auth/login", {
+  // Backend returns User object directly, not wrapped in { user: User }
+  // Cookies are set via Set-Cookie headers automatically
+  const user = await apiClient.post<User>("/auth/login", {
     email: credentials.email,
     password: credentials.password,
   });
 
-  // Backend sets cookies automatically via Set-Cookie headers
-  // Return only user data for frontend state
-  return response.user;
+  return user;
 }
 
 /**
