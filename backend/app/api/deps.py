@@ -10,6 +10,7 @@ from app.db.session import get_db
 from app.core.security import decode_access_token
 from app.models.user import User
 from app.schemas.user import TokenData
+from app.services.redis_service import redis_service
 
 security = HTTPBearer()
 
@@ -32,6 +33,15 @@ async def get_current_user(
         HTTPException: If token is invalid or user not found
     """
     token = credentials.credentials
+
+    # Check if token is blacklisted
+    if redis_service.is_token_blacklisted(token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     payload = decode_access_token(token)
 
     if payload is None:

@@ -16,9 +16,11 @@ from app.core.security import (
     get_password_hash,
     create_access_token,
     create_refresh_token,
-    decode_refresh_token
+    decode_refresh_token,
+    decode_access_token
 )
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, security
+from app.services.redis_service import redis_service
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
@@ -214,17 +216,33 @@ async def refresh_access_token(
 
 @router.post("/logout")
 async def logout(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> dict:
     """
-    Logout user (client should discard the token)
+    Logout user and blacklist current token
 
     Args:
         current_user: Current authenticated user
+        credentials: Bearer token credentials
 
     Returns:
         Success message
     """
-    # In a JWT-based system, logout is handled client-side by discarding the token
-    # For additional security, you could implement token blacklisting with Redis
-    return {"message": "Successfully logged out"}
+    token = credentials.credentials
+    payload = decode_access_token(token)
+
+    if payload and "exp" in payload:
+        # Calculate TTL for blacklist entry (time until token expires)
+        exp_timestamp = payload["exp"]
+        current_timestamp = datetime.utcnow().timestamp()
+        ttl = int(exp_timestamp - current_timestamp)
+
+        if ttl > 0:
+            # Add token to blacklist
+            redis_service.blacklist_token(token, ttl)
+
+    return {
+        "message": "Successfully logged out",
+        "detail": "Your session has been terminated. Please log in again to continue."
+    }
