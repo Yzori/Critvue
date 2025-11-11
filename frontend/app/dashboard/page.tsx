@@ -465,11 +465,6 @@ function ActionButton({ icon, title, description, gradientClass }: ActionButtonP
           {description}
         </p>
       </div>
-
-      {/* Arrow indicator */}
-      <ArrowRight className="absolute bottom-4 right-4 size-4 text-muted-foreground
-        group-hover:text-accent-blue group-hover:translate-x-1
-        transition-all duration-200" />
     </button>
   );
 }
