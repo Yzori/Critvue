@@ -16,7 +16,9 @@ class Settings(BaseSettings):
 
     # Security
     SECRET_KEY: str = "CHANGE_THIS_IN_PRODUCTION_USE_LONG_RANDOM_STRING"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    REFRESH_SECRET_KEY: str = "CHANGE_THIS_REFRESH_KEY_IN_PRODUCTION"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60  # 1 hour
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30  # 30 days
 
     # CORS - comma-separated list in .env file
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000"

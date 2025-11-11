@@ -1,6 +1,7 @@
 """Authentication API endpoints"""
 
 from datetime import datetime
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -9,8 +10,14 @@ from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
-from app.core.security import verify_password, get_password_hash, create_access_token
+from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, TokenRefresh
+from app.core.security import (
+    verify_password,
+    get_password_hash,
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token
+)
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -115,12 +122,16 @@ async def login(
     user.last_login = datetime.utcnow()
     await db.commit()
 
-    # Create access token
-    access_token = create_access_token(
-        data={"user_id": user.id, "email": user.email}
-    )
+    # Create access and refresh tokens
+    token_data = {"user_id": user.id, "email": user.email}
+    access_token = create_access_token(data=token_data)
+    refresh_token = create_refresh_token(data=token_data)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 
 @router.get("/me", response_model=UserResponse)
@@ -137,6 +148,68 @@ async def get_current_user_info(
         Current user information
     """
     return current_user
+
+
+@router.post("/refresh", response_model=Token)
+@limiter.limit("10/minute")  # 10 refresh attempts per minute
+async def refresh_access_token(
+    request: Request,
+    token_data: TokenRefresh,
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Get a new access token using a refresh token
+
+    Args:
+        request: FastAPI request for rate limiting
+        token_data: Refresh token
+        db: Database session
+
+    Returns:
+        New access and refresh tokens
+
+    Raises:
+        HTTPException: If refresh token is invalid
+    """
+    # Decode and validate refresh token
+    payload = decode_refresh_token(token_data.refresh_token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id: Optional[int] = payload.get("user_id")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verify user still exists and is active
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Create new tokens
+    new_token_data = {"user_id": user.id, "email": user.email}
+    new_access_token = create_access_token(data=new_token_data)
+    new_refresh_token = create_refresh_token(data=new_token_data)
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
 
 
 @router.post("/logout")
