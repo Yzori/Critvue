@@ -5,13 +5,16 @@ Main entry point for the backend API
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.ext.asyncio import AsyncSession
+from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset
+from app.api.v1 import reviews, files
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 
@@ -40,6 +43,8 @@ if settings.ENABLE_RATE_LIMITING:
 # Include routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(password_reset.router, prefix="/api/v1")
+app.include_router(reviews.router, prefix="/api/v1")
+app.include_router(files.router, prefix="/api/v1")
 
 # Configure CORS
 app.add_middleware(
@@ -49,6 +54,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files for uploaded content
+uploads_dir = Path("/home/user/Critvue/backend/uploads")
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/files", StaticFiles(directory=str(uploads_dir)), name="files")
 
 
 @app.get("/")

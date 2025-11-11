@@ -2,9 +2,12 @@
 
 import enum
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
+
+if TYPE_CHECKING:
+    from app.models.review_request import ReviewRequest
 
 
 class Base(DeclarativeBase):
@@ -44,6 +47,9 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_login = Column(DateTime, nullable=True)
+
+    # Relationships
+    review_requests = relationship("ReviewRequest", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

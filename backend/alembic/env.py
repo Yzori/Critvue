@@ -12,6 +12,9 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import settings
 from app.models.user import Base
+# Import all models to ensure they're registered with Base
+from app.models.review_request import ReviewRequest
+from app.models.review_file import ReviewFile
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

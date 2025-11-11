@@ -28,25 +28,57 @@ import {
   Clock,
   Zap,
   ArrowRight,
-  Bell,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Palette,
+  Code,
+  Video,
+  Mic,
+  Image as ImageIcon,
 } from "lucide-react";
-import { Suspense, useState, useRef } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getReviews, type CreateReviewResponse } from "@/lib/api/reviews";
 
 function DashboardContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const [mobileSection, setMobileSection] = useState<"overview" | "activity" | "account">("overview");
   const [accountExpanded, setAccountExpanded] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [reviews, setReviews] = useState<CreateReviewResponse[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
-  // Sample trend data for sparklines
-  const projectTrendData = [1, 1, 2, 2, 3, 3, 3];
-  const feedbackTrendData = [16, 18, 20, 19, 22, 23, 24];
-  const completedTrendData = [8, 9, 9, 10, 11, 11, 12];
-  const pendingTrendData = [8, 7, 6, 7, 5, 5, 5];
+  // Fetch reviews on mount
+  useEffect(() => {
+    async function fetchReviews() {
+      try {
+        setReviewsLoading(true);
+        const data = await getReviews();
+        // Ensure data is an array
+        setReviews(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch reviews:", error);
+        setReviews([]); // Set empty array on error
+      } finally {
+        setReviewsLoading(false);
+      }
+    }
+    fetchReviews();
+  }, []);
+
+  // Calculate real stats from reviews
+  const totalReviews = reviews.length;
+  const completedReviews = reviews.filter(r => r.status === "completed").length;
+  const pendingReviews = reviews.filter(r => r.status === "pending" || r.status === "in_review").length;
+  const draftReviews = reviews.filter(r => r.status === "draft").length;
+
+  // Sample trend data for sparklines (will be replaced with real historical data later)
+  const projectTrendData = [1, 1, 2, 2, 3, 3, totalReviews || 3];
+  const completedTrendData = [8, 9, 9, 10, 11, 11, completedReviews];
+  const pendingTrendData = [8, 7, 6, 7, 5, 5, pendingReviews];
 
   // Quick Actions data
   const quickActions = [
@@ -55,24 +87,34 @@ function DashboardContent() {
       title: "New Project",
       description: "Start a new creative project",
       gradientClass: "from-accent-blue to-blue-600",
+      onClick: () => {
+        // TODO: Navigate to new project page
+      },
     },
     {
       icon: <MessageSquare className="size-6 text-white" />,
       title: "Request Feedback",
       description: "Get AI or human reviews",
       gradientClass: "from-accent-peach to-orange-600",
+      onClick: () => router.push("/review/new"),
     },
     {
       icon: <FileText className="size-6 text-white" />,
       title: "View Reports",
       description: "See detailed analytics",
       gradientClass: "from-accent-blue to-indigo-600",
+      onClick: () => {
+        // TODO: Navigate to reports page
+      },
     },
     {
       icon: <Users className="size-6 text-white" />,
       title: "Manage Team",
       description: "Invite collaborators",
       gradientClass: "from-accent-peach to-pink-600",
+      onClick: () => {
+        // TODO: Navigate to team page
+      },
     },
   ];
 
@@ -120,10 +162,10 @@ function DashboardContent() {
         <div className="row-span-2">
           <BentoStatLarge
             icon={<FolderOpen className="size-6" />}
-            value="3"
-            label="Active Projects"
-            trend="+2 this week"
-            trendDirection="up"
+            value={reviewsLoading ? "..." : totalReviews}
+            label="Total Reviews"
+            trend={totalReviews > 0 ? `${totalReviews} total` : "No reviews yet"}
+            trendDirection="neutral"
             color="blue"
           />
         </div>
@@ -131,13 +173,13 @@ function DashboardContent() {
         {/* Secondary stats - Smaller compact pills on right */}
         <BentoStatSmall
           icon={<MessageSquare className="size-5" />}
-          value="24"
-          label="Feedback"
+          value={reviewsLoading ? "..." : totalReviews}
+          label="All Reviews"
           color="peach"
         />
         <BentoStatSmall
           icon={<CheckCircle2 className="size-5" />}
-          value="12"
+          value={reviewsLoading ? "..." : completedReviews}
           label="Completed"
           color="green"
         />
@@ -146,10 +188,10 @@ function DashboardContent() {
         <div className="col-span-2">
           <BentoStatProgress
             icon={<Clock className="size-5" />}
-            value="5"
+            value={reviewsLoading ? "..." : pendingReviews}
             label="Pending Reviews"
-            total={17}
-            trend="-3 this week"
+            total={totalReviews || 1}
+            trend={pendingReviews > 0 ? `${pendingReviews} awaiting feedback` : "All caught up"}
             color="amber"
           />
         </div>
@@ -159,45 +201,45 @@ function DashboardContent() {
       <div className="hidden lg:grid lg:grid-cols-4 gap-6">
         <StatCard
           icon={<FolderOpen className="text-accent-blue" />}
-          label="Active Projects"
-          value="3"
-          trend="+2 this week"
-          trendDirection="up"
+          label="Total Reviews"
+          value={reviewsLoading ? "..." : String(totalReviews)}
+          trend={totalReviews > 0 ? `${totalReviews} total` : "Get started"}
+          trendDirection="neutral"
           trendData={projectTrendData}
-          comparison="vs. last week"
+          comparison="All time"
           bgColor="bg-accent-blue/10"
           sparklineColor="#3B82F6"
         />
         <StatCard
           icon={<MessageSquare className="text-accent-peach" />}
-          label="Feedback Received"
-          value="24"
-          trend="+8 this week"
-          trendDirection="up"
-          trendData={feedbackTrendData}
-          comparison="vs. last week"
+          label="In Progress"
+          value={reviewsLoading ? "..." : String(pendingReviews)}
+          trend={pendingReviews > 0 ? "Being reviewed" : "No pending"}
+          trendDirection="neutral"
+          trendData={pendingTrendData}
+          comparison="Current status"
           bgColor="bg-accent-peach/10"
           sparklineColor="#F97316"
         />
         <StatCard
           icon={<CheckCircle2 className="text-green-600" />}
-          label="Completed Reviews"
-          value="12"
-          trend="+3 this month"
+          label="Completed"
+          value={reviewsLoading ? "..." : String(completedReviews)}
+          trend={completedReviews > 0 ? `${completedReviews} finished` : "None yet"}
           trendDirection="up"
           trendData={completedTrendData}
-          comparison="Last 30 days"
+          comparison="All time"
           bgColor="bg-green-50"
           sparklineColor="#10B981"
         />
         <StatCard
           icon={<Clock className="text-amber-600" />}
-          label="Pending Reviews"
-          value="5"
-          trend="-3 this week"
-          trendDirection="down"
-          trendData={pendingTrendData}
-          comparison="Awaiting feedback"
+          label="Drafts"
+          value={reviewsLoading ? "..." : String(draftReviews)}
+          trend={draftReviews > 0 ? "Not submitted" : "All submitted"}
+          trendDirection="neutral"
+          trendData={[0, 0, 0, 0, 0, 0, draftReviews]}
+          comparison="Saved drafts"
           bgColor="bg-amber-50"
           sparklineColor="#F59E0B"
         />
@@ -412,59 +454,71 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Recent Activity - Show on "activity" tab on mobile, always on desktop */}
+      {/* Recent Reviews - Show on "activity" tab on mobile, always on desktop */}
       <div className={`rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200 ${
         mobileSection !== "activity" ? "hidden lg:block" : ""
       }`}>
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="space-y-0.5 sm:space-y-1">
             <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground">
-              Recent Activity
+              Your Reviews
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Latest updates from your projects
+              {reviewsLoading ? "Loading..." : reviews.length > 0 ? `${reviews.length} review${reviews.length !== 1 ? 's' : ''} requested` : "No reviews yet"}
             </p>
           </div>
           <div className="size-8 sm:size-10 rounded-lg sm:rounded-xl bg-accent-peach/10 flex items-center justify-center">
-            <TrendingUp className="size-4 sm:size-5 text-accent-peach" />
+            <MessageSquare className="size-4 sm:size-5 text-accent-peach" />
           </div>
         </div>
 
-        <div className="space-y-2 sm:space-y-3">
-          <ActivityItem
-            icon={<MessageSquare className="size-4 text-accent-blue" />}
-            title="New feedback received"
-            description="Your design mockup received 3 new comments"
-            time="2 hours ago"
-            badge="New"
-          />
-          <ActivityItem
-            icon={<CheckCircle2 className="size-4 text-green-600" />}
-            title="Review completed"
-            description="AI analysis finished for 'Landing Page V2'"
-            time="5 hours ago"
-          />
-          <ActivityItem
-            icon={<Plus className="size-4 text-accent-peach" />}
-            title="Project created"
-            description="You created 'Mobile App UI'"
-            time="Yesterday"
-          />
-          <ActivityItem
-            icon={<Bell className="size-4 text-blue-600" />}
-            title="Team invitation sent"
-            description="Invited sarah@example.com to collaborate"
-            time="2 days ago"
-          />
-        </div>
+        {reviewsLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : reviews.length > 0 ? (
+          <>
+            <div className="space-y-2 sm:space-y-3">
+              {reviews.slice(0, 4).map((review) => (
+                <ReviewItem key={review.id} review={review} />
+              ))}
+            </div>
 
-        <Button
-          variant="outline"
-          className="w-full mt-6 min-h-[44px] group hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
-        >
-          View All Activity
-          <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
+            {reviews.length > 4 && (
+              <Button
+                variant="outline"
+                className="w-full mt-6 min-h-[44px] group hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
+                onClick={() => {
+                  // TODO: Navigate to all reviews page
+                }}
+              >
+                View All {reviews.length} Reviews
+                <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="size-16 rounded-2xl bg-accent-blue/10 flex items-center justify-center mb-4">
+              <MessageSquare className="size-8 text-accent-blue" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              No reviews yet
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+              Create your first review request to get AI or expert feedback on your work.
+            </p>
+            <Button
+              onClick={() => router.push("/review/new")}
+              className="bg-accent-blue hover:bg-accent-blue/90"
+            >
+              <Plus className="size-4 mr-2" />
+              Request Feedback
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -477,18 +531,17 @@ interface ActionButtonProps {
   title: string;
   description: string;
   gradientClass: string;
+  onClick?: () => void;
 }
 
-function ActionButton({ icon, title, description, gradientClass }: ActionButtonProps) {
+function ActionButton({ icon, title, description, gradientClass, onClick }: ActionButtonProps) {
   return (
     <button
       className="group relative overflow-hidden rounded-2xl bg-background
         hover:shadow-lg
         active:scale-[0.98]
         transition-all duration-200 text-left p-6 min-h-[140px] flex flex-col justify-between"
-      onClick={() => {
-        // Handle navigation
-      }}
+      onClick={onClick}
     >
       {/* Icon with gradient background */}
       <div className={`size-12 rounded-xl bg-gradient-to-br ${gradientClass}
@@ -527,34 +580,75 @@ function InfoRow({ label, value }: InfoRowProps) {
   );
 }
 
-interface ActivityItemProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  time: string;
-  badge?: string;
+interface ReviewItemProps {
+  review: CreateReviewResponse;
 }
 
-function ActivityItem({ icon, title, description, time, badge }: ActivityItemProps) {
+function ReviewItem({ review }: ReviewItemProps) {
+  // Map content types to icons and colors
+  const contentTypeConfig = {
+    design: { icon: <Palette className="size-4" />, color: "text-blue-600", bg: "bg-blue-500/10" },
+    code: { icon: <Code className="size-4" />, color: "text-blue-600", bg: "bg-blue-500/10" },
+    video: { icon: <Video className="size-4" />, color: "text-purple-600", bg: "bg-purple-500/10" },
+    audio: { icon: <Mic className="size-4" />, color: "text-pink-600", bg: "bg-pink-500/10" },
+    writing: { icon: <FileText className="size-4" />, color: "text-green-600", bg: "bg-green-500/10" },
+    art: { icon: <ImageIcon className="size-4" />, color: "text-amber-600", bg: "bg-amber-500/10" },
+  };
+
+  // Map status to badge variants
+  const statusConfig = {
+    draft: { variant: "secondary" as const, label: "Draft" },
+    pending: { variant: "warning" as const, label: "Pending" },
+    in_review: { variant: "info" as const, label: "In Review" },
+    completed: { variant: "success" as const, label: "Completed" },
+    cancelled: { variant: "error" as const, label: "Cancelled" },
+  };
+
+  const config = contentTypeConfig[review.content_type];
+  const statusInfo = statusConfig[review.status as keyof typeof statusConfig] || statusConfig.pending;
+
+  // Format date
+  const createdDate = new Date(review.created_at);
+  const now = new Date();
+  const diffMs = now.getTime() - createdDate.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  let timeText = "";
+  if (diffHours < 1) {
+    timeText = "Just now";
+  } else if (diffHours < 24) {
+    timeText = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  } else if (diffDays < 7) {
+    timeText = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  } else {
+    timeText = createdDate.toLocaleDateString();
+  }
+
   return (
     <div className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl hover:bg-accent-blue/5 transition-all duration-200 cursor-pointer border border-transparent hover:border-accent-blue/20 hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] min-h-[68px]">
-      <div className="size-8 sm:size-10 rounded-lg bg-background-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-        {icon}
+      <div className={`size-8 sm:size-10 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200`}>
+        <div className={config.color}>
+          {config.icon}
+        </div>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-medium text-foreground text-xs sm:text-sm">{title}</h4>
-          {badge && (
-            <Badge variant="primary" size="sm">
-              {badge}
-            </Badge>
-          )}
+          <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-1">{review.title}</h4>
+          <Badge variant={statusInfo.variant} size="sm">
+            {statusInfo.label}
+          </Badge>
         </div>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">{description}</p>
-        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 flex items-center gap-1">
-          <Clock className="size-3" />
-          {time}
-        </p>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">{review.description}</p>
+        <div className="flex items-center gap-3 mt-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
+            <Clock className="size-3" />
+            {timeText}
+          </p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground capitalize">
+            {review.review_type === "free" ? "Quick Feedback" : "Expert Review"}
+          </p>
+        </div>
       </div>
       <ArrowRight className="size-3 sm:size-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 hidden sm:block" />
     </div>

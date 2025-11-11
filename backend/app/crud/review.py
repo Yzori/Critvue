@@ -1,0 +1,345 @@
+"""CRUD operations for review requests"""
+
+from datetime import datetime
+from typing import Optional, List, Tuple
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_
+from sqlalchemy.orm import selectinload
+
+from app.models.review_request import ReviewRequest, ReviewStatus
+from app.models.review_file import ReviewFile
+from app.schemas.review import ReviewRequestCreate, ReviewRequestUpdate, ReviewFileCreate
+
+
+class ReviewCRUD:
+    """CRUD operations for review requests"""
+
+    @staticmethod
+    async def create_review_request(
+        db: AsyncSession,
+        user_id: int,
+        data: ReviewRequestCreate
+    ) -> ReviewRequest:
+        """
+        Create a new review request
+
+        Args:
+            db: Database session
+            user_id: ID of the user creating the review
+            data: Review request data
+
+        Returns:
+            Created review request
+
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            review = ReviewRequest(
+                user_id=user_id,
+                title=data.title,
+                description=data.description,
+                content_type=data.content_type,
+                review_type=data.review_type,
+                status=data.status,
+                feedback_areas=data.feedback_areas,
+                budget=data.budget
+            )
+            db.add(review)
+            await db.commit()
+            await db.refresh(review)
+            return review
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def get_review_request(
+        db: AsyncSession,
+        review_id: int,
+        user_id: Optional[int] = None
+    ) -> Optional[ReviewRequest]:
+        """
+        Get a review request by ID
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            user_id: Optional user ID to verify ownership
+
+        Returns:
+            Review request or None if not found
+
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            query = select(ReviewRequest).options(
+                selectinload(ReviewRequest.files)
+            ).where(
+                ReviewRequest.id == review_id,
+                ReviewRequest.deleted_at.is_(None)
+            )
+
+            # Add ownership check if user_id is provided
+            if user_id is not None:
+                query = query.where(ReviewRequest.user_id == user_id)
+
+            result = await db.execute(query)
+            return result.scalar_one_or_none()
+        except Exception as e:
+            raise e
+
+    @staticmethod
+    async def get_user_review_requests(
+        db: AsyncSession,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 10,
+        status: Optional[ReviewStatus] = None
+    ) -> Tuple[List[ReviewRequest], int]:
+        """
+        Get review requests for a specific user with pagination
+
+        Args:
+            db: Database session
+            user_id: ID of the user
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            status: Optional status filter
+
+        Returns:
+            Tuple of (list of review requests, total count)
+
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            # Build base query
+            query = select(ReviewRequest).options(
+                selectinload(ReviewRequest.files)
+            ).where(
+                ReviewRequest.user_id == user_id,
+                ReviewRequest.deleted_at.is_(None)
+            )
+
+            # Add status filter if provided
+            if status is not None:
+                query = query.where(ReviewRequest.status == status)
+
+            # Order by most recent first
+            query = query.order_by(ReviewRequest.created_at.desc())
+
+            # Get total count
+            count_query = select(func.count()).select_from(ReviewRequest).where(
+                ReviewRequest.user_id == user_id,
+                ReviewRequest.deleted_at.is_(None)
+            )
+            if status is not None:
+                count_query = count_query.where(ReviewRequest.status == status)
+
+            total_result = await db.execute(count_query)
+            total = total_result.scalar()
+
+            # Apply pagination
+            query = query.offset(skip).limit(limit)
+
+            result = await db.execute(query)
+            reviews = result.scalars().all()
+
+            return list(reviews), total
+        except Exception as e:
+            raise e
+
+    @staticmethod
+    async def update_review_request(
+        db: AsyncSession,
+        review_id: int,
+        user_id: int,
+        data: ReviewRequestUpdate
+    ) -> Optional[ReviewRequest]:
+        """
+        Update a review request
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            user_id: ID of the user (for ownership verification)
+            data: Update data
+
+        Returns:
+            Updated review request or None if not found
+
+        Raises:
+            Exception: If database operation fails or user is not the owner
+        """
+        try:
+            # Get the review with ownership check
+            review = await ReviewCRUD.get_review_request(db, review_id, user_id)
+            if not review:
+                return None
+
+            # Check if review is editable
+            if not review.is_editable:
+                raise ValueError(
+                    f"Cannot edit review in '{review.status.value}' status. "
+                    "Only draft and pending reviews can be edited."
+                )
+
+            # Update fields that are provided
+            update_data = data.model_dump(exclude_unset=True)
+            for field, value in update_data.items():
+                setattr(review, field, value)
+
+            # Update the updated_at timestamp
+            review.updated_at = datetime.utcnow()
+
+            # If status is being set to completed, set completed_at
+            if data.status == ReviewStatus.COMPLETED and not review.completed_at:
+                review.completed_at = datetime.utcnow()
+
+            await db.commit()
+            await db.refresh(review)
+            return review
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def delete_review_request(
+        db: AsyncSession,
+        review_id: int,
+        user_id: int,
+        soft_delete: bool = True
+    ) -> bool:
+        """
+        Delete a review request (soft or hard delete)
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            user_id: ID of the user (for ownership verification)
+            soft_delete: If True, soft delete (set deleted_at). If False, hard delete
+
+        Returns:
+            True if deleted, False if not found
+
+        Raises:
+            Exception: If database operation fails or user is not the owner
+        """
+        try:
+            # Get the review with ownership check
+            review = await ReviewCRUD.get_review_request(db, review_id, user_id)
+            if not review:
+                return False
+
+            if soft_delete:
+                # Soft delete
+                review.deleted_at = datetime.utcnow()
+                await db.commit()
+            else:
+                # Hard delete
+                await db.delete(review)
+                await db.commit()
+
+            return True
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def add_file_to_review(
+        db: AsyncSession,
+        review_id: int,
+        user_id: int,
+        file_data: ReviewFileCreate
+    ) -> Optional[ReviewFile]:
+        """
+        Add a file to a review request
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            user_id: ID of the user (for ownership verification)
+            file_data: File data
+
+        Returns:
+            Created review file or None if review not found
+
+        Raises:
+            Exception: If database operation fails or user is not the owner
+        """
+        try:
+            # Verify review exists and user owns it
+            review = await ReviewCRUD.get_review_request(db, review_id, user_id)
+            if not review:
+                return None
+
+            # Create the file
+            review_file = ReviewFile(
+                review_request_id=review_id,
+                filename=file_data.filename,
+                original_filename=file_data.original_filename,
+                file_size=file_data.file_size,
+                file_type=file_data.file_type,
+                file_url=file_data.file_url,
+                file_path=file_data.file_path,
+                content_hash=file_data.content_hash
+            )
+
+            db.add(review_file)
+            await db.commit()
+            await db.refresh(review_file)
+            return review_file
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def get_review_stats(
+        db: AsyncSession,
+        user_id: int
+    ) -> dict:
+        """
+        Get statistics for a user's review requests
+
+        Args:
+            db: Database session
+            user_id: ID of the user
+
+        Returns:
+            Dictionary with statistics
+
+        Raises:
+            Exception: If database operation fails
+        """
+        try:
+            # Get counts by status
+            query = select(
+                ReviewRequest.status,
+                func.count(ReviewRequest.id)
+            ).where(
+                ReviewRequest.user_id == user_id,
+                ReviewRequest.deleted_at.is_(None)
+            ).group_by(ReviewRequest.status)
+
+            result = await db.execute(query)
+            status_counts = dict(result.all())
+
+            # Build stats dictionary
+            stats = {
+                "total_requests": sum(status_counts.values()),
+                "draft_count": status_counts.get(ReviewStatus.DRAFT, 0),
+                "pending_count": status_counts.get(ReviewStatus.PENDING, 0),
+                "in_review_count": status_counts.get(ReviewStatus.IN_REVIEW, 0),
+                "completed_count": status_counts.get(ReviewStatus.COMPLETED, 0),
+                "cancelled_count": status_counts.get(ReviewStatus.CANCELLED, 0),
+            }
+
+            return stats
+        except Exception as e:
+            raise e
+
+
+# Create a singleton instance
+review_crud = ReviewCRUD()
