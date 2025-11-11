@@ -20,15 +20,9 @@ import type {
  * Login user with email and password
  */
 export async function loginUser(credentials: LoginCredentials): Promise<LoginResponse> {
-  // FastAPI OAuth2 expects form data for login
-  const formData = new URLSearchParams();
-  formData.append("username", credentials.email); // FastAPI OAuth2 uses 'username' field
-  formData.append("password", credentials.password);
-
-  const response = await apiClient.post<LoginResponse>("/auth/login", formData, {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+  const response = await apiClient.post<LoginResponse>("/auth/login", {
+    email: credentials.email,
+    password: credentials.password,
   });
 
   return response.data;
