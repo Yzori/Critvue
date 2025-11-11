@@ -396,45 +396,47 @@ export default function NewReviewPage() {
         {/* Step Content */}
         <div className="mb-8">{renderStepContent()}</div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons - Enhanced for mobile touch */}
         {!submitSuccess && (
-          <div className="fixed bottom-0 left-0 right-0 lg:relative bg-background border-t border-border lg:border-0 p-4 lg:p-0 shadow-[0_-4px_8px_rgba(0,0,0,0.04)] lg:shadow-none">
+          <div className="fixed bottom-0 left-0 right-0 lg:relative bg-background border-t border-border lg:border-0 p-4 lg:p-0 shadow-[0_-4px_8px_rgba(0,0,0,0.04)] lg:shadow-none z-50">
             <div className="max-w-2xl mx-auto flex items-center gap-3">
-              {/* Back Button */}
+              {/* Back Button - Enhanced touch target */}
               <Button
                 variant="outline"
                 size="lg"
                 onClick={handleBack}
-                className="flex-shrink-0 group"
+                className="flex-shrink-0 group min-h-[48px] px-5 touch-manipulation active:scale-95"
+                aria-label={currentStep === 1 ? "Cancel and return to dashboard" : "Go back to previous step"}
               >
-                <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-                {currentStep === 1 ? "Cancel" : "Back"}
+                <ArrowLeft className="size-5 group-hover:-translate-x-1 transition-transform" />
+                <span className="hidden sm:inline">{currentStep === 1 ? "Cancel" : "Back"}</span>
               </Button>
 
-              {/* Next/Submit Button */}
+              {/* Next/Submit Button - Enhanced touch target */}
               <Button
                 size="lg"
                 onClick={currentStep === 6 ? handleSubmit : handleNext}
                 disabled={!canProceed() || isSubmitting}
-                className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white group relative overflow-hidden"
+                className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white group relative overflow-hidden min-h-[48px] touch-manipulation active:scale-[0.98]"
+                aria-label={currentStep === 6 ? "Submit review request" : "Continue to next step"}
               >
                 {/* Button shimmer effect on hover */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
-                    {currentStep === 2 ? "Creating..." : "Submitting..."}
+                    <Loader2 className="size-5 animate-spin" />
+                    <span>{currentStep === 2 ? "Creating..." : "Submitting..."}</span>
                   </>
                 ) : currentStep === 6 ? (
                   <>
-                    Submit Request
-                    <Check className="size-4" />
+                    <span>Submit Request</span>
+                    <Check className="size-5" />
                   </>
                 ) : (
                   <>
-                    Continue
-                    <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
+                    <span>Continue</span>
+                    <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </Button>

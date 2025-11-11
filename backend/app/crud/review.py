@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.models.review_request import ReviewRequest, ReviewStatus
 from app.models.review_file import ReviewFile
 from app.schemas.review import ReviewRequestCreate, ReviewRequestUpdate, ReviewFileCreate
+from app.utils.file_utils import delete_files_for_review
 
 
 class ReviewCRUD:
@@ -214,6 +215,7 @@ class ReviewCRUD:
     ) -> bool:
         """
         Delete a review request (soft or hard delete)
+        For hard deletes, also removes associated files from disk.
 
         Args:
             db: Database session
@@ -234,11 +236,22 @@ class ReviewCRUD:
                 return False
 
             if soft_delete:
-                # Soft delete
+                # Soft delete - don't remove files
                 review.deleted_at = datetime.utcnow()
                 await db.commit()
             else:
-                # Hard delete
+                # Hard delete - clean up files from disk
+                if review.files:
+                    file_paths = [f.file_path for f in review.files if f.file_path]
+                    if file_paths:
+                        # Delete files asynchronously (don't fail if file cleanup fails)
+                        try:
+                            await delete_files_for_review(file_paths)
+                        except Exception as e:
+                            # Log error but continue with database deletion
+                            print(f"Error cleaning up files during hard delete: {type(e).__name__}")
+
+                # Delete from database (cascade will handle related records)
                 await db.delete(review)
                 await db.commit()
 

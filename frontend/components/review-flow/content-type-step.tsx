@@ -124,11 +124,11 @@ export function ContentTypeStep({ selectedType, onSelect }: ContentTypeStepProps
               {option.description}
             </p>
 
-            {/* Selected indicator */}
+            {/* Selected indicator - Enhanced touch target */}
             {selectedType === option.type && (
-              <div className="absolute top-2 right-2 size-5 rounded-full bg-accent-blue flex items-center justify-center">
+              <div className="absolute top-2 right-2 size-6 rounded-full bg-accent-blue flex items-center justify-center">
                 <svg
-                  className="size-3 text-white"
+                  className="size-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

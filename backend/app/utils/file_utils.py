@@ -8,6 +8,8 @@ from typing import Optional, Tuple
 from fastapi import UploadFile, HTTPException
 from PIL import Image
 import magic  # python-magic for file type detection
+import aiofiles
+import aiofiles.os
 
 # File type configurations based on content type
 ALLOWED_MIME_TYPES = {
@@ -56,6 +58,46 @@ THUMBNAIL_QUALITY = 85
 
 # Upload directory
 UPLOAD_BASE_DIR = Path("/home/user/Critvue/backend/uploads")
+
+
+def validate_path_safety(file_path: str) -> bool:
+    """
+    Validate that a file path is safe and within the upload directory.
+    Prevents path traversal attacks.
+
+    Args:
+        file_path: Relative path to validate
+
+    Returns:
+        True if path is safe, False otherwise
+    """
+    try:
+        # Normalize the path to resolve any .. or . components
+        normalized_path = os.path.normpath(file_path)
+
+        # Check for path traversal attempts
+        if normalized_path.startswith('..') or normalized_path.startswith('/'):
+            return False
+
+        # Construct the full path
+        full_path = UPLOAD_BASE_DIR.parent / normalized_path
+
+        # Resolve to absolute path
+        resolved_path = full_path.resolve()
+
+        # Ensure the resolved path is within the allowed directory
+        allowed_base = UPLOAD_BASE_DIR.parent.resolve()
+
+        # Check if the resolved path is within the allowed base directory
+        try:
+            resolved_path.relative_to(allowed_base)
+            return True
+        except ValueError:
+            # Path is outside the allowed directory
+            return False
+
+    except (ValueError, OSError):
+        return False
 
 
 def get_upload_directory(content_type: str) -> Path:
@@ -109,14 +151,14 @@ def calculate_file_hash(file_content: bytes) -> str:
 
 
 async def validate_file_type(
-    file: UploadFile,
+    file_content: bytes,
     content_type: str
 ) -> Tuple[bool, Optional[str], Optional[str]]:
     """
-    Validate file type using both MIME type and magic numbers
+    Validate file type using magic numbers (content-based detection).
 
     Args:
-        file: The uploaded file
+        file_content: Raw file bytes
         content_type: The content type category (design, code, video, etc.)
 
     Returns:
@@ -126,35 +168,31 @@ async def validate_file_type(
     allowed_types = ALLOWED_MIME_TYPES.get(content_type, [])
 
     if not allowed_types:
-        return False, None, f"Invalid content type: {content_type}"
+        return False, None, f"Invalid content type category"
 
-    # Read file header for magic number detection
-    file_header = await file.read(2048)
-    await file.seek(0)  # Reset file pointer
-
-    # Detect actual file type using magic numbers
+    # Detect actual file type using magic numbers (first 2048 bytes)
+    file_header = file_content[:2048]
     mime = magic.Magic(mime=True)
     detected_mime = mime.from_buffer(file_header)
 
     # Check if detected MIME type is allowed
     if detected_mime not in allowed_types:
         return False, detected_mime, (
-            f"File type '{detected_mime}' is not allowed for {content_type} content. "
-            f"Allowed types: {', '.join(allowed_types)}"
+            f"File type not allowed for {content_type} content"
         )
 
     return True, detected_mime, None
 
 
 async def validate_file_size(
-    file: UploadFile,
+    file_content: bytes,
     content_type: str
 ) -> Tuple[bool, int, Optional[str]]:
     """
     Validate file size against content type limits
 
     Args:
-        file: The uploaded file
+        file_content: Raw file bytes
         content_type: The content type category
 
     Returns:
@@ -163,10 +201,7 @@ async def validate_file_size(
     # Get size limit for this content type
     size_limit = SIZE_LIMITS.get(content_type, 10 * 1024 * 1024)  # Default 10MB
 
-    # Read entire file to get size
-    file_content = await file.read()
     file_size = len(file_content)
-    await file.seek(0)  # Reset file pointer
 
     if file_size > size_limit:
         size_mb = file_size / (1024 * 1024)
@@ -183,15 +218,15 @@ async def validate_file_size(
 
 
 async def save_uploaded_file(
-    file: UploadFile,
+    file_content: bytes,
     content_type: str,
     unique_filename: str
 ) -> Tuple[str, str]:
     """
-    Save uploaded file to disk
+    Save uploaded file to disk using async I/O
 
     Args:
-        file: The uploaded file
+        file_content: Raw file bytes
         content_type: The content type category
         unique_filename: Unique filename generated for this file
 
@@ -204,10 +239,9 @@ async def save_uploaded_file(
     # Full file path
     file_path = upload_dir / unique_filename
 
-    # Write file to disk
-    file_content = await file.read()
-    with open(file_path, "wb") as f:
-        f.write(file_content)
+    # Write file to disk asynchronously
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(file_content)
 
     # Generate relative path for database storage
     relative_path = f"uploads/{content_type}/{unique_filename}"
@@ -218,13 +252,13 @@ async def save_uploaded_file(
     return str(relative_path), file_url
 
 
-def create_thumbnail(
+async def create_thumbnail_async(
     image_path: Path,
     thumbnail_path: Path,
     size: Tuple[int, int] = THUMBNAIL_SIZE
 ) -> bool:
     """
-    Create a thumbnail for an image file
+    Create a thumbnail for an image file asynchronously
 
     Args:
         image_path: Path to the original image
@@ -235,6 +269,8 @@ def create_thumbnail(
         True if successful, False otherwise
     """
     try:
+        # Image processing is CPU-bound, so we do it synchronously
+        # but wrapped in an async function for consistency
         with Image.open(image_path) as img:
             # Convert RGBA to RGB if necessary (for JPEG)
             if img.mode in ('RGBA', 'LA', 'P'):
@@ -261,7 +297,8 @@ async def process_upload(
     content_type: str
 ) -> dict:
     """
-    Process an uploaded file: validate, save, and generate metadata
+    Process an uploaded file: validate, save, and generate metadata.
+    Reads file content only once to avoid race conditions.
 
     Args:
         file: The uploaded file
@@ -273,26 +310,27 @@ async def process_upload(
     Raises:
         HTTPException: If validation fails
     """
-    # Validate file type
-    is_valid_type, detected_mime, type_error = await validate_file_type(file, content_type)
+    # Read file content once for all operations
+    file_content = await file.read()
+
+    # Validate file type using content
+    is_valid_type, detected_mime, type_error = await validate_file_type(file_content, content_type)
     if not is_valid_type:
         raise HTTPException(status_code=400, detail=type_error)
 
-    # Validate file size
-    is_valid_size, file_size, size_error = await validate_file_size(file, content_type)
+    # Validate file size using content
+    is_valid_size, file_size, size_error = await validate_file_size(file_content, content_type)
     if not is_valid_size:
         raise HTTPException(status_code=400, detail=size_error)
 
     # Generate unique filename
     unique_filename = generate_unique_filename(file.filename or "unnamed")
 
-    # Calculate file hash (for integrity checking)
-    file_content = await file.read()
+    # Calculate file hash using the same content
     content_hash = calculate_file_hash(file_content)
-    await file.seek(0)  # Reset for saving
 
-    # Save file
-    file_path, file_url = await save_uploaded_file(file, content_type, unique_filename)
+    # Save file using the same content
+    file_path, file_url = await save_uploaded_file(file_content, content_type, unique_filename)
 
     # Create thumbnail for images
     thumbnail_url = None
@@ -302,7 +340,8 @@ async def process_upload(
             thumbnail_filename = f"thumb_{unique_filename}"
             thumbnail_path = upload_dir / thumbnail_filename
 
-            if create_thumbnail(Path(file_path.replace("uploads/", str(UPLOAD_BASE_DIR) + "/")), thumbnail_path):
+            full_image_path = upload_dir / unique_filename
+            if await create_thumbnail_async(full_image_path, thumbnail_path):
                 thumbnail_url = f"/files/{content_type}/{thumbnail_filename}"
         except Exception as e:
             print(f"Thumbnail generation failed: {e}")
@@ -320,30 +359,75 @@ async def process_upload(
     }
 
 
-def delete_file(file_path: str) -> bool:
+async def delete_file(file_path: str) -> bool:
     """
-    Delete a file from disk
+    Delete a file from disk with path traversal protection
 
     Args:
-        file_path: Relative path to the file
+        file_path: Relative path to the file (e.g., "uploads/design/uuid.jpg")
 
     Returns:
         True if successful, False otherwise
     """
     try:
-        # Construct full path
-        full_path = UPLOAD_BASE_DIR.parent / file_path
+        # Validate path safety to prevent path traversal attacks
+        if not validate_path_safety(file_path):
+            print(f"Path traversal attempt detected: {file_path}")
+            return False
 
-        if full_path.exists() and full_path.is_file():
-            full_path.unlink()
+        # Construct full path safely
+        full_path = (UPLOAD_BASE_DIR.parent / file_path).resolve()
+
+        # Double-check that resolved path is within allowed directory
+        try:
+            full_path.relative_to(UPLOAD_BASE_DIR.parent.resolve())
+        except ValueError:
+            print(f"Attempted to access file outside upload directory")
+            return False
+
+        # Check if file exists and is actually a file
+        if await aiofiles.os.path.exists(full_path) and await aiofiles.os.path.isfile(full_path):
+            # Delete the file
+            await aiofiles.os.remove(full_path)
 
             # Also try to delete thumbnail if it exists
             thumbnail_path = full_path.parent / f"thumb_{full_path.name}"
-            if thumbnail_path.exists():
-                thumbnail_path.unlink()
+            if await aiofiles.os.path.exists(thumbnail_path):
+                await aiofiles.os.remove(thumbnail_path)
 
             return True
         return False
     except Exception as e:
-        print(f"Failed to delete file {file_path}: {e}")
+        # Sanitize error message to not expose internal paths
+        print(f"File deletion error: {type(e).__name__}")
         return False
+
+
+async def delete_files_for_review(file_paths: list[str]) -> dict:
+    """
+    Delete multiple files associated with a review request.
+    Used for cleanup when a review is deleted.
+
+    Args:
+        file_paths: List of relative file paths to delete
+
+    Returns:
+        Dictionary with deletion statistics
+    """
+    deleted_count = 0
+    failed_count = 0
+
+    for file_path in file_paths:
+        try:
+            if await delete_file(file_path):
+                deleted_count += 1
+            else:
+                failed_count += 1
+        except Exception:
+            failed_count += 1
+
+    return {
+        "deleted": deleted_count,
+        "failed": failed_count,
+        "total": len(file_paths)
+    }

@@ -276,16 +276,17 @@ export function FileUploadStep({
           disabled={!reviewId}
         />
 
-        {/* Camera button for mobile */}
+        {/* Camera button for mobile - Enhanced touch target */}
         {isMobile && contentType === "design" && (
           <Button
             type="button"
             variant="outline"
+            size="lg"
             onClick={handleCameraCapture}
-            className="w-full"
+            className="w-full min-h-[48px]"
             disabled={!reviewId}
           >
-            <Camera className="size-4" />
+            <Camera className="size-5" />
             Take Photo
           </Button>
         )}
@@ -308,6 +309,7 @@ export function FileUploadStep({
                 <Input
                   id="link-input"
                   type="url"
+                  inputMode="url"
                   placeholder={`Paste ${supportedPlatforms[0]} link, etc.`}
                   value={linkInput}
                   onChange={(e) => {
@@ -320,15 +322,18 @@ export function FileUploadStep({
                       handleAddLink();
                     }
                   }}
-                  className="flex-1"
+                  autoComplete="url"
+                  className="flex-1 text-base sm:text-sm"
                   disabled={!reviewId}
                 />
                 <Button
                   type="button"
+                  size="lg"
                   onClick={handleAddLink}
                   disabled={!reviewId}
+                  className="min-h-[48px] px-6"
                 >
-                  <LinkIcon className="size-4" />
+                  <LinkIcon className="size-5" />
                   Add
                 </Button>
               </div>
@@ -360,15 +365,16 @@ export function FileUploadStep({
                         href={link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 text-sm text-foreground hover:text-accent-blue truncate"
+                        className="flex-1 text-sm text-foreground hover:text-accent-blue truncate min-h-[44px] flex items-center"
                       >
                         {link}
                       </a>
                       <button
                         onClick={() => handleRemoveLink(index)}
-                        className="flex-shrink-0 size-8 rounded-full hover:bg-background flex items-center justify-center transition-colors"
+                        className="flex-shrink-0 size-11 rounded-full hover:bg-background flex items-center justify-center transition-colors touch-manipulation active:scale-95"
+                        aria-label="Remove link"
                       >
-                        <AlertCircle className="size-4 text-muted-foreground" />
+                        <AlertCircle className="size-5 text-muted-foreground" />
                       </button>
                     </div>
                   ))}

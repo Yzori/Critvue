@@ -51,7 +51,8 @@ export function BasicInfoStep({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             aria-invalid={!!errors?.title}
-            className="text-base"
+            autoComplete="off"
+            className="text-base sm:text-sm"
           />
           {errors?.title && (
             <p className="text-sm text-destructive">{errors.title}</p>
@@ -72,8 +73,9 @@ export function BasicInfoStep({
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             aria-invalid={!!errors?.description}
+            autoComplete="off"
             rows={6}
-            className="text-base resize-none"
+            className="text-base sm:text-sm resize-none"
           />
           {errors?.description && (
             <p className="text-sm text-destructive">{errors.description}</p>

@@ -8,6 +8,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -83,6 +84,16 @@ class ReviewRequest(Base):
 
     # Soft delete support for audit trail
     deleted_at = Column(DateTime, nullable=True, index=True)
+
+    # Composite indexes for optimized queries
+    __table_args__ = (
+        # Index for filtering user's reviews by status and sorting by date
+        Index('idx_user_status_created', 'user_id', 'status', 'created_at'),
+        # Index for filtering non-deleted reviews by user
+        Index('idx_user_deleted', 'user_id', 'deleted_at'),
+        # Index for filtering by status and date (for admin queries)
+        Index('idx_status_created', 'status', 'created_at'),
+    )
 
     # Relationships
     user = relationship("User", back_populates="review_requests")

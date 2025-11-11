@@ -1,7 +1,7 @@
 """Review Request API endpoints"""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path as PathParam, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -172,7 +172,7 @@ async def get_review_stats(
     summary="Get a specific review request"
 )
 async def get_review_request(
-    review_id: int,
+    review_id: int = PathParam(..., ge=1, description="ID of the review request (must be positive)"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> ReviewRequestResponse:
@@ -222,8 +222,8 @@ async def get_review_request(
     summary="Update a review request"
 )
 async def update_review_request(
-    review_id: int,
-    update_data: ReviewRequestUpdate,
+    review_id: int = PathParam(..., ge=1, description="ID of the review request (must be positive)"),
+    update_data: ReviewRequestUpdate = ...,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> ReviewRequestResponse:
@@ -286,7 +286,7 @@ async def update_review_request(
     summary="Delete a review request"
 )
 async def delete_review_request(
-    review_id: int,
+    review_id: int = PathParam(..., ge=1, description="ID of the review request (must be positive)"),
     hard_delete: bool = Query(False, description="Permanently delete (default: soft delete)"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)

@@ -2,11 +2,13 @@
  * Review Type Selection Step
  * Choose between free (AI + Community) or paid (Expert) review
  * Includes dynamic budget input for expert reviews
+ * Enhanced with conversion-optimized UX features
  */
 
 import { ReviewType } from "@/lib/api/reviews";
-import { Sparkles, Award, Check, Clock, Users } from "lucide-react";
+import { Sparkles, Award, Check, Clock, Users, Star, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface ReviewTypeStepProps {
   selectedType: ReviewType | null;
@@ -72,6 +74,11 @@ interface BudgetTier {
   level: string;
   estimatedTime: string;
   description: string;
+  expertCount: string;
+  detailsOnHover: {
+    features: string[];
+    avgDeliveryTime: string;
+  };
 }
 
 const budgetTiers: BudgetTier[] = [
@@ -81,6 +88,11 @@ const budgetTiers: BudgetTier[] = [
     level: "Junior Expert",
     estimatedTime: "4-6 hours",
     description: "Emerging professionals with solid fundamentals",
+    expertCount: "15+ experts",
+    detailsOnHover: {
+      features: ["Written review", "Basic video feedback", "Email follow-up"],
+      avgDeliveryTime: "Same day",
+    },
   },
   {
     min: 50,
@@ -88,6 +100,11 @@ const budgetTiers: BudgetTier[] = [
     level: "Mid-Level Expert",
     estimatedTime: "2-4 hours",
     description: "Experienced reviewers with specialized skills",
+    expertCount: "8+ experts",
+    detailsOnHover: {
+      features: ["Detailed written review", "Full video walkthrough", "30min live Q&A"],
+      avgDeliveryTime: "Within 3 hours",
+    },
   },
   {
     min: 100,
@@ -95,8 +112,36 @@ const budgetTiers: BudgetTier[] = [
     level: "Senior Expert",
     estimatedTime: "1-2 hours",
     description: "Industry leaders with deep expertise",
+    expertCount: "3+ experts",
+    detailsOnHover: {
+      features: ["Comprehensive analysis", "Extended video", "60min consultation", "Follow-up session"],
+      avgDeliveryTime: "Within 2 hours",
+    },
   },
 ];
+
+// Mock reviewer avatars data
+const getReviewersForTier = (budget: number) => {
+  if (budget < 50) {
+    return {
+      visible: 4,
+      total: 15,
+      colors: ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-yellow-500"],
+    };
+  } else if (budget < 100) {
+    return {
+      visible: 3,
+      total: 8,
+      colors: ["bg-indigo-500", "bg-pink-500", "bg-teal-500"],
+    };
+  } else {
+    return {
+      visible: 2,
+      total: 3,
+      colors: ["bg-violet-500", "bg-rose-500"],
+    };
+  }
+};
 
 function getBudgetTier(budget: number): BudgetTier {
   const found = budgetTiers.find(tier => budget >= tier.min && budget <= tier.max);
@@ -104,8 +149,20 @@ function getBudgetTier(budget: number): BudgetTier {
   return budgetTiers[0]!; // Non-null assertion - array is always populated
 }
 
+// Calculate progress percentage for slider fill
+function getBudgetProgress(budget: number): number {
+  const min = 29;
+  const max = 199;
+  return ((budget - min) / (max - min)) * 100;
+}
+
 export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange }: ReviewTypeStepProps) {
   const currentTier = getBudgetTier(budget);
+  const reviewers = getReviewersForTier(budget);
+  const budgetProgress = getBudgetProgress(budget);
+  const [showWhyExpert, setShowWhyExpert] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [hoveredTier, setHoveredTier] = useState<number | null>(null);
 
   return (
     <div className="space-y-6">
@@ -195,9 +252,9 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
               ))}
             </ul>
 
-            {/* Selected indicator */}
+            {/* Selected indicator - Enhanced visibility */}
             {selectedType === option.type && (
-              <div className="absolute bottom-4 right-4 size-6 rounded-full bg-accent-blue flex items-center justify-center">
+              <div className="absolute bottom-4 right-4 size-7 rounded-full bg-accent-blue flex items-center justify-center">
                 <svg
                   className="size-4 text-white"
                   fill="none"
@@ -233,6 +290,24 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
       {/* Dynamic Budget Input for Expert Review */}
       {selectedType === "expert" && (
         <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          {/* Single Social Proof Stat - Minimal */}
+          <div className="text-center animate-in fade-in delay-100">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-peach/5 border border-accent-peach/20">
+              <Star className="size-4 text-accent-peach fill-accent-peach" />
+              <span className="text-sm font-semibold text-foreground">
+                4.9/5 from 2,000+ expert reviews
+              </span>
+            </div>
+          </div>
+
+          {/* Value Proposition - Single Sentence */}
+          <div className="text-center animate-in fade-in delay-150">
+            <p className="text-base text-muted-foreground">
+              Get detailed feedback from professional reviewers in as fast as 2 hours
+            </p>
+          </div>
+
+          {/* Main Budget Section */}
           <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
             <div className="space-y-6">
               {/* Budget Header */}
@@ -250,34 +325,54 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
                 </p>
               </div>
 
-              {/* Budget Slider */}
+              {/* Enhanced Budget Slider with Progress Fill */}
               <div className="space-y-4">
-                <input
-                  type="range"
-                  min="29"
-                  max="199"
-                  step="10"
-                  value={budget}
-                  onChange={(e) => onBudgetChange(Number(e.target.value))}
-                  className="w-full h-2 rounded-full appearance-none cursor-pointer
-                    bg-gradient-to-r from-accent-peach/20 to-accent-peach/40
-                    [&::-webkit-slider-thumb]:appearance-none
-                    [&::-webkit-slider-thumb]:size-5
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-webkit-slider-thumb]:bg-accent-peach
-                    [&::-webkit-slider-thumb]:shadow-lg
-                    [&::-webkit-slider-thumb]:transition-transform
-                    [&::-webkit-slider-thumb]:hover:scale-110
-                    [&::-webkit-slider-thumb]:active:scale-95
-                    [&::-moz-range-thumb]:size-5
-                    [&::-moz-range-thumb]:rounded-full
-                    [&::-moz-range-thumb]:bg-accent-peach
-                    [&::-moz-range-thumb]:border-0
-                    [&::-moz-range-thumb]:shadow-lg
-                    [&::-moz-range-thumb]:transition-transform
-                    [&::-moz-range-thumb]:hover:scale-110
-                    [&::-moz-range-thumb]:active:scale-95"
-                />
+                <div className="relative">
+                  {/* Progress fill background */}
+                  <div className="absolute inset-0 h-2 rounded-full bg-accent-peach/20 pointer-events-none" />
+                  <div
+                    className="absolute left-0 h-2 rounded-full bg-gradient-to-r from-accent-peach/40 to-accent-peach pointer-events-none transition-all duration-200"
+                    style={{ width: `${budgetProgress}%` }}
+                  />
+
+                  {/* Slider input - Enhanced for touch with 48px thumb */}
+                  <input
+                    type="range"
+                    min="29"
+                    max="199"
+                    step="10"
+                    value={budget}
+                    onChange={(e) => onBudgetChange(Number(e.target.value))}
+                    className="relative w-full h-12 rounded-full appearance-none cursor-pointer bg-transparent touch-manipulation
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:size-12
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:bg-accent-peach
+                      [&::-webkit-slider-thumb]:shadow-lg
+                      [&::-webkit-slider-thumb]:shadow-accent-peach/30
+                      [&::-webkit-slider-thumb]:transition-transform
+                      [&::-webkit-slider-thumb]:hover:scale-110
+                      [&::-webkit-slider-thumb]:active:scale-95
+                      [&::-webkit-slider-thumb]:ring-4
+                      [&::-webkit-slider-thumb]:ring-white
+                      [&::-webkit-slider-thumb]:cursor-grab
+                      [&::-webkit-slider-thumb]:active:cursor-grabbing
+                      [&::-moz-range-thumb]:size-12
+                      [&::-moz-range-thumb]:rounded-full
+                      [&::-moz-range-thumb]:bg-accent-peach
+                      [&::-moz-range-thumb]:border-0
+                      [&::-moz-range-thumb]:shadow-lg
+                      [&::-moz-range-thumb]:shadow-accent-peach/30
+                      [&::-moz-range-thumb]:transition-transform
+                      [&::-moz-range-thumb]:hover:scale-110
+                      [&::-moz-range-thumb]:active:scale-95
+                      [&::-moz-range-thumb]:ring-4
+                      [&::-moz-range-thumb]:ring-white
+                      [&::-moz-range-thumb]:cursor-grab
+                      [&::-moz-range-thumb]:active:cursor-grabbing"
+                    aria-label="Budget slider"
+                  />
+                </div>
 
                 {/* Budget markers */}
                 <div className="flex justify-between text-xs text-muted-foreground px-0.5">
@@ -285,6 +380,36 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
                   <span>$99</span>
                   <span>$199</span>
                 </div>
+              </div>
+
+              {/* Simplified Quick Select Buttons - Enhanced touch targets */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {budgetTiers.map((tier) => (
+                  <button
+                    key={tier.min}
+                    onClick={() => onBudgetChange(tier.min)}
+                    className={`
+                      w-full px-3 py-3 sm:py-2 min-h-[48px] rounded-lg border-2 transition-all text-sm font-medium touch-manipulation active:scale-95
+                      ${
+                        budget >= tier.min && budget <= tier.max
+                          ? "border-accent-peach bg-accent-peach/5 text-accent-peach"
+                          : "border-border text-muted-foreground hover:border-accent-peach/30 hover:text-foreground"
+                      }
+                    `}
+                    aria-label={`Set budget to ${tier.min} dollars`}
+                  >
+                    ${tier.min}
+                  </button>
+                ))}
+              </div>
+
+              {/* Simple Budget Context */}
+              <div className="text-center text-xs text-muted-foreground">
+                <p>
+                  ${budgetTiers[0]!.min}-{budgetTiers[0]!.max}: {budgetTiers[0]!.level} •
+                  ${budgetTiers[1]!.min}-{budgetTiers[1]!.max}: {budgetTiers[1]!.level} •
+                  ${budgetTiers[2]!.min}+: {budgetTiers[2]!.level}
+                </p>
               </div>
 
               {/* Tier Information Card */}
@@ -319,47 +444,154 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
                     <span className="text-foreground font-medium">Reviewer Pool</span>
                   </div>
                   <span className="text-accent-peach font-semibold">
-                    {budget < 50 ? "15+ experts" : budget < 100 ? "8+ experts" : "3+ experts"}
+                    {currentTier.expertCount}
                   </span>
                 </div>
-              </div>
-
-              {/* Quick Select Buttons */}
-              <div className="grid grid-cols-3 gap-2">
-                {budgetTiers.map((tier) => (
-                  <button
-                    key={tier.min}
-                    onClick={() => onBudgetChange(tier.min)}
-                    className={`
-                      px-3 py-2 rounded-lg border-2 transition-all text-sm font-medium
-                      ${
-                        budget >= tier.min && budget <= tier.max
-                          ? "border-accent-peach bg-accent-peach/5 text-accent-peach"
-                          : "border-border text-muted-foreground hover:border-accent-peach/30 hover:text-foreground"
-                      }
-                    `}
-                  >
-                    ${tier.min}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
 
-          {/* Testimonial */}
-          <div className="rounded-xl bg-accent-blue/5 border border-accent-blue/20 p-4">
-            <div className="flex items-start gap-3">
-              <div className="size-5 rounded-full bg-accent-blue/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Sparkles className="size-3 text-accent-blue" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-foreground italic">
-                  "The expert review completely transformed my project. The detailed feedback was worth every penny!"
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Sarah K., UX Designer
-                </p>
-              </div>
+          {/* Collapsible Sections */}
+          <div className="space-y-3">
+            {/* Compare Plans Expandable - Enhanced touch target */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <button
+                onClick={() => setShowComparison(!showComparison)}
+                className="w-full flex items-center justify-between p-4 min-h-[56px] hover:bg-accent/5 transition-colors touch-manipulation active:scale-[0.99]"
+                aria-expanded={showComparison}
+                aria-label="Compare free and expert review plans"
+              >
+                <div className="flex items-center gap-2">
+                  <Award className="size-5 text-accent-peach" />
+                  <span className="text-sm font-semibold text-foreground">Compare Free vs Expert</span>
+                </div>
+                {showComparison ? (
+                  <ChevronUp className="size-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="size-5 text-muted-foreground" />
+                )}
+              </button>
+
+              {showComparison && (
+                <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="border-t border-border pt-3 mb-3" />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                    {/* Header */}
+                    <div className="font-medium text-muted-foreground text-xs">Free Review</div>
+                    <div className="font-medium text-accent-peach text-xs">Expert Review</div>
+
+                    {/* Comparison rows */}
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="size-3 text-muted-foreground" />
+                      <span className="text-xs">AI Analysis</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Check className="size-3 text-green-600" />
+                      <span className="text-xs font-medium">AI + Human Expert</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="size-3 text-muted-foreground" />
+                      <span className="text-xs">Basic Feedback</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Check className="size-3 text-green-600" />
+                      <span className="text-xs font-medium">In-depth Analysis</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="size-3 flex-shrink-0"></span>
+                      <span className="text-xs">No video review</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Check className="size-3 text-green-600" />
+                      <span className="text-xs font-medium">Video Walkthrough</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="size-3 flex-shrink-0"></span>
+                      <span className="text-xs">No follow-up</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Check className="size-3 text-green-600" />
+                      <span className="text-xs font-medium">1-on-1 Session</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="size-3 text-muted-foreground" />
+                      <span className="text-xs">24-48 hours</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-foreground">
+                      <Clock className="size-3 text-green-600" />
+                      <span className="text-xs font-medium">2-6 hours</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Why Expert? Expandable Section - Enhanced touch target */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+              <button
+                onClick={() => setShowWhyExpert(!showWhyExpert)}
+                className="w-full flex items-center justify-between p-4 min-h-[56px] hover:bg-accent/5 transition-colors touch-manipulation active:scale-[0.99]"
+                aria-expanded={showWhyExpert}
+                aria-label="Learn why to choose expert review"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="size-5 text-accent-peach" />
+                  <span className="text-sm font-semibold text-foreground">Why choose Expert Review?</span>
+                </div>
+                {showWhyExpert ? (
+                  <ChevronUp className="size-5 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="size-5 text-muted-foreground" />
+                )}
+              </button>
+
+              {showWhyExpert && (
+                <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="border-t border-border pt-3" />
+
+                  <div className="space-y-3 text-sm">
+                    <div className="flex gap-3">
+                      <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center flex-shrink-0">
+                        <Users className="size-4 text-accent-blue" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">Personalized Human Touch</p>
+                        <p className="text-xs text-muted-foreground">
+                          Get feedback from real professionals who understand your industry and context, not just algorithms.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="size-8 rounded-lg bg-accent-peach/10 flex items-center justify-center flex-shrink-0">
+                        <Award className="size-4 text-accent-peach" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">Actionable Insights</p>
+                        <p className="text-xs text-muted-foreground">
+                          Receive detailed, implementable recommendations based on real-world experience and best practices.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="size-8 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="size-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground mb-1">Faster Results</p>
+                        <p className="text-xs text-muted-foreground">
+                          Expert reviews are prioritized with response times as fast as 1-2 hours, so you can iterate quickly.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

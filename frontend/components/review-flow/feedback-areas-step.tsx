@@ -359,7 +359,8 @@ export function FeedbackAreasStep({
           {selectedAreas.length > 0 && (
             <button
               onClick={() => onAreasChange([])}
-              className="text-sm font-medium text-accent-blue hover:text-accent-blue/80 transition-colors"
+              className="text-sm font-medium text-accent-blue hover:text-accent-blue/80 transition-colors min-h-[44px] px-3 -mr-3 touch-manipulation active:scale-95"
+              aria-label="Clear all selections"
             >
               Clear all
             </button>
@@ -386,12 +387,12 @@ export function FeedbackAreasStep({
                   }
                 `}
               >
-                {/* Checkbox Icon */}
+                {/* Checkbox Icon - Enhanced for touch */}
                 <div className="flex-shrink-0 pt-0.5">
                   {isSelected ? (
-                    <CheckSquare className="size-5 text-accent-blue" />
+                    <CheckSquare className="size-6 text-accent-blue" />
                   ) : (
-                    <Square className="size-5 text-muted-foreground group-hover:text-accent-blue/50 transition-colors" />
+                    <Square className="size-6 text-muted-foreground group-hover:text-accent-blue/50 transition-colors" />
                   )}
                 </div>
 
@@ -425,7 +426,8 @@ export function FeedbackAreasStep({
             placeholder="e.g., Brand consistency, Mobile responsiveness..."
             value={customArea}
             onChange={(e) => onCustomAreaChange(e.target.value)}
-            className="text-base"
+            autoComplete="off"
+            className="text-base sm:text-sm"
           />
           <p className="text-xs text-muted-foreground">
             Describe any specific feedback areas not listed above
