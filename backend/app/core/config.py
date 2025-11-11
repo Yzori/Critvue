@@ -33,6 +33,14 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/critvue"
+    DATABASE_ECHO: bool = False  # Set to True for SQL query logging
+
+    # Connection Pool Settings (for PostgreSQL)
+    DATABASE_POOL_SIZE: int = 5  # Number of connections to maintain in pool
+    DATABASE_MAX_OVERFLOW: int = 10  # Max connections beyond pool_size
+    DATABASE_POOL_TIMEOUT: int = 30  # Seconds to wait for connection from pool
+    DATABASE_POOL_RECYCLE: int = 3600  # Recycle connections after N seconds (1 hour)
+    DATABASE_POOL_PRE_PING: bool = True  # Verify connections before using them
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

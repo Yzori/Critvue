@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.api import auth, password_reset
 from app.core.logging_config import setup_logging
+from app.db.session import close_db
 
 # Setup logging
 setup_logging(level=settings.LOG_LEVEL)
@@ -62,3 +63,9 @@ async def health_check():
         "status": "healthy",
         "service": "critvue-backend"
     }
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on application shutdown"""
+    await close_db()
