@@ -103,7 +103,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         case "down":
           return "text-red-600";
         default:
-          return "text-foreground-muted";
+          return "text-muted-foreground";
       }
     };
 
@@ -183,7 +183,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
             >
               {icon}
             </div>
-            <p className="text-xs sm:text-sm font-medium text-foreground-muted truncate">{label}</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{label}</p>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
                 </span>
               )}
               {comparison && (
-                <span className="text-[10px] sm:text-xs text-foreground-muted hidden sm:inline">
+                <span className="text-[10px] sm:text-xs text-muted-foreground hidden sm:inline">
                   {comparison}
                 </span>
               )}

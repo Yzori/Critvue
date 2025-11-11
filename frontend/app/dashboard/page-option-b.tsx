@@ -1,16 +1,11 @@
 "use client";
 
 /**
- * Dashboard Home Page - Modern 2025 Redesign
+ * Dashboard Home Page - OPTION B: Compact Grid Layout
  *
- * Key Features:
- * - Enhanced tiered shadow system for depth
- * - Sparkline visualizations in stat cards
- * - Sophisticated micro-interactions
- * - Mobile-first responsive design
- * - Modern hover states with scale + shadow
- * - Improved loading states with shimmer
- * - Touch-friendly interactions (44px+ targets)
+ * Alternative mobile implementation showing all Quick Actions in a 2x2 grid
+ * instead of horizontal scroll. This maximizes content visibility at the cost
+ * of larger touch targets and visual hierarchy.
  */
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,17 +25,13 @@ import {
   ArrowRight,
   Bell,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import { Suspense, useState, useRef } from "react";
+import { Suspense, useState } from "react";
 
 function DashboardContent() {
   const { user } = useAuth();
   const [mobileSection, setMobileSection] = useState<"overview" | "activity" | "account">("overview");
   const [accountExpanded, setAccountExpanded] = useState(false);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Sample trend data for sparklines
   const projectTrendData = [1, 1, 2, 2, 3, 3, 3];
@@ -51,50 +42,30 @@ function DashboardContent() {
   // Quick Actions data
   const quickActions = [
     {
-      icon: <Plus className="size-6 text-white" />,
+      icon: <Plus className="size-6 sm:size-8 text-white" />,
       title: "New Project",
       description: "Start a new creative project",
       gradientClass: "from-accent-blue to-blue-600",
     },
     {
-      icon: <MessageSquare className="size-6 text-white" />,
+      icon: <MessageSquare className="size-6 sm:size-8 text-white" />,
       title: "Request Feedback",
       description: "Get AI or human reviews",
       gradientClass: "from-accent-peach to-orange-600",
     },
     {
-      icon: <FileText className="size-6 text-white" />,
+      icon: <FileText className="size-6 sm:size-8 text-white" />,
       title: "View Reports",
       description: "See detailed analytics",
       gradientClass: "from-accent-blue to-indigo-600",
     },
     {
-      icon: <Users className="size-6 text-white" />,
+      icon: <Users className="size-6 sm:size-8 text-white" />,
       title: "Manage Team",
       description: "Invite collaborators",
       gradientClass: "from-accent-peach to-pink-600",
     },
   ];
-
-  // Handle scroll position tracking for card indicators
-  const handleCardScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    const container = e.currentTarget;
-    const cardWidth = container.scrollWidth / quickActions.length;
-    const index = Math.round(scrollLeft / cardWidth);
-    setActiveCardIndex(Math.min(index, quickActions.length - 1));
-  };
-
-  // Scroll to specific card
-  const scrollToCard = (index: number) => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const cardWidth = container.scrollWidth / quickActions.length;
-    container.scrollTo({
-      left: cardWidth * index,
-      behavior: "smooth",
-    });
-  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 pb-24 lg:pb-8">
@@ -215,83 +186,14 @@ function DashboardContent() {
             </div>
           </div>
 
-          {/* Mobile: Horizontal scroll with centered cards + navigation */}
-          <div className="lg:hidden">
-            <div className="relative">
-              {/* Scrollable container - centered with padding */}
-              <div
-                ref={scrollContainerRef}
-                className="overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
-                onScroll={handleCardScroll}
-              >
-                <div className="flex gap-4 px-8">
-                  {quickActions.map((action, i) => (
-                    <div key={i} className="snap-center flex-shrink-0 w-[calc(100vw-96px)] max-w-[280px]">
-                      <ActionButton {...action} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Navigation arrows - outside cards */}
-              {activeCardIndex > 0 && (
-                <button
-                  onClick={() => scrollToCard(activeCardIndex - 1)}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 size-8 rounded-full
-                    bg-background border border-border shadow-md
-                    flex items-center justify-center
-                    hover:bg-muted transition-colors"
-                  aria-label="Previous card"
-                >
-                  <ChevronLeft className="size-5 text-foreground" />
-                </button>
-              )}
-
-              {activeCardIndex < quickActions.length - 1 && (
-                <button
-                  onClick={() => scrollToCard(activeCardIndex + 1)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 size-8 rounded-full
-                    bg-background border border-border shadow-md
-                    flex items-center justify-center
-                    hover:bg-muted transition-colors"
-                  aria-label="Next card"
-                >
-                  <ChevronRight className="size-5 text-foreground" />
-                </button>
-              )}
-            </div>
-
-            {/* Swipe hint + dots indicator */}
-            <div className="flex flex-col items-center gap-2 mt-4">
-              {/* Scroll position dots */}
-              <div className="flex justify-center gap-1.5" role="tablist" aria-label="Quick action cards">
-                {quickActions.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => scrollToCard(i)}
-                    role="tab"
-                    aria-selected={i === activeCardIndex}
-                    aria-label={`Go to card ${i + 1} of ${quickActions.length}`}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === activeCardIndex
-                        ? 'w-6 bg-accent-blue'
-                        : 'w-1.5 bg-border hover:bg-muted-foreground/50'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              {/* Swipe hint text */}
-              {activeCardIndex === 0 && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1 animate-pulse">
-                  <span>Swipe to see more</span>
-                  <ChevronRight className="size-3" />
-                </p>
-              )}
-            </div>
+          {/* Mobile: Compact 2x2 grid - All actions visible */}
+          <div className="lg:hidden grid grid-cols-2 gap-3">
+            {quickActions.map((action, i) => (
+              <ActionButton key={i} {...action} compact />
+            ))}
           </div>
 
-          {/* Desktop: Grid layout */}
+          {/* Desktop: 2x2 Grid layout (same as before) */}
           <div className="hidden lg:grid lg:grid-cols-2 gap-4">
             {quickActions.map((action, i) => (
               <ActionButton key={i} {...action} />
@@ -435,41 +337,46 @@ interface ActionButtonProps {
   title: string;
   description: string;
   gradientClass: string;
+  compact?: boolean;
 }
 
-function ActionButton({ icon, title, description, gradientClass }: ActionButtonProps) {
+function ActionButton({ icon, title, description, gradientClass, compact = false }: ActionButtonProps) {
   return (
     <button
-      className="group relative overflow-hidden rounded-2xl border border-border bg-background
+      className={`group relative overflow-hidden rounded-2xl border border-border bg-background
         hover:border-accent-blue/30 hover:shadow-lg
         active:scale-[0.98]
-        transition-all duration-200 text-left p-6 min-h-[140px] flex flex-col justify-between"
+        transition-all duration-200 text-left flex flex-col justify-between
+        ${compact ? 'p-4 min-h-[110px]' : 'p-6 min-h-[140px]'}`}
       onClick={() => {
         // Handle navigation
       }}
     >
       {/* Icon with gradient background */}
-      <div className={`size-12 rounded-xl bg-gradient-to-br ${gradientClass}
-        flex items-center justify-center mb-4
+      <div className={`rounded-xl bg-gradient-to-br ${gradientClass}
+        flex items-center justify-center mb-3
         group-hover:scale-110 group-hover:shadow-lg
-        transition-all duration-200`}>
+        transition-all duration-200
+        ${compact ? 'size-10' : 'size-12'}`}>
         {icon}
       </div>
 
       {/* Text content */}
       <div>
-        <h3 className="font-semibold text-base mb-1 text-foreground group-hover:text-accent-blue transition-colors">
+        <h3 className={`font-semibold mb-1 text-foreground group-hover:text-accent-blue transition-colors
+          ${compact ? 'text-sm' : 'text-base'}`}>
           {title}
         </h3>
-        <p className="text-xs text-muted-foreground">
+        <p className={`text-muted-foreground ${compact ? 'text-[10px] leading-tight' : 'text-xs'}`}>
           {description}
         </p>
       </div>
 
-      {/* Arrow indicator */}
-      <ArrowRight className="absolute bottom-4 right-4 size-4 text-muted-foreground
+      {/* Arrow indicator - smaller on compact */}
+      <ArrowRight className={`absolute bottom-3 right-3 text-muted-foreground
         group-hover:text-accent-blue group-hover:translate-x-1
-        transition-all duration-200" />
+        transition-all duration-200
+        ${compact ? 'size-3' : 'size-4'}`} />
     </button>
   );
 }
