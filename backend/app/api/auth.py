@@ -69,10 +69,19 @@ async def register(
 
     # Create new user
     hashed_password = get_password_hash(user_data.password)
+
+    # Auto-generate full_name from email prefix if not provided
+    # Example: "john.doe@example.com" -> "john.doe"
+    full_name = user_data.full_name
+    if not full_name:
+        # Extract username part before @ symbol
+        email_prefix = user_data.email.split('@')[0]
+        full_name = email_prefix
+
     new_user = User(
         email=user_data.email,
         hashed_password=hashed_password,
-        full_name=user_data.full_name,
+        full_name=full_name,
     )
 
     db.add(new_user)

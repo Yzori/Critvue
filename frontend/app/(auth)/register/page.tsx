@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const { register } = useAuth();
 
   // Form state
-  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,7 +33,6 @@ export default function RegisterPage() {
 
   // Form validation errors
   const [errors, setErrors] = useState({
-    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -46,19 +44,11 @@ export default function RegisterPage() {
    */
   const validateForm = (): boolean => {
     const newErrors = {
-      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
       terms: "",
     };
-
-    // Full name validation
-    if (!fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    } else if (fullName.trim().length < 2) {
-      newErrors.fullName = "Name must be at least 2 characters";
-    }
 
     // Email validation
     if (!email) {
@@ -108,7 +98,6 @@ export default function RegisterPage() {
       await register({
         email,
         password,
-        full_name: fullName.trim(),
       });
       // Navigation happens in the register function
     } catch (err) {
@@ -140,22 +129,6 @@ export default function RegisterPage() {
 
       {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Full Name Field */}
-        <FormField
-          label="Full Name"
-          type="text"
-          value={fullName}
-          onChange={(e) => {
-            setFullName(e.target.value);
-            if (errors.fullName) setErrors({ ...errors, fullName: "" });
-          }}
-          error={errors.fullName}
-          placeholder="John Doe"
-          autoComplete="name"
-          required
-          disabled={isLoading}
-        />
-
         {/* Email Field */}
         <FormField
           label="Email"

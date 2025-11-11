@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Critvue Frontend Registration Test</h1>
+    <p>This test simulates exactly what the Next.js frontend does when registering a user.</p>
+
+    <div class="test-section">
+        <h2>Test Configuration</h2>
+        <p><strong>API URL:</strong> <span id="apiUrl">http://localhost:8000/api/v1/auth/register</span></p>
+        <p><strong>Test Email:</strong> <span id="testEmail">browsertest-<span id="timestamp"></span>@example.com</span></p>
+        <p><strong>Password:</strong> TestPass123!</p>
+        <p><strong>Full Name:</strong> Browser Test User</p>
+    </div>
+
+    <button onclick="runTest()">Run Registration Test</button>
+
+    <div id="results"></div>
+
+    <script>
+        // Set timestamp
+        document.getElementById('timestamp').textContent = Date.now();
+
+        async function runTest() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section"><p>Running test...</p></div>';
+
+            const apiUrl = 'http://localhost:8000/api/v1/auth/register';
+            const testEmail = `browsertest-${Date.now()}@example.com`;
+
+            const credentials = {
+                email: testEmail,
+                password: 'TestPass123!',
+                full_name: 'Browser Test User'
+            };
+
+            let testResults = '';
+
+            // Step 1: Check if API is reachable
+            testResults += '<div class="test-section"><h3>Step 1: API Health Check</h3>';
+            try {
+                const healthResponse = await fetch('http://localhost:8000/health');
+                if (healthResponse.ok) {
+                    testResults += '<p class="success">✓ Backend is reachable</p>';
+                } else {
+                    testResults += `<p class="error">✗ Backend returned ${healthResponse.status}</p>`;
+                }
+            } catch (error) {
+                testResults += `<p class="error">✗ Cannot reach backend: ${error.message}</p>`;
+            }
+            testResults += '</div>';
+
+            // Step 2: Test registration
+            testResults += '<div class="test-section"><h3>Step 2: Registration Request</h3>';
+            testResults += '<p><strong>Payload:</strong></p>';
+            testResults += `<pre>${JSON.stringify(credentials, null, 2)}</pre>`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+
+                testResults += `<p><strong>Status:</strong> ${response.status} ${response.statusText}</p>`;
+
+                const responseData = await response.json();
+                testResults += '<p><strong>Response:</strong></p>';
+                testResults += `<pre>${JSON.stringify(responseData, null, 2)}</pre>`;
+
+                if (response.status === 201) {
+                    testResults += '<p class="success">✓ ✓ ✓ REGISTRATION SUCCESSFUL! ✓ ✓ ✓</p>';
+                    testResults += '<p>The frontend registration endpoint is working correctly.</p>';
+                } else if (response.status === 422) {
+                    testResults += '<p class="error">✗ Validation Error (422)</p>';
+                    testResults += '<p><strong>Possible causes:</strong></p>';
+                    testResults += '<ul>';
+                    testResults += '<li>Password doesn\'t meet requirements (min 8 chars, uppercase, lowercase, digit, special char)</li>';
+                    testResults += '<li>Email format is invalid</li>';
+                    testResults += '<li>Full name is missing or too short</li>';
+                    testResults += '</ul>';
+
+                    if (Array.isArray(responseData.detail)) {
+                        testResults += '<p><strong>Validation errors:</strong></p><ul>';
+                        responseData.detail.forEach(err => {
+                            testResults += `<li>${err.loc.join('.')}: ${err.msg}</li>`;
+                        });
+                        testResults += '</ul>';
+                    }
+                } else if (response.status === 400) {
+                    testResults += '<p class="error">✗ Bad Request (400)</p>';
+                    testResults += '<p>Email may already be registered.</p>';
+                } else {
+                    testResults += `<p class="error">✗ Unexpected error (HTTP ${response.status})</p>`;
+                }
+            } catch (error) {
+                testResults += `<p class="error">✗ Request failed: ${error.message}</p>`;
+                testResults += '<p><strong>Possible causes:</strong></p>';
+                testResults += '<ul>';
+                testResults += '<li>CORS error (check browser console)</li>';
+                testResults += '<li>Network error</li>';
+                testResults += '<li>Backend is not running</li>';
+                testResults += '</ul>';
+            }
+            testResults += '</div>';
+
+            resultsDiv.innerHTML = testResults;
+        }
+
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            setTimeout(runTest, 500);
+        });
+    </script>
+</body>
+</html>
