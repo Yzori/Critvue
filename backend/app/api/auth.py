@@ -1,9 +1,11 @@
 """Authentication API endpoints"""
 
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.models.user import User
@@ -12,10 +14,13 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("3/hour")  # 3 registrations per hour per IP
 async def register(
+    request: Request,
     user_data: UserCreate,
     db: AsyncSession = Depends(get_db)
 ) -> User:
@@ -37,9 +42,10 @@ async def register(
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
+        # Generic error to prevent email enumeration
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Unable to complete registration. Please try a different email or contact support."
         )
 
     # Create new user
@@ -58,7 +64,9 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("5/minute")  # 5 login attempts per minute per IP
 async def login(
+    request: Request,
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db)
 ) -> dict:
@@ -79,15 +87,17 @@ async def login(
     result = await db.execute(select(User).where(User.email == credentials.email))
     user = result.scalar_one_or_none()
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    # Always verify password to prevent timing attacks
+    # Even if user doesn't exist, we still run bcrypt
+    if user:
+        password_valid = verify_password(credentials.password, user.hashed_password)
+    else:
+        # Run password hash to maintain consistent timing
+        get_password_hash(credentials.password)
+        password_valid = False
 
-    # Verify password
-    if not verify_password(credentials.password, user.hashed_password):
+    # Generic error message to prevent email enumeration
+    if not user or not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -98,7 +108,7 @@ async def login(
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
+            detail="Account is inactive"
         )
 
     # Update last login

@@ -26,8 +26,10 @@ ENV/
 env/
 .venv
 
-# Environment variables
+# Environment variables - NEVER commit these!
 .env
+.env.*
+!.env.example
 .env.local
 
 # IDE
