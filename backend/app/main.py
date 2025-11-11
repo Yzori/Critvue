@@ -6,6 +6,7 @@ Main entry point for the backend API
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.api import auth
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -15,10 +16,13 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# Include routers
+app.include_router(auth.router, prefix="/api/v1")
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
