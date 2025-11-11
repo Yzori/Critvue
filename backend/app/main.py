@@ -19,7 +19,10 @@ from app.db.session import close_db, get_db
 setup_logging(level=settings.LOG_LEVEL)
 
 # Initialize rate limiter
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(
+    key_func=get_remote_address,
+    enabled=settings.ENABLE_RATE_LIMITING
+)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -31,7 +34,8 @@ app = FastAPI(
 
 # Add rate limiter to app state
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+if settings.ENABLE_RATE_LIMITING:
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1")

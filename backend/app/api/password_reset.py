@@ -25,10 +25,11 @@ from app.services.password_reset import (
 )
 from app.services.email import send_password_reset_email
 from app.core.logging_config import security_logger
+from app.core.config import settings
 
 
 router = APIRouter(prefix="/auth/password-reset", tags=["Password Reset"])
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
 
 
 def get_client_ip(request: Request) -> Optional[str]:
@@ -49,7 +50,7 @@ def get_user_agent(request: Request) -> Optional[str]:
 
 
 @router.post("/request", response_model=PasswordResetResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("3/hour")  # 3 password reset requests per hour per IP
+@limiter.limit(settings.RATE_LIMIT_PASSWORD_RESET)
 async def request_password_reset(
     request: Request,
     reset_request: PasswordResetRequest,
@@ -158,7 +159,7 @@ async def request_password_reset(
 
 
 @router.post("/verify", response_model=PasswordResetVerifyResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("10/minute")  # 10 token verification requests per minute per IP
+@limiter.limit(settings.RATE_LIMIT_RESET_VERIFY)
 async def verify_password_reset_token(
     request: Request,
     verify_request: PasswordResetVerify,
@@ -222,7 +223,7 @@ async def verify_password_reset_token(
 
 
 @router.post("/confirm", response_model=PasswordResetResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("5/minute")  # 5 password reset confirmations per minute per IP
+@limiter.limit(settings.RATE_LIMIT_RESET_CONFIRM)
 async def confirm_password_reset(
     request: Request,
     reset_confirm: PasswordResetConfirm,

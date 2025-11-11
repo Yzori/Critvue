@@ -23,13 +23,14 @@ from app.core.security import (
 from app.api.deps import get_current_user, security
 from app.services.redis_service import redis_service
 from app.core.logging_config import security_logger
+from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-@limiter.limit("3/hour")  # 3 registrations per hour per IP
+@limiter.limit(settings.RATE_LIMIT_REGISTRATION)
 async def register(
     request: Request,
     user_data: UserCreate,
@@ -85,7 +86,7 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
-@limiter.limit("5/minute")  # 5 login attempts per minute per IP
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(
     request: Request,
     credentials: UserLogin,
@@ -182,7 +183,7 @@ async def get_current_user_info(
 
 
 @router.post("/refresh", response_model=Token)
-@limiter.limit("10/minute")  # 10 refresh attempts per minute
+@limiter.limit(settings.RATE_LIMIT_REFRESH)
 async def refresh_access_token(
     request: Request,
     token_data: TokenRefresh,

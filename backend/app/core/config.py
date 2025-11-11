@@ -61,6 +61,15 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@critvue.com"
     EMAIL_API_KEY: str = ""
 
+    # Rate Limiting
+    ENABLE_RATE_LIMITING: bool = True  # Set to False to disable rate limiting entirely
+    RATE_LIMIT_REGISTRATION: str = "3/hour"  # Registrations per IP (dev: 1000/hour, prod: 3/hour)
+    RATE_LIMIT_LOGIN: str = "5/minute"  # Login attempts per IP (dev: 1000/minute, prod: 5/minute)
+    RATE_LIMIT_REFRESH: str = "10/minute"  # Token refresh per IP (dev: 1000/minute, prod: 10/minute)
+    RATE_LIMIT_PASSWORD_RESET: str = "3/hour"  # Password reset requests per IP (dev: 1000/hour, prod: 3/hour)
+    RATE_LIMIT_RESET_VERIFY: str = "10/minute"  # Reset token verification per IP (dev: 1000/minute, prod: 10/minute)
+    RATE_LIMIT_RESET_CONFIRM: str = "5/minute"  # Password reset confirmation per IP (dev: 1000/minute, prod: 5/minute)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True

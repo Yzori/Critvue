@@ -134,8 +134,8 @@ main() {
 
     print_info "Logging in with credentials"
     login_response=$(curl -s -X POST "${API_BASE}/auth/login" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "username=$TEST_EMAIL&password=$TEST_PASSWORD")
+        -H "Content-Type: application/json" \
+        -d "{\"email\": \"$TEST_EMAIL\", \"password\": \"$TEST_PASSWORD\"}")
 
     if echo "$login_response" | grep -q "access_token"; then
         print_success "User login successful"
@@ -197,7 +197,7 @@ main() {
     print_header "Step 6: Testing Password Reset Request"
 
     print_info "Requesting password reset for $TEST_EMAIL"
-    reset_request_response=$(api_request POST "/password-reset/request" "{
+    reset_request_response=$(api_request POST "/auth/password-reset/request" "{
         \"email\": \"$TEST_EMAIL\"
     }")
 
@@ -225,8 +225,8 @@ main() {
 
     print_info "Attempting login with wrong password"
     invalid_login=$(curl -s -X POST "${API_BASE}/auth/login" \
-        -H "Content-Type: application/x-www-form-urlencoded" \
-        -d "username=$TEST_EMAIL&password=WrongPassword123!")
+        -H "Content-Type: application/json" \
+        -d "{\"email\": \"$TEST_EMAIL\", \"password\": \"WrongPassword123!\"}")
 
     if echo "$invalid_login" | grep -q "401"; then
         print_success "Invalid credentials properly rejected"
