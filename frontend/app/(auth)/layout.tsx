@@ -1,0 +1,68 @@
+/**
+ * Authentication Layout
+ * Shared layout for all auth pages with Critvue branding
+ * Mobile-first responsive design with centered content
+ */
+
+import Link from "next/link";
+
+export default function AuthLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header with Logo */}
+      <header className="w-full border-b border-border-light">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-foreground hover:text-accent-blue transition-colors"
+          >
+            <div className="size-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center">
+              <span className="text-white font-bold text-lg">C</span>
+            </div>
+            <span className="text-xl font-semibold">Critvue</span>
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Content - Centered Card */}
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="w-full max-w-md">
+          {children}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-border-light py-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+            <p>&copy; 2025 Critvue. All rights reserved.</p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/privacy"
+                className="hover:text-foreground transition-colors"
+              >
+                Privacy
+              </Link>
+              <Link
+                href="/terms"
+                className="hover:text-foreground transition-colors"
+              >
+                Terms
+              </Link>
+              <Link
+                href="/help"
+                className="hover:text-foreground transition-colors"
+              >
+                Help
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
