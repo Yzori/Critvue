@@ -24,6 +24,7 @@ from app.services.password_reset import (
     RESET_TOKEN_EXPIRE_MINUTES
 )
 from app.services.email import send_password_reset_email
+from app.core.logging_config import security_logger
 
 
 router = APIRouter(prefix="/auth/password-reset", tags=["Password Reset"])
@@ -123,6 +124,9 @@ async def request_password_reset(
                 user_name=user.full_name
             )
 
+            # Log successful password reset request
+            security_logger.log_password_reset_request(user.email, request)
+
         except Exception as e:
             # Log the error but don't reveal it to the user
             # In production, you'd want proper error logging here
@@ -131,6 +135,19 @@ async def request_password_reset(
             logger.error(f"Failed to send password reset email: {e}")
 
             # Still return success to prevent email enumeration
+            pass
+    else:
+        # Log password reset request for non-existent or inactive user
+        # This helps detect enumeration attempts
+        if user and not user.is_active:
+            security_logger.log_auth_failure(
+                reset_request.email,
+                request,
+                reason="inactive_account",
+                event_type="password_reset"
+            )
+        else:
+            # Don't log non-existent email attempts to avoid filling logs
             pass
 
     # Always return the same response, whether user exists or not
@@ -252,7 +269,7 @@ async def confirm_password_reset(
         }
     """
     try:
-        # Reset password using token
+        # Reset password using token (this also returns the user)
         success = await reset_password(
             db=db,
             token=reset_confirm.token,
@@ -260,12 +277,24 @@ async def confirm_password_reset(
         )
 
         if success:
+            # Get user email for logging
+            reset_token_obj, user = await verify_reset_token(db, reset_confirm.token)
+            if user:
+                security_logger.log_password_reset_success(user.email, request)
+
             return PasswordResetResponse(
                 message="Password reset successful",
                 detail="Your password has been updated. You can now log in with your new password."
             )
 
-    except HTTPException:
+    except HTTPException as http_exc:
+        # Log failed password reset attempt
+        security_logger.log_auth_failure(
+            "unknown",
+            request,
+            reason=str(http_exc.detail),
+            event_type="password_reset_confirm"
+        )
         # Re-raise HTTP exceptions (like invalid token)
         raise
     except Exception as e:

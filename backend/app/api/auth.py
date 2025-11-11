@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from slowapi import Limiter
@@ -21,6 +22,7 @@ from app.core.security import (
 )
 from app.api.deps import get_current_user, security
 from app.services.redis_service import redis_service
+from app.core.logging_config import security_logger
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address)
@@ -51,6 +53,13 @@ async def register(
     existing_user = result.scalar_one_or_none()
 
     if existing_user:
+        # Log failed registration attempt
+        security_logger.log_auth_failure(
+            user_data.email,
+            request,
+            reason="email_already_exists",
+            event_type="register"
+        )
         # Generic error to prevent email enumeration
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -68,6 +77,9 @@ async def register(
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
+
+    # Log successful registration
+    security_logger.log_auth_success(new_user.email, request, event_type="register")
 
     return new_user
 
@@ -107,6 +119,13 @@ async def login(
 
     # Generic error message to prevent email enumeration
     if not user or not password_valid:
+        # Log failed login attempt
+        security_logger.log_auth_failure(
+            credentials.email,
+            request,
+            reason="invalid_credentials",
+            event_type="login"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -115,6 +134,13 @@ async def login(
 
     # Check if user is active
     if not user.is_active:
+        # Log inactive account login attempt
+        security_logger.log_auth_failure(
+            credentials.email,
+            request,
+            reason="inactive_account",
+            event_type="login"
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is inactive"
@@ -128,6 +154,9 @@ async def login(
     token_data = {"user_id": user.id, "email": user.email}
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
+
+    # Log successful login
+    security_logger.log_auth_success(user.email, request, event_type="login")
 
     return {
         "access_token": access_token,
@@ -177,6 +206,13 @@ async def refresh_access_token(
     payload = decode_refresh_token(token_data.refresh_token)
 
     if not payload:
+        # Log failed token refresh
+        security_logger.log_auth_failure(
+            "unknown",
+            request,
+            reason="invalid_refresh_token",
+            event_type="token_refresh"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
@@ -185,6 +221,13 @@ async def refresh_access_token(
 
     user_id: Optional[int] = payload.get("user_id")
     if not user_id:
+        # Log failed token refresh
+        security_logger.log_auth_failure(
+            "unknown",
+            request,
+            reason="missing_user_id_in_token",
+            event_type="token_refresh"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
@@ -196,6 +239,14 @@ async def refresh_access_token(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
+        # Log failed token refresh
+        email = payload.get("email", "unknown")
+        security_logger.log_auth_failure(
+            email,
+            request,
+            reason="user_not_found_or_inactive",
+            event_type="token_refresh"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
@@ -206,6 +257,9 @@ async def refresh_access_token(
     new_token_data = {"user_id": user.id, "email": user.email}
     new_access_token = create_access_token(data=new_token_data)
     new_refresh_token = create_refresh_token(data=new_token_data)
+
+    # Log successful token refresh
+    security_logger.log_auth_success(user.email, request, event_type="token_refresh")
 
     return {
         "access_token": new_access_token,
@@ -241,6 +295,14 @@ async def logout(
         if ttl > 0:
             # Add token to blacklist
             redis_service.blacklist_token(token, ttl)
+            # Log token blacklisting
+            security_logger.log_token_blacklist(current_user.email, reason="logout")
+
+    # Log logout event (we need request object for this)
+    # Since we don't have request in dependencies, we'll use a simpler log
+    from app.core.logging_config import logging
+    logger = logging.getLogger("security")
+    logger.info(f"LOGOUT | email={current_user.email}")
 
     return {
         "message": "Successfully logged out",
