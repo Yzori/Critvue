@@ -6,26 +6,36 @@ You are working on **Critvue**, a hybrid AI-human feedback platform for creators
 
 Before starting any work on this project, you must read and understand the following documentation files:
 
-1. **Product Brief**: `/home/user/Critvue/docs/crtivue_product_brief.md`
+1. **Product Brief**: `/home/user/Critvue/docs/product/critvue_product_brief.md`
    - Product vision, target users, problems being solved
    - Key features and business model
    - Expansion potential
 
-2. **Tech Stack**: `/home/user/Critvue/docs/critvue_techstack.md`
+2. **Tech Stack**: `/home/user/Critvue/docs/technical/critvue_techstack.md`
    - Frontend: Next.js 14, Tailwind CSS, shadcn/ui, Framer Motion
    - Backend: FastAPI, PostgreSQL, Supabase/Railway
    - AI: OpenAI GPT-4-Turbo, Claude 2.1/3
    - Auth, payments, hosting, and infrastructure details
 
-3. **Brand & Design System**: `/home/user/Critvue/docs/critvue_brand_style.md`
+3. **Brand & Design System**: `/home/user/Critvue/docs/product/critvue_brand_style.md`
    - Design philosophy (Apple-like minimalism with creative warmth)
    - Color palette, typography, UI elements
    - Motion and interaction patterns
 
-4. **Mobile-First UX Guide**: `/home/user/Critvue/docs/mobile_guide.md`
+4. **Mobile-First UX Guide**: `/home/user/Critvue/docs/product/mobile_guide.md`
    - Mobile design philosophy and layout principles
    - Key screens and user flows
    - Interaction patterns and accessibility requirements
+
+## Documentation Structure
+
+All documentation is organized in `/home/user/Critvue/docs/`:
+- **docs/product/** - Product vision, brand, and design guidelines
+- **docs/technical/** - Technical architecture and implementation plans
+- **docs/frontend/** - Frontend-specific documentation
+- **backend/docs/** - Backend-specific documentation
+
+See `/home/user/Critvue/docs/README.md` for the complete documentation index.
 
 ## Project Principles
 
