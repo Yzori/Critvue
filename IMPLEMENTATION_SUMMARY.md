@@ -84,10 +84,8 @@ A production-ready, secure password reset system has been successfully implement
 7. `/backend/tests/test_password_reset.py` - Comprehensive test suite
 
 ### Documentation
-8. `/backend/docs/PASSWORD_RESET_GUIDE.md` - Complete implementation guide
-9. `/backend/docs/PASSWORD_RESET_ARCHITECTURE.md` - Architecture and design
-10. `/backend/docs/PASSWORD_RESET_QUICK_REFERENCE.md` - Quick reference card
-11. `/home/user/Critvue/IMPLEMENTATION_SUMMARY.md` - This file
+8. `/backend/docs/PASSWORD_RESET.md` - Complete password reset documentation
+9. `/home/user/Critvue/IMPLEMENTATION_SUMMARY.md` - This file
 
 ### Modified Files
 - `/backend/app/main.py` - Registered password reset router
@@ -327,19 +325,13 @@ Models → Services → API Endpoints
 ## Documentation
 
 ### Available Documentation
-1. **Quick Reference**: `/backend/docs/PASSWORD_RESET_QUICK_REFERENCE.md`
-   - API endpoints, examples, troubleshooting
+1. **Password Reset Guide**: `/backend/docs/PASSWORD_RESET.md`
+   - Complete documentation including API endpoints, architecture, security features, deployment
 
-2. **Implementation Guide**: `/backend/docs/PASSWORD_RESET_GUIDE.md`
-   - Detailed documentation, security features, deployment
-
-3. **Architecture**: `/backend/docs/PASSWORD_RESET_ARCHITECTURE.md`
-   - System design, flow diagrams, database schema
-
-4. **API Docs**: `http://localhost:8000/api/docs`
+2. **API Docs**: `http://localhost:8000/api/docs`
    - Interactive Swagger UI
 
-5. **Tests**: `/backend/tests/test_password_reset.py`
+3. **Tests**: `/backend/tests/test_password_reset.py`
    - Usage examples, test cases
 
 ## Next Steps
@@ -367,7 +359,7 @@ Models → Services → API Endpoints
 ## Support and Maintenance
 
 ### Troubleshooting
-See `/backend/docs/PASSWORD_RESET_QUICK_REFERENCE.md` for common issues
+See `/backend/docs/PASSWORD_RESET.md` for common issues
 
 ### Monitoring Queries
 ```sql

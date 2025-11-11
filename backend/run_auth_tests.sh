@@ -160,57 +160,57 @@ check_pytest
 case $COMMAND in
     all)
         print_header "Running All Authentication Tests (56 tests)"
-        python -m pytest tests/test_auth_integration.py -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py -v $EXTRA_ARGS
         ;;
 
     registration)
         print_header "Running User Registration Tests (9 tests)"
-        python -m pytest tests/test_auth_integration.py::TestUserRegistration -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestUserRegistration -v $EXTRA_ARGS
         ;;
 
     login)
         print_header "Running User Login Tests (6 tests)"
-        python -m pytest tests/test_auth_integration.py::TestUserLogin -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestUserLogin -v $EXTRA_ARGS
         ;;
 
     tokens)
         print_header "Running Token Management Tests (7 tests)"
-        python -m pytest tests/test_auth_integration.py::TestTokenManagement -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestTokenManagement -v $EXTRA_ARGS
         ;;
 
     protected)
         print_header "Running Protected Endpoint Tests (6 tests)"
-        python -m pytest tests/test_auth_integration.py::TestProtectedEndpoints -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestProtectedEndpoints -v $EXTRA_ARGS
         ;;
 
     password-reset)
         print_header "Running Password Reset Tests (7 tests)"
-        python -m pytest tests/test_auth_integration.py::TestPasswordReset -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestPasswordReset -v $EXTRA_ARGS
         ;;
 
     security)
         print_header "Running Security Feature Tests (9 tests)"
-        python -m pytest tests/test_auth_integration.py::TestSecurityFeatures -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestSecurityFeatures -v $EXTRA_ARGS
         ;;
 
     edge-cases)
         print_header "Running Edge Case Tests (7 tests)"
-        python -m pytest tests/test_auth_integration.py::TestEdgeCases -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestEdgeCases -v $EXTRA_ARGS
         ;;
 
     performance)
         print_header "Running Performance Tests (2 tests)"
-        python -m pytest tests/test_auth_integration.py::TestPerformance -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestPerformance -v $EXTRA_ARGS
         ;;
 
     integration)
         print_header "Running Integration Scenario Tests (3 tests)"
-        python -m pytest tests/test_auth_integration.py::TestIntegrationScenarios -v $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py::TestIntegrationScenarios -v $EXTRA_ARGS
         ;;
 
     coverage)
         print_header "Running All Tests with Coverage Report"
-        python -m pytest tests/test_auth_integration.py \
+        python -m pytest tests/integration/test_auth_integration.py \
             --cov=app/api/auth \
             --cov=app/core/security \
             --cov=app/api/deps \
@@ -223,27 +223,27 @@ case $COMMAND in
 
     fast)
         print_header "Running All Tests (Fast Mode - No Coverage)"
-        python -m pytest tests/test_auth_integration.py -v --no-cov $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py -v --no-cov $EXTRA_ARGS
         ;;
 
     verbose)
         print_header "Running All Tests (Verbose Output)"
-        python -m pytest tests/test_auth_integration.py -vv -s $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py -vv -s $EXTRA_ARGS
         ;;
 
     debug)
         print_header "Running All Tests (Debug Mode)"
-        python -m pytest tests/test_auth_integration.py -vv -s -l $EXTRA_ARGS
+        python -m pytest tests/integration/test_auth_integration.py -vv -s -l $EXTRA_ARGS
         ;;
 
     collect)
         print_header "Collecting All Tests"
-        python -m pytest tests/test_auth_integration.py --collect-only -q
+        python -m pytest tests/integration/test_auth_integration.py --collect-only -q
         ;;
 
     count)
         print_header "Counting Tests"
-        TEST_COUNT=$(python -m pytest tests/test_auth_integration.py --collect-only -q | grep "test_" | wc -l)
+        TEST_COUNT=$(python -m pytest tests/integration/test_auth_integration.py --collect-only -q | grep "test_" | wc -l)
         print_success "Total authentication tests: $TEST_COUNT"
         echo ""
         echo "Breakdown:"
