@@ -1,9 +1,9 @@
 /**
  * Authentication API Service
- * All authentication-related API calls
+ * All authentication-related API calls using httpOnly cookie authentication
  */
 
-import { apiClient } from "./client";
+import apiClient from "./client";
 import type {
   LoginCredentials,
   LoginResponse,
@@ -18,22 +18,26 @@ import type {
 
 /**
  * Login user with email and password
+ * Backend sets httpOnly cookies (access_token, refresh_token) automatically
+ * Returns only user data for frontend state management
  */
-export async function loginUser(credentials: LoginCredentials): Promise<LoginResponse> {
+export async function loginUser(credentials: LoginCredentials): Promise<User> {
   const response = await apiClient.post<LoginResponse>("/auth/login", {
     email: credentials.email,
     password: credentials.password,
   });
 
-  return response.data;
+  // Backend sets cookies automatically via Set-Cookie headers
+  // Return only user data for frontend state
+  return response.user;
 }
 
 /**
  * Register new user
+ * Returns registration response (may include user data or confirmation message)
  */
 export async function registerUser(credentials: RegisterCredentials): Promise<RegisterResponse> {
-  const response = await apiClient.post<RegisterResponse>("/auth/register", credentials);
-  return response.data;
+  return await apiClient.post<RegisterResponse>("/auth/register", credentials);
 }
 
 /**
@@ -42,35 +46,39 @@ export async function registerUser(credentials: RegisterCredentials): Promise<Re
 export async function requestPasswordReset(
   data: PasswordResetRequest
 ): Promise<PasswordResetRequestResponse> {
-  const response = await apiClient.post<PasswordResetRequestResponse>(
-    "/password-reset/request",
-    data
-  );
-  return response.data;
+  return await apiClient.post<PasswordResetRequestResponse>("/password-reset/request", data);
 }
 
 /**
  * Reset password with token
  */
 export async function resetPassword(data: PasswordReset): Promise<PasswordResetResponse> {
-  const response = await apiClient.post<PasswordResetResponse>("/password-reset/reset", data);
-  return response.data;
+  return await apiClient.post<PasswordResetResponse>("/password-reset/reset", data);
 }
 
 /**
  * Get current user profile (protected endpoint)
+ * Uses httpOnly cookies for authentication - no token needed in request
  */
 export async function getCurrentUser(): Promise<User> {
-  const response = await apiClient.get<User>("/users/me");
-  return response.data;
+  return await apiClient.get<User>("/users/me");
 }
 
 /**
- * Refresh access token
+ * Refresh access token using httpOnly refresh_token cookie
+ * Backend reads refresh_token from cookie automatically
+ * No need to send token in request body
  */
-export async function refreshAccessToken(refreshToken: string): Promise<LoginResponse> {
-  const response = await apiClient.post<LoginResponse>("/auth/refresh", {
-    refresh_token: refreshToken,
-  });
-  return response.data;
+export async function refreshAccessToken(): Promise<void> {
+  // Cookies are sent automatically via credentials: 'include'
+  // Backend validates refresh_token cookie and sets new access_token cookie
+  await apiClient.post<void>("/auth/refresh");
+}
+
+/**
+ * Logout user and clear httpOnly cookies
+ * Backend clears the httpOnly cookies on the server side
+ */
+export async function logoutUser(): Promise<void> {
+  await apiClient.post<void>("/auth/logout");
 }

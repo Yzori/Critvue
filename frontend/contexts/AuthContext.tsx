@@ -2,7 +2,8 @@
 
 /**
  * Authentication Context Provider
- * Manages global authentication state and provides auth methods
+ * Manages global authentication state using httpOnly cookie-based authentication
+ * No tokens stored in localStorage - all auth handled via secure httpOnly cookies
  */
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
@@ -13,7 +14,7 @@ import type {
   LoginCredentials,
   RegisterCredentials,
 } from "@/lib/types/auth";
-import { loginUser, registerUser } from "@/lib/api/auth";
+import { loginUser, registerUser, logoutUser, getCurrentUser } from "@/lib/api/auth";
 import { clearAuthData, getErrorMessage } from "@/lib/api/client";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,18 +24,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Initialize auth state from localStorage
+  // Initialize auth state by checking with backend
+  // httpOnly cookies are sent automatically, so we can verify auth status
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
-        const storedUser = localStorage.getItem("user");
-        const accessToken = localStorage.getItem("access_token");
+        // Try to get current user from backend using httpOnly cookies
+        // If cookies are valid, backend will return user data
+        const userData = await getCurrentUser();
+        setUser(userData);
 
-        if (storedUser && accessToken) {
-          setUser(JSON.parse(storedUser));
-        }
+        // Also cache user data in localStorage for quick access
+        localStorage.setItem("user", JSON.stringify(userData));
       } catch (error) {
-        console.error("Failed to initialize auth:", error);
+        // No valid session - user needs to login
+        console.log("No active session");
         clearAuthData();
       } finally {
         setIsLoading(false);
@@ -45,19 +49,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Login user and store tokens
+   * Login user using httpOnly cookies
+   * Backend sets secure httpOnly cookies automatically
    */
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       try {
-        const response = await loginUser(credentials);
+        // Backend returns user data and sets httpOnly cookies via Set-Cookie headers
+        const userData = await loginUser(credentials);
 
-        // Store tokens and user data
-        localStorage.setItem("access_token", response.access_token);
-        localStorage.setItem("refresh_token", response.refresh_token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-
-        setUser(response.user);
+        // Store user data locally for quick access (not security-sensitive)
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
 
         // Redirect to dashboard or home
         router.push("/");
@@ -91,32 +94,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   /**
-   * Logout user and clear auth data
+   * Logout user and clear httpOnly cookies
+   * Calls backend logout endpoint to clear cookies server-side
    */
-  const logout = useCallback(() => {
-    clearAuthData();
-    setUser(null);
-    router.push("/login");
+  const logout = useCallback(async () => {
+    try {
+      // Call backend to clear httpOnly cookies
+      await logoutUser();
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Continue with local cleanup even if backend call fails
+    } finally {
+      // Clear local user data
+      clearAuthData();
+      setUser(null);
+      router.push("/login");
+    }
   }, [router]);
 
   /**
-   * Refresh access token
+   * Refresh access token using httpOnly refresh_token cookie
+   * Token refresh is handled automatically by the API client
+   * This function is provided for explicit refresh calls if needed
    */
   const refreshToken = useCallback(async () => {
-    try {
-      const refreshToken = localStorage.getItem("refresh_token");
-
-      if (!refreshToken) {
-        throw new Error("No refresh token available");
-      }
-
-      // The refresh logic is handled by the API client interceptor
-      // This function is here for explicit refresh calls if needed
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      logout();
-    }
-  }, [logout]);
+    // Token refresh is handled automatically in apiClient
+    // when it receives a 401 response
+    // This is a no-op but kept for API compatibility
+    console.log("Token refresh handled automatically by API client");
+  }, []);
 
   const value: AuthContextType = {
     user,

@@ -80,3 +80,9 @@ class TokenData(BaseModel):
     """Data stored in JWT token"""
     user_id: int
     email: str
+
+
+class LoginResponse(BaseModel):
+    """Response for login endpoint (cookies contain tokens)"""
+    user: UserResponse
+    message: str = "Login successful"

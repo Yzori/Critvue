@@ -1,7 +1,7 @@
 """Dependencies for API endpoints"""
 
 from typing import Optional
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -16,14 +16,14 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    access_token: Optional[str] = Cookie(None),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
-    Dependency to get the current authenticated user from JWT token
+    Dependency to get the current authenticated user from JWT token in cookie
 
     Args:
-        credentials: HTTP Bearer token from Authorization header
+        access_token: JWT access token from httpOnly cookie
         db: Database session
 
     Returns:
@@ -32,17 +32,23 @@ async def get_current_user(
     Raises:
         HTTPException: If token is invalid or user not found
     """
-    token = credentials.credentials
+    # Check if token exists in cookie
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Check if token is blacklisted
-    if redis_service.is_token_blacklisted(token):
+    if redis_service.is_token_blacklisted(access_token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has been revoked",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    payload = decode_access_token(token)
+    payload = decode_access_token(access_token)
 
     if payload is None:
         raise HTTPException(

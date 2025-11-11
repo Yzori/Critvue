@@ -59,7 +59,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>; // Now async to call backend logout endpoint
   refreshToken: () => Promise<void>;
 }
 

@@ -2,8 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from slowapi import Limiter
@@ -11,7 +10,7 @@ from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, TokenRefresh
+from app.schemas.user import UserCreate, UserLogin, UserResponse
 from app.core.security import (
     verify_password,
     get_password_hash,
@@ -20,7 +19,7 @@ from app.core.security import (
     decode_refresh_token,
     decode_access_token
 )
-from app.api.deps import get_current_user, security
+from app.api.deps import get_current_user
 from app.services.redis_service import redis_service
 from app.core.logging_config import security_logger
 from app.core.config import settings
@@ -94,22 +93,25 @@ async def register(
     return new_user
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=UserResponse)
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(
     request: Request,
+    response: Response,
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db)
-) -> dict:
+) -> User:
     """
-    Login user and return JWT token
+    Login user and set JWT tokens as httpOnly cookies
 
     Args:
+        request: FastAPI request for rate limiting
+        response: FastAPI response to set cookies
         credentials: User login credentials
         db: Database session
 
     Returns:
-        JWT access token
+        User information (tokens set in httpOnly cookies)
 
     Raises:
         HTTPException: If credentials are invalid
@@ -165,14 +167,33 @@ async def login(
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
 
+    # Set access token as httpOnly cookie (15 minutes)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,           # Cannot be accessed by JavaScript
+        secure=False,            # Set to True in production with HTTPS
+        samesite="lax",          # CSRF protection
+        max_age=900,             # 15 minutes (900 seconds)
+        path="/",                # Available to all routes
+    )
+
+    # Set refresh token as httpOnly cookie (7 days)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,           # Cannot be accessed by JavaScript
+        secure=False,            # Set to True in production with HTTPS
+        samesite="lax",          # CSRF protection
+        max_age=604800,          # 7 days (604800 seconds)
+        path="/api/v1/auth",     # Only sent to auth endpoints
+    )
+
     # Log successful login
     security_logger.log_auth_success(user.email, request, event_type="login")
 
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    # Return user data (not tokens)
+    return user
 
 
 @router.get("/me", response_model=UserResponse)
@@ -191,29 +212,46 @@ async def get_current_user_info(
     return current_user
 
 
-@router.post("/refresh", response_model=Token)
+@router.post("/refresh")
 @limiter.limit(settings.RATE_LIMIT_REFRESH)
 async def refresh_access_token(
     request: Request,
-    token_data: TokenRefresh,
+    response: Response,
+    refresh_token: Optional[str] = Cookie(None),
     db: AsyncSession = Depends(get_db)
 ) -> dict:
     """
-    Get a new access token using a refresh token
+    Get a new access token using a refresh token from cookie
 
     Args:
         request: FastAPI request for rate limiting
-        token_data: Refresh token
+        response: FastAPI response to set new cookies
+        refresh_token: Refresh token from cookie
         db: Database session
 
     Returns:
-        New access and refresh tokens
+        Success message (new tokens set in httpOnly cookies)
 
     Raises:
-        HTTPException: If refresh token is invalid
+        HTTPException: If refresh token is invalid or missing
     """
+    # Check if refresh token exists in cookie
+    if not refresh_token:
+        # Log failed token refresh
+        security_logger.log_auth_failure(
+            "unknown",
+            request,
+            reason="missing_refresh_token",
+            event_type="token_refresh"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     # Decode and validate refresh token
-    payload = decode_refresh_token(token_data.refresh_token)
+    payload = decode_refresh_token(refresh_token)
 
     if not payload:
         # Log failed token refresh
@@ -268,48 +306,82 @@ async def refresh_access_token(
     new_access_token = create_access_token(data=new_token_data)
     new_refresh_token = create_refresh_token(data=new_token_data)
 
+    # Set new access token as httpOnly cookie (15 minutes)
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=900,             # 15 minutes
+        path="/",
+    )
+
+    # Set new refresh token as httpOnly cookie (7 days)
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=604800,          # 7 days
+        path="/api/v1/auth",
+    )
+
     # Log successful token refresh
     security_logger.log_auth_success(user.email, request, event_type="token_refresh")
 
     return {
-        "access_token": new_access_token,
-        "refresh_token": new_refresh_token,
-        "token_type": "bearer"
+        "message": "Token refreshed successfully",
+        "detail": "New access token has been set in httpOnly cookie"
     }
 
 
 @router.post("/logout")
 async def logout(
+    response: Response,
     current_user: User = Depends(get_current_user),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    access_token: Optional[str] = Cookie(None)
 ) -> dict:
     """
-    Logout user and blacklist current token
+    Logout user and clear httpOnly cookies
 
     Args:
+        response: FastAPI response to delete cookies
         current_user: Current authenticated user
-        credentials: Bearer token credentials
+        access_token: Access token from cookie (for blacklisting)
 
     Returns:
         Success message
     """
-    token = credentials.credentials
-    payload = decode_access_token(token)
+    # If access token exists, blacklist it for additional security
+    if access_token:
+        payload = decode_access_token(access_token)
+        if payload and "exp" in payload:
+            # Calculate TTL for blacklist entry (time until token expires)
+            exp_timestamp = payload["exp"]
+            current_timestamp = datetime.utcnow().timestamp()
+            ttl = int(exp_timestamp - current_timestamp)
 
-    if payload and "exp" in payload:
-        # Calculate TTL for blacklist entry (time until token expires)
-        exp_timestamp = payload["exp"]
-        current_timestamp = datetime.utcnow().timestamp()
-        ttl = int(exp_timestamp - current_timestamp)
+            if ttl > 0:
+                # Add token to blacklist
+                redis_service.blacklist_token(access_token, ttl)
+                # Log token blacklisting
+                security_logger.log_token_blacklist(current_user.email, reason="logout")
 
-        if ttl > 0:
-            # Add token to blacklist
-            redis_service.blacklist_token(token, ttl)
-            # Log token blacklisting
-            security_logger.log_token_blacklist(current_user.email, reason="logout")
+    # Delete access_token cookie
+    response.delete_cookie(
+        key="access_token",
+        path="/"
+    )
 
-    # Log logout event (we need request object for this)
-    # Since we don't have request in dependencies, we'll use a simpler log
+    # Delete refresh_token cookie
+    response.delete_cookie(
+        key="refresh_token",
+        path="/api/v1/auth"
+    )
+
+    # Log logout event
     from app.core.logging_config import logging
     logger = logging.getLogger("security")
     logger.info(f"LOGOUT | email={current_user.email}")
