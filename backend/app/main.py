@@ -3,16 +3,17 @@ Critvue FastAPI Application
 Main entry point for the backend API
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.api import auth, password_reset
 from app.core.logging_config import setup_logging
-from app.db.session import close_db
+from app.db.session import close_db, get_db
 
 # Setup logging
 setup_logging(level=settings.LOG_LEVEL)
@@ -57,11 +58,39 @@ async def root():
 
 
 @app.get("/health")
-async def health_check():
-    """Detailed health check endpoint"""
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """
+    Detailed health check endpoint with database connectivity test
+
+    Returns:
+        - status: overall system health status
+        - service: service name
+        - database: database connectivity status
+        - version: API version
+        - timestamp: current server time
+    """
+    from datetime import datetime
+    from sqlalchemy import text
+
+    # Test database connectivity
+    db_status = "unknown"
+    try:
+        # Simple query to verify database is responsive
+        result = await db.execute(text("SELECT 1"))
+        if result:
+            db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)[:100]}"
+
+    # Determine overall health
+    is_healthy = db_status == "connected"
+
     return {
-        "status": "healthy",
-        "service": "critvue-backend"
+        "status": "healthy" if is_healthy else "degraded",
+        "service": "critvue-backend",
+        "database": db_status,
+        "version": settings.VERSION,
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 
