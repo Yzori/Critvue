@@ -21,7 +21,7 @@ export interface CreateReviewRequest {
 
 // Response from creating a review
 export interface CreateReviewResponse {
-  id: string;
+  id: number;
   title: string;
   description: string;
   content_type: ContentType;
@@ -48,6 +48,6 @@ export async function getReviews(): Promise<CreateReviewResponse[]> {
 /**
  * Get a single review by ID
  */
-export async function getReview(id: string): Promise<CreateReviewResponse> {
+export async function getReview(id: number): Promise<CreateReviewResponse> {
   return apiClient.get<CreateReviewResponse>(`/reviews/${id}`);
 }

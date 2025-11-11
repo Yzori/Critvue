@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { BottomNav, type BottomNavItem } from "@/components/ui/bottom-nav";
 import { FAB, type FABAction } from "@/components/ui/fab";
 import { Badge } from "@/components/ui/badge";
+import { CommandPalette } from "@/components/command-palette";
 import {
   LogOut,
   User,
@@ -360,6 +361,9 @@ export default function DashboardLayout({
         icon={<Plus className="size-6" />}
         hideOnScroll
       />
+
+      {/* Command Palette - ⌘K */}
+      <CommandPalette />
 
       {/* Footer (Desktop Only) */}
       <footer className="hidden lg:block border-t border-border-light bg-background mt-auto">

@@ -158,7 +158,6 @@ function getBudgetProgress(budget: number): number {
 
 export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange }: ReviewTypeStepProps) {
   const currentTier = getBudgetTier(budget);
-  const reviewers = getReviewersForTier(budget);
   const budgetProgress = getBudgetProgress(budget);
   const [showWhyExpert, setShowWhyExpert] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
