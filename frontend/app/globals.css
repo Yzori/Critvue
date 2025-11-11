@@ -172,3 +172,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Modern 2025 Animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

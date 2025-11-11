@@ -1,18 +1,22 @@
 "use client";
 
 /**
- * Dashboard Home Page
- * Main landing page for authenticated users
- * Features:
- * - Welcome message with user's name
- * - Account information card
- * - Quick actions for common tasks
- * - Loading states with Suspense
- * - Brand-consistent styling
+ * Dashboard Home Page - Modern 2025 Redesign
+ *
+ * Key Features:
+ * - Enhanced tiered shadow system for depth
+ * - Sparkline visualizations in stat cards
+ * - Sophisticated micro-interactions
+ * - Mobile-first responsive design
+ * - Modern hover states with scale + shadow
+ * - Improved loading states with shimmer
+ * - Touch-friendly interactions (44px+ targets)
  */
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/stat-card";
+import { Badge } from "@/components/ui/badge";
 import {
   FileText,
   FolderOpen,
@@ -23,65 +27,102 @@ import {
   Users,
   CheckCircle2,
   Clock,
+  Zap,
+  ArrowRight,
+  Bell,
 } from "lucide-react";
 import { Suspense } from "react";
 
 function DashboardContent() {
   const { user } = useAuth();
 
+  // Sample trend data for sparklines
+  const projectTrendData = [1, 1, 2, 2, 3, 3, 3];
+  const feedbackTrendData = [16, 18, 20, 19, 22, 23, 24];
+  const completedTrendData = [8, 9, 9, 10, 11, 11, 12];
+  const pendingTrendData = [8, 7, 6, 7, 5, 5, 5];
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Welcome Section */}
-      <div className="space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-          Welcome back, {user?.full_name || "User"}!
-        </h1>
-        <p className="text-base sm:text-lg text-foreground-muted">
+    <div className="max-w-7xl mx-auto space-y-8 pb-24 lg:pb-8">
+      {/* Welcome Section - Enhanced Typography */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
+            Welcome back, {user?.full_name || "User"}!
+          </h1>
+          <Badge variant="success" showDot pulse size="md">
+            Active
+          </Badge>
+        </div>
+        <p className="text-base sm:text-lg text-foreground-muted max-w-2xl">
           Here's what's happening with your projects today.
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Enhanced with Sparklines */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           icon={<FolderOpen className="size-5 text-accent-blue" />}
           label="Active Projects"
           value="3"
           trend="+2 this week"
+          trendDirection="up"
+          trendData={projectTrendData}
+          comparison="vs. last week"
           bgColor="bg-accent-blue/10"
+          sparklineColor="#3B82F6"
         />
         <StatCard
           icon={<MessageSquare className="size-5 text-accent-peach" />}
           label="Feedback Received"
           value="24"
           trend="+8 this week"
+          trendDirection="up"
+          trendData={feedbackTrendData}
+          comparison="vs. last week"
           bgColor="bg-accent-peach/10"
+          sparklineColor="#F97316"
         />
         <StatCard
           icon={<CheckCircle2 className="size-5 text-green-600" />}
           label="Completed Reviews"
           value="12"
-          trend="Last 30 days"
+          trend="+3 this month"
+          trendDirection="up"
+          trendData={completedTrendData}
+          comparison="Last 30 days"
           bgColor="bg-green-50"
+          sparklineColor="#10B981"
         />
         <StatCard
           icon={<Clock className="size-5 text-amber-600" />}
           label="Pending Reviews"
           value="5"
-          trend="Awaiting feedback"
+          trend="-3 this week"
+          trendDirection="down"
+          trendData={pendingTrendData}
+          comparison="Awaiting feedback"
           bgColor="bg-amber-50"
+          sparklineColor="#F59E0B"
         />
       </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions Card */}
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+        {/* Quick Actions Card - Enhanced Interactions */}
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
-              Quick Actions
-            </h2>
-            <Plus className="size-5 text-foreground-muted" />
+            <div className="space-y-1">
+              <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+                Quick Actions
+              </h2>
+              <p className="text-sm text-foreground-muted">
+                Start your workflow
+              </p>
+            </div>
+            <div className="size-10 rounded-xl bg-accent-blue/10 flex items-center justify-center">
+              <Zap className="size-5 text-accent-blue" />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -112,10 +153,10 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Account Info Card */}
-        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+        {/* Account Info Card - Enhanced with Badges */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200">
           <div className="flex items-center gap-3 mb-6">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center shadow-sm">
+            <div className="size-12 rounded-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center shadow-sm ring-2 ring-accent-blue/20">
               <span className="text-white font-bold text-xl">
                 {user?.full_name?.charAt(0) || "U"}
               </span>
@@ -134,76 +175,67 @@ function DashboardContent() {
             <InfoRow
               label="Status"
               value={
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                    user?.is_active
-                      ? "bg-green-50 text-green-700"
-                      : "bg-red-50 text-red-700"
-                  }`}
+                <Badge
+                  variant={user?.is_active ? "success" : "error"}
+                  showDot
+                  pulse={user?.is_active}
+                  size="sm"
                 >
-                  <span
-                    className={`size-1.5 rounded-full ${
-                      user?.is_active ? "bg-green-600" : "bg-red-600"
-                    }`}
-                  />
                   {user?.is_active ? "Active" : "Inactive"}
-                </span>
+                </Badge>
               }
             />
             <InfoRow
               label="Verified"
               value={
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                    user?.is_verified
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-amber-50 text-amber-700"
-                  }`}
+                <Badge
+                  variant={user?.is_verified ? "info" : "warning"}
+                  icon={user?.is_verified ? <CheckCircle2 className="size-3" /> : <Clock className="size-3" />}
+                  size="sm"
                 >
-                  {user?.is_verified ? (
-                    <>
-                      <CheckCircle2 className="size-3" />
-                      Verified
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="size-3" />
-                      Not Verified
-                    </>
-                  )}
-                </span>
+                  {user?.is_verified ? "Verified" : "Not Verified"}
+                </Badge>
               }
             />
           </div>
 
           <Button
             variant="outline"
-            className="w-full mt-6 gap-2 min-h-[44px]"
+            className="w-full mt-6 gap-2 min-h-[44px] group hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
             onClick={() => {
               // Navigate to settings
             }}
           >
-            <Settings className="size-4" />
+            <Settings className="size-4 group-hover:rotate-90 transition-transform duration-300" />
             Account Settings
+            <ArrowRight className="size-4 ml-auto group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+      {/* Recent Activity - Enhanced with Modern Cards */}
+      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
-            Recent Activity
-          </h2>
-          <TrendingUp className="size-5 text-foreground-muted" />
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-semibold text-foreground">
+              Recent Activity
+            </h2>
+            <p className="text-sm text-foreground-muted">
+              Latest updates from your projects
+            </p>
+          </div>
+          <div className="size-10 rounded-xl bg-accent-peach/10 flex items-center justify-center">
+            <TrendingUp className="size-5 text-accent-peach" />
+          </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <ActivityItem
             icon={<MessageSquare className="size-4 text-accent-blue" />}
             title="New feedback received"
             description="Your design mockup received 3 new comments"
             time="2 hours ago"
+            badge="New"
           />
           <ActivityItem
             icon={<CheckCircle2 className="size-4 text-green-600" />}
@@ -217,10 +249,20 @@ function DashboardContent() {
             description="You created 'Mobile App UI'"
             time="Yesterday"
           />
+          <ActivityItem
+            icon={<Bell className="size-4 text-blue-600" />}
+            title="Team invitation sent"
+            description="Invited sarah@example.com to collaborate"
+            time="2 days ago"
+          />
         </div>
 
-        <Button variant="outline" className="w-full mt-6 min-h-[44px]">
+        <Button
+          variant="outline"
+          className="w-full mt-6 min-h-[44px] group hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
+        >
           View All Activity
+          <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
         </Button>
       </div>
     </div>
@@ -228,31 +270,6 @@ function DashboardContent() {
 }
 
 // Helper Components
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  trend: string;
-  bgColor: string;
-}
-
-function StatCard({ icon, label, value, trend, bgColor }: StatCardProps) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
-        <div className={`size-10 rounded-xl ${bgColor} flex items-center justify-center`}>
-          {icon}
-        </div>
-      </div>
-      <div className="mt-4">
-        <p className="text-sm text-foreground-muted">{label}</p>
-        <p className="text-3xl font-bold text-foreground mt-1">{value}</p>
-        <p className="text-xs text-foreground-muted mt-2">{trend}</p>
-      </div>
-    </div>
-  );
-}
 
 interface ActionButtonProps {
   icon: React.ReactNode;
@@ -263,24 +280,29 @@ interface ActionButtonProps {
 
 function ActionButton({ icon, title, description, color }: ActionButtonProps) {
   const colorClasses = {
-    "accent-blue": "bg-accent-blue text-white hover:opacity-90",
-    "accent-peach": "bg-accent-peach text-white hover:opacity-90",
+    "accent-blue": "bg-accent-blue text-white",
+    "accent-peach": "bg-accent-peach text-white",
   };
 
   return (
     <button
-      className="group p-4 rounded-xl border border-border bg-background hover:bg-accent-blue/5 transition-all text-left min-h-[96px] flex flex-col justify-center"
+      className="group relative p-4 rounded-xl border border-border bg-background hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all duration-200 text-left min-h-[96px] flex flex-col justify-center shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 active:scale-[0.98]"
       onClick={() => {
         // Handle navigation
       }}
     >
       <div
-        className={`size-10 rounded-lg ${colorClasses[color]} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}
+        className={`size-10 rounded-lg ${colorClasses[color]} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200 shadow-sm`}
       >
         {icon}
       </div>
       <h3 className="font-semibold text-foreground text-base">{title}</h3>
       <p className="text-sm text-foreground-muted mt-1">{description}</p>
+
+      {/* Hover indicator */}
+      <div className="absolute top-3 right-3 size-5 rounded-full bg-accent-blue/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <ArrowRight className="size-3 text-accent-blue" />
+      </div>
     </button>
   );
 }
@@ -293,7 +315,7 @@ interface InfoRowProps {
 function InfoRow({ label, value }: InfoRowProps) {
   return (
     <div className="flex items-start justify-between gap-4 py-2 border-b border-border-light last:border-0">
-      <span className="text-sm text-foreground-muted">{label}</span>
+      <span className="text-sm text-foreground-muted font-medium">{label}</span>
       <span className="text-sm font-medium text-foreground text-right">
         {value}
       </span>
@@ -306,19 +328,31 @@ interface ActivityItemProps {
   title: string;
   description: string;
   time: string;
+  badge?: string;
 }
 
-function ActivityItem({ icon, title, description, time }: ActivityItemProps) {
+function ActivityItem({ icon, title, description, time, badge }: ActivityItemProps) {
   return (
-    <div className="flex items-start gap-4 p-4 rounded-xl hover:bg-accent-blue/5 transition-colors">
-      <div className="size-10 rounded-lg bg-background-subtle flex items-center justify-center flex-shrink-0">
+    <div className="group flex items-start gap-4 p-4 rounded-xl hover:bg-accent-blue/5 transition-all duration-200 cursor-pointer border border-transparent hover:border-accent-blue/20 hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+      <div className="size-10 rounded-lg bg-background-subtle flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-foreground text-sm">{title}</h4>
+        <div className="flex items-start justify-between gap-2">
+          <h4 className="font-medium text-foreground text-sm">{title}</h4>
+          {badge && (
+            <Badge variant="primary" size="sm">
+              {badge}
+            </Badge>
+          )}
+        </div>
         <p className="text-sm text-foreground-muted mt-0.5">{description}</p>
-        <p className="text-xs text-foreground-muted mt-1">{time}</p>
+        <p className="text-xs text-foreground-muted mt-1 flex items-center gap-1">
+          <Clock className="size-3" />
+          {time}
+        </p>
       </div>
+      <ArrowRight className="size-4 text-foreground-muted opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200" />
     </div>
   );
 }
@@ -332,18 +366,18 @@ export default function DashboardPage() {
   );
 }
 
-// Loading Skeleton
+// Loading Skeleton (will be replaced with enhanced version)
 function DashboardSkeleton() {
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
-      <div className="space-y-2">
-        <div className="h-10 bg-muted rounded-lg w-64" />
-        <div className="h-6 bg-muted rounded-lg w-96" />
+      <div className="space-y-3">
+        <div className="h-12 bg-muted rounded-xl w-80 max-w-full" />
+        <div className="h-6 bg-muted rounded-lg w-96 max-w-full" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-2xl border border-border bg-card p-6 h-32" />
+          <div key={i} className="rounded-2xl border border-border bg-card p-6 h-40" />
         ))}
       </div>
 
