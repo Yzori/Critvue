@@ -61,7 +61,7 @@ export async function resetPassword(data: PasswordReset): Promise<PasswordResetR
  * Uses httpOnly cookies for authentication - no token needed in request
  */
 export async function getCurrentUser(): Promise<User> {
-  return await apiClient.get<User>("/users/me");
+  return await apiClient.get<User>("/auth/me");
 }
 
 /**

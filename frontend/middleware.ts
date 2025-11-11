@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Validate authentication by checking if user can access /users/me endpoint
+  // Validate authentication by checking if user can access /auth/me endpoint
   // This validates the httpOnly cookies server-side
   const isAuthenticated = await checkAuthentication(request);
 
@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
 
 /**
  * Check if user is authenticated by validating httpOnly cookies
- * Makes a request to the backend /users/me endpoint
+ * Makes a request to the backend /auth/me endpoint
  */
 async function checkAuthentication(request: NextRequest): Promise<boolean> {
   try {
@@ -79,7 +79,7 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
       .join("; ");
 
     // Make request to backend to validate authentication
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: {
         Cookie: cookieHeader,
