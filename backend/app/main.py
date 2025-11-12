@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset
-from app.api.v1 import reviews, files, browse, review_slots
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 
@@ -47,6 +47,8 @@ app.include_router(browse.router, prefix="/api/v1")  # Public browse marketplace
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
 app.include_router(review_slots.router, prefix="/api/v1")  # Review slots workflow
+app.include_router(profile.router, prefix="/api/v1")  # User profiles
+app.include_router(portfolio.router, prefix="/api/v1")  # Portfolio projects
 
 # Configure CORS
 app.add_middleware(

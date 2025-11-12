@@ -3,7 +3,7 @@
 import enum
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, relationship
 
 if TYPE_CHECKING:
@@ -42,6 +42,15 @@ class User(Base):
     # Profile
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
+    title = Column(String(255), nullable=True)
+    specialty_tags = Column(Text, nullable=True)  # JSON stored as Text for SQLite
+    badges = Column(Text, nullable=True)  # JSON stored as Text for SQLite
+
+    # Stats
+    total_reviews_given = Column(Integer, nullable=False, default=0, server_default='0')
+    total_reviews_received = Column(Integer, nullable=False, default=0, server_default='0')
+    avg_rating = Column(Numeric(precision=3, scale=2), nullable=True)
+    avg_response_time_hours = Column(Integer, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
