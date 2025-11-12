@@ -12,8 +12,14 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
+# IMPORTANT: Import models BEFORE importing app to ensure they're registered with Base.metadata
+from app.models.user import Base, User, UserRole
+from app.models.review_request import ReviewRequest, ReviewStatus, ContentType, ReviewType
+from app.models.review_file import ReviewFile
+from app.models.review_slot import ReviewSlot
+
+# Now import app (which won't re-initialize Base since models are already loaded)
 from app.main import app
-from app.models.user import Base, User
 from app.db.session import get_db
 from app.core.security import get_password_hash, create_access_token
 

@@ -599,6 +599,8 @@ interface ReviewItemProps {
 }
 
 function ReviewItem({ review }: ReviewItemProps) {
+  const router = useRouter();
+
   // Map content types to icons and colors
   const contentTypeConfig = {
     design: { icon: <Palette className="size-4" />, color: "text-blue-600", bg: "bg-blue-500/10" },
@@ -646,7 +648,10 @@ function ReviewItem({ review }: ReviewItemProps) {
   }
 
   return (
-    <div className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl hover:bg-accent-blue/5 transition-all duration-200 cursor-pointer border border-transparent hover:border-accent-blue/20 hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] min-h-[68px]">
+    <div
+      onClick={() => router.push(`/review/${review.id}`)}
+      className="group flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl hover:bg-accent-blue/5 transition-all duration-200 cursor-pointer border border-transparent hover:border-accent-blue/20 hover:shadow-[0_2px_8px_rgba(0,0,0,0.05)] min-h-[68px]"
+    >
       <div className={`size-8 sm:size-10 rounded-lg ${config.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200`}>
         <div className={config.color}>
           {config.icon}

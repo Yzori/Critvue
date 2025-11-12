@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ContentType, ReviewType, createReview } from "@/lib/api/reviews";
+import { ContentType, ReviewType, createReview, updateReview } from "@/lib/api/reviews";
 import { Button } from "@/components/ui/button";
 import { ContentTypeStep } from "@/components/review-flow/content-type-step";
 import { BasicInfoStep } from "@/components/review-flow/basic-info-step";
@@ -206,9 +206,19 @@ export default function NewReviewPage() {
     setIsSubmitting(true);
 
     try {
-      // Update review type (review was already created in step 2)
-      // For now, we'll just proceed since files are already uploaded
-      // In a real implementation, you'd want to update the review status
+      // Build feedback_areas string from selected areas
+      const feedbackAreasStr = [...formState.feedbackAreas, formState.customFeedbackArea]
+        .filter(Boolean)
+        .join(", ");
+
+      // Update the review with complete data and set status to "pending"
+      await updateReview(formState.reviewId, {
+        review_type: formState.reviewType,
+        reviews_requested: formState.numberOfReviews,
+        status: "pending", // This makes it appear in browse marketplace
+        feedback_areas: feedbackAreasStr || undefined,
+        budget: formState.reviewType === "expert" ? formState.budget : undefined,
+      });
 
       // Show success state
       setSubmitSuccess(true);

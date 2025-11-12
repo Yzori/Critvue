@@ -203,7 +203,15 @@ async def get_review_request(
                 detail=f"Review request with id {review_id} not found"
             )
 
-        return ReviewRequestResponse.model_validate(review)
+        # Prepare response with requester information
+        response_data = ReviewRequestResponse.model_validate(review)
+
+        # Add requester information from the user relationship
+        if hasattr(review, 'user') and review.user:
+            response_data.requester_username = review.user.full_name or review.user.email.split('@')[0]
+            response_data.requester_avatar = review.user.avatar_url
+
+        return response_data
     except HTTPException:
         raise
     except Exception as e:

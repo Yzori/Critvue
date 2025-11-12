@@ -102,7 +102,9 @@ class ReviewCRUD:
         """
         try:
             query = select(ReviewRequest).options(
-                selectinload(ReviewRequest.files)
+                selectinload(ReviewRequest.files),
+                selectinload(ReviewRequest.slots),
+                selectinload(ReviewRequest.user)
             ).where(
                 ReviewRequest.id == review_id,
                 ReviewRequest.deleted_at.is_(None)
@@ -206,12 +208,52 @@ class ReviewCRUD:
             if not review:
                 return None
 
+            # Store original status for comparison
+            original_status = review.status
+
             # Check if review is editable
             if not review.is_editable:
                 raise ValueError(
                     f"Cannot edit review in '{review.status.value}' status. "
                     "Only draft and pending reviews can be edited."
                 )
+
+            # Validate status transitions
+            if data.status is not None and data.status != original_status:
+                # Define allowed status transitions
+                ALLOWED_TRANSITIONS = {
+                    ReviewStatus.DRAFT: {ReviewStatus.PENDING, ReviewStatus.CANCELLED},
+                    ReviewStatus.PENDING: {ReviewStatus.IN_REVIEW, ReviewStatus.CANCELLED},
+                    ReviewStatus.IN_REVIEW: {ReviewStatus.COMPLETED, ReviewStatus.CANCELLED},
+                }
+
+                allowed = ALLOWED_TRANSITIONS.get(original_status, set())
+                if data.status not in allowed:
+                    raise ValueError(
+                        f"Invalid status transition from '{original_status.value}' to '{data.status.value}'. "
+                        f"Allowed transitions: {[s.value for s in allowed]}"
+                    )
+
+            # Validate reviews_requested if being updated
+            if data.reviews_requested is not None:
+                if data.reviews_requested < review.reviews_claimed:
+                    raise ValueError(
+                        f"Cannot set reviews_requested ({data.reviews_requested}) below "
+                        f"reviews_claimed ({review.reviews_claimed})"
+                    )
+
+            # Restrict editing of critical fields once review is pending
+            if original_status == ReviewStatus.PENDING:
+                critical_fields = {'review_type', 'reviews_requested', 'budget', 'content_type'}
+                update_data_dict = data.model_dump(exclude_unset=True)
+                attempting_critical_edit = bool(critical_fields & update_data_dict.keys())
+
+                if attempting_critical_edit:
+                    raise ValueError(
+                        "Cannot modify review_type, reviews_requested, budget, or content_type "
+                        "after review is pending. Only title, description, feedback_areas, and "
+                        "deadline can be updated for pending reviews."
+                    )
 
             # Update fields that are provided
             update_data = data.model_dump(exclude_unset=True)
@@ -224,6 +266,27 @@ class ReviewCRUD:
             # If status is being set to completed, set completed_at
             if data.status == ReviewStatus.COMPLETED and not review.completed_at:
                 review.completed_at = datetime.utcnow()
+
+            # CRITICAL FIX: Create review slots if transitioning to PENDING
+            if data.status == ReviewStatus.PENDING and original_status != ReviewStatus.PENDING:
+                # Check if slots already exist
+                if not review.slots or len(review.slots) == 0:
+                    from app.crud import review_slot as crud_review_slot
+                    from decimal import Decimal
+                    from app.models.review_request import ReviewType
+
+                    # Calculate payment amount per slot for expert reviews
+                    payment_amount = None
+                    if review.review_type == ReviewType.EXPERT and review.budget:
+                        payment_amount = Decimal(review.budget) / Decimal(review.reviews_requested)
+
+                    # Create review slots
+                    await crud_review_slot.create_review_slots(
+                        db,
+                        review.id,
+                        review.reviews_requested,
+                        payment_amount
+                    )
 
             await db.commit()
             await db.refresh(review)

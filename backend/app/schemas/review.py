@@ -6,6 +6,7 @@ from typing import Optional, List
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review_request import ContentType, ReviewType, ReviewStatus
+from app.schemas.review_slot import ReviewSlotResponse
 
 
 # ===== ReviewFile Schemas =====
@@ -161,6 +162,11 @@ class ReviewRequestResponse(ReviewRequestBase):
     completed_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
     files: List[ReviewFileResponse] = []
+    slots: List[ReviewSlotResponse] = []
+
+    # Requester information (loaded from user relationship)
+    requester_username: Optional[str] = None
+    requester_avatar: Optional[str] = None
 
     # Computed fields for convenience
     @property

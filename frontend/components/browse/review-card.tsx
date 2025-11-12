@@ -438,7 +438,7 @@ export function ReviewCard({
                 !isHighImportance && "hover:border-gray-300"
               )}
             >
-              <Link href={`/browse/${review.id}`}>
+              <Link href={`/review/${review.id}`}>
                 View Details
               </Link>
             </Button>
@@ -452,7 +452,7 @@ export function ReviewCard({
                 !isHighImportance && "hover:opacity-90"
               )}
             >
-              <Link href={`/browse/${review.id}/claim`}>
+              <Link href={`/review/${review.id}`}>
                 Claim
                 <ArrowRight className="ml-1 size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
