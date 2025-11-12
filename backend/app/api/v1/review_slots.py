@@ -37,10 +37,11 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post(
     "/{slot_id}/claim",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def claim_review_slot(
+    request: Request,
     slot_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -103,10 +104,11 @@ async def claim_review_slot(
 @router.post(
     "/{slot_id}/abandon",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def abandon_review_slot(
+    request: Request,
     slot_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -157,10 +159,11 @@ async def abandon_review_slot(
 @router.post(
     "/{slot_id}/submit",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def submit_review(
+    request: Request,
     slot_id: int,
     review_data: ReviewSubmit,
     current_user: User = Depends(get_current_user),
@@ -219,10 +222,11 @@ async def submit_review(
 @router.post(
     "/{slot_id}/accept",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def accept_review(
+    request: Request,
     slot_id: int,
     accept_data: ReviewAccept,
     current_user: User = Depends(get_current_user),
@@ -275,10 +279,11 @@ async def accept_review(
 @router.post(
     "/{slot_id}/reject",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def reject_review(
+    request: Request,
     slot_id: int,
     reject_data: ReviewReject,
     current_user: User = Depends(get_current_user),
@@ -339,10 +344,11 @@ async def reject_review(
 @router.post(
     "/{slot_id}/dispute",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def create_dispute(
+    request: Request,
     slot_id: int,
     dispute_data: ReviewDispute,
     current_user: User = Depends(get_current_user),
@@ -398,10 +404,11 @@ async def create_dispute(
 
 @router.get(
     "/my-slots",
-    response_model=ReviewSlotListResponse,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    response_model=ReviewSlotListResponse
 )
+@limiter.limit("20/minute")
 async def get_my_review_slots(
+    request: Request,
     status: Optional[str] = None,
     skip: int = 0,
     limit: int = 20,
@@ -460,10 +467,11 @@ async def get_my_review_slots(
 
 @router.get(
     "/request/{request_id}/slots",
-    response_model=List[ReviewSlotResponse],
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    response_model=List[ReviewSlotResponse]
 )
+@limiter.limit("20/minute")
 async def get_request_slots(
+    request: Request,
     request_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -512,10 +520,11 @@ async def get_request_slots(
 
 @router.get(
     "/{slot_id}",
-    response_model=ReviewSlotResponse,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    response_model=ReviewSlotResponse
 )
+@limiter.limit("20/minute")
 async def get_review_slot(
+    request: Request,
     slot_id: int,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -554,10 +563,11 @@ async def get_review_slot(
 @router.post(
     "/{slot_id}/resolve-dispute",
     response_model=ReviewSlotResponse,
-    status_code=status.HTTP_200_OK,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    status_code=status.HTTP_200_OK
 )
+@limiter.limit("20/minute")
 async def resolve_dispute(
+    request: Request,
     slot_id: int,
     resolution_data: DisputeResolve,
     current_user: User = Depends(get_current_user),
@@ -615,10 +625,11 @@ async def resolve_dispute(
 
 @router.get(
     "/admin/disputed",
-    response_model=ReviewSlotListResponse,
-    dependencies=[Depends(rate_limit(requests=20, window=60))]
+    response_model=ReviewSlotListResponse
 )
+@limiter.limit("20/minute")
 async def get_disputed_slots(
+    request: Request,
     skip: int = 0,
     limit: int = 20,
     current_user: User = Depends(get_current_user),
