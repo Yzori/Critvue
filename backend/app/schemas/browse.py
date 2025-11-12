@@ -67,6 +67,7 @@ class BrowseReviewItem(BaseModel):
     - Creator information (public only)
     - Preview image/thumbnail
     - Skills needed
+    - Multi-review claim status
     """
     id: int = Field(..., description="Review request ID")
     title: str = Field(..., description="Review title")
@@ -92,8 +93,30 @@ class BrowseReviewItem(BaseModel):
     )
     urgency: UrgencyLevel = Field(..., description="Deadline urgency level")
 
+    # Multi-review support
+    reviews_requested: int = Field(..., ge=1, le=10, description="Total number of reviews requested")
+    reviews_claimed: int = Field(..., ge=0, description="Number of review slots claimed")
+    available_slots: int = Field(..., ge=0, description="Number of available review slots")
+
     class Config:
         from_attributes = True
+
+
+# ===== Claim Review Schema =====
+
+class ClaimReviewSlotRequest(BaseModel):
+    """Request schema for claiming a review slot"""
+    review_request_id: int = Field(..., gt=0, description="ID of the review request to claim")
+
+
+class ClaimReviewSlotResponse(BaseModel):
+    """Response schema after claiming a review slot"""
+    success: bool = Field(..., description="Whether the claim was successful")
+    message: str = Field(..., description="Status message")
+    review_request_id: int = Field(..., description="ID of the claimed review request")
+    reviews_claimed: int = Field(..., ge=0, description="Total slots now claimed")
+    available_slots: int = Field(..., ge=0, description="Remaining available slots")
+    is_fully_claimed: bool = Field(..., description="Whether all slots are now claimed")
 
 
 # ===== Browse Response Schema =====

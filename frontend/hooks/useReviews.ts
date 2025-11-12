@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getReviews, createReview, type CreateReviewResponse, type CreateReviewRequest } from "@/lib/api/reviews";
+import { getReviews, createReview, type CreateReviewRequest } from "@/lib/api/reviews";
 import { toast } from "sonner";
 
 /**

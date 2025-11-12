@@ -67,9 +67,9 @@ export function CommandPalette() {
         <>
           {/* Backdrop */}
           <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0 }}
+            initial={prefersReducedMotion ? undefined : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={prefersReducedMotion ? false : { opacity: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0 }}
             transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
             onClick={() => setOpen(false)}
             className="fixed inset-0 bg-[var(--background-overlay)] backdrop-blur-sm z-50"
@@ -78,9 +78,9 @@ export function CommandPalette() {
           {/* Command Dialog */}
           <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:p-8 pt-[15vh]">
             <motion.div
-              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95, y: -20 }}
+              initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={prefersReducedMotion ? false : { opacity: 0, scale: 0.95, y: -20 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
               className="w-full max-w-2xl"
             >

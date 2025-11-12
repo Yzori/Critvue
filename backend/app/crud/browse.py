@@ -107,7 +107,7 @@ class BrowseCRUD:
             Exception: If database operation fails
         """
         try:
-            # Build base query - only show "pending" reviews (open for claiming)
+            # Build base query - only show reviews with available slots
             # Join with User for creator info and ReviewFile for preview images
             query = (
                 select(ReviewRequest)
@@ -118,9 +118,16 @@ class BrowseCRUD:
                     selectinload(ReviewRequest.files)
                 )
                 .where(
-                    ReviewRequest.status == ReviewStatus.PENDING,
+                    # Show pending OR in_review (if not fully claimed)
+                    or_(
+                        ReviewRequest.status == ReviewStatus.PENDING,
+                        ReviewRequest.status == ReviewStatus.IN_REVIEW
+                    ),
                     ReviewRequest.deleted_at.is_(None),
-                    User.is_active == True  # Only show reviews from active users
+                    User.is_active == True,  # Only show reviews from active users
+                    # CRITICAL: Only show reviews with available slots
+                    # This filters out fully claimed reviews automatically
+                    ReviewRequest.reviews_claimed < ReviewRequest.reviews_requested
                 )
                 .distinct()  # Prevent duplicates from ReviewFile join
             )
@@ -177,9 +184,14 @@ class BrowseCRUD:
                 .select_from(ReviewRequest)
                 .join(User, ReviewRequest.user_id == User.id)
                 .where(
-                    ReviewRequest.status == ReviewStatus.PENDING,
+                    or_(
+                        ReviewRequest.status == ReviewStatus.PENDING,
+                        ReviewRequest.status == ReviewStatus.IN_REVIEW
+                    ),
                     ReviewRequest.deleted_at.is_(None),
-                    User.is_active == True
+                    User.is_active == True,
+                    # Only count reviews with available slots
+                    ReviewRequest.reviews_claimed < ReviewRequest.reviews_requested
                 )
             )
 
@@ -294,7 +306,10 @@ class BrowseCRUD:
                     creator=creator,
                     preview_image=preview_image,
                     skills_needed=skills_needed,
-                    urgency=urgency
+                    urgency=urgency,
+                    reviews_requested=review.reviews_requested,
+                    reviews_claimed=review.reviews_claimed,
+                    available_slots=review.available_slots
                 )
                 browse_items.append(browse_item)
 

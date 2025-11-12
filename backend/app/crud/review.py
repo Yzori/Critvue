@@ -22,7 +22,7 @@ class ReviewCRUD:
         data: ReviewRequestCreate
     ) -> ReviewRequest:
         """
-        Create a new review request
+        Create a new review request and automatically create review slots
 
         Args:
             db: Database session
@@ -30,7 +30,7 @@ class ReviewCRUD:
             data: Review request data
 
         Returns:
-            Created review request
+            Created review request with slots
 
         Raises:
             Exception: If database operation fails
@@ -44,11 +44,37 @@ class ReviewCRUD:
                 review_type=data.review_type,
                 status=data.status,
                 feedback_areas=data.feedback_areas,
-                budget=data.budget
+                budget=data.budget,
+                deadline=data.deadline,
+                reviews_requested=data.reviews_requested
             )
             db.add(review)
             await db.commit()
             await db.refresh(review)
+
+            # Automatically create review slots if status is pending or in_review
+            if review.status in [ReviewStatus.PENDING, "in_review"]:
+                from app.crud import review_slot as crud_review_slot
+                from decimal import Decimal
+                from app.models.review_request import ReviewType
+
+                # Calculate payment amount per slot for expert reviews
+                payment_amount = None
+                if review.review_type == ReviewType.EXPERT and review.budget:
+                    # Divide budget equally among requested reviews
+                    payment_amount = Decimal(review.budget) / Decimal(review.reviews_requested)
+
+                # Create slots
+                await crud_review_slot.create_review_slots(
+                    db,
+                    review.id,
+                    review.reviews_requested,
+                    payment_amount
+                )
+
+                # Refresh to get slots relationship
+                await db.refresh(review)
+
             return review
         except Exception as e:
             await db.rollback()
@@ -304,6 +330,156 @@ class ReviewCRUD:
             await db.commit()
             await db.refresh(review_file)
             return review_file
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def claim_review_slot(
+        db: AsyncSession,
+        review_id: int,
+        reviewer_id: int
+    ) -> Optional[ReviewRequest]:
+        """
+        Claim a review slot for a review request.
+
+        This operation uses database-level locking (SELECT FOR UPDATE) to prevent
+        race conditions when multiple reviewers try to claim simultaneously.
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            reviewer_id: ID of the user claiming the review
+
+        Returns:
+            Updated review request if successful, None if not found
+
+        Raises:
+            ValueError: If claim is invalid (fully claimed, own review, already claimed, etc.)
+            Exception: If database operation fails
+        """
+        try:
+            # Use SELECT FOR UPDATE to lock the row and prevent race conditions
+            query = (
+                select(ReviewRequest)
+                .where(
+                    ReviewRequest.id == review_id,
+                    ReviewRequest.deleted_at.is_(None)
+                )
+                .with_for_update()  # Row-level lock
+            )
+
+            result = await db.execute(query)
+            review = result.scalar_one_or_none()
+
+            if not review:
+                return None
+
+            # Validation checks
+            if review.user_id == reviewer_id:
+                raise ValueError("You cannot claim your own review request")
+
+            if review.status not in [ReviewStatus.PENDING, ReviewStatus.IN_REVIEW]:
+                raise ValueError(
+                    f"Cannot claim review with status '{review.status.value}'. "
+                    "Only pending or in-review requests can be claimed."
+                )
+
+            if review.is_fully_claimed:
+                raise ValueError(
+                    "All review slots are already claimed. "
+                    f"{review.reviews_claimed}/{review.reviews_requested} slots filled."
+                )
+
+            # Check if this reviewer has already claimed a slot
+            # For now, we allow multiple slots per reviewer since we don't have a claims table
+            # In a future enhancement, we could add a review_claims table to track individual claims
+
+            # Increment reviews_claimed
+            review.reviews_claimed += 1
+
+            # If this was the first claim, change status to IN_REVIEW
+            if review.reviews_claimed == 1 and review.status == ReviewStatus.PENDING:
+                review.status = ReviewStatus.IN_REVIEW
+
+            # If all slots are now claimed, keep status as IN_REVIEW
+            # (Will be changed to COMPLETED when actual reviews are submitted)
+
+            review.updated_at = datetime.utcnow()
+
+            await db.commit()
+            await db.refresh(review)
+            return review
+
+        except ValueError:
+            # Re-raise validation errors
+            await db.rollback()
+            raise
+        except Exception as e:
+            await db.rollback()
+            raise e
+
+    @staticmethod
+    async def unclaim_review_slot(
+        db: AsyncSession,
+        review_id: int,
+        reviewer_id: int
+    ) -> Optional[ReviewRequest]:
+        """
+        Unclaim a review slot (e.g., if reviewer decides not to proceed).
+
+        Args:
+            db: Database session
+            review_id: ID of the review request
+            reviewer_id: ID of the user unclaiming the review
+
+        Returns:
+            Updated review request if successful, None if not found
+
+        Raises:
+            ValueError: If unclaim is invalid
+            Exception: If database operation fails
+        """
+        try:
+            # Use SELECT FOR UPDATE to lock the row
+            query = (
+                select(ReviewRequest)
+                .where(
+                    ReviewRequest.id == review_id,
+                    ReviewRequest.deleted_at.is_(None)
+                )
+                .with_for_update()
+            )
+
+            result = await db.execute(query)
+            review = result.scalar_one_or_none()
+
+            if not review:
+                return None
+
+            # Validation checks
+            if review.reviews_claimed == 0:
+                raise ValueError("No slots are claimed for this review request")
+
+            if review.status == ReviewStatus.COMPLETED:
+                raise ValueError("Cannot unclaim a completed review")
+
+            # Decrement reviews_claimed
+            review.reviews_claimed -= 1
+
+            # If no slots are claimed, change status back to PENDING
+            if review.reviews_claimed == 0:
+                review.status = ReviewStatus.PENDING
+
+            review.updated_at = datetime.utcnow()
+
+            await db.commit()
+            await db.refresh(review)
+            return review
+
+        except ValueError:
+            await db.rollback()
+            raise
         except Exception as e:
             await db.rollback()
             raise e

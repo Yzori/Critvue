@@ -14,7 +14,8 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset
-from app.api.v1 import reviews, files
+from app.api.v1 import reviews, files, browse
+# from app.api.v1 import review_slots  # Temporarily disabled - has import issues
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 
@@ -43,8 +44,10 @@ if settings.ENABLE_RATE_LIMITING:
 # Include routers
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(password_reset.router, prefix="/api/v1")
+app.include_router(browse.router, prefix="/api/v1")  # Public browse marketplace (must be before reviews to avoid conflicts)
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
+# app.include_router(review_slots.router, prefix="/api/v1")  # Review slots workflow - temporarily disabled
 
 # Configure CORS
 app.add_middleware(

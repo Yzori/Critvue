@@ -1,7 +1,7 @@
 """Public Browse API endpoints for marketplace discovery"""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -9,12 +9,16 @@ from slowapi.util import get_remote_address
 from app.db.session import get_db
 from app.schemas.browse import (
     BrowseReviewsResponse,
+    ClaimReviewSlotResponse,
     SortOption,
     DeadlineFilter
 )
 from app.crud.browse import browse_crud
+from app.crud.review import review_crud
 from app.models.review_request import ContentType, ReviewType
+from app.models.user import User
 from app.core.logging_config import security_logger
+from app.api.deps import get_current_active_user
 
 router = APIRouter(prefix="/reviews", tags=["Browse"])
 
@@ -143,8 +147,239 @@ async def browse_reviews(
             f"Failed to browse reviews: {type(e).__name__}: {str(e)}"
         )
         # Re-raise as generic error to avoid exposing internal details
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve review requests. Please try again later."
+        )
+
+
+@router.post(
+    "/{review_id}/claim",
+    response_model=ClaimReviewSlotResponse,
+    summary="Claim a review slot"
+)
+@limiter.limit("20/minute")  # Stricter rate limit for state-changing operation
+async def claim_review_slot(
+    request: Request,
+    review_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+) -> ClaimReviewSlotResponse:
+    """
+    Claim a review slot for a specific review request.
+
+    This endpoint allows authenticated reviewers to claim one of the available
+    review slots for a review request. Multiple reviewers can claim slots for
+    the same request if reviews_requested > 1.
+
+    **Requirements:**
+    - Must be authenticated
+    - Cannot claim your own review request
+    - Review must have available slots (reviews_claimed < reviews_requested)
+    - Review must be in PENDING or IN_REVIEW status
+    - Review must not be deleted
+
+    **Race Condition Protection:**
+    - Uses database-level row locking (SELECT FOR UPDATE)
+    - Ensures atomic increment of reviews_claimed
+    - Prevents over-claiming when multiple reviewers claim simultaneously
+
+    **Status Updates:**
+    - If this is the first claim, status changes from PENDING to IN_REVIEW
+    - If this fills all slots, status remains IN_REVIEW (changes to COMPLETED when reviews submitted)
+
+    **Future Enhancement:**
+    - Currently allows same reviewer to claim multiple slots
+    - Future version will add review_claims table to track individual claims
+    - Will prevent duplicate claims by same reviewer
+
+    Args:
+        request: FastAPI request object (for rate limiting)
+        review_id: ID of the review request to claim
+        current_user: Currently authenticated user (injected by dependency)
+        db: Database session
+
+    Returns:
+        ClaimReviewSlotResponse with claim status and updated slot information
+
+    Raises:
+        HTTPException 401: If not authenticated
+        HTTPException 403: If trying to claim own review
+        HTTPException 404: If review request not found
+        HTTPException 409: If no available slots or invalid state
+        HTTPException 429: If rate limit exceeded
+        HTTPException 500: If database operation fails
+    """
+    try:
+        # Log the claim attempt
+        security_logger.logger.info(
+            f"User {current_user.id} attempting to claim review {review_id}"
+        )
+
+        # Attempt to claim the review slot
+        review = await review_crud.claim_review_slot(
+            db=db,
+            review_id=review_id,
+            reviewer_id=current_user.id
+        )
+
+        # Handle not found
+        if not review:
+            security_logger.logger.warning(
+                f"Review {review_id} not found for claim by user {current_user.id}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Review request {review_id} not found"
+            )
+
+        # Success - log and return response
+        security_logger.logger.info(
+            f"User {current_user.id} successfully claimed review {review_id}. "
+            f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
+        )
+
+        return ClaimReviewSlotResponse(
+            success=True,
+            message="Successfully claimed review slot",
+            review_request_id=review.id,
+            reviews_claimed=review.reviews_claimed,
+            available_slots=review.available_slots,
+            is_fully_claimed=review.is_fully_claimed
+        )
+
+    except ValueError as e:
+        # Handle validation errors (own review, fully claimed, invalid status, etc.)
+        error_msg = str(e)
+        security_logger.logger.warning(
+            f"Claim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
+        )
+
+        # Determine appropriate status code
+        if "cannot claim your own" in error_msg.lower():
+            status_code = status.HTTP_403_FORBIDDEN
+        elif "already claimed" in error_msg.lower() or "all review slots" in error_msg.lower():
+            status_code = status.HTTP_409_CONFLICT
+        else:
+            status_code = status.HTTP_409_CONFLICT
+
+        raise HTTPException(
+            status_code=status_code,
+            detail=error_msg
+        )
+
+    except Exception as e:
+        # Handle unexpected errors
+        security_logger.logger.error(
+            f"Failed to claim review {review_id} for user {current_user.id}: "
+            f"{type(e).__name__}: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to claim review slot. Please try again later."
+        )
+
+
+@router.post(
+    "/{review_id}/unclaim",
+    response_model=ClaimReviewSlotResponse,
+    summary="Unclaim a review slot"
+)
+@limiter.limit("20/minute")
+async def unclaim_review_slot(
+    request: Request,
+    review_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+) -> ClaimReviewSlotResponse:
+    """
+    Unclaim a previously claimed review slot.
+
+    This endpoint allows reviewers to release a claimed review slot if they
+    decide not to proceed with the review.
+
+    **Requirements:**
+    - Must be authenticated
+    - Review must have at least one claimed slot
+    - Review must not be in COMPLETED status
+
+    **Status Updates:**
+    - If this was the last claimed slot, status changes from IN_REVIEW to PENDING
+    - Otherwise, status remains IN_REVIEW
+
+    Args:
+        request: FastAPI request object (for rate limiting)
+        review_id: ID of the review request to unclaim
+        current_user: Currently authenticated user (injected by dependency)
+        db: Database session
+
+    Returns:
+        ClaimReviewSlotResponse with unclaim status and updated slot information
+
+    Raises:
+        HTTPException 401: If not authenticated
+        HTTPException 404: If review request not found
+        HTTPException 409: If no slots are claimed or invalid state
+        HTTPException 429: If rate limit exceeded
+        HTTPException 500: If database operation fails
+    """
+    try:
+        # Log the unclaim attempt
+        security_logger.logger.info(
+            f"User {current_user.id} attempting to unclaim review {review_id}"
+        )
+
+        # Attempt to unclaim the review slot
+        review = await review_crud.unclaim_review_slot(
+            db=db,
+            review_id=review_id,
+            reviewer_id=current_user.id
+        )
+
+        # Handle not found
+        if not review:
+            security_logger.logger.warning(
+                f"Review {review_id} not found for unclaim by user {current_user.id}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Review request {review_id} not found"
+            )
+
+        # Success - log and return response
+        security_logger.logger.info(
+            f"User {current_user.id} successfully unclaimed review {review_id}. "
+            f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
+        )
+
+        return ClaimReviewSlotResponse(
+            success=True,
+            message="Successfully unclaimed review slot",
+            review_request_id=review.id,
+            reviews_claimed=review.reviews_claimed,
+            available_slots=review.available_slots,
+            is_fully_claimed=review.is_fully_claimed
+        )
+
+    except ValueError as e:
+        # Handle validation errors
+        error_msg = str(e)
+        security_logger.logger.warning(
+            f"Unclaim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=error_msg
+        )
+
+    except Exception as e:
+        # Handle unexpected errors
+        security_logger.logger.error(
+            f"Failed to unclaim review {review_id} for user {current_user.id}: "
+            f"{type(e).__name__}: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to unclaim review slot. Please try again later."
         )

@@ -6,7 +6,6 @@
 import apiClient from "./client";
 import type {
   LoginCredentials,
-  LoginResponse,
   RegisterCredentials,
   RegisterResponse,
   PasswordResetRequest,

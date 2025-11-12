@@ -15,6 +15,7 @@ from app.models.user import Base
 # Import all models to ensure they're registered with Base
 from app.models.review_request import ReviewRequest
 from app.models.review_file import ReviewFile
+from app.models.review_slot import ReviewSlot
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -79,7 +80,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            render_as_batch=True  # Enable batch mode for SQLite
         )
 
         with context.begin_transaction():

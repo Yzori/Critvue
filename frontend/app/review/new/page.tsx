@@ -8,9 +8,10 @@
  * 1. Content Type Selection - Visual icon grid
  * 2. Basic Info - Title and description
  * 3. File Upload - Upload files and add links
- * 4. Feedback Areas - Specify what feedback is needed (NEW)
- * 5. Review Type - Free vs Expert with budget input (ENHANCED)
- * 6. Review & Submit - Comprehensive confirmation (ENHANCED)
+ * 4. Feedback Areas - Specify what feedback is needed
+ * 5. Review Type - Free vs Expert with budget input
+ * 6. Number of Reviews - Select 1-10 reviews (Expert only, conditionally shown)
+ * 7. Review & Submit - Comprehensive confirmation
  *
  * Based on UX research showing 86% conversion increase
  */
@@ -24,6 +25,7 @@ import { BasicInfoStep } from "@/components/review-flow/basic-info-step";
 import { FileUploadStep } from "@/components/review-flow/file-upload-step";
 import { FeedbackAreasStep } from "@/components/review-flow/feedback-areas-step";
 import { ReviewTypeStep } from "@/components/review-flow/review-type-step";
+import { NumberOfReviewsStep } from "@/components/review-flow/number-of-reviews-step";
 import { ReviewSubmitStep } from "@/components/review-flow/review-submit-step";
 import { ProgressIndicator } from "@/components/review-flow/progress-indicator";
 import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
@@ -41,6 +43,7 @@ interface FormState {
   customFeedbackArea: string;
   reviewType: ReviewType | null;
   budget: number;
+  numberOfReviews: number; // Number of reviews requested (1-10)
   reviewId: number | null;
 }
 
@@ -56,7 +59,8 @@ const encouragingMessages: Record<number, string> = {
   2: "Looking good! Time to share your files...",
   3: "Files look amazing! What feedback do you need?",
   4: "Perfect! Now choose your review type...",
-  5: "Almost there! Let's review everything...",
+  5: "Excellent! How many reviews would you like?",
+  6: "Almost there! Let's review everything...",
 };
 
 export default function NewReviewPage() {
@@ -79,6 +83,7 @@ export default function NewReviewPage() {
     customFeedbackArea: "",
     reviewType: null,
     budget: 49, // Default to junior tier
+    numberOfReviews: 1, // Default to 1 review
     reviewId: null,
   });
 
@@ -124,6 +129,12 @@ export default function NewReviewPage() {
       return formState.reviewType !== null;
     }
 
+    if (step === 6) {
+      // Number of reviews - must be between 1-10 for expert, 1-3 for free
+      const maxReviews = formState.reviewType === "expert" ? 10 : 3;
+      return formState.numberOfReviews >= 1 && formState.numberOfReviews <= maxReviews;
+    }
+
     return true;
   };
 
@@ -158,7 +169,7 @@ export default function NewReviewPage() {
         setFormState((prev) => ({ ...prev, reviewId: response.id as any }));
 
         // Show encouraging message and move to next step
-        const nextStep = Math.min(currentStep + 1, 6);
+        const nextStep = Math.min(currentStep + 1, 7);
         setCurrentStep(nextStep);
         showEncouragingMessage(currentStep);
       } catch (error) {
@@ -171,7 +182,7 @@ export default function NewReviewPage() {
     }
 
     // Move to next step with encouraging message
-    const nextStep = Math.min(currentStep + 1, 6);
+    const nextStep = Math.min(currentStep + 1, 7);
     setCurrentStep(nextStep);
     showEncouragingMessage(currentStep);
   };
@@ -320,6 +331,19 @@ export default function NewReviewPage() {
 
             case 6:
               return (
+                <NumberOfReviewsStep
+                  numberOfReviews={formState.numberOfReviews}
+                  pricePerReview={formState.budget}
+                  onNumberChange={(num) =>
+                    setFormState((prev) => ({ ...prev, numberOfReviews: num }))
+                  }
+                  isPaidReview={formState.reviewType === "expert"}
+                  reviewType={formState.reviewType || "free"}
+                />
+              );
+
+            case 7:
+              return (
                 <ReviewSubmitStep
                   contentType={formState.contentType!}
                   title={formState.title}
@@ -353,6 +377,9 @@ export default function NewReviewPage() {
       case 5:
         return formState.reviewType !== null;
       case 6:
+        const maxReviews = formState.reviewType === "expert" ? 10 : 3;
+        return formState.numberOfReviews >= 1 && formState.numberOfReviews <= maxReviews;
+      case 7:
         return true;
       default:
         return false;
@@ -367,7 +394,7 @@ export default function NewReviewPage() {
           <div className="mb-8">
             <ProgressIndicator
               currentStep={currentStep}
-              totalSteps={6}
+              totalSteps={7}
               onStepClick={(step) => {
                 // Only allow going back to completed steps
                 if (step < currentStep) {
@@ -415,10 +442,10 @@ export default function NewReviewPage() {
               {/* Next/Submit Button - Enhanced touch target */}
               <Button
                 size="lg"
-                onClick={currentStep === 6 ? handleSubmit : handleNext}
+                onClick={currentStep === 7 ? handleSubmit : handleNext}
                 disabled={!canProceed() || isSubmitting}
                 className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white group relative overflow-hidden min-h-[48px] touch-manipulation active:scale-[0.98]"
-                aria-label={currentStep === 6 ? "Submit review request" : "Continue to next step"}
+                aria-label={currentStep === 7 ? "Submit review request" : "Continue to next step"}
               >
                 {/* Button shimmer effect on hover */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -428,7 +455,7 @@ export default function NewReviewPage() {
                     <Loader2 className="size-5 animate-spin" />
                     <span>{currentStep === 2 ? "Creating..." : "Submitting..."}</span>
                   </>
-                ) : currentStep === 6 ? (
+                ) : currentStep === 7 ? (
                   <>
                     <span>Submit Request</span>
                     <Check className="size-5" />

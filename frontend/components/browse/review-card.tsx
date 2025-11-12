@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BrowseReviewItem } from "@/lib/api/browse";
-import { ArrowRight, Calendar, DollarSign, Star, Heart } from "lucide-react";
+import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle } from "lucide-react";
 
 export interface ReviewCardProps extends React.HTMLAttributes<HTMLDivElement> {
   review: BrowseReviewItem;
@@ -60,6 +60,44 @@ export function ReviewCard({
       return <Badge variant="warning" size="sm">3 days left</Badge>;
     }
     return null;
+  };
+
+  // Calculate claim status badge
+  const getClaimStatusBadge = () => {
+    const reviewsRequested = review.reviews_requested || 1;
+    const reviewsClaimed = review.reviews_claimed || 0;
+    const availableSlots = review.available_slots ?? (reviewsRequested - reviewsClaimed);
+
+    // Don't show badge if only 1 review requested (standard flow)
+    if (reviewsRequested === 1) return null;
+
+    // Fully claimed
+    if (availableSlots === 0) {
+      return (
+        <Badge variant="neutral" size="sm" className="flex items-center gap-1">
+          <Users className="size-3" />
+          <span>All slots claimed</span>
+        </Badge>
+      );
+    }
+
+    // Only 1 slot left - urgent badge
+    if (availableSlots === 1) {
+      return (
+        <Badge variant="warning" size="sm" className="flex items-center gap-1 animate-pulse">
+          <AlertCircle className="size-3" />
+          <span>Only 1 slot left!</span>
+        </Badge>
+      );
+    }
+
+    // Multiple slots available
+    return (
+      <Badge variant="success" size="sm" className="flex items-center gap-1">
+        <Users className="size-3" />
+        <span>{availableSlots} of {reviewsRequested} slots</span>
+      </Badge>
+    );
   };
 
   // Get content type color
@@ -272,6 +310,7 @@ export function ReviewCard({
         <div className="flex flex-wrap gap-3 items-center pointer-events-none">
           {getContentTypeBadge()}
           {getReviewTypeBadge()}
+          {getClaimStatusBadge()}
           {getUrgencyBadge()}
           {/* Featured badge only shown if no image (fallback) */}
           {review.is_featured && !review.preview_image_url && (
@@ -333,6 +372,34 @@ export function ReviewCard({
 
         {/* Metadata and actions grouped at bottom with mt-auto */}
         <div className="mt-auto flex flex-col gap-3">
+          {/* Claim Progress Bar - Only for multi-review requests */}
+          {(review.reviews_requested ?? 1) > 1 && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground font-medium flex items-center gap-1">
+                  <Users className="size-3" />
+                  Review slots
+                </span>
+                <span className="text-foreground font-semibold">
+                  {review.reviews_claimed || 0} of {review.reviews_requested} claimed
+                </span>
+              </div>
+              <div className="relative h-2 bg-accent-sage/20 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "absolute inset-y-0 left-0 rounded-full transition-all duration-500",
+                    (review.available_slots ?? 1) > 1 ? "bg-accent-sage" :
+                    (review.available_slots ?? 1) === 1 ? "bg-amber-500" :
+                    "bg-green-500"
+                  )}
+                  style={{
+                    width: `${((review.reviews_claimed || 0) / (review.reviews_requested || 1)) * 100}%`
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Metadata footer */}
           <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
             {/* Price */}

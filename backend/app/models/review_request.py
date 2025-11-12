@@ -21,6 +21,7 @@ from app.models.user import Base
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.review_file import ReviewFile
+    from app.models.review_slot import ReviewSlot
 
 
 class ContentType(str, enum.Enum):
@@ -77,6 +78,34 @@ class ReviewRequest(Base):
     # Budget for expert reviews (optional, in cents to avoid floating point issues)
     budget = Column(Numeric(10, 2), nullable=True)
 
+    # Deadline for review completion (optional, UTC datetime)
+    deadline = Column(DateTime, nullable=True, index=True)
+
+    # Multi-review support
+    reviews_requested = Column(
+        Integer,
+        nullable=False,
+        default=1,
+        server_default="1",
+        doc="Number of reviews requested (1-10)"
+    )
+    reviews_claimed = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        index=True,
+        doc="Number of review slots that have been claimed"
+    )
+    reviews_completed = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+        index=True,
+        doc="Number of reviews that have been accepted"
+    )
+
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -93,6 +122,12 @@ class ReviewRequest(Base):
         Index('idx_user_deleted', 'user_id', 'deleted_at'),
         # Index for filtering by status and date (for admin queries)
         Index('idx_status_created', 'status', 'created_at'),
+        # Index for browse marketplace queries (status, deadline for urgency filters)
+        Index('idx_status_deadline', 'status', 'deadline'),
+        # Index for content type filtering in browse
+        Index('idx_content_status', 'content_type', 'status', 'created_at'),
+        # Index for multi-review queries (status + reviews_claimed)
+        Index('idx_status_reviews_claimed', 'status', 'reviews_claimed'),
     )
 
     # Relationships
@@ -102,6 +137,12 @@ class ReviewRequest(Base):
         back_populates="review_request",
         cascade="all, delete-orphan",
         lazy="selectin"  # Eager load files when fetching review requests
+    )
+    slots = relationship(
+        "ReviewSlot",
+        back_populates="review_request",
+        cascade="all, delete-orphan",
+        lazy="selectin"  # Eager load slots for status calculations
     )
 
     def __repr__(self) -> str:
@@ -121,3 +162,25 @@ class ReviewRequest(Base):
     def file_count(self) -> int:
         """Get number of attached files"""
         return len(self.files) if self.files else 0
+
+    @property
+    def available_slots(self) -> int:
+        """Get number of available review slots"""
+        return max(0, self.reviews_requested - self.reviews_claimed)
+
+    @property
+    def is_fully_claimed(self) -> bool:
+        """Check if all review slots are claimed"""
+        return self.reviews_claimed >= self.reviews_requested
+
+    @property
+    def is_partially_claimed(self) -> bool:
+        """Check if some but not all review slots are claimed"""
+        return 0 < self.reviews_claimed < self.reviews_requested
+
+    @property
+    def claim_progress_percentage(self) -> float:
+        """Get claim progress as percentage (0-100)"""
+        if self.reviews_requested == 0:
+            return 0.0
+        return (self.reviews_claimed / self.reviews_requested) * 100

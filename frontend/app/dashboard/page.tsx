@@ -485,9 +485,9 @@ function DashboardContent() {
                 {reviews.slice(0, 4).map((review, index) => (
                   <motion.div
                     key={review.id}
-                    initial={prefersReducedMotion ? false : { opacity: 0, x: -20 }}
+                    initial={prefersReducedMotion ? undefined : { opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={prefersReducedMotion ? false : { opacity: 0, x: 20 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, x: 20 }}
                     transition={{
                       duration: prefersReducedMotion ? 0 : 0.3,
                       delay: prefersReducedMotion ? 0 : index * 0.05
@@ -621,6 +621,12 @@ function ReviewItem({ review }: ReviewItemProps) {
   const config = contentTypeConfig[review.content_type];
   const statusInfo = statusConfig[review.status as keyof typeof statusConfig] || statusConfig.pending;
 
+  // Calculate claim progress for multi-review requests
+  const reviewsRequested = review.reviews_requested || 1;
+  const reviewsClaimed = review.reviews_claimed || 0;
+  const availableSlots = review.available_slots ?? (reviewsRequested - reviewsClaimed);
+  const hasMultipleReviews = reviewsRequested > 1;
+
   // Format date
   const createdDate = new Date(review.created_at);
   const now = new Date();
@@ -654,6 +660,36 @@ function ReviewItem({ review }: ReviewItemProps) {
           </Badge>
         </div>
         <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-1 sm:line-clamp-none">{review.description}</p>
+
+        {/* Claim Progress - Only for multi-review requests */}
+        {hasMultipleReviews && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-[10px] sm:text-xs">
+              <span className="text-muted-foreground font-medium flex items-center gap-1">
+                <Users className="size-3" />
+                {reviewsClaimed} of {reviewsRequested} reviews claimed
+              </span>
+              {availableSlots > 0 && (
+                <span className="text-accent-sage font-semibold">
+                  {availableSlots} slot{availableSlots !== 1 ? 's' : ''} available
+                </span>
+              )}
+            </div>
+            <div className="relative h-1.5 bg-accent-sage/20 rounded-full overflow-hidden">
+              <div
+                className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${
+                  availableSlots === 0 ? "bg-green-500" :
+                  availableSlots === 1 ? "bg-amber-500" :
+                  "bg-accent-sage"
+                }`}
+                style={{
+                  width: `${(reviewsClaimed / reviewsRequested) * 100}%`
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center gap-3 mt-1">
           <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
             <Clock className="size-3" />

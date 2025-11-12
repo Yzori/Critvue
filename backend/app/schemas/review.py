@@ -48,6 +48,13 @@ class ReviewRequestBase(BaseModel):
     review_type: ReviewType = ReviewType.FREE
     feedback_areas: Optional[str] = Field(None, max_length=1000)
     budget: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    deadline: Optional[datetime] = Field(None, description="Review deadline (UTC)")
+    reviews_requested: int = Field(
+        default=1,
+        ge=1,
+        le=10,
+        description="Number of reviews requested (1-10)"
+    )
 
     @field_validator('title')
     @classmethod
@@ -65,6 +72,23 @@ class ReviewRequestBase(BaseModel):
         v = v.strip()
         if len(v) < 10:
             raise ValueError('Description must be at least 10 characters long')
+        return v
+
+    @field_validator('reviews_requested')
+    @classmethod
+    def validate_reviews_requested(cls, v: int, info) -> int:
+        """Validate reviews_requested based on review type"""
+        data = info.data
+        review_type = data.get('review_type')
+
+        # Free reviews: 1-3 max (prevents abuse)
+        if review_type == ReviewType.FREE and v > 3:
+            raise ValueError('Free reviews are limited to 3 maximum. Upgrade to expert reviews for more.')
+
+        # Expert reviews: 1-10 max
+        if review_type == ReviewType.EXPERT and v > 10:
+            raise ValueError('Expert reviews are limited to 10 maximum.')
+
         return v
 
     @field_validator('budget')
@@ -96,6 +120,13 @@ class ReviewRequestUpdate(BaseModel):
     status: Optional[ReviewStatus] = None
     feedback_areas: Optional[str] = Field(None, max_length=1000)
     budget: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    deadline: Optional[datetime] = Field(None, description="Review deadline (UTC)")
+    reviews_requested: Optional[int] = Field(
+        None,
+        ge=1,
+        le=10,
+        description="Number of reviews requested (1-10)"
+    )
 
     @field_validator('title')
     @classmethod
@@ -123,11 +154,36 @@ class ReviewRequestResponse(ReviewRequestBase):
     id: int
     user_id: int
     status: ReviewStatus
+    reviews_claimed: int = Field(..., description="Number of review slots claimed")
+    reviews_completed: int = Field(default=0, description="Number of reviews accepted")
     created_at: datetime
     updated_at: datetime
     completed_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
     files: List[ReviewFileResponse] = []
+
+    # Computed fields for convenience
+    @property
+    def available_slots(self) -> int:
+        """Get number of available review slots"""
+        return max(0, self.reviews_requested - self.reviews_claimed)
+
+    @property
+    def is_fully_claimed(self) -> bool:
+        """Check if all review slots are claimed"""
+        return self.reviews_claimed >= self.reviews_requested
+
+    @property
+    def is_partially_claimed(self) -> bool:
+        """Check if some but not all review slots are claimed"""
+        return 0 < self.reviews_claimed < self.reviews_requested
+
+    @property
+    def completion_progress(self) -> float:
+        """Get completion progress as percentage (0-100)"""
+        if self.reviews_requested == 0:
+            return 0.0
+        return (self.reviews_completed / self.reviews_requested) * 100
 
     class Config:
         from_attributes = True

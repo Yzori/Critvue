@@ -25,6 +25,9 @@ export interface BrowseReviewItem {
   creator_rating?: number;
   is_featured?: boolean;
   urgency?: "low" | "medium" | "high";
+  reviews_requested?: number; // Number of reviews requested (1-10)
+  reviews_claimed?: number; // Number of reviews claimed by reviewers
+  available_slots?: number; // Computed: reviews_requested - reviews_claimed
 }
 
 // Browse response with pagination
@@ -107,8 +110,9 @@ export async function getBrowseReview(id: number): Promise<BrowseReviewItem> {
 }
 
 /**
- * Claim a review (requires authentication)
+ * Claim a review slot (requires authentication)
+ * For reviews with multiple slots, claims one available slot
  */
-export async function claimReview(id: number): Promise<{ success: boolean; message: string }> {
+export async function claimReviewSlot(id: number): Promise<{ success: boolean; message: string }> {
   return apiClient.post<{ success: boolean; message: string }>(`/reviews/${id}/claim`);
 }

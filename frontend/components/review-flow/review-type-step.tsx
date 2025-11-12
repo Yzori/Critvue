@@ -120,28 +120,28 @@ const budgetTiers: BudgetTier[] = [
   },
 ];
 
-// Mock reviewer avatars data
-const getReviewersForTier = (budget: number) => {
-  if (budget < 50) {
-    return {
-      visible: 4,
-      total: 15,
-      colors: ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-yellow-500"],
-    };
-  } else if (budget < 100) {
-    return {
-      visible: 3,
-      total: 8,
-      colors: ["bg-indigo-500", "bg-pink-500", "bg-teal-500"],
-    };
-  } else {
-    return {
-      visible: 2,
-      total: 3,
-      colors: ["bg-violet-500", "bg-rose-500"],
-    };
-  }
-};
+// Mock reviewer avatars data - commented out as it's not currently used
+// const getReviewersForTier = (budget: number) => {
+//   if (budget < 50) {
+//     return {
+//       visible: 4,
+//       total: 15,
+//       colors: ["bg-blue-500", "bg-purple-500", "bg-green-500", "bg-yellow-500"],
+//     };
+//   } else if (budget < 100) {
+//     return {
+//       visible: 3,
+//       total: 8,
+//       colors: ["bg-indigo-500", "bg-pink-500", "bg-teal-500"],
+//     };
+//   } else {
+//     return {
+//       visible: 2,
+//       total: 3,
+//       colors: ["bg-violet-500", "bg-rose-500"],
+//     };
+//   }
+// };
 
 function getBudgetTier(budget: number): BudgetTier {
   const found = budgetTiers.find(tier => budget >= tier.min && budget <= tier.max);
@@ -161,7 +161,7 @@ export function ReviewTypeStep({ selectedType, budget, onSelect, onBudgetChange 
   const budgetProgress = getBudgetProgress(budget);
   const [showWhyExpert, setShowWhyExpert] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
-  const [hoveredTier, setHoveredTier] = useState<number | null>(null);
+  // Removed unused hover state: const [hoveredTier, setHoveredTier] = useState<number | null>(null);
 
   return (
     <div className="space-y-6">

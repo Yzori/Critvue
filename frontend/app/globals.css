@@ -14,6 +14,12 @@
   /* Accents */
   --accent-blue: #3B82F6;
   --accent-peach: #F97316;
+  --accent-sage: #4ADE80;
+
+  /* Accent RGB for gradients */
+  --accent-blue-rgb: 59, 130, 246;
+  --accent-peach-rgb: 249, 115, 22;
+  --accent-sage-rgb: 74, 222, 128;
 
   /* Borders / UI Grays */
   --border-light: rgba(0, 0, 0, 0.05);
@@ -24,6 +30,23 @@
   /* Overlay & Glass Morphism */
   --background-overlay: rgba(0, 0, 0, 0.5);
   --background-glass: oklch(1 0 0 / 0.95);
+  --glass-light: rgba(255, 255, 255, 0.7);
+  --glass-medium: rgba(255, 255, 255, 0.8);
+  --glass-heavy: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-border-dark: rgba(0, 0, 0, 0.1);
+
+  /* Compact Filter Tokens */
+  --filter-bar-height: 48px;
+  --filter-button-height: 40px;
+  --filter-button-radius: 20px;
+  --filter-gap: 12px;
+  --filter-chip-height: 32px;
+
+  /* Popover Tokens */
+  --popover-bg: rgba(255, 255, 255, 0.9);
+  --popover-border: rgba(255, 255, 255, 0.3);
+  --popover-shadow: 0 12px 48px rgba(31, 38, 135, 0.2);
 
   /* Animation Durations */
   --duration-fast: 150ms;
@@ -98,10 +121,13 @@
   --radius-full: 9999px;
 
   /* Shadows - Subtle elevation */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.08), 0 8px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.12), 0 12px 24px rgba(0, 0, 0, 0.08);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -306,5 +332,215 @@ body {
 
   .duration-500 {
     animation-duration: 0.5s;
+  }
+
+  /* Bento Grid Layout - Professional v2 (2025 Standard) */
+  .bento-grid-v2 {
+    display: grid;
+    gap: 1rem; /* 16px - 2025 minimum standard */
+
+    /* IMPROVED: Natural flow instead of dense packing */
+    /* Maintains reading order for better UX and accessibility */
+    grid-auto-flow: row;
+
+    /* Mobile: 1 column */
+    grid-template-columns: 1fr;
+
+    /* Adaptive row heights for content flexibility - 2025 standards */
+    grid-auto-rows: minmax(300px, auto);
+
+    /* Smooth layout transitions */
+    transition: grid-template-columns 0.3s ease, gap 0.3s ease;
+  }
+
+  /* Tablet: 2 columns with professional spacing */
+  @media (min-width: 640px) {
+    .bento-grid-v2 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem; /* 20px - professional spacing */
+      grid-auto-rows: minmax(320px, auto);
+    }
+  }
+
+  /* Desktop: 3 columns with optimal density */
+  @media (min-width: 1024px) {
+    .bento-grid-v2 {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem; /* 24px - optimal desktop spacing */
+      grid-auto-rows: minmax(340px, auto);
+    }
+  }
+
+  /* Large Desktop: 4 columns for premium layouts */
+  @media (min-width: 1536px) {
+    .bento-grid-v2 {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.75rem; /* 28px - premium spacing */
+      grid-auto-rows: minmax(340px, auto);
+    }
+  }
+
+  /* Legacy bento-grid support (deprecated - use bento-grid-v2) */
+  .bento-grid {
+    display: grid;
+    gap: 1rem;
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(280px, auto);
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  @media (min-width: 640px) {
+    .bento-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      grid-auto-rows: minmax(300px, auto);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .bento-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      grid-auto-rows: minmax(320px, auto);
+    }
+  }
+
+  @media (min-width: 1536px) {
+    .bento-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.75rem;
+      grid-auto-rows: minmax(320px, auto);
+    }
+  }
+
+  /* Card size utilities for bento grid with masonry */
+  .card-small {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  .card-medium {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  /* Mobile: all cards same size (prevents overflow) */
+  .card-large,
+  .card-wide,
+  .card-tall {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
+  /* Tablet: enable 2x2 large cards and 2x1 wide cards */
+  @media (min-width: 640px) {
+    .card-large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .card-wide {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    /* Tall cards NOT enabled on tablet - keep as 1x1 for better proportions on 2-column grid */
+    .card-tall {
+      grid-column: span 1;
+      grid-row: span 1;
+    }
+  }
+
+  /* Desktop: enable all card variations including tall cards */
+  @media (min-width: 1024px) {
+    .card-large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .card-wide {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    /* Tall cards now enabled on desktop+ (3-4 column layouts) */
+    .card-tall {
+      grid-column: span 1;
+      grid-row: span 2;
+    }
+  }
+
+  /* Large Desktop: full masonry potential */
+  @media (min-width: 1536px) {
+    .card-large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .card-wide {
+      grid-column: span 2;
+      grid-row: span 1;
+    }
+
+    .card-tall {
+      grid-column: span 1;
+      grid-row: span 2;
+    }
+  }
+
+  /* IMPROVED: Performance optimization for smooth transitions */
+  .bento-grid-v2 > * {
+    /* Hardware-accelerated transitions */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease;
+  }
+
+  /* Performance optimization for hover effects with GPU acceleration */
+  .review-card {
+    /* Subtle optimization - only transform */
+    will-change: transform;
+    /* Promote to its own layer for smoother animations */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .review-card:hover {
+    /* During hover, prepare for shadow changes too */
+    will-change: transform, box-shadow;
+  }
+
+  /* Legacy grid transitions */
+  .bento-grid > * {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  /* Glassmorphism utilities */
+  .glass-light {
+    background: var(--glass-light);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .glass-medium {
+    background: var(--glass-medium);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-heavy {
+    background: var(--glass-heavy);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Support for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
