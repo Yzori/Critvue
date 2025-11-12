@@ -27,6 +27,21 @@ import {
   Pencil,
 } from "lucide-react";
 
+// API imports
+import { getMyProfile, ProfileData as ApiProfileData } from "@/lib/api/profile";
+import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { ApiClientError } from "@/lib/api/client";
+
+// Component imports
+import { ProfilePageSkeleton } from "@/components/profile/profile-skeleton";
+import {
+  ProfileLoadError,
+  ProfileNotFoundError,
+  AuthenticationRequiredError,
+  NetworkError,
+  EmptyPortfolioState,
+} from "@/components/profile/error-states";
+
 /**
  * Profile Page
  *
@@ -63,25 +78,104 @@ interface ProfileData {
 export default function ProfilePage() {
   const prefersReducedMotion = useReducedMotion();
   const [activeRole, setActiveRole] = useState<ProfileRole>("both");
-  const [isOwnProfile, setIsOwnProfile] = useState(true); // TODO: Determine from auth
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
 
-  // Mock profile data - TODO: Replace with API call
-  const profileData: ProfileData = {
-    id: "1",
-    username: "johndoe",
-    full_name: "John Doe",
-    title: "UX Designer & Code Reviewer",
-    bio: "Helping creators level up through thoughtful feedback on design and frontend code. Passionate about accessibility and user-centered design.",
-    avatar_url: undefined,
-    rating: 4.8,
-    total_reviews_given: 42,
-    total_reviews_received: 12,
-    avg_response_time_hours: 18,
-    member_since: "2024-01-15",
-    verified: true,
-    badges: ["Top Contributor", "Fast Responder", "Expert Reviewer"],
-    specialty_tags: ["UI/UX", "React", "TypeScript", "Accessibility"],
+  // State management
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<{
+    type: "not_found" | "auth_required" | "network" | "server" | "unknown";
+    message: string;
+  } | null>(null);
+
+  // Load profile data on mount
+  useEffect(() => {
+    loadProfileData();
+  }, []);
+
+  /**
+   * Load profile and portfolio data from API
+   */
+  const loadProfileData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load profile data
+      const profile = await getMyProfile();
+      setProfileData(profile);
+
+      // Load portfolio items
+      const portfolioResponse = await getUserPortfolio(Number(profile.id), {
+        page_size: 20,
+      });
+      setPortfolioItems(portfolioResponse.items);
+    } catch (err) {
+      console.error("Profile load error:", err);
+
+      // Handle different error types
+      if (err instanceof ApiClientError) {
+        if (err.status === 401) {
+          setError({
+            type: "auth_required",
+            message: "Authentication required",
+          });
+        } else if (err.status === 404) {
+          setError({
+            type: "not_found",
+            message: "Profile not found",
+          });
+        } else if (err.status >= 500) {
+          setError({
+            type: "server",
+            message: "Server error occurred",
+          });
+        } else {
+          setError({
+            type: "unknown",
+            message: err.message || "Failed to load profile",
+          });
+        }
+      } else if (err instanceof Error && err.message === "Failed to fetch") {
+        setError({
+          type: "network",
+          message: "Network connection error",
+        });
+      } else {
+        setError({
+          type: "unknown",
+          message: "An unexpected error occurred",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Show loading skeleton
+  if (loading) {
+    return <ProfilePageSkeleton />;
+  }
+
+  // Show error states
+  if (error) {
+    switch (error.type) {
+      case "auth_required":
+        return <AuthenticationRequiredError />;
+      case "not_found":
+        return <ProfileNotFoundError onRetry={loadProfileData} />;
+      case "network":
+        return <NetworkError onRetry={loadProfileData} />;
+      default:
+        return <ProfileLoadError onRetry={loadProfileData} />;
+    }
+  }
+
+  // Profile data should exist at this point
+  if (!profileData) {
+    return <ProfileLoadError onRetry={loadProfileData} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
@@ -458,66 +552,78 @@ export default function ProfilePage() {
             ))}
           </div>
 
-          {/* Bento Grid - Mock data */}
-          <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[200px] gap-3 sm:gap-4">
-            {/* Large Project Card */}
-            <motion.div
-              className="col-span-2 row-span-2 relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 group cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Badge variant="info" size="sm" className="mb-2">
-                  Design
-                </Badge>
-                <h3 className="text-lg font-bold mb-1">E-commerce Redesign</h3>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="flex items-center">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "size-3",
-                          i < 5 ? "fill-amber-400 text-amber-400" : "text-gray-400"
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span>5.0</span>
-                </div>
-              </div>
-            </motion.div>
+          {/* Bento Grid - Real Portfolio Data */}
+          {portfolioItems.length === 0 ? (
+            <EmptyPortfolioState isOwnProfile={isOwnProfile} />
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[200px] gap-3 sm:gap-4">
+              {portfolioItems.map((item, index) => {
+                // First item gets large card treatment
+                const isLarge = index === 0;
+                const cardClasses = isLarge ? "col-span-2 row-span-2" : "";
 
-            {/* Medium Project Cards */}
-            {[
-              { title: "React Component Library", type: "Code", rating: 4.8 },
-              { title: "Brand Identity System", type: "Design", rating: 4.9 },
-              { title: "API Documentation", type: "Writing", rating: 4.7 },
-              { title: "Landing Page Concept", type: "Design", rating: 4.6 },
-            ].map((project, index) => (
-              <motion.div
-                key={project.title}
-                className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 group cursor-pointer"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: prefersReducedMotion ? 0 : 0.9 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Badge variant="info" size="sm" className="mb-2">
-                    {project.type}
-                  </Badge>
-                  <h3 className="text-sm font-bold mb-1 line-clamp-2">{project.title}</h3>
-                  <div className="flex items-center gap-1 text-xs">
-                    <Star className="size-3 fill-amber-400 text-amber-400" />
-                    <span>{project.rating}</span>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                return (
+                  <motion.div
+                    key={item.id}
+                    className={cn(
+                      "relative rounded-2xl overflow-hidden group cursor-pointer",
+                      cardClasses
+                    )}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: prefersReducedMotion ? 0 : 0.9 + index * 0.05 }}
+                    whileHover={{ scale: isLarge ? 1.02 : 1.05 }}
+                    onClick={() => item.project_url && window.open(item.project_url, "_blank")}
+                  >
+                    {/* Background Image or Gradient */}
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+                    )}
+
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                    {/* Content */}
+                    <div
+                      className={cn(
+                        "absolute bottom-0 left-0 right-0 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                        isLarge ? "p-6" : "p-4"
+                      )}
+                    >
+                      <Badge variant="info" size="sm" className="mb-2 capitalize">
+                        {item.content_type}
+                      </Badge>
+                      <h3
+                        className={cn(
+                          "font-bold mb-1 line-clamp-2",
+                          isLarge ? "text-lg" : "text-sm"
+                        )}
+                      >
+                        {item.title}
+                      </h3>
+                      {item.rating && (
+                        <div
+                          className={cn(
+                            "flex items-center gap-1",
+                            isLarge ? "text-sm" : "text-xs"
+                          )}
+                        >
+                          <Star className="size-3 fill-amber-400 text-amber-400" />
+                          <span>{item.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
       </section>
 
