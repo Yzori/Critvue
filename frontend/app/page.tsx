@@ -525,6 +525,312 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Content Types - What You Can Get Reviewed */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12 md:mb-16"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="info" size="lg" className="mb-4">
+              What We Review
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Get feedback on any creative work
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              From code to design, writing to video—we've got you covered
+            </p>
+          </motion.div>
+
+          {/* Content type grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
+            {[
+              { icon: Code, label: "Code", color: "blue" },
+              { icon: Palette, label: "Design", color: "purple" },
+              { icon: Video, label: "Video", color: "red" },
+              { icon: PenTool, label: "Writing", color: "green" },
+              { icon: Mic, label: "Audio", color: "orange" },
+              { icon: ImageIcon, label: "Art", color: "pink" },
+            ].map((type, index) => (
+              <motion.div
+                key={type.label}
+                className="group relative"
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05, duration: 0.4 }}
+                whileHover={{ scale: 1.05, y: -4 }}
+              >
+                <div className="relative p-6 sm:p-8 rounded-2xl bg-white border-2 border-gray-200 hover:border-accent-blue/50 transition-all duration-300 shadow-md hover:shadow-xl overflow-hidden">
+                  {/* Decorative gradient on hover */}
+                  <div className={cn(
+                    "absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300",
+                    type.color === "blue" && "bg-gradient-to-br from-blue-500 to-indigo-500",
+                    type.color === "purple" && "bg-gradient-to-br from-purple-500 to-pink-500",
+                    type.color === "red" && "bg-gradient-to-br from-red-500 to-orange-500",
+                    type.color === "green" && "bg-gradient-to-br from-green-500 to-emerald-500",
+                    type.color === "orange" && "bg-gradient-to-br from-orange-500 to-amber-500",
+                    type.color === "pink" && "bg-gradient-to-br from-pink-500 to-rose-500"
+                  )} />
+
+                  {/* Icon */}
+                  <div className="relative flex flex-col items-center gap-3">
+                    <motion.div
+                      className={cn(
+                        "size-12 sm:size-14 md:size-16 rounded-xl flex items-center justify-center ring-2 ring-offset-2 transition-all duration-300",
+                        type.color === "blue" && "bg-gradient-to-br from-blue-500 to-indigo-500 text-white ring-blue-500/20 group-hover:ring-blue-500/40",
+                        type.color === "purple" && "bg-gradient-to-br from-purple-500 to-pink-500 text-white ring-purple-500/20 group-hover:ring-purple-500/40",
+                        type.color === "red" && "bg-gradient-to-br from-red-500 to-orange-500 text-white ring-red-500/20 group-hover:ring-red-500/40",
+                        type.color === "green" && "bg-gradient-to-br from-green-500 to-emerald-500 text-white ring-green-500/20 group-hover:ring-green-500/40",
+                        type.color === "orange" && "bg-gradient-to-br from-orange-500 to-amber-500 text-white ring-orange-500/20 group-hover:ring-orange-500/40",
+                        type.color === "pink" && "bg-gradient-to-br from-pink-500 to-rose-500 text-white ring-pink-500/20 group-hover:ring-pink-500/40"
+                      )}
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <type.icon className="size-6 sm:size-7 md:size-8" />
+                    </motion.div>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-gray-800 transition-colors">
+                      {type.label}
+                    </h3>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing - Simple & Transparent */}
+      <section className="py-16 md:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12 md:mb-16"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="success" size="lg" className="mb-4">
+              Pricing
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Choose your feedback style
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              Instant AI insights or human expert reviews—both get results
+            </p>
+          </motion.div>
+
+          {/* Pricing cards */}
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
+            {/* Free AI Plan */}
+            <motion.div
+              className="relative p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 font-semibold text-sm mb-4">
+                  <CheckCircle className="size-4" />
+                  Free Forever
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">AI Reviews</h3>
+                <p className="text-gray-600">Instant feedback powered by AI</p>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl sm:text-6xl font-black text-gray-900">$0</span>
+                  <span className="text-xl text-gray-600">/review</span>
+                </div>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Instant AI-powered analysis",
+                  "Detailed actionable feedback",
+                  "Unlimited free reviews",
+                  "Support for all content types",
+                  "Get results in seconds",
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="size-5 text-green-600 mt-0.5 shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                size="lg"
+                onClick={() => router.push("/review/new?type=ai")}
+                className="w-full bg-gradient-to-r from-accent-blue to-blue-600 hover:from-accent-blue/90 hover:to-blue-600/90 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <span className="hidden min-[360px]:inline">Try AI Review Free</span>
+                <span className="min-[360px]:hidden">Try AI Free</span>
+                <ArrowRight className="ml-2 size-5" />
+              </Button>
+            </motion.div>
+
+            {/* Expert Plan */}
+            <motion.div
+              className="relative p-8 sm:p-10 rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 border-2 border-accent-peach/50"
+              style={{
+                background: "linear-gradient(135deg, #fff 0%, #fff5f0 100%)",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ y: -4 }}
+            >
+              {/* Popular badge */}
+              <div className="absolute top-0 right-0 px-6 py-2 bg-gradient-to-r from-accent-peach to-orange-500 text-white font-bold text-sm rounded-bl-2xl">
+                Most Popular
+              </div>
+
+              <div className="mb-6 mt-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold text-sm mb-4">
+                  <Award className="size-4" />
+                  Expert Quality
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Expert Reviews</h3>
+                <p className="text-gray-600">Human experts with real expertise</p>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl sm:text-5xl font-black text-gray-900">$50</span>
+                  <span className="text-xl text-gray-600">- $150</span>
+                </div>
+                <p className="text-sm text-gray-500 mt-1">per review</p>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Professional human reviewers",
+                  "In-depth personalized critique",
+                  "Industry-specific expertise",
+                  "24-hour turnaround",
+                  "Direct communication with reviewer",
+                  "100% satisfaction guarantee",
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="size-5 text-accent-peach mt-0.5 shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                size="lg"
+                onClick={() => router.push("/browse")}
+                className="w-full bg-gradient-to-r from-accent-peach to-orange-500 hover:from-accent-peach/90 hover:to-orange-500/90 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <span className="hidden min-[360px]:inline">Browse Reviewers</span>
+                <span className="min-[360px]:hidden">Browse Experts</span>
+                <ArrowRight className="ml-2 size-5" />
+              </Button>
+            </motion.div>
+          </div>
+
+          {/* Trust footer */}
+          <motion.div
+            className="mt-12 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-sm text-gray-500">
+              <Shield className="inline size-4 mr-1" />
+              All payments secured • Full refund if not satisfied
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials - Social Proof */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-slate-50 via-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12 md:mb-16"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="success" size="lg" className="mb-4">
+              Testimonials
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Loved by creators worldwide
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              Join 2,500+ creators getting better feedback every day
+            </p>
+          </motion.div>
+
+          {/* Testimonial grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {[
+              {
+                quote: "The AI feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
+                author: "Sarah Chen",
+                role: "Frontend Developer",
+                rating: 5,
+                avatar: "SC",
+              },
+              {
+                quote: "Getting my portfolio reviewed by an expert designer completely transformed my work. The feedback was detailed and actionable.",
+                author: "Marcus Johnson",
+                role: "UX Designer",
+                rating: 5,
+                avatar: "MJ",
+              },
+              {
+                quote: "I've tried other platforms, but Critvue's reviewers actually understand my niche. The turnaround time is incredible too.",
+                author: "Priya Patel",
+                role: "Content Creator",
+                rating: 5,
+                avatar: "PP",
+              },
+            ].map((testimonial, index) => (
+              <motion.div
+                key={index}
+                className="relative p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                whileHover={{ y: -4 }}
+              >
+                {/* Stars */}
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+
+                {/* Quote */}
+                <p className="text-gray-700 leading-relaxed mb-6 text-sm sm:text-base">
+                  "{testimonial.quote}"
+                </p>
+
+                {/* Author */}
+                <div className="flex items-center gap-3">
+                  <div className="size-12 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center text-white font-bold text-sm">
+                    {testimonial.avatar}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                    <div className="text-sm text-gray-600">{testimonial.role}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Dual Perspective - Premium Toggle Design */}
       <section className="relative py-16 md:py-24 overflow-hidden">
         {/* Animated gradient background */}
