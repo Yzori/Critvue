@@ -47,6 +47,21 @@
   --popover-bg: rgba(255, 255, 255, 0.9);
   --popover-border: rgba(255, 255, 255, 0.3);
   --popover-shadow: 0 12px 48px rgba(31, 38, 135, 0.2);
+}
+
+/* Mobile-First Utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 
   /* Animation Durations */
   --duration-fast: 150ms;
