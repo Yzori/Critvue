@@ -15,6 +15,20 @@ Product vision, brand guidelines, and design systems:
 - [Brand & Design System](product/critvue_brand_style.md) - Critvue brand colors, typography, and design principles
 - [Mobile-First UX Guide](product/mobile_guide.md) - Mobile interaction patterns and best practices
 
+## Design Documentation
+
+UI/UX design specifications for key features:
+
+- [Homepage Design Spec](design/homepage-design-spec.md) - Complete homepage design specification
+- [Profile Design Spec](design/profile-design-spec.md) - Profile page design and layout
+
+## Research
+
+User research and design exploration:
+
+- [Homepage Research 2024-2025](research/homepage-research-2024-2025.md) - Homepage design research findings
+- [Mobile Homepage Research 2025](research/mobile-homepage-research-2025.md) - Mobile-specific UX research
+
 ## Technical Documentation
 
 Architecture, tech stack, and implementation plans:
@@ -31,6 +45,14 @@ Next.js frontend implementation guides:
 - [Authentication Quick Start](frontend/AUTH_QUICKSTART.md) - 5-minute auth setup guide
 - [Password Reset Implementation](frontend/PASSWORD_RESET.md) - Password reset flow details
 
+## Developer Guides
+
+Feature-specific development guides:
+
+- [Profile Integration Guide](guides/profile-integration.md) - How to integrate profile and portfolio APIs
+- [Profile Testing Guide](guides/profile-testing.md) - Comprehensive testing scenarios for profile features
+- [Mobile UX Patterns](guides/mobile-ux-patterns.md) - Mobile-first interaction patterns reference
+
 ## Backend Documentation
 
 FastAPI backend documentation:
@@ -39,11 +61,20 @@ FastAPI backend documentation:
 - [Testing Guide](../backend/docs/TESTING.md) - Backend testing documentation
 - [Password Reset Backend](../backend/docs/PASSWORD_RESET.md) - Backend password reset implementation
 
+## API Documentation
+
+Backend API references:
+
+- [Profile & Portfolio API](api/profile-api.md) - Complete profile and portfolio API reference
+- [Browse API](api/browse-api.md) - Browse/discovery API endpoints
+
 ## Archive
 
 Historical implementation reports (for reference):
 
-- [Archive](archive/) - Implementation reports and historical documentation
+- [Profile System Implementation](archive/profile-system-implementation-summary.md) - Profile & portfolio backend implementation summary
+- [Mobile-First Implementation](archive/mobile-first-implementation-summary.md) - Mobile-first homepage implementation summary
+- [Archive Directory](archive/) - Additional implementation reports and historical documentation
 
 ---
 
@@ -66,15 +97,15 @@ When adding new documentation:
 
 **Designer:**
 1. Read [Brand & Design System](product/critvue_brand_style.md)
-2. Review [Mobile UX Guide](product/mobile_guide.md)
-3. Check [Product Brief](product/critvue_product_brief.md)
+2. Review [Mobile UX Patterns](guides/mobile-ux-patterns.md)
+3. Check [Design Specs](design/homepage-design-spec.md)
 
 **Backend Developer:**
 1. Review [Tech Stack](technical/critvue_techstack.md)
-2. Read [Backend Docs](../backend/docs/)
-3. Check [Implementation Plan](technical/implementation_plan.md)
+2. Read [API Documentation](api/profile-api.md)
+3. Check [Backend Docs](../backend/docs/)
 
 **Frontend Developer:**
 1. Review [Frontend Overview](frontend/README.md)
-2. Follow [Auth Quick Start](frontend/AUTH_QUICKSTART.md)
+2. Follow [Profile Integration Guide](guides/profile-integration.md)
 3. Read [Brand Guidelines](product/critvue_brand_style.md)
