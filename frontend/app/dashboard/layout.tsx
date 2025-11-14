@@ -45,8 +45,35 @@ export default function DashboardLayout({
   const { user, logout, isLoading } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [activeNavItem, setActiveNavItem] = useState("home");
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const firstMenuItemRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
+
+  // Focus management for dropdown menu
+  useEffect(() => {
+    if (isUserMenuOpen) {
+      // Move focus to first menu item when opened
+      firstMenuItemRef.current?.focus();
+    }
+  }, [isUserMenuOpen]);
+
+  // Handle Escape key to close menu
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsUserMenuOpen(false);
+        menuButtonRef.current?.focus(); // Return focus to trigger
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isUserMenuOpen]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -62,6 +89,26 @@ export default function DashboardLayout({
     }
   }, [isUserMenuOpen]);
 
+  // Auto-hide header on scroll down, show on scroll up (mobile UX optimization)
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Only hide after scrolling past 100px
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsHeaderVisible(false);
+        setIsUserMenuOpen(false); // Close menu when hiding header
+      } else if (currentScrollY < lastScrollY) {
+        setIsHeaderVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   // Update active nav item based on pathname
   useEffect(() => {
     if (pathname === "/dashboard") {
@@ -75,82 +122,154 @@ export default function DashboardLayout({
     }
   }, [pathname]);
 
-  // Bottom navigation items (mobile only)
-  const bottomNavItems: BottomNavItem[] = [
-    {
-      id: "home",
-      label: "Home",
-      icon: <Home className="size-5" />,
-      activeIcon: <Home className="size-5" fill="currentColor" />,
-      onClick: () => {
-        setActiveNavItem("home");
-        // Navigate to home
-      },
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      icon: <FolderOpen className="size-5" />,
-      activeIcon: <FolderOpen className="size-5" fill="currentColor" />,
-      onClick: () => {
-        setActiveNavItem("projects");
-        // Navigate to projects
-      },
-    },
-    {
-      id: "feedback",
-      label: "Feedback",
-      icon: <MessageSquare className="size-5" />,
-      activeIcon: <MessageSquare className="size-5" fill="currentColor" />,
-      onClick: () => {
-        setActiveNavItem("feedback");
-        // Navigate to feedback
-      },
-      badge: 3,
-    },
-    {
-      id: "notifications",
-      label: "Activity",
-      icon: <Bell className="size-5" />,
-      activeIcon: <Bell className="size-5" fill="currentColor" />,
-      onClick: () => {
-        setActiveNavItem("notifications");
-        // Navigate to notifications
-      },
-      badge: 5,
-    },
-  ];
+  // TODO: Add 'role' or 'is_reviewer' field to User interface in lib/types/auth.ts
+  // For now, we'll default to creator navigation
+  const isReviewer = false; // Replace with: user?.is_reviewer || user?.role === 'reviewer'
 
-  // FAB actions (expandable menu)
-  const fabActions: FABAction[] = [
-    {
-      id: "new-project",
-      label: "New Project",
-      icon: <FolderOpen className="size-5" />,
-      onClick: () => {
-        // Handle new project
-      },
-      variant: "primary",
-    },
-    {
-      id: "request-feedback",
-      label: "Request Feedback",
-      icon: <MessageSquare className="size-5" />,
-      onClick: () => {
-        // Handle request feedback
-      },
-      variant: "secondary",
-    },
-    {
-      id: "invite-team",
-      label: "Invite Team",
-      icon: <Users className="size-5" />,
-      onClick: () => {
-        // Handle invite team
-      },
-      variant: "primary",
-    },
-  ];
+  // Role-based bottom navigation items (mobile only)
+  const bottomNavItems: BottomNavItem[] = isReviewer
+    ? [
+        // Reviewer Navigation
+        {
+          id: "home",
+          label: "Home",
+          icon: <Home className="size-5" />,
+          activeIcon: <Home className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("home");
+            // Navigate to home
+          },
+        },
+        {
+          id: "available-reviews",
+          label: "Available",
+          icon: <Search className="size-5" />,
+          activeIcon: <Search className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("available-reviews");
+            // Navigate to available reviews
+          },
+        },
+        {
+          id: "my-reviews",
+          label: "My Reviews",
+          icon: <MessageSquare className="size-5" />,
+          activeIcon: <MessageSquare className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("my-reviews");
+            // Navigate to my reviews
+          },
+          badge: 3, // Replace with actual review count
+        },
+        {
+          id: "profile",
+          label: "Profile",
+          icon: <User className="size-5" />,
+          activeIcon: <User className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("profile");
+            // Navigate to profile
+          },
+        },
+      ]
+    : [
+        // Creator Navigation
+        {
+          id: "home",
+          label: "Home",
+          icon: <Home className="size-5" />,
+          activeIcon: <Home className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("home");
+            // Navigate to home
+          },
+        },
+        {
+          id: "browse",
+          label: "Browse",
+          icon: <Search className="size-5" />,
+          activeIcon: <Search className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("browse");
+            // Navigate to browse
+          },
+        },
+        {
+          id: "reviews",
+          label: "Reviews",
+          icon: <MessageSquare className="size-5" />,
+          activeIcon: <MessageSquare className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("reviews");
+            // Navigate to reviews
+          },
+          badge: 3, // Replace with actual review count
+        },
+        {
+          id: "profile",
+          label: "Profile",
+          icon: <User className="size-5" />,
+          activeIcon: <User className="size-5" fill="currentColor" />,
+          onClick: () => {
+            setActiveNavItem("profile");
+            // Navigate to profile
+          },
+        },
+      ];
+
+  // Role-based FAB actions (expandable menu)
+  const fabActions: FABAction[] = isReviewer
+    ? [
+        // Reviewer FAB
+        {
+          id: "browse-available",
+          label: "Browse Reviews",
+          icon: <Search className="size-5" />,
+          onClick: () => {
+            // Navigate to available reviews
+          },
+          variant: "primary",
+        },
+        {
+          id: "my-reviews",
+          label: "My Reviews",
+          icon: <MessageSquare className="size-5" />,
+          onClick: () => {
+            // Navigate to my reviews
+          },
+          variant: "secondary",
+        },
+      ]
+    : [
+        // Creator FAB
+        {
+          id: "request-review",
+          label: "Request Review",
+          icon: <MessageSquare className="size-5" />,
+          onClick: () => {
+            // Navigate to request review
+          },
+          variant: "primary",
+        },
+        {
+          id: "new-project",
+          label: "New Project",
+          icon: <FolderOpen className="size-5" />,
+          onClick: () => {
+            // Handle new project
+          },
+          variant: "secondary",
+        },
+        {
+          id: "invite-team",
+          label: "Invite Team",
+          icon: <Users className="size-5" />,
+          onClick: () => {
+            // Handle invite team
+          },
+          variant: "secondary",
+        },
+      ];
 
   // Show loading state while auth is initializing
   if (isLoading) {
@@ -173,8 +292,8 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background-subtle">
-      {/* Top Navigation Bar - Enhanced Glassmorphism */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border-light shadow-[0_1px_3px_rgba(0,0,0,0.05)] pt-safe">
+      {/* Top Navigation Bar - Enhanced Glassmorphism with Auto-Hide */}
+      <header className={`sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border-light shadow-[0_1px_3px_rgba(0,0,0,0.05)] pt-safe transition-transform duration-300 ease-in-out ${isHeaderVisible ? "translate-y-0" : "-translate-y-full"}`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
@@ -241,6 +360,7 @@ export default function DashboardLayout({
               {/* Dropdown Menu */}
               <div className="relative" ref={menuRef}>
                 <Button
+                  ref={menuButtonRef}
                   variant="outline"
                   size="sm"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -289,6 +409,7 @@ export default function DashboardLayout({
                     {/* Menu Items */}
                     <div className="py-2">
                       <button
+                        ref={firstMenuItemRef}
                         onClick={() => {
                           setIsUserMenuOpen(false);
                           // Navigate to settings
