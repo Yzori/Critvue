@@ -174,7 +174,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-background-subtle">
       {/* Top Navigation Bar - Enhanced Glassmorphism */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border-light shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border-light shadow-[0_1px_3px_rgba(0,0,0,0.05)] pt-safe">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo and Brand */}
@@ -195,7 +195,7 @@ export default function DashboardLayout({
 
               {/* Command Palette Trigger (Desktop) */}
               <button
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background/50 hover:bg-background transition-all text-sm text-foreground-muted hover:text-foreground min-h-[36px]"
+                className="hidden lg:flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background/50 hover:bg-background transition-all text-sm text-foreground-muted hover:text-foreground min-h-[44px]"
                 onClick={() => {
                   // Open command palette
                 }}
@@ -244,7 +244,7 @@ export default function DashboardLayout({
                   variant="outline"
                   size="sm"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="gap-2 min-h-[44px] md:min-h-[36px] hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
+                  className="gap-2 min-h-[44px] hover:bg-accent-blue/5 hover:border-accent-blue/30 transition-all"
                   aria-expanded={isUserMenuOpen}
                   aria-haspopup="true"
                 >

@@ -47,6 +47,16 @@
   --popover-bg: rgba(255, 255, 255, 0.9);
   --popover-border: rgba(255, 255, 255, 0.3);
   --popover-shadow: 0 12px 48px rgba(31, 38, 135, 0.2);
+
+  /* Z-Index Strategy - Unified layering system */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky-nav: 50;
+  --z-fab: 40;
+  --z-drawer: 100;
+  --z-modal-backdrop: 200;
+  --z-modal: 300;
+  --z-toast: 1000;
 }
 
 /* Mobile-First Utilities */
@@ -556,6 +566,74 @@ body {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* ========================================
+     Safe Area Insets for Notched Devices
+     ======================================== */
+
+  /**
+   * iOS 11+ and modern Android devices with notches/rounded corners
+   * provide safe-area-inset-* environment variables.
+   *
+   * These utilities ensure content is not obscured by:
+   * - Status bar / notch (top)
+   * - Home indicator bar (bottom)
+   * - Curved edges (left/right)
+   */
+
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .pb-safe {
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+
+    .pt-safe {
+      padding-top: max(0.5rem, env(safe-area-inset-top));
+    }
+
+    .pr-safe {
+      padding-right: max(0.5rem, env(safe-area-inset-right));
+    }
+
+    .pl-safe {
+      padding-left: max(0.5rem, env(safe-area-inset-left));
+    }
+
+    /* Padding for all sides */
+    .p-safe {
+      padding-top: max(0.5rem, env(safe-area-inset-top));
+      padding-right: max(0.5rem, env(safe-area-inset-right));
+      padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+      padding-left: max(0.5rem, env(safe-area-inset-left));
+    }
+
+    /* Margin variants (if needed) */
+    .mb-safe {
+      margin-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+
+    .mt-safe {
+      margin-top: max(0.5rem, env(safe-area-inset-top));
+    }
+  }
+
+  /* Fallback for browsers that don't support env() */
+  @supports not (padding-bottom: env(safe-area-inset-bottom)) {
+    .pb-safe {
+      padding-bottom: 0.5rem;
+    }
+
+    .pt-safe {
+      padding-top: 0.5rem;
+    }
+
+    .pr-safe {
+      padding-right: 0.5rem;
+    }
+
+    .pl-safe {
+      padding-left: 0.5rem;
     }
   }
 }

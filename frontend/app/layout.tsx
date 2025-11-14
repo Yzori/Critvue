@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { Navigation } from "@/components/navigation/navigation";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -30,12 +31,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+      </head>
       <body
         className={`${inter.variable} ${ibmPlexMono.variable} antialiased`}
       >
         <QueryProvider>
           <AuthProvider>
-            {children}
+            <Navigation />
+            <main className="pt-16 md:pt-20 pb-24 lg:pb-0">
+              {children}
+            </main>
           </AuthProvider>
           <Toaster
             position="bottom-right"
