@@ -30,6 +30,34 @@ router = APIRouter(prefix="/profile", tags=["Profile"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
 
 
+def _ensure_absolute_avatar_url(avatar_url: Optional[str]) -> Optional[str]:
+    """
+    Convert relative avatar URLs to absolute URLs for cross-origin access
+
+    This handles backward compatibility with avatars uploaded before BACKEND_URL
+    was configured. New uploads already use absolute URLs.
+
+    Args:
+        avatar_url: Avatar URL from database (may be relative or absolute)
+
+    Returns:
+        Absolute URL or None if avatar_url is None
+    """
+    if not avatar_url:
+        return avatar_url
+
+    # If URL is already absolute (starts with http:// or https://), return as-is
+    if avatar_url.startswith('http://') or avatar_url.startswith('https://'):
+        return avatar_url
+
+    # Convert relative URL to absolute by prepending BACKEND_URL
+    # This ensures frontend at localhost:3000 can access files from backend at localhost:8000
+    if settings.BACKEND_URL:
+        return f"{settings.BACKEND_URL}{avatar_url}"
+
+    return avatar_url
+
+
 @router.get("/me", response_model=ProfileResponse)
 async def get_my_profile(
     current_user: User = Depends(get_current_user),
@@ -50,7 +78,7 @@ async def get_my_profile(
         full_name=current_user.full_name,
         title=current_user.title,
         bio=current_user.bio,
-        avatar_url=current_user.avatar_url,
+        avatar_url=_ensure_absolute_avatar_url(current_user.avatar_url),
         role=current_user.role.value,
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
@@ -99,7 +127,7 @@ async def get_user_profile(
         full_name=user.full_name,
         title=user.title,
         bio=user.bio,
-        avatar_url=user.avatar_url,
+        avatar_url=_ensure_absolute_avatar_url(user.avatar_url),
         role=user.role.value,
         is_active=user.is_active,
         is_verified=user.is_verified,
@@ -154,7 +182,7 @@ async def update_my_profile(
         full_name=updated_user.full_name,
         title=updated_user.title,
         bio=updated_user.bio,
-        avatar_url=updated_user.avatar_url,
+        avatar_url=_ensure_absolute_avatar_url(updated_user.avatar_url),
         role=updated_user.role.value,
         is_active=updated_user.is_active,
         is_verified=updated_user.is_verified,
