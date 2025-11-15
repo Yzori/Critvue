@@ -31,6 +31,7 @@ import {
   Mic,
   FileText,
   Image as ImageIcon,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -125,6 +126,14 @@ export default function ReviewerDashboard() {
     },
   };
 
+  const stats = dashboard?.stats || {
+    total_reviews: 0,
+    acceptance_rate: 0,
+    average_rating: 0,
+    total_earned: 0,
+    pending_payment: 0,
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Error state */}
@@ -144,19 +153,61 @@ export default function ReviewerDashboard() {
       )}
 
       {/* Stats Section */}
-      <DashboardStats
-        stats={
-          dashboard?.stats || {
-            total_reviews: 0,
-            acceptance_rate: 0,
-            average_rating: 0,
-            total_earned: 0,
-            pending_payment: 0,
-          }
-        }
-        activeClaimsCount={activeReviews.length}
-        isLoading={loading}
-      />
+      {/* Mobile: Bento Grid - Apple-style asymmetric layout */}
+      <div className="lg:hidden grid grid-cols-2 gap-3 auto-rows-[minmax(100px,auto)]">
+        {/* Primary stat - Total Earnings - Takes full left column height */}
+        <div className="row-span-2">
+          <BentoStatLarge
+            icon={<TrendingUp className="size-6" />}
+            value={loading ? "..." : `$${stats.total_earned.toFixed(2)}`}
+            label="Total Earnings"
+            trend={stats.pending_payment > 0 ? `$${stats.pending_payment.toFixed(2)} pending` : "All released"}
+            trendDirection={stats.total_earned > 0 ? "up" : "neutral"}
+            color="peach"
+          />
+        </div>
+
+        {/* Secondary stats - Smaller compact pills on right */}
+        <BentoStatSmall
+          icon={<Clock className="size-5" />}
+          value={loading ? "..." : activeReviews.length}
+          label="Active"
+          color="blue"
+        />
+        <BentoStatSmall
+          icon={<CheckCircle2 className="size-5" />}
+          value={loading ? "..." : stats.total_reviews}
+          label="Completed"
+          color="green"
+        />
+
+        {/* Full width bottom stat with rating */}
+        <div className="col-span-2">
+          <BentoStatProgress
+            icon={<Star className="size-5" />}
+            value={stats.average_rating ? stats.average_rating.toFixed(1) : "0"}
+            label="Average Rating"
+            total={5}
+            trend={stats.average_rating
+              ? stats.average_rating >= 4.5
+                ? "Excellent reviews"
+                : stats.average_rating >= 4.0
+                  ? "Very good reviews"
+                  : "Good reviews"
+              : "No ratings yet"}
+            color="amber"
+          />
+        </div>
+      </div>
+
+      {/* Desktop: Full stat cards grid with all details */}
+      <div className="hidden lg:block">
+        <DashboardStats
+          stats={stats}
+          activeClaimsCount={activeReviews.length}
+          isLoading={loading}
+        />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -394,6 +445,230 @@ export default function ReviewerDashboard() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Bento Grid Components - Apple-style Asymmetric Layout
+ * Matching the creator dashboard mobile experience
+ */
+
+interface BentoStatLargeProps {
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+  trend?: string;
+  trendDirection?: "up" | "down" | "neutral";
+  color: "blue" | "peach" | "green" | "amber";
+}
+
+interface BentoStatSmallProps {
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+  color: "blue" | "peach" | "green" | "amber";
+}
+
+interface BentoStatProgressProps {
+  icon: React.ReactNode;
+  value: string | number;
+  label: string;
+  total: number;
+  trend?: string;
+  color: "blue" | "peach" | "green" | "amber";
+}
+
+// Large primary stat - Takes 2 rows
+function BentoStatLarge({ icon, value, label, trend, trendDirection = "neutral", color }: BentoStatLargeProps) {
+  const iconColors = {
+    blue: "text-accent-blue",
+    peach: "text-accent-peach",
+    green: "text-green-600",
+    amber: "text-amber-600",
+  };
+
+  const iconBgColors = {
+    blue: "bg-accent-blue/10",
+    peach: "bg-accent-peach/10",
+    green: "bg-green-500/10",
+    amber: "bg-amber-500/10",
+  };
+
+  const getTrendColor = () => {
+    switch (trendDirection) {
+      case "up": return "text-green-600";
+      case "down": return "text-red-600";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const TrendIcon = () => {
+    const iconClass = "size-3.5";
+    switch (trendDirection) {
+      case "up": return <TrendingUp className={iconClass} />;
+      case "down": return <TrendingUp className={`${iconClass} rotate-180`} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <div
+      className="h-full rounded-2xl border border-border bg-card p-5
+        shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)]
+        transition-all duration-200
+        flex flex-col items-center justify-between
+        cursor-pointer active:scale-[0.98]"
+    >
+      {/* Icon at top - centered */}
+      <div className={`size-12 rounded-xl ${iconBgColors[color]}
+        flex items-center justify-center`}>
+        <div className={iconColors[color]}>
+          {icon}
+        </div>
+      </div>
+
+      {/* Value and label - Centered vertically and horizontally */}
+      <div className="flex-1 flex flex-col items-center justify-center my-4 text-center">
+        <div className="text-4xl font-bold text-foreground leading-none mb-2 tracking-tight">
+          {value}
+        </div>
+        <div className="text-sm text-foreground font-medium">
+          {label}
+        </div>
+      </div>
+
+      {/* Trend at bottom - centered */}
+      {trend && (
+        <div className={`flex items-center justify-center gap-1.5 text-xs font-medium ${getTrendColor()}`}>
+          <TrendIcon />
+          <span>{trend}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Small compact stat
+function BentoStatSmall({ icon, value, label, color }: BentoStatSmallProps) {
+  const iconColors = {
+    blue: "text-accent-blue",
+    peach: "text-accent-peach",
+    green: "text-green-600",
+    amber: "text-amber-600",
+  };
+
+  const iconBgColors = {
+    blue: "bg-accent-blue/10",
+    peach: "bg-accent-peach/10",
+    green: "bg-green-500/10",
+    amber: "bg-amber-500/10",
+  };
+
+  return (
+    <div
+      className="rounded-2xl border border-border bg-card p-4
+        shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)]
+        transition-all duration-200
+        flex flex-col items-center justify-center text-center
+        cursor-pointer active:scale-[0.98]
+        min-h-[100px]"
+    >
+      {/* Icon - centered */}
+      <div className={`size-9 rounded-lg ${iconBgColors[color]}
+        flex items-center justify-center mb-2`}>
+        <div className={iconColors[color]}>
+          {icon}
+        </div>
+      </div>
+
+      {/* Value - centered */}
+      <div className="text-2xl font-bold text-foreground leading-none mb-1">
+        {value}
+      </div>
+
+      {/* Label - centered */}
+      <div className="text-xs text-muted-foreground font-medium">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// Full-width stat with progress bar
+function BentoStatProgress({ icon, value, label, total, trend, color }: BentoStatProgressProps) {
+  const iconColors = {
+    blue: "text-accent-blue",
+    peach: "text-accent-peach",
+    green: "text-green-600",
+    amber: "text-amber-600",
+  };
+
+  const iconBgColors = {
+    blue: "bg-accent-blue/10",
+    peach: "bg-accent-peach/10",
+    green: "bg-green-500/10",
+    amber: "bg-amber-500/10",
+  };
+
+  const progressColors = {
+    blue: "bg-accent-blue",
+    peach: "bg-accent-peach",
+    green: "bg-green-500",
+    amber: "bg-amber-500",
+  };
+
+  const percentage = Math.round((Number(value) / total) * 100);
+
+  return (
+    <div
+      className="rounded-2xl border border-border bg-card p-4
+        shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]
+        hover:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)]
+        transition-all duration-200
+        cursor-pointer active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-3 mb-3">
+        {/* Icon */}
+        <div className={`size-10 rounded-lg ${iconBgColors[color]}
+          flex items-center justify-center flex-shrink-0`}>
+          <div className={iconColors[color]}>
+            {icon}
+          </div>
+        </div>
+
+        {/* Label and value */}
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-muted-foreground font-medium mb-0.5">
+            {label}
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-foreground leading-none">
+              {value}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              / {total}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`absolute inset-y-0 left-0 ${progressColors[color]} rounded-full transition-all duration-500`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      {/* Trend text */}
+      {trend && (
+        <p className="text-xs text-muted-foreground mt-2">
+          {trend}
+        </p>
+      )}
     </div>
   );
 }

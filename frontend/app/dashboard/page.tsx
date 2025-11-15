@@ -82,9 +82,9 @@ function DashboardContent() {
     <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 pb-24 lg:pb-8">
       {/* Header with Role Toggle */}
       <div className="space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-foreground tracking-tight">
+        <div className="flex flex-col items-center sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl lg:text-5xl font-bold text-foreground tracking-tight text-center sm:text-left">
               Welcome back{user?.full_name && <span className="hidden sm:inline">, {user.full_name}</span>}!
             </h1>
             <Badge variant="success" showDot pulse size="sm" className="sm:text-sm">
@@ -93,7 +93,7 @@ function DashboardContent() {
           </div>
 
           {/* Role Toggle - Mobile-first design with brand colors */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-end">
             <div className="inline-flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border shadow-sm">
               <button
                 onClick={() => handleRoleChange("creator")}
@@ -135,7 +135,7 @@ function DashboardContent() {
         </div>
 
         {/* Description text - changes based on role */}
-        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl">
+        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl text-center sm:text-left mx-auto sm:mx-0">
           {activeRole === "creator"
             ? "Here's what's happening with your projects today."
             : "Manage your review claims, track earnings, and view your performance."}
