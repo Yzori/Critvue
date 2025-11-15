@@ -78,6 +78,13 @@ class Settings(BaseSettings):
     RATE_LIMIT_RESET_VERIFY: str = "10/minute"  # Reset token verification per IP (dev: 1000/minute, prod: 10/minute)
     RATE_LIMIT_RESET_CONFIRM: str = "5/minute"  # Password reset confirmation per IP (dev: 1000/minute, prod: 5/minute)
 
+    # Background Job Scheduler (Reviewer Workflow)
+    SCHEDULER_ENABLED: bool = True  # Enable/disable background job scheduler
+    SCHEDULER_CLAIM_TIMEOUT_HOURS: int = 72  # Hours before claimed reviews are abandoned
+    SCHEDULER_AUTO_ACCEPT_DAYS: int = 7  # Days before submitted reviews are auto-accepted
+    SCHEDULER_DISPUTE_WINDOW_DAYS: int = 7  # Days reviewers have to dispute rejections
+    SCHEDULER_INTERVAL_MINUTES: int = 60  # How often scheduler jobs run (in minutes)
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ClaimButton } from "@/components/reviewer/claim-button";
 import { BrowseReviewItem } from "@/lib/api/browse";
 import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle } from "lucide-react";
 
@@ -442,21 +443,36 @@ export function ReviewCard({
                 View Details
               </Link>
             </Button>
-            <Button
-              asChild
-              size="sm"
-              className={cn(
-                "flex-1 bg-gradient-to-r from-accent-blue to-accent-peach transition-all duration-200 min-h-[44px]",
-                isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
-                isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg",
-                !isHighImportance && "hover:opacity-90"
-              )}
-            >
-              <Link href={`/review/${review.id}`}>
-                Claim
-                <ArrowRight className="ml-1 size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </Link>
-            </Button>
+            {review.slot_id ? (
+              <ClaimButton
+                slotId={review.slot_id}
+                reviewRequestId={review.id}
+                paymentAmount={review.price || null}
+                reviewType={review.review_type}
+                title={review.title}
+                className={cn(
+                  "flex-1",
+                  isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
+                  isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg"
+                )}
+              />
+            ) : (
+              <Button
+                asChild
+                size="sm"
+                className={cn(
+                  "flex-1 bg-gradient-to-r from-accent-blue to-accent-peach transition-all duration-200 min-h-[44px]",
+                  isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
+                  isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg",
+                  !isHighImportance && "hover:opacity-90"
+                )}
+              >
+                <Link href={`/review/${review.id}`}>
+                  View Details
+                  <ArrowRight className="ml-1 size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

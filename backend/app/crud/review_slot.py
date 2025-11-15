@@ -278,6 +278,26 @@ async def claim_review_slot(
     if not slot.is_claimable:
         raise ValueError(f"Slot is not available (current status: {slot.status})")
 
+    # Check if reviewer already has a slot for this request (prevent multiple claims)
+    existing_claim = await db.execute(
+        select(ReviewSlot).where(
+            and_(
+                ReviewSlot.review_request_id == slot.review_request_id,
+                ReviewSlot.reviewer_id == reviewer_id,
+                ReviewSlot.status.in_([
+                    ReviewSlotStatus.CLAIMED.value,
+                    ReviewSlotStatus.SUBMITTED.value
+                ])
+            )
+        )
+    )
+
+    if existing_claim.scalar_one_or_none():
+        raise ValueError(
+            "You have already claimed a slot for this review request. "
+            "Complete or abandon your current claim before claiming another."
+        )
+
     # Claim the slot using model method
     slot.claim(reviewer_id, claim_hours)
 

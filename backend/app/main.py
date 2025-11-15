@@ -14,9 +14,10 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
+from app.services.scheduler import start_background_jobs, stop_background_jobs
 
 # Setup logging
 setup_logging(level=settings.LOG_LEVEL)
@@ -47,6 +48,7 @@ app.include_router(browse.router, prefix="/api/v1")  # Public browse marketplace
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
 app.include_router(review_slots.router, prefix="/api/v1")  # Review slots workflow
+app.include_router(reviewer_dashboard.router, prefix="/api/v1")  # Reviewer dashboard
 app.include_router(profile.router, prefix="/api/v1")  # User profiles
 app.include_router(portfolio.router, prefix="/api/v1")  # Portfolio projects
 
@@ -112,7 +114,41 @@ async def health_check(db: AsyncSession = Depends(get_db)):
     }
 
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on application startup"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info("Starting Critvue backend...")
+
+    # Start background job scheduler
+    try:
+        start_background_jobs()
+        logger.info("Background job scheduler started successfully")
+    except Exception as e:
+        logger.error(f"Failed to start background job scheduler: {e}", exc_info=True)
+        # Don't fail startup if scheduler fails
+
+    logger.info("Critvue backend startup complete")
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on application shutdown"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info("Shutting down Critvue backend...")
+
+    # Stop background job scheduler
+    try:
+        stop_background_jobs()
+        logger.info("Background job scheduler stopped successfully")
+    except Exception as e:
+        logger.error(f"Error stopping background job scheduler: {e}", exc_info=True)
+
+    # Close database connections
     await close_db()
+
+    logger.info("Critvue backend shutdown complete")

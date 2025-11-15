@@ -324,6 +324,28 @@ class ReviewCRUD:
             if not review:
                 return False
 
+            # Check for active claims or submitted reviews (prevent deletion)
+            from sqlalchemy import select, func, and_
+            from app.models.review_slot import ReviewSlot, ReviewSlotStatus
+
+            active_slots_query = select(func.count(ReviewSlot.id)).where(
+                and_(
+                    ReviewSlot.review_request_id == review_id,
+                    ReviewSlot.status.in_([
+                        ReviewSlotStatus.CLAIMED.value,
+                        ReviewSlotStatus.SUBMITTED.value
+                    ])
+                )
+            )
+            active_slots_result = await db.execute(active_slots_query)
+            active_count = active_slots_result.scalar() or 0
+
+            if active_count > 0:
+                raise ValueError(
+                    f"Cannot delete review request with {active_count} active claim(s) or "
+                    "submitted review(s). Wait for reviewers to submit or abandon their claims."
+                )
+
             if soft_delete:
                 # Soft delete - don't remove files
                 review.deleted_at = datetime.utcnow()
