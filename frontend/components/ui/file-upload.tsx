@@ -25,7 +25,7 @@ interface FileUploadProps {
   maxFiles?: number;
   onFilesSelected: (files: File[]) => void;
   onFileRemove?: (fileId: string) => void;
-  uploadedFiles: UploadedFile[];
+  uploadedFiles?: UploadedFile[];
   disabled?: boolean;
   contentType?: string;
   className?: string;
@@ -37,7 +37,7 @@ export function FileUpload({
   maxFiles = 10,
   onFilesSelected,
   onFileRemove,
-  uploadedFiles,
+  uploadedFiles = [],
   disabled = false,
   className
 }: FileUploadProps) {
