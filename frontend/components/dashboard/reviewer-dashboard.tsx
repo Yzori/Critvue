@@ -1,18 +1,14 @@
 /**
- * Reviewer Dashboard Page
+ * Reviewer Dashboard Component
  *
- * Comprehensive dashboard for reviewers showing:
- * - Key statistics (active, completed, earnings, rating)
- * - Active claimed reviews with deadlines
- * - Submitted reviews awaiting acceptance
- * - Recent completed reviews
+ * Extracted from the original reviewer/dashboard/page.tsx
+ * Shows reviewer-specific content: active claims, submissions, earnings, stats
  *
  * Brand Compliance:
- * - Critvue purple/blue gradients throughout
+ * - Critvue purple/blue gradients
  * - Glassmorphism effects on cards
  * - Smooth animations with reduced motion support
- * - Mobile-first responsive bento grid layout
- * - Consistent with existing dashboard design patterns
+ * - Mobile-first responsive design
  */
 
 "use client";
@@ -47,7 +43,7 @@ import {
 } from "@/lib/api/reviewer";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-export default function ReviewerDashboardPage() {
+export default function ReviewerDashboard() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
 
@@ -130,22 +126,7 @@ export default function ReviewerDashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 pb-24 lg:pb-8">
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight">
-            Reviewer Dashboard
-          </h1>
-          <Badge variant="primary" showDot pulse size="sm" className="sm:text-sm">
-            Reviewer
-          </Badge>
-        </div>
-        <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl">
-          Manage your review claims, track earnings, and view your performance.
-        </p>
-      </div>
-
+    <div className="space-y-6 sm:space-y-8">
       {/* Error state */}
       {error && (
         <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">

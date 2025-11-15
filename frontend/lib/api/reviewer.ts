@@ -190,7 +190,8 @@ export async function getMyReviews(
   }
 
   const endpoint = `/review-slots/my-slots${params.toString() ? `?${params.toString()}` : ""}`;
-  return apiClient.get<ReviewSlot[]>(endpoint);
+  const response = await apiClient.get<{ items: ReviewSlot[]; total: number; skip: number; limit: number; has_more: boolean }>(endpoint);
+  return response.items;
 }
 
 /**

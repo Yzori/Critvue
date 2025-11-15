@@ -60,12 +60,8 @@ export function RoleSwitcher({ className }: RoleSwitcherProps) {
     setRole(newRole);
     localStorage.setItem("user-role", newRole);
 
-    // Navigate to appropriate dashboard
-    if (newRole === "reviewer") {
-      router.push("/reviewer/dashboard");
-    } else {
-      router.push("/dashboard");
-    }
+    // Navigate to unified dashboard with role parameter
+    router.push(`/dashboard?role=${newRole}`);
   };
 
   return (

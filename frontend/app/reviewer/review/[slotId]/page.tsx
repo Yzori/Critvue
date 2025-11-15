@@ -164,7 +164,7 @@ export default function ReviewWritingPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push("/reviewer/dashboard")}
+            onClick={() => router.push("/dashboard?role=reviewer")}
             className="mt-3"
           >
             Back to Dashboard
@@ -210,7 +210,7 @@ export default function ReviewWritingPage() {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => router.push("/reviewer/dashboard")}
+          onClick={() => router.push("/dashboard?role=reviewer")}
           className="flex-shrink-0"
         >
           <ArrowLeft className="size-5" />
@@ -279,7 +279,7 @@ export default function ReviewWritingPage() {
             slotId={slotId}
             initialDraft={draft}
             onSubmitSuccess={() => {
-              router.push("/reviewer/dashboard");
+              router.push("/dashboard?role=reviewer");
             }}
           />
         </div>
