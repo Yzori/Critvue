@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     AVATAR_STORAGE_PATH: str = "/home/user/Critvue/backend/uploads/avatars"
     AVATAR_BASE_URL: str = "/files/avatars"
     AVATAR_STRIP_METADATA: bool = True  # Strip EXIF data for privacy
+    BACKEND_URL: str = "http://localhost:8000"  # Backend URL for absolute avatar URLs
 
     # Stripe
     STRIPE_API_KEY: str = ""

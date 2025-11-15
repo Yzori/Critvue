@@ -147,6 +147,7 @@ class ProfileResponse(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     role: str
+    is_active: bool  # Added for frontend User interface compatibility
     is_verified: bool
     specialty_tags: List[str] = []
     badges: List[str] = []

@@ -54,6 +54,7 @@ class ServiceFactory:
                 storage_type=settings.AVATAR_STORAGE_TYPE,
                 base_path=settings.AVATAR_STORAGE_PATH,
                 base_url=settings.AVATAR_BASE_URL,
+                backend_url=settings.BACKEND_URL,
             )
         return cls._storage_service
 

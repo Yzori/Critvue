@@ -42,6 +42,7 @@ import {
   EmptyPortfolioState,
 } from "@/components/profile/error-states";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Profile Page
@@ -78,6 +79,7 @@ interface ProfileData {
 
 export default function ProfilePage() {
   const prefersReducedMotion = useReducedMotion();
+  const { updateUserAvatar } = useAuth();
   const [activeRole, setActiveRole] = useState<ProfileRole>("both");
   const [isOwnProfile, setIsOwnProfile] = useState(true);
 
@@ -201,9 +203,12 @@ export default function ProfilePage() {
                   <AvatarUpload
                     currentAvatarUrl={profileData.avatar_url}
                     onUploadComplete={(newAvatarUrl) => {
+                      // Update local profile state
                       setProfileData((prev) =>
                         prev ? { ...prev, avatar_url: newAvatarUrl } : prev
                       );
+                      // Update global auth context so navigation updates too
+                      updateUserAvatar(newAvatarUrl);
                     }}
                     onUploadError={(error) => {
                       console.error("Avatar upload error:", error);

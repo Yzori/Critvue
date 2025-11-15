@@ -34,6 +34,7 @@ class StorageService:
         storage_type: str = "local",
         base_path: Optional[Path | str] = None,
         base_url: Optional[str] = None,
+        backend_url: Optional[str] = None,
     ):
         """
         Initialize storage service
@@ -41,7 +42,8 @@ class StorageService:
         Args:
             storage_type: Type of storage ("local", "cloud")
             base_path: Base path for local storage (Path or str)
-            base_url: Base URL for accessing files
+            base_url: Base URL path for accessing files (e.g. "/files/avatars")
+            backend_url: Full backend URL for absolute URLs (e.g. "http://localhost:8000")
         """
         self.storage_type = storage_type
         # Ensure base_path is a Path object, whether input is str or Path
@@ -52,6 +54,7 @@ class StorageService:
         else:
             self.base_path = base_path
         self.base_url = base_url or "/files/avatars"
+        self.backend_url = backend_url or ""  # Empty string for relative URLs
 
         # Ensure base directory exists with proper permissions
         if storage_type == "local":
@@ -310,7 +313,7 @@ class StorageService:
             size: Image size variant
 
         Returns:
-            Public URL for file
+            Public URL for file (absolute if backend_url is set, relative otherwise)
         """
         # For local storage, construct URL based on base_url
         # For cloud storage, this would return the CDN URL
@@ -318,9 +321,15 @@ class StorageService:
         if self.storage_type == "local":
             # Convert path separators to URL format
             url_path = relative_path.replace(os.sep, '/')
-            return f"{self.base_url}/{url_path}"
+            # Return absolute URL if backend_url is configured
+            if self.backend_url:
+                return f"{self.backend_url}{self.base_url}/{url_path}"
+            else:
+                return f"{self.base_url}/{url_path}"
 
         # Placeholder for cloud storage URL generation
+        if self.backend_url:
+            return f"{self.backend_url}{self.base_url}/{relative_path}"
         return f"{self.base_url}/{relative_path}"
 
     def get_variant_url(self, base_filename: str, size: str = 'medium') -> str:
