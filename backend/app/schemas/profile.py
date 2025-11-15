@@ -170,3 +170,5 @@ class AvatarUploadResponse(BaseModel):
 
     avatar_url: str
     message: str = "Avatar uploaded successfully"
+    variants: Optional[dict] = None  # URLs for different size variants
+    metadata: Optional[dict] = None  # Image metadata (size, dimensions, format)

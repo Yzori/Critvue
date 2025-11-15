@@ -75,14 +75,10 @@ export async function uploadFile(
       reject(new Error("Upload cancelled"));
     });
 
-    // Get auth token from localStorage
-    const token = localStorage.getItem("accessToken");
-
     // Set up request
+    // Authentication is handled via httpOnly cookies sent automatically
     xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews/${reviewId}/files`);
-    if (token) {
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    }
+    xhr.withCredentials = true; // Send httpOnly cookies with request
 
     // Send request
     xhr.send(formData);
@@ -144,14 +140,10 @@ export async function uploadFiles(
       reject(new Error("Upload cancelled"));
     });
 
-    // Get auth token from localStorage
-    const token = localStorage.getItem("accessToken");
-
     // Set up request
+    // Authentication is handled via httpOnly cookies sent automatically
     xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews/${reviewId}/files/batch`);
-    if (token) {
-      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    }
+    xhr.withCredentials = true; // Send httpOnly cookies with request
 
     // Send request
     xhr.send(formData);

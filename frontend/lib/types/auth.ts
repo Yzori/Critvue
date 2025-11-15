@@ -7,6 +7,7 @@ export interface User {
   id: number;
   email: string;
   full_name: string;
+  avatar_url?: string | null;
   is_active: boolean;
   is_verified: boolean;
   created_at?: string;
@@ -61,6 +62,7 @@ export interface AuthContextType {
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => Promise<void>; // Now async to call backend logout endpoint
   refreshToken: () => Promise<void>;
+  updateUserAvatar: (avatarUrl: string) => void;
 }
 
 export interface ApiError {

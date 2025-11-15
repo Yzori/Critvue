@@ -41,6 +41,7 @@ import {
   NetworkError,
   EmptyPortfolioState,
 } from "@/components/profile/error-states";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
 
 /**
  * Profile Page
@@ -196,16 +197,32 @@ export default function ProfilePage() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.5 }}
             >
               <div className="relative">
-                {profileData.avatar_url ? (
-                  <img
-                    src={profileData.avatar_url}
-                    alt={profileData.full_name}
-                    className="size-24 sm:size-28 lg:size-32 rounded-full border-4 border-white shadow-xl object-cover"
+                {isOwnProfile ? (
+                  <AvatarUpload
+                    currentAvatarUrl={profileData.avatar_url}
+                    onUploadComplete={(newAvatarUrl) => {
+                      setProfileData((prev) =>
+                        prev ? { ...prev, avatar_url: newAvatarUrl } : prev
+                      );
+                    }}
+                    onUploadError={(error) => {
+                      console.error("Avatar upload error:", error);
+                    }}
                   />
                 ) : (
-                  <div className="size-24 sm:size-28 lg:size-32 rounded-full border-4 border-white shadow-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center">
-                    <User className="size-12 sm:size-14 lg:size-16 text-white" />
-                  </div>
+                  <>
+                    {profileData.avatar_url ? (
+                      <img
+                        src={profileData.avatar_url}
+                        alt={profileData.full_name}
+                        className="size-24 sm:size-28 lg:size-32 rounded-full border-4 border-white shadow-xl object-cover"
+                      />
+                    ) : (
+                      <div className="size-24 sm:size-28 lg:size-32 rounded-full border-4 border-white shadow-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center">
+                        <User className="size-12 sm:size-14 lg:size-16 text-white" />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Verification Badge */}

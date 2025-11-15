@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024  # 50MB
     UPLOAD_DIR: str = "uploads"
 
+    # Avatar Upload Settings
+    MAX_AVATAR_SIZE: int = 5 * 1024 * 1024  # 5MB
+    AVATAR_STORAGE_TYPE: str = "local"  # "local" or "cloud"
+    AVATAR_STORAGE_PATH: str = "/home/user/Critvue/backend/uploads/avatars"
+    AVATAR_BASE_URL: str = "/files/avatars"
+    AVATAR_STRIP_METADATA: bool = True  # Strip EXIF data for privacy
+
     # Stripe
     STRIPE_API_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""

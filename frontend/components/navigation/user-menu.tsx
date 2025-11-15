@@ -6,6 +6,7 @@ import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown } from "luc
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
+import { Avatar } from "@/components/profile/avatar-display";
 
 /**
  * UserMenu Component - Profile Dropdown Menu
@@ -122,25 +123,13 @@ export function UserMenu({ user }: UserMenuProps) {
         aria-haspopup="true"
         aria-label="User menu"
       >
-        {/* Avatar with gradient border */}
-        <div
-          className={cn(
-            "relative size-10 rounded-full",
-            "bg-gradient-to-r from-accent-blue to-accent-peach",
-            "p-[2px]"
-          )}
-        >
-          <div
-            className={cn(
-              "size-full rounded-full",
-              "bg-accent-blue/10",
-              "flex items-center justify-center",
-              "text-accent-blue font-semibold text-sm"
-            )}
-          >
-            {initials}
-          </div>
-        </div>
+        {/* Avatar with brand-consistent styling */}
+        <Avatar
+          avatarUrl={user.avatar_url}
+          fullName={user.full_name || user.email}
+          size="md"
+          verified={user.is_verified}
+        />
 
         {/* User name - hidden on smaller screens */}
         <span className="hidden xl:block text-sm font-medium max-w-[120px] truncate">
@@ -217,11 +206,12 @@ export function UserMenu({ user }: UserMenuProps) {
             {isMobile && (
               <div className="flex items-center gap-3 mb-3 md:hidden">
                 {/* Avatar in mobile header */}
-                <div className="size-12 rounded-xl bg-gradient-to-r from-accent-blue to-accent-peach p-[2px]">
-                  <div className="size-full rounded-xl bg-accent-blue/10 flex items-center justify-center text-accent-blue font-bold text-base">
-                    {getInitials(user.full_name || user.email)}
-                  </div>
-                </div>
+                <Avatar
+                  avatarUrl={user.avatar_url}
+                  fullName={user.full_name || user.email}
+                  size="lg"
+                  verified={user.is_verified}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-semibold text-foreground truncate">
                     {user.full_name || "User"}

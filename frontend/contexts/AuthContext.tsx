@@ -124,6 +124,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Token refresh handled automatically by API client");
   }, []);
 
+  /**
+   * Update user avatar URL in context
+   * Called after successful avatar upload
+   */
+  const updateUserAvatar = useCallback((avatarUrl: string) => {
+    setUser((prevUser) => {
+      if (!prevUser) return null;
+
+      const updatedUser = { ...prevUser, avatar_url: avatarUrl };
+
+      // Update localStorage cache
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      return updatedUser;
+    });
+  }, []);
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -132,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshToken,
+    updateUserAvatar,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

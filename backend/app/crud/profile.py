@@ -67,7 +67,7 @@ async def update_profile(
 
 
 async def update_avatar(
-    db: AsyncSession, user_id: int, avatar_url: str
+    db: AsyncSession, user_id: int, avatar_url: Optional[str]
 ) -> Optional[User]:
     """
     Update user avatar URL
@@ -75,7 +75,7 @@ async def update_avatar(
     Args:
         db: Database session
         user_id: User ID
-        avatar_url: New avatar URL
+        avatar_url: New avatar URL (None to remove avatar)
 
     Returns:
         Updated user object or None if not found
