@@ -58,9 +58,10 @@ export async function resetPassword(data: PasswordReset): Promise<PasswordResetR
 /**
  * Get current user profile (protected endpoint)
  * Uses httpOnly cookies for authentication - no token needed in request
+ * Uses /profile/me to get full profile including avatar_url
  */
 export async function getCurrentUser(): Promise<User> {
-  return await apiClient.get<User>("/auth/me");
+  return await apiClient.get<User>("/profile/me");
 }
 
 /**
