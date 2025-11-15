@@ -51,7 +51,15 @@ Feature-specific development guides:
 
 - [Profile Integration Guide](guides/profile-integration.md) - How to integrate profile and portfolio APIs
 - [Profile Testing Guide](guides/profile-testing.md) - Comprehensive testing scenarios for profile features
+- [Avatar Quick Start](guides/avatar-quick-start.md) - Get avatar upload running in 5 minutes
 - [Mobile UX Patterns](guides/mobile-ux-patterns.md) - Mobile-first interaction patterns reference
+
+## Feature Documentation
+
+Complete feature implementations and specifications:
+
+- [Avatar Upload Backend](features/avatar-upload-backend.md) - Backend implementation details
+- [Avatar Security](features/avatar-security.md) - Security audit and best practices
 
 ## Backend Documentation
 
@@ -66,14 +74,17 @@ FastAPI backend documentation:
 Backend API references:
 
 - [Profile & Portfolio API](api/profile-api.md) - Complete profile and portfolio API reference
+- [Avatar Upload API](api/avatar-upload.md) - Avatar upload and management API
 - [Browse API](api/browse-api.md) - Browse/discovery API endpoints
 
 ## Archive
 
-Historical implementation reports (for reference):
+Historical implementation reports and debugging documentation (for reference):
 
 - [Profile System Implementation](archive/profile-system-implementation-summary.md) - Profile & portfolio backend implementation summary
 - [Mobile-First Implementation](archive/mobile-first-implementation-summary.md) - Mobile-first homepage implementation summary
+- [Navigation System Implementation](archive/navigation-implementation-summary.md) - Navigation system implementation details
+- [Avatar Implementation Archive](archive/avatar-implementation/) - Complete avatar upload implementation journey with debugging reports
 - [Archive Directory](archive/) - Additional implementation reports and historical documentation
 
 ---

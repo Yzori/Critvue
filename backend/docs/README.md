@@ -14,6 +14,10 @@ Comprehensive documentation for the Critvue FastAPI backend.
 
 ### Feature Documentation
 - **[Password Reset](features/PASSWORD_RESET.md)** - Password reset system implementation guide
+- **[Avatar Upload Quick Start](features/avatar-quick-start.md)** - Get avatar upload running in 5 minutes
+- **[Avatar Quick Reference](features/avatar-quick-reference.md)** - Avatar API quick reference
+- **[Avatar Implementation Summary](features/avatar-implementation-summary.md)** - Complete avatar implementation details
+- **[Avatar Review Report](features/avatar-review-report.md)** - Avatar system architecture review
 
 ## Documentation Structure
 
@@ -25,9 +29,21 @@ docs/
 ├── testing/            # Testing guides and reports
 │   ├── TESTING.md
 │   ├── INTEGRATION_TEST_REPORT.md
-│   └── INTEGRATION_TEST_SUMMARY.md
-└── features/           # Feature-specific guides
-    └── PASSWORD_RESET.md
+│   ├── INTEGRATION_TEST_SUMMARY.md
+│   └── review-flow-report.md
+├── features/           # Feature-specific guides
+│   ├── PASSWORD_RESET.md
+│   ├── avatar-quick-start.md
+│   ├── avatar-quick-reference.md
+│   ├── avatar-implementation-summary.md
+│   └── avatar-review-report.md
+├── configuration/      # Configuration guides
+│   └── RATE_LIMITING.md
+└── review-system/      # Review system documentation
+    ├── QUICKSTART.md
+    ├── IMPLEMENTATION.md
+    ├── API_REFERENCE.md
+    └── DEPLOYMENT_CHECKLIST.md
 ```
 
 ## Getting Started
@@ -62,9 +78,10 @@ docs/
 - **JWT Authentication**: Access and refresh token system
 - **User Management**: Registration, login, profile management
 - **Password Reset**: Secure token-based password reset flow
+- **Avatar Upload**: Multi-variant image processing with security validation
 - **Rate Limiting**: Protection against brute force attacks
 - **Input Validation**: Pydantic models with comprehensive validation
-- **Security**: bcrypt hashing, CORS configuration, token expiration
+- **Security**: bcrypt hashing, CORS configuration, token expiration, file validation
 
 ### Project Structure
 ```
