@@ -42,8 +42,6 @@ import {
   Image as ImageIcon,
   ChevronDown,
   ChevronRight,
-  Menu,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +50,6 @@ import { cn } from "@/lib/utils";
 export default function HomePage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [perspective, setPerspective] = useState<"creator" | "reviewer">("creator");
   const [expandedHowItWorks, setExpandedHowItWorks] = useState<number | null>(null);
   const [showBottomCTA, setShowBottomCTA] = useState(false);
@@ -94,23 +91,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Mobile Header - Sticky */}
-      <MobileHeader
-        isMenuOpen={mobileMenuOpen}
-        onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-        router={router}
-        user={user}
-        isAuthenticated={isAuthenticated}
-      />
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <MobileMenu
-          onClose={() => setMobileMenuOpen(false)}
-          router={router}
-        />
-      )}
-
       {/* Hero Section - Mobile-First */}
       <section className="relative pt-20 pb-12 px-6 md:pt-32 md:pb-20 overflow-hidden">
         {/* Background gradient orbs - Simplified on mobile */}
@@ -1072,145 +1052,6 @@ export default function HomePage() {
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-/**
- * Mobile Header Component
- * Sticky header with logo and hamburger menu
- * 48px height for thumb accessibility
- */
-function MobileHeader({
-  isMenuOpen,
-  onMenuToggle,
-  router,
-  user,
-  isAuthenticated,
-}: {
-  isMenuOpen: boolean;
-  onMenuToggle: () => void;
-  router: any;
-  user: any;
-  isAuthenticated: boolean;
-}) {
-  return (
-    <motion.header
-      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200"
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="max-w-7xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
-        {/* Logo */}
-        <button
-          onClick={() => router.push("/")}
-          className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent min-h-[44px] min-w-[44px] flex items-center touch-manipulation"
-        >
-          Critvue
-        </button>
-
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
-          <button
-            onClick={() => router.push("/browse")}
-            className="text-gray-700 hover:text-gray-900 font-medium min-h-[44px] px-4 touch-manipulation"
-          >
-            Browse
-          </button>
-          <button
-            onClick={() => router.push(isAuthenticated ? "/dashboard" : "/review/new")}
-            className="text-gray-700 hover:text-gray-900 font-medium min-h-[44px] px-4 touch-manipulation"
-          >
-            {isAuthenticated ? "Dashboard" : "Get Review"}
-          </button>
-
-          {isAuthenticated ? (
-            <Button
-              onClick={() => router.push("/profile")}
-              className="bg-gradient-to-r from-accent-blue to-accent-peach text-white min-h-[44px] touch-manipulation"
-            >
-              {user?.email?.split('@')[0] || "Profile"}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => router.push("/auth/register")}
-              className="bg-gradient-to-r from-accent-blue to-accent-peach text-white min-h-[44px] touch-manipulation"
-            >
-              Sign Up
-            </Button>
-          )}
-        </nav>
-
-        {/* Mobile Hamburger */}
-        <button
-          onClick={onMenuToggle}
-          className="md:hidden p-3 -mr-3 min-h-[48px] min-w-[48px] flex items-center justify-center touch-manipulation"
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        >
-          {isMenuOpen ? (
-            <X className="size-6 text-gray-900" />
-          ) : (
-            <Menu className="size-6 text-gray-900" />
-          )}
-        </button>
-      </div>
-    </motion.header>
-  );
-}
-
-/**
- * Mobile Menu Overlay
- * Full-screen menu with touch-friendly links
- */
-function MobileMenu({
-  onClose,
-  router,
-}: {
-  onClose: () => void;
-  router: any;
-}) {
-  const menuItems = [
-    { label: "Browse Reviewers", href: "/browse" },
-    { label: "Get Review", href: "/review/new" },
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Pricing", href: "#pricing" },
-  ];
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-40 bg-white md:hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <div className="pt-24 px-6 space-y-2">
-        {menuItems.map((item) => (
-          <button
-            key={item.href}
-            onClick={() => {
-              router.push(item.href);
-              onClose();
-            }}
-            className="w-full text-left px-6 py-4 text-xl font-semibold text-gray-900 hover:bg-gray-50 rounded-2xl min-h-[56px] transition-colors touch-manipulation"
-          >
-            {item.label}
-          </button>
-        ))}
-
-        <div className="pt-6">
-          <Button
-            size="lg"
-            onClick={() => {
-              router.push("/auth/register");
-              onClose();
-            }}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-peach text-white font-semibold min-h-[56px] rounded-2xl touch-manipulation"
-          >
-            Sign Up Free
-          </Button>
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
