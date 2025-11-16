@@ -15,16 +15,42 @@ import { Card } from '@/components/ui/card'
 
 export default function ExpertApplicationPage() {
   const [showResumeDraft, setShowResumeDraft] = useState(false)
+  const [checkingStatus, setCheckingStatus] = useState(true)
   const currentStep = useExpertApplicationStore((state) => state.currentStep)
   const startedAt = useExpertApplicationStore((state) => state.startedAt)
   const reset = useExpertApplicationStore((state) => state.reset)
   const setCurrentStep = useExpertApplicationStore((state) => state.setCurrentStep)
 
   useEffect(() => {
-    // Check if there's a saved draft
-    if (startedAt && currentStep > 1) {
-      setShowResumeDraft(true)
-    }
+    // Check if user already has an application
+    fetch('http://localhost:8000/api/v1/expert-applications/me/status', {
+      credentials: 'include'
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.status !== 'withdrawn') {
+          // User has an existing application that isn't withdrawn, redirect to status page
+          window.location.href = '/apply/expert/status'
+        } else {
+          // No application or withdrawn, allow to apply
+          setCheckingStatus(false)
+
+          // Check if there's a saved draft
+          if (startedAt && currentStep > 1) {
+            setShowResumeDraft(true)
+          }
+        }
+      })
+      .catch(err => {
+        console.error('Failed to check application status:', err)
+        // On error, allow to continue (they might not be authenticated)
+        setCheckingStatus(false)
+
+        // Check if there's a saved draft
+        if (startedAt && currentStep > 1) {
+          setShowResumeDraft(true)
+        }
+      })
   }, [])
 
   const handleResumeDraft = () => {
@@ -34,6 +60,18 @@ export default function ExpertApplicationPage() {
   const handleStartFresh = () => {
     reset()
     setShowResumeDraft(false)
+  }
+
+  // Show loading while checking application status
+  if (checkingStatus) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent-blue border-t-transparent mx-auto mb-4" />
+          <p className="text-foreground-muted">Checking application status...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

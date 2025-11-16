@@ -236,6 +236,26 @@ async def create_application(
         )
 
 
+@router.get("/me/status", response_model=Optional[ApplicationResponse])
+async def get_my_application_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get current user's expert application status.
+
+    Returns the most recent application for the authenticated user.
+    Returns null if no application exists.
+    """
+    from app.models.expert_application import ExpertApplication
+
+    application = db.query(ExpertApplication).filter(
+        ExpertApplication.user_id == current_user.id
+    ).order_by(ExpertApplication.created_at.desc()).first()
+
+    return application
+
+
 @router.get("/{application_id}", response_model=ApplicationResponse)
 async def get_application(
     application_id: UUID,
