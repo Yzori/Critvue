@@ -170,7 +170,7 @@ function DashboardContent() {
             animate={{ opacity: 1, y: 0, height: "auto" }}
             exit={{ opacity: 0, y: -20, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+            className="overflow-hidden rounded-2xl"
           >
             <div className="relative rounded-2xl bg-gradient-to-br from-accent-peach via-orange-500 to-accent-peach/90 p-6 sm:p-8 text-white shadow-2xl overflow-hidden">
               {/* Decorative background pattern */}
