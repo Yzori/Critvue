@@ -16,6 +16,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,7 @@ import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [perspective, setPerspective] = useState<"creator" | "reviewer">("creator");
   const [expandedHowItWorks, setExpandedHowItWorks] = useState<number | null>(null);
@@ -97,6 +99,8 @@ export default function HomePage() {
         isMenuOpen={mobileMenuOpen}
         onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
         router={router}
+        user={user}
+        isAuthenticated={isAuthenticated}
       />
 
       {/* Mobile Menu Overlay */}
@@ -1080,10 +1084,14 @@ function MobileHeader({
   isMenuOpen,
   onMenuToggle,
   router,
+  user,
+  isAuthenticated,
 }: {
   isMenuOpen: boolean;
   onMenuToggle: () => void;
   router: any;
+  user: any;
+  isAuthenticated: boolean;
 }) {
   return (
     <motion.header
@@ -1110,17 +1118,27 @@ function MobileHeader({
             Browse
           </button>
           <button
-            onClick={() => router.push("/review/new")}
+            onClick={() => router.push(isAuthenticated ? "/dashboard" : "/review/new")}
             className="text-gray-700 hover:text-gray-900 font-medium min-h-[44px] px-4 touch-manipulation"
           >
-            Get Review
+            {isAuthenticated ? "Dashboard" : "Get Review"}
           </button>
-          <Button
-            onClick={() => router.push("/auth/register")}
-            className="bg-gradient-to-r from-accent-blue to-accent-peach text-white min-h-[44px] touch-manipulation"
-          >
-            Sign Up
-          </Button>
+
+          {isAuthenticated ? (
+            <Button
+              onClick={() => router.push("/profile")}
+              className="bg-gradient-to-r from-accent-blue to-accent-peach text-white min-h-[44px] touch-manipulation"
+            >
+              {user?.email?.split('@')[0] || "Profile"}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => router.push("/auth/register")}
+              className="bg-gradient-to-r from-accent-blue to-accent-peach text-white min-h-[44px] touch-manipulation"
+            >
+              Sign Up
+            </Button>
+          )}
         </nav>
 
         {/* Mobile Hamburger */}
