@@ -65,7 +65,11 @@ export interface Employment {
   isCurrent: boolean
 }
 
+export type CredentialsMode = 'quick' | 'detailed'
+
 export interface Credentials {
+  mode: CredentialsMode
+  linkedInUrl?: string
   education: Education[]
   certifications: Certification[]
   employment: Employment[]
@@ -129,6 +133,8 @@ export interface ApplicationState {
   addEmployment: (employment: Employment) => void
   removeEmployment: (employmentId: string) => void
   updateEmployment: (employmentId: string, data: Partial<Employment>) => void
+  setCredentialsMode: (mode: CredentialsMode) => void
+  updateLinkedInUrl: (linkedInUrl: string | undefined) => void
   addReference: (reference: Reference) => void
   removeReference: (referenceId: string) => void
   updateReference: (referenceId: string, data: Partial<Reference>) => void
@@ -138,7 +144,7 @@ export interface ApplicationState {
   reset: () => void
 }
 
-export const TOTAL_STEPS = 8
+export const TOTAL_STEPS = 7
 
 export const STEP_LABELS = [
   'Welcome',
@@ -146,8 +152,7 @@ export const STEP_LABELS = [
   'Background',
   'Skills',
   'Portfolio',
-  'Credentials',
-  'References',
+  'Professional Background',
   'Sample Review'
 ]
 
@@ -337,7 +342,6 @@ export const ESTIMATED_STEP_TIMES = [
   60,  // Step 3: Background (1 minute)
   120, // Step 4: Skills (2 minutes)
   180, // Step 5: Portfolio (3 minutes)
-  150, // Step 6: Credentials (2.5 minutes)
-  120, // Step 7: References (2 minutes)
-  300  // Step 8: Sample Review (5 minutes)
+  150, // Step 6: Professional Background (2.5 minutes - Quick mode faster)
+  300  // Step 7: Sample Review (5 minutes)
 ] as const

@@ -27,11 +27,9 @@ interface Application {
   id: string
   application_number: string
   status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'withdrawn'
-  target_tier: string
   created_at: string
   submitted_at?: string
   decision_made_at?: string
-  approved_tier?: string
 }
 
 export default function ApplicationStatusPage() {
@@ -252,15 +250,6 @@ export default function ApplicationStatusPage() {
               )}
             </div>
 
-            {/* Target Tier */}
-            <div className="rounded-lg border border-border p-4">
-              <div className="text-sm text-foreground-muted mb-2">
-                {application.approved_tier ? 'Approved Tier' : 'Target Tier'}
-              </div>
-              <Badge variant="default" className="text-base">
-                {application.approved_tier || application.target_tier}
-              </Badge>
-            </div>
           </motion.div>
 
           {/* Status-specific content */}

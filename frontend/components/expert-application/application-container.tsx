@@ -17,8 +17,7 @@ import { Step2PersonalInfo } from './steps/step-2-personal-info'
 import { Step3ProfessionalBackground } from './steps/step-3-professional-background'
 import { Step4Skills } from './steps/step-4-skills'
 import { Step5Portfolio } from './steps/step-5-portfolio'
-import { Step6Credentials } from './steps/step-6-credentials'
-import { Step7References } from './steps/step-7-references'
+import { Step6ProfessionalBackground } from './steps/step-6-professional-background'
 import { Step8SampleReview } from './steps/step-8-sample-review'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import { TOTAL_STEPS } from '@/lib/expert-application/types'
@@ -154,10 +153,8 @@ export function ApplicationContainer() {
       case 5:
         return <Step5Portfolio {...stepProps} />
       case 6:
-        return <Step6Credentials {...stepProps} />
+        return <Step6ProfessionalBackground {...stepProps} />
       case 7:
-        return <Step7References {...stepProps} />
-      case 8:
         return <Step8SampleReview {...stepProps} />
       default:
         return <Step1Welcome />

@@ -16,10 +16,13 @@ import type {
   Employment,
   Reference,
   SampleReview,
-  Credentials
+  Credentials,
+  CredentialsMode
 } from '@/lib/expert-application/types'
 
 const initialCredentials: Credentials = {
+  mode: 'quick',
+  linkedInUrl: undefined,
   education: [],
   certifications: [],
   employment: []
@@ -224,6 +227,24 @@ export const useExpertApplicationStore = create<ApplicationState>()(
             employment: state.credentials.employment.map((e) =>
               e.id === employmentId ? { ...e, ...data } : e
             )
+          },
+          isDirty: true
+        })),
+
+      setCredentialsMode: (mode) =>
+        set((state) => ({
+          credentials: {
+            ...state.credentials,
+            mode
+          },
+          isDirty: true
+        })),
+
+      updateLinkedInUrl: (linkedInUrl) =>
+        set((state) => ({
+          credentials: {
+            ...state.credentials,
+            linkedInUrl
           },
           isDirty: true
         })),
