@@ -190,15 +190,23 @@ export default function ApplicationStatusPage() {
 
             {/* Timeline */}
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-foreground-muted" />
-                  <div className="text-sm text-foreground-muted">Created</div>
+              {application.created_at && (
+                <div className="rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-foreground-muted" />
+                    <div className="text-sm text-foreground-muted">Created</div>
+                  </div>
+                  <div className="text-sm font-medium">
+                    {(() => {
+                      try {
+                        return format(new Date(application.created_at), 'MMM d, yyyy')
+                      } catch {
+                        return 'Date unavailable'
+                      }
+                    })()}
+                  </div>
                 </div>
-                <div className="text-sm font-medium">
-                  {format(new Date(application.created_at), 'MMM d, yyyy')}
-                </div>
-              </div>
+              )}
 
               {application.submitted_at && (
                 <div className="rounded-lg border border-border p-4">
@@ -207,7 +215,13 @@ export default function ApplicationStatusPage() {
                     <div className="text-sm text-foreground-muted">Submitted</div>
                   </div>
                   <div className="text-sm font-medium">
-                    {format(new Date(application.submitted_at), 'MMM d, yyyy')}
+                    {(() => {
+                      try {
+                        return format(new Date(application.submitted_at), 'MMM d, yyyy')
+                      } catch {
+                        return 'Date unavailable'
+                      }
+                    })()}
                   </div>
                 </div>
               )}
@@ -219,7 +233,13 @@ export default function ApplicationStatusPage() {
                     <div className="text-sm text-foreground-muted">Decision</div>
                   </div>
                   <div className="text-sm font-medium">
-                    {format(new Date(application.decision_made_at), 'MMM d, yyyy')}
+                    {(() => {
+                      try {
+                        return format(new Date(application.decision_made_at), 'MMM d, yyyy')
+                      } catch {
+                        return 'Date unavailable'
+                      }
+                    })()}
                   </div>
                 </div>
               )}
