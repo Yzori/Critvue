@@ -41,7 +41,7 @@ export function Navigation({ transparent = false }: NavigationProps) {
   const getActiveBottomNavId = () => {
     if (pathname === "/") return "home";
     if (pathname.startsWith("/browse")) return "browse";
-    if (pathname.startsWith("/dashboard")) return "reviews";
+    if (pathname.startsWith("/dashboard")) return "dashboard";
     if (pathname.startsWith("/profile")) return "profile";
     return "home";
   };
@@ -63,8 +63,8 @@ export function Navigation({ transparent = false }: NavigationProps) {
       onClick: () => router.push("/browse"),
     },
     {
-      id: "reviews",
-      label: "Reviews",
+      id: "dashboard",
+      label: "Dashboard",
       icon: <LayoutDashboard className="size-6" />,
       activeIcon: <LayoutDashboard className="size-6" fill="currentColor" />,
       onClick: () => router.push("/dashboard"),

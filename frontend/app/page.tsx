@@ -966,7 +966,7 @@ export default function HomePage() {
             <div className="flex justify-center pt-6">
               <Button
                 size="lg"
-                onClick={() => router.push(perspective === "creator" ? "/review/new" : "/auth/register")}
+                onClick={() => router.push(perspective === "creator" ? "/review/new" : "/apply/expert")}
                 className={cn(
                   "w-full sm:w-auto font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] touch-manipulation",
                   perspective === "creator"
@@ -1319,7 +1319,7 @@ function Footer({ router }: { router: any }) {
       links: [
         { label: "Browse Reviews", href: "/browse" },
         { label: "Request Review", href: "/review/new" },
-        { label: "Become Reviewer", href: "/auth/register" },
+        { label: "Become Reviewer", href: "/apply/expert" },
         { label: "Pricing", href: "#pricing" },
       ],
     },

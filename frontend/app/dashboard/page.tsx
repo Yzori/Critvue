@@ -27,7 +27,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Palette } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Briefcase, Palette, Star, ArrowRight, X } from "lucide-react";
 
 // Import dashboard components
 import CreatorDashboard from "@/components/dashboard/creator-dashboard";
@@ -59,6 +60,7 @@ function DashboardContent() {
   };
 
   const [activeRole, setActiveRole] = useState<DashboardRole>(getInitialRole());
+  const [showExpertBanner, setShowExpertBanner] = useState(true);
 
   // Persist role selection to localStorage
   useEffect(() => {
@@ -66,6 +68,24 @@ function DashboardContent() {
       localStorage.setItem("dashboardRole", activeRole);
     }
   }, [activeRole]);
+
+  // Check if banner was dismissed
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const dismissed = localStorage.getItem("expertBannerDismissed");
+      if (dismissed === "true") {
+        setShowExpertBanner(false);
+      }
+    }
+  }, []);
+
+  // Handle banner dismissal
+  const handleDismissBanner = () => {
+    setShowExpertBanner(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("expertBannerDismissed", "true");
+    }
+  };
 
   // Handle role change
   const handleRoleChange = (role: DashboardRole) => {
@@ -141,6 +161,65 @@ function DashboardContent() {
             : "Manage your review claims, track earnings, and view your performance."}
         </p>
       </div>
+
+      {/* Become an Expert Reviewer Banner - Dismissible */}
+      <AnimatePresence>
+        {showExpertBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div className="relative rounded-2xl bg-gradient-to-br from-accent-peach via-orange-500 to-accent-peach/90 p-6 sm:p-8 text-white shadow-2xl overflow-hidden">
+              {/* Decorative background pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={handleDismissBanner}
+                className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-lg transition-colors"
+                aria-label="Dismiss banner"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="relative flex flex-col sm:flex-row items-center gap-6">
+                {/* Icon */}
+                <div className="flex-shrink-0 size-16 sm:size-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-4 ring-white/30">
+                  <Star className="size-8 sm:size-10 fill-white" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <h3 className="text-2xl sm:text-3xl font-bold drop-shadow-lg">
+                    Become an Expert Reviewer
+                  </h3>
+                  <p className="text-white/90 text-sm sm:text-base leading-relaxed max-w-2xl">
+                    Share your expertise, earn $50-150 per review, and help creators improve their work.
+                    Join our community of industry professionals.
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <Button
+                  onClick={() => router.push("/apply/expert")}
+                  size="lg"
+                  className="flex-shrink-0 bg-white text-accent-peach hover:bg-gray-50 font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[48px]"
+                >
+                  <span className="hidden sm:inline">Apply Now</span>
+                  <span className="sm:hidden">Apply</span>
+                  <ArrowRight className="ml-2 size-5" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Dashboard Content - Animated transitions */}
       <AnimatePresence mode="wait">
