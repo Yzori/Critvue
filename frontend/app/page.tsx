@@ -1045,9 +1045,8 @@ export default function HomePage() {
               </Button>
               <Button
                 size="lg"
-                variant="outline"
                 onClick={() => router.push("/browse")}
-                className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[48px] transition-all duration-300 touch-manipulation"
+                className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[48px] transition-all duration-300 touch-manipulation"
               >
                 Browse Reviewers
               </Button>
