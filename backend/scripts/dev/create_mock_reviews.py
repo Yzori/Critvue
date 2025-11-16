@@ -2,7 +2,11 @@
 Create mock review requests for testing the browse page
 """
 import sys
-sys.path.insert(0, '/home/user/Critvue/backend')
+from pathlib import Path
+
+# Add backend root to path (go up 2 levels from scripts/dev/)
+backend_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(backend_root))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

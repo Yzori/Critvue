@@ -382,7 +382,7 @@ Credentials (cookies, authorization headers) are allowed.
 ```bash
 cd /home/user/Critvue/backend
 source venv/bin/activate
-python3 integration_test.py
+python3 tests/manual/integration_test.py
 ```
 
 ### Using the Interactive API Documentation

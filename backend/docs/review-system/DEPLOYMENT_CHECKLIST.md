@@ -14,7 +14,7 @@ All verification checks have passed:
 Run verification anytime:
 ```bash
 cd /home/user/Critvue/backend
-./venv/bin/python verify_setup.py
+./venv/bin/python scripts/validation/verify_setup.py
 ```
 
 ### 2. Database Migration
@@ -242,7 +242,7 @@ Then run `alembic upgrade head` again.
 **Solution**: Make sure virtual environment is activated:
 ```bash
 source venv/bin/activate
-python verify_setup.py
+python scripts/validation/verify_setup.py
 ```
 
 ### Issue: Authentication not working
@@ -330,7 +330,7 @@ The application logs all important operations:
 - `/home/user/Critvue/backend/DEPLOYMENT_CHECKLIST.md` (this file)
 
 ### Utilities
-- `/home/user/Critvue/backend/verify_setup.py`
+- `/home/user/Critvue/backend/scripts/validation/verify_setup.py`
 
 ## Next Steps After Deployment
 

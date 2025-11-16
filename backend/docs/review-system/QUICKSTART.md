@@ -47,10 +47,11 @@ A complete backend system for requesting and managing reviews on any type of con
 │   ├── env.py                     📝 UPDATED - Import models
 │   └── versions/
 │       └── a3f4d7e8c1b2_...py     ✨ NEW - Migration
-├── API_REFERENCE.md               ✨ NEW - API documentation
-├── REVIEW_SYSTEM_IMPLEMENTATION.md ✨ NEW - Implementation details
-├── DEPLOYMENT_CHECKLIST.md        ✨ NEW - Deployment guide
-└── verify_setup.py                ✨ NEW - Verification script
+├── docs/                          ✨ Documentation files
+├── scripts/
+│   └── validation/
+│       └── verify_setup.py        ✨ NEW - Verification script
+└── alembic.ini                    📝 Migration config
 ```
 
 ## The API Endpoints
@@ -148,7 +149,7 @@ review_files
 ### Run Verification
 ```bash
 cd /home/user/Critvue/backend
-./venv/bin/python verify_setup.py
+./venv/bin/python scripts/validation/verify_setup.py
 ```
 
 ### Test Complete Flow
@@ -268,7 +269,7 @@ SELECT status, COUNT(*) FROM review_requests GROUP BY status;
 
 ### Import Errors
 - Activate virtual environment: `source venv/bin/activate`
-- Run verification: `./venv/bin/python verify_setup.py`
+- Run verification: `./venv/bin/python scripts/validation/verify_setup.py`
 
 ### 404 on Endpoints
 - Verify router is included in `main.py`
@@ -307,7 +308,7 @@ Ensure these are set in production:
 | API Reference | `API_REFERENCE.md` |
 | Implementation Guide | `REVIEW_SYSTEM_IMPLEMENTATION.md` |
 | Deployment Checklist | `DEPLOYMENT_CHECKLIST.md` |
-| Verification Script | `verify_setup.py` |
+| Verification Script | `scripts/validation/verify_setup.py` |
 | Swagger UI | `http://localhost:8000/api/docs` |
 | ReDoc | `http://localhost:8000/api/redoc` |
 

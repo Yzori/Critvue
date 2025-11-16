@@ -172,7 +172,7 @@ Response (200):
 
 ## Files Generated
 
-1. `/home/user/Critvue/backend/integration_test.py` - Comprehensive test suite
+1. `/home/user/Critvue/backend/tests/manual/integration_test.py` - Comprehensive test suite
 2. `/home/user/Critvue/backend/INTEGRATION_TEST_REPORT.md` - Detailed report
 3. `/home/user/Critvue/backend/INTEGRATION_TEST_SUMMARY.md` - This file
 
@@ -191,7 +191,7 @@ uvicorn app.main:app --reload
 ```bash
 cd /home/user/Critvue/backend
 source venv/bin/activate
-python3 integration_test.py
+python3 tests/manual/integration_test.py
 ```
 
 ### Check Health

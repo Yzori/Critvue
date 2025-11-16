@@ -51,6 +51,7 @@ uploads/
 
 # Database
 *.db
+*.db.backup*
 *.sqlite3
 
 # OS
