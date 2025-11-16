@@ -42,6 +42,11 @@ import {
   Image as ImageIcon,
   ChevronDown,
   ChevronRight,
+  Twitter,
+  Linkedin,
+  Github,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1193,10 +1198,16 @@ function BenefitCard({
 
 /**
  * Footer Component
- * Minimal footer with collapsible links on mobile
+ * Modern, comprehensive footer with dark theme, newsletter signup, social links
+ * Mobile: Accordion sections with sticky CTA bar
+ * Desktop: Multi-column layout with inline legal links
  */
 function Footer({ router }: { router: any }) {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const footerSections = [
     {
@@ -1205,81 +1216,321 @@ function Footer({ router }: { router: any }) {
         { label: "Browse Reviews", href: "/browse" },
         { label: "Request Review", href: "/review/new" },
         { label: "Become Reviewer", href: "/apply/expert" },
-        { label: "Pricing", href: "#pricing" },
+        { label: "Pricing", href: "/pricing" },
       ],
     },
     {
-      title: "Company",
+      title: "Resources",
       links: [
         { label: "About", href: "/about" },
-        { label: "Careers", href: "/careers" },
-        { label: "Privacy", href: "/privacy" },
-        { label: "Terms", href: "/terms" },
+        { label: "Blog", href: "/blog" },
+        { label: "Help Center", href: "/help" },
+        { label: "API Docs", href: "/docs/api" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "Contact", href: "/contact" },
+        { label: "FAQ", href: "/faq" },
+        { label: "Community", href: "/community" },
+        { label: "System Status", href: "/status" },
       ],
     },
   ];
 
-  return (
-    <footer className="bg-gray-900 text-white py-12 md:py-16">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Brand */}
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent mb-3">
-            Critvue
-          </h3>
-          <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-            Transform feedback into your creative advantage
-          </p>
-        </div>
+  const socialLinks = [
+    {
+      name: "Twitter",
+      icon: Twitter,
+      href: "https://twitter.com/critvue",
+      ariaLabel: "Follow us on Twitter",
+    },
+    {
+      name: "LinkedIn",
+      icon: Linkedin,
+      href: "https://linkedin.com/company/critvue",
+      ariaLabel: "Connect with us on LinkedIn",
+    },
+    {
+      name: "GitHub",
+      icon: Github,
+      href: "https://github.com/critvue",
+      ariaLabel: "View our GitHub repository",
+    },
+    {
+      name: "Discord",
+      icon: MessageSquare,
+      href: "https://discord.gg/critvue",
+      ariaLabel: "Join our Discord community",
+    },
+  ];
 
-        {/* Links - Collapsible on mobile */}
-        <div className="grid gap-6 md:grid-cols-4 mb-8">
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <button
-                onClick={() =>
-                  setExpandedSection(
-                    expandedSection === section.title ? null : section.title
-                  )
-                }
-                className="w-full flex items-center justify-between md:justify-start font-semibold mb-4 text-white min-h-[44px] touch-manipulation"
-              >
-                {section.title}
-                <ChevronDown
-                  className={cn(
-                    "size-5 md:hidden transition-transform",
-                    expandedSection === section.title && "rotate-180"
-                  )}
-                />
-              </button>
-              <ul
-                className={cn(
-                  "space-y-3",
-                  expandedSection === section.title ? "block" : "hidden md:block"
+  const legalLinks = [
+    { label: "Privacy Policy", href: "/privacy" },
+    { label: "Terms of Service", href: "/terms" },
+    { label: "Cookie Policy", href: "/cookies" },
+    { label: "Accessibility", href: "/accessibility" },
+  ];
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    setSubscribed(true);
+    setIsSubmitting(false);
+    setEmail("");
+
+    // Reset success message after 5 seconds
+    setTimeout(() => setSubscribed(false), 5000);
+  };
+
+  return (
+    <>
+      {/* Main Footer */}
+      <footer className="bg-gray-900 text-white border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 py-8 md:py-12">
+          {/* Desktop Layout - Grid */}
+          <div className="hidden md:grid md:grid-cols-5 md:gap-8 md:mb-12">
+            {/* Column 1: Branding + Newsletter */}
+            <div className="col-span-2">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent mb-3">
+                Critvue
+              </h3>
+              <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
+                Transform feedback into your creative advantage
+              </p>
+
+              {/* Newsletter Signup */}
+              <div className="mt-8">
+                <h4 className="text-base font-semibold text-white mb-3">
+                  Stay updated
+                </h4>
+                {subscribed ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 text-green-400 text-sm"
+                  >
+                    <CheckCircle className="size-4" />
+                    <span>Thanks for subscribing!</span>
+                  </motion.div>
+                ) : (
+                  <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      className="flex-1 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent transition-all"
+                      aria-label="Email address for newsletter"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-4 py-2.5 bg-accent-blue hover:bg-accent-blue/90 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? "..." : "Subscribe"}
+                    </Button>
+                  </form>
                 )}
-              >
-                {section.links.map((link) => (
+              </div>
+            </div>
+
+            {/* Columns 2-4: Link Sections */}
+            {footerSections.map((section) => (
+              <div key={section.title}>
+                <h4 className="font-semibold text-white mb-4 text-sm">
+                  {section.title}
+                </h4>
+                <ul className="space-y-3">
+                  {section.links.map((link) => (
+                    <li key={link.label}>
+                      <button
+                        onClick={() => router.push(link.href)}
+                        className="text-gray-400 hover:text-white transition-colors text-sm inline-flex items-center group"
+                      >
+                        {link.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Layout - Accordion + Branding */}
+          <div className="md:hidden">
+            {/* Brand */}
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent mb-3">
+                Critvue
+              </h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Transform feedback into your creative advantage
+              </p>
+            </div>
+
+            {/* Newsletter Signup - Mobile */}
+            <div className="mb-8 pb-8 border-b border-gray-800">
+              <h4 className="text-base font-semibold text-white mb-3">
+                Stay updated
+              </h4>
+              {subscribed ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-green-400 text-sm"
+                >
+                  <CheckCircle className="size-4" />
+                  <span>Thanks for subscribing!</span>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-2">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:border-transparent transition-all min-h-[48px]"
+                    aria-label="Email address for newsletter"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 bg-accent-blue hover:bg-accent-blue/90 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[48px]"
+                  >
+                    {isSubmitting ? "Subscribing..." : "Subscribe"}
+                  </Button>
+                </form>
+              )}
+            </div>
+
+            {/* Accordion Sections */}
+            <div className="space-y-4 mb-8">
+              {footerSections.map((section) => (
+                <div key={section.title} className="border-b border-gray-800 pb-4 last:border-b-0">
+                  <button
+                    onClick={() =>
+                      setExpandedSection(
+                        expandedSection === section.title ? null : section.title
+                      )
+                    }
+                    className="w-full flex items-center justify-between font-semibold text-white min-h-[44px] touch-manipulation"
+                    aria-expanded={expandedSection === section.title}
+                    aria-controls={`footer-section-${section.title}`}
+                  >
+                    <span className="text-base">{section.title}</span>
+                    <ChevronDown
+                      className={cn(
+                        "size-5 transition-transform duration-200",
+                        expandedSection === section.title && "rotate-180"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {expandedSection === section.title && (
+                      <motion.ul
+                        id={`footer-section-${section.title}`}
+                        initial={prefersReducedMotion ? {} : { height: 0, opacity: 0 }}
+                        animate={prefersReducedMotion ? {} : { height: "auto", opacity: 1 }}
+                        exit={prefersReducedMotion ? {} : { height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="overflow-hidden space-y-1 mt-3"
+                      >
+                        {section.links.map((link) => (
+                          <li key={link.label}>
+                            <button
+                              onClick={() => router.push(link.href)}
+                              className="text-gray-400 hover:text-white transition-colors text-sm min-h-[44px] flex items-center py-2 touch-manipulation w-full text-left"
+                            >
+                              {link.label}
+                            </button>
+                          </li>
+                        ))}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Social Media Links - Both Desktop & Mobile */}
+          <div className="flex justify-center md:justify-start gap-4 mb-8 pb-8 border-b border-gray-800">
+            {socialLinks.map((social) => {
+              const Icon = social.icon;
+              return (
+                <motion.a
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.ariaLabel}
+                  className="flex items-center justify-center size-10 md:size-9 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-lg transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-accent-blue focus:ring-offset-2 focus:ring-offset-gray-900"
+                  whileHover={prefersReducedMotion ? {} : { y: -2 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                >
+                  <Icon className="size-5 md:size-4" />
+                </motion.a>
+              );
+            })}
+          </div>
+
+          {/* Bottom Bar - Copyright & Legal Links */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-gray-400">
+            <p className="text-center md:text-left">
+              © 2025 Critvue. All rights reserved.
+            </p>
+
+            {/* Legal Links */}
+            <nav aria-label="Legal links">
+              <ul className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2">
+                {legalLinks.map((link, index) => (
                   <li key={link.label}>
                     <button
                       onClick={() => router.push(link.href)}
-                      className="text-gray-400 hover:text-white transition-colors text-sm min-h-[44px] flex items-center py-2 touch-manipulation"
+                      className="text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1 group"
                     >
                       {link.label}
+                      <ExternalLink className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </li>
                 ))}
               </ul>
-            </div>
-          ))}
+            </nav>
+          </div>
         </div>
+      </footer>
 
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-gray-800 text-center md:text-left">
-          <p className="text-gray-400 text-sm">
-            © 2025 Critvue. All rights reserved.
-          </p>
+      {/* Mobile Sticky CTA Bar - Only visible on mobile */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className="px-6 py-3">
+          <Button
+            onClick={() => router.push("/auth/register")}
+            className="w-full h-14 bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-lg text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation"
+          >
+            Get Started Free
+            <ArrowRight className="size-5" />
+          </Button>
         </div>
       </div>
-    </footer>
+    </>
   );
 }
