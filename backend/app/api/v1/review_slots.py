@@ -406,7 +406,7 @@ async def create_dispute(
     "/my-slots",
     response_model=ReviewSlotListResponse
 )
-@limiter.limit("20/minute")
+@limiter.limit("100/minute")
 async def get_my_review_slots(
     request: Request,
     status: Optional[str] = None,
@@ -423,7 +423,7 @@ async def get_my_review_slots(
     - skip: Pagination offset (default: 0)
     - limit: Page size (default: 20, max: 100)
 
-    **Rate Limit:** 20 requests per minute
+    **Rate Limit:** 100 requests per minute (higher limit to support dashboard components)
     """
     try:
         # Validate status if provided

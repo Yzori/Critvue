@@ -36,11 +36,16 @@ interface Application {
 
 export default function ApplicationStatusPage() {
   const router = useRouter()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const [application, setApplication] = useState<Application | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Wait for auth to finish loading before checking authentication
+    if (authLoading) {
+      return
+    }
+
     if (!isAuthenticated) {
       router.push('/login?redirect=/apply/expert/status')
       return
@@ -52,11 +57,13 @@ export default function ApplicationStatusPage() {
     })
       .then(res => res.json())
       .then(data => {
-        setApplication(data)
-        setLoading(false)
-
-        // If no application, redirect to apply page
-        if (!data) {
+        // Backend returns {has_application: bool, application: {...} | null}
+        if (data.has_application && data.application) {
+          setApplication(data.application)
+          setLoading(false)
+        } else {
+          // No application, redirect to apply page
+          setLoading(false)
           router.push('/apply/expert')
         }
       })
@@ -64,7 +71,7 @@ export default function ApplicationStatusPage() {
         console.error('Failed to fetch application status:', err)
         setLoading(false)
       })
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, authLoading, router])
 
   if (loading) {
     return (

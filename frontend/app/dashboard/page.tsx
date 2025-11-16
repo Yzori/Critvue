@@ -42,42 +42,37 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
 
-  // Get initial role from URL param or localStorage, default to creator
-  const getInitialRole = (): DashboardRole => {
+  // Initialize with creator to match SSR, then update from localStorage after mount
+  const [activeRole, setActiveRole] = useState<DashboardRole>("creator");
+  const [showExpertBanner, setShowExpertBanner] = useState(true);
+  const [mounted, setMounted] = useState(false);
+
+  // Hydrate state from URL params and localStorage after mount
+  useEffect(() => {
     const urlRole = searchParams?.get("role");
     if (urlRole === "creator" || urlRole === "reviewer") {
-      return urlRole;
-    }
-
-    if (typeof window !== "undefined") {
+      setActiveRole(urlRole);
+    } else {
       const savedRole = localStorage.getItem("dashboardRole");
       if (savedRole === "creator" || savedRole === "reviewer") {
-        return savedRole;
+        setActiveRole(savedRole as DashboardRole);
       }
     }
 
-    return "creator";
-  };
+    const dismissed = localStorage.getItem("expertBannerDismissed");
+    if (dismissed === "true") {
+      setShowExpertBanner(false);
+    }
 
-  const [activeRole, setActiveRole] = useState<DashboardRole>(getInitialRole());
-  const [showExpertBanner, setShowExpertBanner] = useState(true);
+    setMounted(true);
+  }, [searchParams]);
 
-  // Persist role selection to localStorage
+  // Persist role selection to localStorage (only after mount to avoid SSR issues)
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (mounted) {
       localStorage.setItem("dashboardRole", activeRole);
     }
-  }, [activeRole]);
-
-  // Check if banner was dismissed
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const dismissed = localStorage.getItem("expertBannerDismissed");
-      if (dismissed === "true") {
-        setShowExpertBanner(false);
-      }
-    }
-  }, []);
+  }, [activeRole, mounted]);
 
   // Handle banner dismissal
   const handleDismissBanner = () => {

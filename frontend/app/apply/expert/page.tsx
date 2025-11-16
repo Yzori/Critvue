@@ -28,7 +28,8 @@ export default function ExpertApplicationPage() {
     })
       .then(res => res.json())
       .then(data => {
-        if (data && data.status !== 'withdrawn') {
+        // Backend returns {has_application: bool, application: {...} | null}
+        if (data.has_application && data.application && data.application.status !== 'withdrawn') {
           // User has an existing application that isn't withdrawn, redirect to status page
           window.location.href = '/apply/expert/status'
         } else {

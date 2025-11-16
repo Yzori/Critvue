@@ -59,6 +59,7 @@ class User(Base):
 
     # Relationships
     review_requests = relationship("ReviewRequest", back_populates="user", cascade="all, delete-orphan")
+    expert_applications = relationship("ExpertApplication", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

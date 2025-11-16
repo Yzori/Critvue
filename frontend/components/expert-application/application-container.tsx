@@ -82,19 +82,58 @@ export function ApplicationContainer() {
         sampleReview: state.sampleReview
       }
 
-      // TODO: Submit to API
-      console.log('Submitting application:', applicationData)
+      // Step 1: Create draft application
+      const createResponse = await fetch('http://localhost:8000/api/v1/expert-applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: state.personalInfo.email || '',
+          full_name: state.personalInfo.fullName || '',
+          application_data: applicationData
+        })
+      })
+
+      if (!createResponse.ok) {
+        const errorData = await createResponse.json()
+        console.error('Failed to create draft:', errorData)
+        throw new Error(errorData.detail || 'Failed to create application')
+      }
+
+      const createdApp = await createResponse.json()
+
+      // Step 2: Submit the draft
+      const submitResponse = await fetch(`http://localhost:8000/api/v1/expert-applications/${createdApp.id}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          application_data: applicationData
+        })
+      })
+
+      if (!submitResponse.ok) {
+        const errorData = await submitResponse.json()
+        console.error('Failed to submit application:', errorData)
+        throw new Error(errorData.detail || 'Failed to submit application')
+      }
+
+      const submittedApp = await submitResponse.json()
 
       // Show 100% celebration
       setCelebration('100-percent')
 
-      // Navigate to success page after celebration
+      // Navigate to status page after celebration
       setTimeout(() => {
-        router.push('/apply/expert/success')
+        router.push('/apply/expert/status')
       }, 4000)
     } catch (error) {
       console.error('Failed to submit application:', error)
-      // TODO: Show error toast
+      alert(`Failed to submit application: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
