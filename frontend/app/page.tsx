@@ -588,13 +588,13 @@ export default function HomePage() {
               Choose your feedback style
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              Instant AI insights or human expert reviews—both get results
+              From free community reviews to expert critiques—scale as you grow
             </p>
           </motion.div>
 
           {/* Pricing cards */}
-          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto">
-            {/* Free AI Plan */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {/* Free Tier */}
             <motion.div
               className="relative p-8 sm:p-10 rounded-3xl bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300"
               initial={{ opacity: 0, y: 20 }}
@@ -608,23 +608,22 @@ export default function HomePage() {
                   <CheckCircle className="size-4" />
                   Free Forever
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">AI Reviews</h3>
-                <p className="text-gray-600">Instant feedback powered by AI</p>
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Free</h3>
+                <p className="text-gray-600">Get started with community reviews</p>
               </div>
 
               <div className="mb-8">
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl sm:text-6xl font-black text-gray-900">$0</span>
-                  <span className="text-xl text-gray-600">/review</span>
+                  <span className="text-xl text-gray-600">/month</span>
                 </div>
               </div>
 
               <ul className="space-y-4 mb-8">
                 {[
-                  "Instant AI-powered analysis",
-                  "Detailed actionable feedback",
-                  "Unlimited free reviews",
-                  "Support for all content types",
+                  "3 community reviews/month",
+                  "AI-powered analysis",
+                  "All content types",
                   "Get results in seconds",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -637,38 +636,93 @@ export default function HomePage() {
               <Button
                 size="lg"
                 onClick={() => router.push("/review/new?type=ai")}
-                className="w-full bg-gradient-to-r from-accent-blue to-blue-600 hover:from-accent-blue/90 hover:to-blue-600/90 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <span className="hidden min-[360px]:inline">Try AI Review Free</span>
-                <span className="min-[360px]:hidden">Try AI Free</span>
+                <span className="min-[360px]:hidden">Try Free</span>
                 <ArrowRight className="ml-2 size-5" />
               </Button>
             </motion.div>
 
-            {/* Expert Plan */}
+            {/* Pro Subscription - MOST POPULAR */}
             <motion.div
-              className="relative p-8 sm:p-10 rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 border-2 border-accent-peach/50"
+              className="relative p-8 sm:p-10 rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-300 border-2 border-accent-blue/50 md:scale-105"
+              style={{
+                background: "linear-gradient(135deg, #fff 0%, #f0f7ff 100%)",
+                boxShadow: "0 0 40px rgba(59, 130, 246, 0.2)",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ y: -6, boxShadow: "0 0 60px rgba(59, 130, 246, 0.3)" }}
+            >
+              {/* Most Popular badge */}
+              <div className="absolute top-0 right-0 px-6 py-2 bg-gradient-to-r from-accent-blue to-blue-600 text-white font-bold text-sm rounded-bl-2xl">
+                Most Popular
+              </div>
+
+              <div className="mb-6 mt-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-semibold text-sm mb-4">
+                  <Sparkles className="size-4" />
+                  Best Value
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Pro</h3>
+                <p className="text-gray-600">Unlimited reviews plus expert discounts</p>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl sm:text-6xl font-black text-gray-900">$9</span>
+                  <span className="text-xl text-gray-600">/month</span>
+                </div>
+              </div>
+
+              <ul className="space-y-4 mb-8">
+                {[
+                  "Unlimited community reviews",
+                  "15% discount on expert reviews",
+                  "Priority queue for experts",
+                  "All Free features included",
+                  "Cancel anytime",
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle className="size-5 text-accent-blue mt-0.5 shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                size="lg"
+                onClick={() => router.push("/pricing")}
+                className="w-full bg-gradient-to-r from-accent-blue to-blue-600 hover:from-accent-blue/90 hover:to-blue-600/90 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <span className="hidden min-[360px]:inline">Upgrade to Pro</span>
+                <span className="min-[360px]:hidden">Get Pro</span>
+                <ArrowRight className="ml-2 size-5" />
+              </Button>
+            </motion.div>
+
+            {/* Expert Reviews */}
+            <motion.div
+              className="relative p-8 sm:p-10 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-accent-peach/50"
               style={{
                 background: "linear-gradient(135deg, #fff 0%, #fff5f0 100%)",
               }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
               whileHover={{ y: -4 }}
             >
-              {/* Popular badge */}
-              <div className="absolute top-0 right-0 px-6 py-2 bg-gradient-to-r from-accent-peach to-orange-500 text-white font-bold text-sm rounded-bl-2xl">
-                Most Popular
-              </div>
-
-              <div className="mb-6 mt-4">
+              <div className="mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold text-sm mb-4">
                   <Award className="size-4" />
                   Expert Quality
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Expert Reviews</h3>
-                <p className="text-gray-600">Human experts with real expertise</p>
+                <p className="text-gray-600">Professional human expertise</p>
               </div>
 
               <div className="mb-8">
@@ -685,12 +739,15 @@ export default function HomePage() {
                   "In-depth personalized critique",
                   "Industry-specific expertise",
                   "24-hour turnaround",
-                  "Direct communication with reviewer",
+                  "Direct communication",
                   "100% satisfaction guarantee",
+                  "15% off with Pro subscription",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle className="size-5 text-accent-peach mt-0.5 shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <span className={cn("text-gray-700", i === 6 && "font-semibold text-accent-blue")}>
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
