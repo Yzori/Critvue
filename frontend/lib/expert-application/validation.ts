@@ -18,11 +18,6 @@ export const personalInfoSchema = z.object({
     .email('Please enter a valid email address')
     .toLowerCase(),
 
-  phone: z
-    .string()
-    .regex(/^[\d\s()+\-ext.]+$/, 'Please enter a valid phone number')
-    .min(10, 'Phone number must be at least 10 digits'),
-
   location: z
     .string()
     .min(2, 'Please enter your location (city, country)'),

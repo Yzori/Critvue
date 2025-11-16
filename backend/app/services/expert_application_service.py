@@ -204,7 +204,7 @@ class ApplicationService:
         Run automated checks on submitted application.
 
         Automated checks include:
-        - Email/phone verification
+        - Email verification
         - Duplicate detection
         - Blacklist check
         - Minimum requirements check

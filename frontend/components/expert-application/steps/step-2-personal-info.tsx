@@ -1,6 +1,6 @@
 /**
  * Step 2: Personal Information
- * Name, email, phone, location, timezone, LinkedIn
+ * Name, email, location, timezone, LinkedIn
  */
 
 'use client'
@@ -9,7 +9,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, MapPin, Globe, Linkedin } from 'lucide-react'
+import { User, Mail, MapPin, Globe, Linkedin } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,7 +36,6 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
     defaultValues: {
       fullName: personalInfo.fullName || '',
       email: personalInfo.email || '',
-      phone: personalInfo.phone || '',
       location: personalInfo.location || '',
       timezone: personalInfo.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       linkedinUrl: personalInfo.linkedinUrl || ''
@@ -100,24 +99,6 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
                 className="h-12"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? 'email-error' : undefined}
-              />
-            </FormField>
-
-            {/* Phone */}
-            <FormField
-              icon={Phone}
-              label="Phone Number"
-              error={errors.phone?.message}
-            >
-              <Input
-                {...register('phone')}
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                autoComplete="tel"
-                inputMode="tel"
-                className="h-12"
-                aria-invalid={!!errors.phone}
-                aria-describedby={errors.phone ? 'phone-error' : undefined}
               />
             </FormField>
 

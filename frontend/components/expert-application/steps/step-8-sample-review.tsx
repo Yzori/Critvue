@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
@@ -23,8 +23,9 @@ interface Step8SampleReviewProps {
 export function Step8SampleReview({ onValidationChange }: Step8SampleReviewProps) {
   const sampleReview = useExpertApplicationStore((state) => state.sampleReview)
   const updateSampleReview = useExpertApplicationStore((state) => state.updateSampleReview)
+  const [hoverRating, setHoverRating] = useState(0)
 
-  const { register, formState: { errors, isValid }, watch } = useForm<SampleReviewFormData>({
+  const { register, formState: { errors, isValid }, watch, setValue } = useForm<SampleReviewFormData>({
     resolver: zodResolver(sampleReviewSchema),
     mode: 'onBlur',
     defaultValues: {
@@ -34,6 +35,8 @@ export function Step8SampleReview({ onValidationChange }: Step8SampleReviewProps
       detailedFeedback: sampleReview.detailedFeedback || ''
     }
   })
+
+  const currentRating = watch('rating') || 0
 
   useEffect(() => {
     const subscription = watch((data) => {
@@ -64,20 +67,41 @@ export function Step8SampleReview({ onValidationChange }: Step8SampleReviewProps
           <div className="space-y-6">
             {/* Rating */}
             <div className="space-y-2">
-              <Label>Overall Rating</Label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <label key={star} className="cursor-pointer">
-                    <input
-                      type="radio"
-                      value={star}
-                      {...register('rating', { valueAsNumber: true })}
-                      className="peer sr-only"
-                    />
-                    <Star className="h-8 w-8 text-gray-300 peer-checked:fill-[var(--accent-blue)] peer-checked:text-[var(--accent-blue)]" />
-                  </label>
-                ))}
+              <Label>
+                Overall Rating <span className="text-destructive">*</span>
+              </Label>
+              <div
+                className="flex gap-2"
+                onMouseLeave={() => setHoverRating(0)}
+              >
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const displayRating = hoverRating || currentRating
+                  const isFilled = star <= displayRating
+
+                  return (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setValue('rating', star, { shouldValidate: true })}
+                      onMouseEnter={() => setHoverRating(star)}
+                      className="cursor-pointer transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={`h-8 w-8 transition-colors ${
+                          isFilled
+                            ? 'fill-[var(--accent-blue)] text-[var(--accent-blue)]'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  )
+                })}
               </div>
+              {currentRating > 0 && (
+                <p className="text-sm text-foreground-muted">
+                  {currentRating} out of 5 stars
+                </p>
+              )}
               {errors.rating && <p className="text-sm text-red-600">⚠ {errors.rating.message}</p>}
             </div>
 

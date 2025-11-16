@@ -6,7 +6,6 @@
 export interface PersonalInfo {
   fullName: string
   email: string
-  phone: string
   location: string
   timezone: string
   linkedinUrl?: string

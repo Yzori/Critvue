@@ -33,7 +33,6 @@ class ApplicationCreate(BaseModel):
     email: EmailStr
     full_name: str = Field(..., min_length=2, max_length=255)
     professional_name: Optional[str] = Field(None, max_length=255)
-    phone: Optional[str] = Field(None, max_length=50)
     country: str
     timezone: str
     target_tier: ReviewerTier
@@ -53,7 +52,6 @@ class ApplicationCreate(BaseModel):
 class ApplicationUpdate(BaseModel):
     """Schema for updating an existing application"""
     professional_name: Optional[str] = None
-    phone: Optional[str] = None
     personal_info: Optional[dict] = None
     professional_background: Optional[dict] = None
     credentials: Optional[dict] = None
@@ -214,7 +212,6 @@ async def create_application(
             full_name=application_data.full_name,
             target_tier=application_data.target_tier,
             professional_name=application_data.professional_name,
-            phone=application_data.phone,
             country=application_data.country,
             timezone=application_data.timezone,
             personal_info=application_data.personal_info,

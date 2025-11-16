@@ -8,8 +8,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, Camera, Link as LinkIcon } from 'lucide-react'
+import { Upload, Camera, Link as LinkIcon, X, FileText, Image as ImageIcon } from 'lucide-react'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { FileUpload, UploadedFile } from '@/components/ui/file-upload'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import type { PortfolioItem } from '@/lib/expert-application/types'
@@ -21,6 +24,7 @@ interface Step5PortfolioProps {
 export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
   const portfolio = useExpertApplicationStore((state) => state.portfolio)
   const addPortfolioItem = useExpertApplicationStore((state) => state.addPortfolioItem)
+  const updatePortfolioItem = useExpertApplicationStore((state) => state.updatePortfolioItem)
   const removePortfolioItem = useExpertApplicationStore((state) => state.removePortfolioItem)
 
   // Local state for managing upload UI
@@ -116,6 +120,96 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
             onFileRemove={handleFileRemove}
             uploadedFiles={uploadedFiles}
           />
+
+          {/* Portfolio Items with Title and Description */}
+          {portfolio.length > 0 && (
+            <div className="mt-8 space-y-6">
+              <h3 className="text-lg font-semibold">Work Sample Details</h3>
+              <p className="text-sm text-foreground-muted -mt-2">
+                Add a title and description for each uploaded sample
+              </p>
+
+              {portfolio.map((item, index) => (
+                <Card key={item.id} className="p-4 border-2">
+                  <div className="flex gap-4">
+                    {/* Preview */}
+                    <div className="flex-shrink-0">
+                      {item.thumbnailUrl ? (
+                        <img
+                          src={item.thumbnailUrl}
+                          alt={item.fileName}
+                          className="w-20 h-20 rounded object-cover"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded bg-muted flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Input Fields */}
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-muted-foreground mb-3">
+                            Sample {index + 1}: {item.fileName}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleFileRemove(item.id)}
+                          className="flex-shrink-0 p-1 hover:bg-destructive/10 rounded transition-colors"
+                          aria-label="Remove file"
+                        >
+                          <X className="w-4 h-4 text-destructive" />
+                        </button>
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`title-${item.id}`} className="text-sm font-medium">
+                          Title <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id={`title-${item.id}`}
+                          value={item.title}
+                          onChange={(e) => updatePortfolioItem(item.id, { title: e.target.value })}
+                          placeholder="e.g., E-commerce Website Redesign"
+                          className="mt-1.5"
+                          maxLength={100}
+                        />
+                        {!item.title && portfolio.length >= 3 && (
+                          <p className="text-xs text-destructive mt-1">Title is required</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor={`description-${item.id}`} className="text-sm font-medium">
+                          Description <span className="text-destructive">*</span>
+                        </Label>
+                        <Textarea
+                          id={`description-${item.id}`}
+                          value={item.description}
+                          onChange={(e) => updatePortfolioItem(item.id, { description: e.target.value })}
+                          placeholder="Briefly describe this work sample, your role, and what makes it notable..."
+                          className="mt-1.5 min-h-[80px]"
+                          maxLength={500}
+                        />
+                        <div className="flex justify-between mt-1">
+                          <span>
+                            {!item.description && portfolio.length >= 3 && (
+                              <p className="text-xs text-destructive">Description is required</p>
+                            )}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {item.description.length}/500
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
 
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <UploadOption
