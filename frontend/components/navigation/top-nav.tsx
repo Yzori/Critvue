@@ -36,7 +36,7 @@ export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
 
 const navItems: NavItem[] = [
   { label: "Browse", href: "/browse", showOn: "tablet" },
-  { label: "Reviews", href: "/dashboard", showOn: "tablet" },
+  { label: "Dashboard", href: "/dashboard", showOn: "tablet" },
   { label: "How It Works", href: "/how-it-works", showOn: "desktop" },
 ];
 
