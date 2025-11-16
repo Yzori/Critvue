@@ -8,13 +8,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ["/dashboard"];
+const PROTECTED_ROUTES = ["/dashboard", "/apply/expert/status", "/profile"];
 
 // Routes that should redirect to dashboard if already authenticated
 const AUTH_ROUTES = ["/login", "/register"];
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/about", "/pricing", "/contact"];
+const PUBLIC_ROUTES = ["/", "/about", "/pricing", "/contact", "/apply/expert", "/browse"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
