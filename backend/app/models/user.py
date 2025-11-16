@@ -22,6 +22,23 @@ class UserRole(str, enum.Enum):
     ADMIN = "admin"
 
 
+class SubscriptionTier(str, enum.Enum):
+    """Subscription tier types"""
+    FREE = "free"
+    PRO = "pro"
+
+
+class SubscriptionStatus(str, enum.Enum):
+    """Subscription status types"""
+    ACTIVE = "active"
+    CANCELED = "canceled"
+    PAST_DUE = "past_due"
+    INCOMPLETE = "incomplete"
+    INCOMPLETE_EXPIRED = "incomplete_expired"
+    TRIALING = "trialing"
+    UNPAID = "unpaid"
+
+
 class User(Base):
     """User model for authentication and basic info"""
 
@@ -51,6 +68,17 @@ class User(Base):
     total_reviews_received = Column(Integer, nullable=False, default=0, server_default='0')
     avg_rating = Column(Numeric(precision=3, scale=2), nullable=True)
     avg_response_time_hours = Column(Integer, nullable=True)
+
+    # Subscription fields
+    subscription_tier = Column(Enum(SubscriptionTier), default=SubscriptionTier.FREE, nullable=False)
+    subscription_status = Column(Enum(SubscriptionStatus), nullable=True)
+    stripe_customer_id = Column(String(255), nullable=True, unique=True, index=True)
+    stripe_subscription_id = Column(String(255), nullable=True, unique=True, index=True)
+    subscription_end_date = Column(DateTime, nullable=True)
+
+    # Review limit tracking for free tier
+    monthly_reviews_used = Column(Integer, nullable=False, default=0, server_default='0')
+    reviews_reset_at = Column(DateTime, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

@@ -64,6 +64,8 @@ class Settings(BaseSettings):
     # Stripe
     STRIPE_API_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRO_PRICE_ID: str = ""  # Stripe Price ID for Pro subscription ($9/month)
+    STRIPE_PUBLISHABLE_KEY: str = ""  # Frontend publishable key
 
     # Email
     EMAIL_FROM: str = "noreply@critvue.com"

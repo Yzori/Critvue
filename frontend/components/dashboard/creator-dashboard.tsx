@@ -36,6 +36,7 @@ import { useRouter } from "next/navigation";
 import { type CreateReviewResponse } from "@/lib/api/reviews";
 import { useReviews } from "@/hooks/useReviews";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import SubscriptionStatusCard from "./subscription-status-card";
 
 export default function CreatorDashboard() {
   const { user } = useAuth();
@@ -430,6 +431,11 @@ export default function CreatorDashboard() {
               group-hover:text-foreground group-hover:translate-x-1
               transition-all duration-200" />
           </button>
+        </div>
+
+        {/* Subscription Status Card - Show on "account" tab on mobile, always on desktop */}
+        <div className={`${mobileSection !== "account" ? "hidden lg:block" : ""}`}>
+          <SubscriptionStatusCard />
         </div>
       </div>
 

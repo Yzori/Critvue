@@ -17,6 +17,7 @@ from app.schemas.review import (
 )
 from app.crud.review import review_crud
 from app.core.logging_config import security_logger
+from app.services.subscription_service import SubscriptionService
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -47,11 +48,25 @@ async def create_review_request(
         HTTPException: If creation fails
     """
     try:
+        # Check review limits for community/free reviews (not for expert reviews)
+        from app.models.review_request import ReviewType
+        if review_data.review_type == ReviewType.FREE:
+            can_create, error_message = await SubscriptionService.check_review_limit(current_user, db)
+            if not can_create:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=error_message
+                )
+
         review = await review_crud.create_review_request(
             db=db,
             user_id=current_user.id,
             data=review_data
         )
+
+        # Increment review count for free tier users (community reviews only)
+        if review_data.review_type == ReviewType.FREE:
+            await SubscriptionService.increment_review_count(current_user, db)
 
         security_logger.logger.info(
             f"Review request created: id={review.id}, user={current_user.email}, "
