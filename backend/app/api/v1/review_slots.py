@@ -169,13 +169,24 @@ async def submit_review(
     **Rate Limit:** 20 requests per minute
     """
     try:
+        # Convert Pydantic models to dicts for CRUD function
+        feedback_sections = None
+        if review_data.feedback_sections:
+            feedback_sections = [section.model_dump() for section in review_data.feedback_sections]
+
+        annotations = None
+        if review_data.annotations:
+            annotations = [annotation.model_dump() for annotation in review_data.annotations]
+
         submitted_slot = await crud_review_slot.submit_review(
             db,
             slot_id,
             current_user.id,
             review_data.review_text,
             review_data.rating,
-            review_data.attachments
+            review_data.attachments,
+            feedback_sections,
+            annotations
         )
 
         logger.info(f"User {current_user.id} submitted review for slot {slot_id}")
@@ -202,6 +213,103 @@ async def submit_review(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while submitting the review"
+        )
+
+
+# ===== Section Templates =====
+
+@router.get(
+    "/{slot_id}/sections",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("20/minute")
+async def get_review_sections(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get context-aware section templates for a review slot
+
+    Returns appropriate sections based on:
+    - Content Type (design, code, writing, etc.)
+    - Feedback Priority (validation, specific_fixes, etc.)
+    - Review Tier (quick, standard, deep)
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot
+
+    **Rate Limit:** 20 requests per minute
+    """
+    try:
+        # Get the slot and verify access
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review slot not found or you don't have access"
+            )
+
+        # Verify user is the reviewer
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the assigned reviewer can access section templates"
+            )
+
+        # Get the review request to extract context
+        from app.models.review_request import ReviewRequest
+        review_request = await db.get(ReviewRequest, slot.review_request_id)
+
+        if not review_request:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review request not found"
+            )
+
+        # Get appropriate sections from template system
+        from app.config.review_sections import get_sections, calculate_min_total_words
+
+        sections = get_sections(
+            content_type=review_request.content_type.value,
+            feedback_priority=review_request.feedback_priority.value if review_request.feedback_priority else "specific_fixes",
+            review_tier=review_request.review_tier.value if review_request.review_tier else "standard"
+        )
+
+        # Merge with draft data if available
+        if slot.draft_sections:
+            import json
+            try:
+                draft_sections = json.loads(slot.draft_sections) if isinstance(slot.draft_sections, str) else slot.draft_sections
+                # Merge draft content into section templates
+                section_dict = {s["id"]: s for s in sections}
+                for draft in draft_sections:
+                    if draft["id"] in section_dict:
+                        section_dict[draft["id"]]["content"] = draft.get("content", "")
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.error(f"Failed to parse draft sections for slot {slot_id}: {e}")
+                # Continue without draft data rather than failing the request
+
+        return JSONResponse({
+            "sections": sections,
+            "context": {
+                "content_type": review_request.content_type.value,
+                "feedback_priority": review_request.feedback_priority.value if review_request.feedback_priority else "specific_fixes",
+                "review_tier": review_request.review_tier.value if review_request.review_tier else "standard",
+                "min_total_words": calculate_min_total_words(sections),
+                "has_draft": bool(slot.draft_sections)
+            }
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting sections for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching section templates"
         )
 
 

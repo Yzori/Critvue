@@ -385,20 +385,24 @@ async def submit_review(
     db: AsyncSession,
     slot_id: int,
     reviewer_id: int,
-    review_text: str,
+    review_text: Optional[str],
     rating: int,
-    attachments: Optional[list] = None
+    attachments: Optional[list] = None,
+    feedback_sections: Optional[list] = None,
+    annotations: Optional[list] = None
 ) -> ReviewSlot:
     """
-    Submit a review for a claimed slot
+    Submit a review for a claimed slot (supports both structured and legacy formats)
 
     Args:
         db: Database session
         slot_id: Slot ID
         reviewer_id: Reviewer user ID
-        review_text: Review content
+        review_text: Review content (legacy format, optional if feedback_sections provided)
         rating: Rating 1-5
         attachments: Optional list of attachments
+        feedback_sections: Optional structured feedback sections
+        annotations: Optional context-specific annotations
 
     Returns:
         Updated review slot
@@ -415,13 +419,40 @@ async def submit_review(
     if slot.reviewer_id != reviewer_id:
         raise PermissionError("You cannot submit a review for a slot you don't own")
 
-    # Submit review using model method
-    slot.submit_review(review_text, rating, attachments)
+    # Handle structured vs legacy submission
+    if feedback_sections:
+        import json
+        import html
+
+        try:
+            # Store structured sections
+            slot.feedback_sections = json.dumps(feedback_sections) if isinstance(feedback_sections, list) else feedback_sections
+
+            # Store annotations if provided
+            if annotations:
+                slot.annotations = json.dumps(annotations) if isinstance(annotations, list) else annotations
+
+            # Generate review_text from sections for backward compatibility
+            # Sanitize HTML to prevent XSS attacks
+            if not review_text:
+                review_text = "\n\n".join([
+                    f"**{html.escape(section['section_label'])}**\n{html.escape(section['content'])}"
+                    for section in feedback_sections
+                ])
+        except (json.JSONDecodeError, KeyError, TypeError) as e:
+            logger.error(f"Failed to process structured feedback for slot {slot_id}: {e}")
+            raise ValueError(f"Invalid structured feedback format: {e}")
+
+    # Submit review using model method (still uses review_text internally)
+    slot.submit_review(review_text or "", rating, attachments)
 
     await db.commit()
     await db.refresh(slot)
 
-    logger.info(f"User {reviewer_id} submitted review for slot {slot_id}")
+    logger.info(
+        f"User {reviewer_id} submitted review for slot {slot_id} "
+        f"(structured: {bool(feedback_sections)})"
+    )
 
     return slot
 

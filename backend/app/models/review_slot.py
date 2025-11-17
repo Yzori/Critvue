@@ -108,6 +108,11 @@ class ReviewSlot(Base):
     rating = Column(Integer, nullable=True)  # 1-5 stars
     review_attachments = Column(Text, nullable=True)  # JSON stored as Text for SQLite
 
+    # Structured feedback (new format - Phase 1 of Smart Adaptive Review Editor)
+    feedback_sections = Column(JSON, nullable=True)  # Structured section-based feedback
+    annotations = Column(JSON, nullable=True)        # Context-specific annotations (pins, timestamps, etc.)
+    draft_sections = Column(JSON, nullable=True)     # Auto-saved section drafts
+
     # Acceptance/Rejection metadata (use String for SQLite compatibility)
     acceptance_type = Column(String(20), nullable=True)
     rejection_reason = Column(String(20), nullable=True)
