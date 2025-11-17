@@ -312,7 +312,7 @@ export function SlotsList({ slots, className }: SlotsListProps) {
                   <span className="text-gray-700">Payment</span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">
-                      ${slot.payment_amount.toFixed(2)}
+                      ${Number(slot.payment_amount).toFixed(2)}
                     </span>
                     <Badge
                       variant={

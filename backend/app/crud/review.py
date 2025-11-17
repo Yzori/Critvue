@@ -426,10 +426,16 @@ class ReviewCRUD:
         reviewer_id: int
     ) -> Optional[ReviewRequest]:
         """
-        Claim a review slot for a review request.
+        DEPRECATED: Use app.services.claim_service.claim_review_by_request_id() instead.
 
-        This operation uses database-level locking (SELECT FOR UPDATE) to prevent
-        race conditions when multiple reviewers try to claim simultaneously.
+        This method only increments the reviews_claimed counter and does NOT create
+        ReviewSlot records. This is incomplete and should not be used.
+
+        Use claim_service.claim_review_by_request_id() which:
+        - Creates ReviewSlot records properly
+        - Prevents duplicate claims
+        - Uses proper row-level locking
+        - Returns the created slot_id
 
         Args:
             db: Database session
@@ -511,7 +517,16 @@ class ReviewCRUD:
         reviewer_id: int
     ) -> Optional[ReviewRequest]:
         """
-        Unclaim a review slot (e.g., if reviewer decides not to proceed).
+        DEPRECATED: Use app.services.claim_service.unclaim_review_slot() instead.
+
+        This method only decrements the reviews_claimed counter and does NOT
+        properly manage ReviewSlot records.
+
+        Use claim_service.unclaim_review_slot() which:
+        - Properly updates ReviewSlot status to ABANDONED
+        - Validates ownership
+        - Uses proper row-level locking
+        - Returns the updated slot
 
         Args:
             db: Database session

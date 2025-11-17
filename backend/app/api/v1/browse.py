@@ -14,11 +14,11 @@ from app.schemas.browse import (
     DeadlineFilter
 )
 from app.crud.browse import browse_crud
-from app.crud.review import review_crud
 from app.models.review_request import ContentType, ReviewType
 from app.models.user import User
 from app.core.logging_config import security_logger
 from app.api.deps import get_current_active_user
+from app.services.claim_service import claim_service, ClaimValidationError
 
 router = APIRouter(prefix="/reviews", tags=["Browse"])
 
@@ -178,20 +178,20 @@ async def claim_review_slot(
     - Review must have available slots (reviews_claimed < reviews_requested)
     - Review must be in PENDING or IN_REVIEW status
     - Review must not be deleted
+    - Cannot claim multiple slots for the same request
 
     **Race Condition Protection:**
     - Uses database-level row locking (SELECT FOR UPDATE)
-    - Ensures atomic increment of reviews_claimed
+    - Ensures atomic claim operations
     - Prevents over-claiming when multiple reviewers claim simultaneously
 
     **Status Updates:**
     - If this is the first claim, status changes from PENDING to IN_REVIEW
     - If this fills all slots, status remains IN_REVIEW (changes to COMPLETED when reviews submitted)
 
-    **Future Enhancement:**
-    - Currently allows same reviewer to claim multiple slots
-    - Future version will add review_claims table to track individual claims
-    - Will prevent duplicate claims by same reviewer
+    **Response:**
+    - Returns slot_id that can be used to navigate to /reviewer/review/{slot_id}
+    - Frontend should redirect user to the review writing page with this slot_id
 
     Args:
         request: FastAPI request object (for rate limiting)
@@ -200,13 +200,13 @@ async def claim_review_slot(
         db: Database session
 
     Returns:
-        ClaimReviewSlotResponse with claim status and updated slot information
+        ClaimReviewSlotResponse with claim status, slot_id, and updated slot information
 
     Raises:
         HTTPException 401: If not authenticated
         HTTPException 403: If trying to claim own review
         HTTPException 404: If review request not found
-        HTTPException 409: If no available slots or invalid state
+        HTTPException 409: If no available slots or already claimed
         HTTPException 429: If rate limit exceeded
         HTTPException 500: If database operation fails
     """
@@ -216,26 +216,20 @@ async def claim_review_slot(
             f"User {current_user.id} attempting to claim review {review_id}"
         )
 
-        # Attempt to claim the review slot
-        review = await review_crud.claim_review_slot(
+        # Claim the review slot using shared service
+        slot = await claim_service.claim_review_by_request_id(
             db=db,
             review_id=review_id,
             reviewer_id=current_user.id
         )
 
-        # Handle not found
-        if not review:
-            security_logger.logger.warning(
-                f"Review {review_id} not found for claim by user {current_user.id}"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request {review_id} not found"
-            )
+        # Get updated review request for counters
+        from app.models.review_request import ReviewRequest
+        review = await db.get(ReviewRequest, review_id)
 
         # Success - log and return response
         security_logger.logger.info(
-            f"User {current_user.id} successfully claimed review {review_id}. "
+            f"User {current_user.id} successfully claimed review {review_id} (slot {slot.id}). "
             f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
         )
 
@@ -243,13 +237,14 @@ async def claim_review_slot(
             success=True,
             message="Successfully claimed review slot",
             review_request_id=review.id,
+            slot_id=slot.id,
             reviews_claimed=review.reviews_claimed,
             available_slots=review.available_slots,
             is_fully_claimed=review.is_fully_claimed
         )
 
-    except ValueError as e:
-        # Handle validation errors (own review, fully claimed, invalid status, etc.)
+    except ClaimValidationError as e:
+        # Handle validation errors (own review, fully claimed, duplicate claim, etc.)
         error_msg = str(e)
         security_logger.logger.warning(
             f"Claim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
@@ -265,6 +260,17 @@ async def claim_review_slot(
 
         raise HTTPException(
             status_code=status_code,
+            detail=error_msg
+        )
+
+    except RuntimeError as e:
+        # Handle not found errors
+        error_msg = str(e)
+        security_logger.logger.warning(
+            f"Review {review_id} not found for claim by user {current_user.id}: {error_msg}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=error_msg
         )
 
@@ -296,12 +302,13 @@ async def unclaim_review_slot(
     Unclaim a previously claimed review slot.
 
     This endpoint allows reviewers to release a claimed review slot if they
-    decide not to proceed with the review.
+    decide not to proceed with the review. Note: This finds and unclaims
+    the user's active slot for this review request.
 
     **Requirements:**
     - Must be authenticated
-    - Review must have at least one claimed slot
-    - Review must not be in COMPLETED status
+    - Must have an active claimed slot for this review
+    - Slot must be in CLAIMED status (not yet submitted)
 
     **Status Updates:**
     - If this was the last claimed slot, status changes from IN_REVIEW to PENDING
@@ -318,8 +325,8 @@ async def unclaim_review_slot(
 
     Raises:
         HTTPException 401: If not authenticated
-        HTTPException 404: If review request not found
-        HTTPException 409: If no slots are claimed or invalid state
+        HTTPException 404: If review request or slot not found
+        HTTPException 409: If no active claim found or invalid state
         HTTPException 429: If rate limit exceeded
         HTTPException 500: If database operation fails
     """
@@ -329,26 +336,44 @@ async def unclaim_review_slot(
             f"User {current_user.id} attempting to unclaim review {review_id}"
         )
 
-        # Attempt to unclaim the review slot
-        review = await review_crud.unclaim_review_slot(
-            db=db,
-            review_id=review_id,
-            reviewer_id=current_user.id
+        # Find the user's claimed slot for this review
+        from sqlalchemy import select, and_
+        from app.models.review_slot import ReviewSlot, ReviewSlotStatus
+
+        slot_query = select(ReviewSlot).where(
+            and_(
+                ReviewSlot.review_request_id == review_id,
+                ReviewSlot.reviewer_id == current_user.id,
+                ReviewSlot.status == ReviewSlotStatus.CLAIMED.value
+            )
         )
 
-        # Handle not found
-        if not review:
+        result = await db.execute(slot_query)
+        slot = result.scalar_one_or_none()
+
+        if not slot:
             security_logger.logger.warning(
-                f"Review {review_id} not found for unclaim by user {current_user.id}"
+                f"No claimed slot found for user {current_user.id} on review {review_id}"
             )
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request {review_id} not found"
+                detail="No active claim found for this review request"
             )
+
+        # Unclaim the slot using shared service
+        await claim_service.unclaim_review_slot(
+            db=db,
+            slot_id=slot.id,
+            reviewer_id=current_user.id
+        )
+
+        # Get updated review request for counters
+        from app.models.review_request import ReviewRequest
+        review = await db.get(ReviewRequest, review_id)
 
         # Success - log and return response
         security_logger.logger.info(
-            f"User {current_user.id} successfully unclaimed review {review_id}. "
+            f"User {current_user.id} successfully unclaimed review {review_id} (slot {slot.id}). "
             f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
         )
 
@@ -356,12 +381,13 @@ async def unclaim_review_slot(
             success=True,
             message="Successfully unclaimed review slot",
             review_request_id=review.id,
+            slot_id=slot.id,
             reviews_claimed=review.reviews_claimed,
             available_slots=review.available_slots,
             is_fully_claimed=review.is_fully_claimed
         )
 
-    except ValueError as e:
+    except ClaimValidationError as e:
         # Handle validation errors
         error_msg = str(e)
         security_logger.logger.warning(
@@ -370,6 +396,17 @@ async def unclaim_review_slot(
 
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
+            detail=error_msg
+        )
+
+    except RuntimeError as e:
+        # Handle not found errors
+        error_msg = str(e)
+        security_logger.logger.warning(
+            f"Slot not found for unclaim by user {current_user.id}: {error_msg}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=error_msg
         )
 

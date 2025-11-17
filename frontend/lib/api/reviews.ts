@@ -11,6 +11,12 @@ export type ContentType = "design" | "code" | "video" | "audio" | "writing" | "a
 // Review type options
 export type ReviewType = "free" | "expert";
 
+// Expert review tier options
+export type ReviewTier = "quick" | "standard" | "deep";
+
+// Feedback priority options
+export type FeedbackPriority = "validation" | "specific_fixes" | "strategic_direction" | "comprehensive";
+
 // Request payload for creating a review
 export interface CreateReviewRequest {
   title: string;
@@ -21,6 +27,13 @@ export interface CreateReviewRequest {
   budget?: number; // Budget for expert reviews
   deadline?: string; // ISO 8601 datetime string
   feedback_areas?: string; // Feedback areas
+
+  // Expert review tier fields (required for expert reviews)
+  tier?: ReviewTier; // Expert review tier: quick, standard, or deep
+  feedback_priority?: FeedbackPriority; // Primary focus area for the review
+  specific_questions?: string[]; // List of specific questions (max 10)
+  context?: string; // Additional context about the project (max 5000 chars)
+  estimated_duration?: number; // Estimated review duration in minutes
 }
 
 // Response from creating a review
@@ -38,6 +51,13 @@ export interface CreateReviewResponse {
   available_slots?: number; // Computed: reviews_requested - reviews_claimed
   budget?: number; // Budget for expert reviews
   deadline?: string; // ISO 8601 datetime string
+
+  // Expert review tier fields
+  tier?: ReviewTier;
+  feedback_priority?: FeedbackPriority;
+  specific_questions?: string[];
+  context?: string;
+  estimated_duration?: number;
 }
 
 /**
@@ -141,6 +161,13 @@ export interface UpdateReviewRequest {
   budget?: number;
   deadline?: string;
   feedback_areas?: string;
+
+  // Expert review tier fields
+  tier?: ReviewTier;
+  feedback_priority?: FeedbackPriority;
+  specific_questions?: string[];
+  context?: string;
+  estimated_duration?: number;
 }
 
 /**

@@ -6,6 +6,12 @@
 import apiClient from "./client";
 import { ContentType, ReviewType } from "./reviews";
 
+// Expert review tier type matching backend enum
+export type ExpertReviewTier = "quick" | "standard" | "deep";
+
+// Feedback priority type matching backend enum
+export type FeedbackPriority = "validation" | "specific_fixes" | "comprehensive" | "improvement";
+
 // Browse review item with extended metadata
 export interface BrowseReviewItem {
   id: number;
@@ -28,6 +34,14 @@ export interface BrowseReviewItem {
   reviews_requested?: number; // Number of reviews requested (1-10)
   reviews_claimed?: number; // Number of reviews claimed by reviewers
   available_slots?: number; // Computed: reviews_requested - reviews_claimed
+  slot_id?: number; // Slot ID for claiming (if available)
+
+  // Expert review tier fields (null for free reviews)
+  tier?: ExpertReviewTier; // Expert review tier: quick (5-10min), standard (15-20min), deep (30+ min)
+  feedback_priority?: FeedbackPriority; // Primary focus area for the review
+  specific_questions?: string[]; // Specific questions the requester wants answered
+  context?: string; // Additional context about the project
+  estimated_duration?: number; // Estimated review duration in minutes
 }
 
 // Browse response with pagination
@@ -110,9 +124,23 @@ export async function getBrowseReview(id: number): Promise<BrowseReviewItem> {
 }
 
 /**
+ * Claim response from backend
+ */
+export interface ClaimReviewResponse {
+  success: boolean;
+  message: string;
+  review_request_id: number;
+  slot_id: number;  // The newly created/claimed slot ID
+  reviews_claimed: number;
+  available_slots: number;
+  is_fully_claimed: boolean;
+}
+
+/**
  * Claim a review slot (requires authentication)
  * For reviews with multiple slots, claims one available slot
+ * Returns the slot_id which is needed to redirect to the review writing page
  */
-export async function claimReviewSlot(id: number): Promise<{ success: boolean; message: string }> {
-  return apiClient.post<{ success: boolean; message: string }>(`/reviews/${id}/claim`);
+export async function claimReviewSlot(id: number): Promise<ClaimReviewResponse> {
+  return apiClient.post<ClaimReviewResponse>(`/reviews/${id}/claim`);
 }

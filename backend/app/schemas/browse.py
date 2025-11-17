@@ -6,7 +6,13 @@ from decimal import Decimal
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-from app.models.review_request import ContentType, ReviewType, ReviewStatus
+from app.models.review_request import (
+    ContentType,
+    ReviewType,
+    ReviewStatus,
+    ReviewTier,
+    FeedbackPriority
+)
 
 
 class SortOption(str, enum.Enum):
@@ -68,6 +74,7 @@ class BrowseReviewItem(BaseModel):
     - Preview image/thumbnail
     - Skills needed
     - Multi-review claim status
+    - Expert review tier information
     """
     id: int = Field(..., description="Review request ID")
     title: str = Field(..., description="Review title")
@@ -98,6 +105,28 @@ class BrowseReviewItem(BaseModel):
     reviews_claimed: int = Field(..., ge=0, description="Number of review slots claimed")
     available_slots: int = Field(..., ge=0, description="Number of available review slots")
 
+    # Expert review tier fields (null for free reviews)
+    tier: Optional[ReviewTier] = Field(
+        None,
+        description="Expert review tier: quick (5-10min), standard (15-20min), deep (30+ min). Null for free reviews."
+    )
+    feedback_priority: Optional[FeedbackPriority] = Field(
+        None,
+        description="Primary focus area for the review"
+    )
+    specific_questions: Optional[List[str]] = Field(
+        None,
+        description="Specific questions the requester wants answered"
+    )
+    context: Optional[str] = Field(
+        None,
+        description="Additional context about the project"
+    )
+    estimated_duration: Optional[int] = Field(
+        None,
+        description="Estimated review duration in minutes"
+    )
+
     class Config:
         from_attributes = True
 
@@ -114,6 +143,7 @@ class ClaimReviewSlotResponse(BaseModel):
     success: bool = Field(..., description="Whether the claim was successful")
     message: str = Field(..., description="Status message")
     review_request_id: int = Field(..., description="ID of the claimed review request")
+    slot_id: int = Field(..., description="ID of the claimed review slot")
     reviews_claimed: int = Field(..., ge=0, description="Total slots now claimed")
     available_slots: int = Field(..., ge=0, description="Remaining available slots")
     is_fully_claimed: bool = Field(..., description="Whether all slots are now claimed")

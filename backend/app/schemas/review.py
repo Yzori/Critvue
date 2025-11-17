@@ -3,9 +3,15 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.models.review_request import ContentType, ReviewType, ReviewStatus
+from app.models.review_request import (
+    ContentType,
+    ReviewType,
+    ReviewStatus,
+    ReviewTier,
+    FeedbackPriority
+)
 from app.schemas.review_slot import ReviewSlotResponse
 
 
@@ -57,6 +63,32 @@ class ReviewRequestBase(BaseModel):
         description="Number of reviews requested (1-10)"
     )
 
+    # Expert review tier fields (optional - only for expert reviews)
+    tier: Optional[ReviewTier] = Field(
+        None,
+        description="Expert review tier: quick ($5-15, 5-10min), standard ($25-75, 15-20min), deep ($100-200+, 30+ min)"
+    )
+    feedback_priority: Optional[FeedbackPriority] = Field(
+        None,
+        description="Primary focus area for the review"
+    )
+    specific_questions: Optional[List[str]] = Field(
+        None,
+        max_length=10,
+        description="List of specific questions (max 10)"
+    )
+    context: Optional[str] = Field(
+        None,
+        max_length=5000,
+        description="Additional context about the project"
+    )
+    estimated_duration: Optional[int] = Field(
+        None,
+        ge=1,
+        le=180,
+        description="Estimated review duration in minutes"
+    )
+
     @field_validator('title')
     @classmethod
     def validate_title(cls, v: str) -> str:
@@ -106,6 +138,68 @@ class ReviewRequestBase(BaseModel):
             raise ValueError('Budget should not be set for free reviews')
         return v
 
+    @field_validator('specific_questions')
+    @classmethod
+    def validate_specific_questions(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        """Validate specific questions list"""
+        if v is not None:
+            # Remove empty strings and limit to 10 questions
+            v = [q.strip() for q in v if q and q.strip()]
+            if len(v) > 10:
+                raise ValueError('Maximum 10 specific questions allowed')
+            # Validate question length
+            for question in v:
+                if len(question) > 500:
+                    raise ValueError('Each question must be 500 characters or less')
+        return v if v else None
+
+    @model_validator(mode='after')
+    def validate_expert_review_tier(self):
+        """Validate tier requirements for expert reviews"""
+        if self.review_type == ReviewType.EXPERT:
+            # Tier is required for expert reviews
+            if self.tier is None:
+                raise ValueError('Tier is required for expert reviews (quick, standard, or deep)')
+
+            # Validate budget matches tier range
+            if self.budget is not None:
+                tier_ranges = {
+                    ReviewTier.QUICK: (Decimal('5.00'), Decimal('15.00')),
+                    ReviewTier.STANDARD: (Decimal('25.00'), Decimal('75.00')),
+                    ReviewTier.DEEP: (Decimal('100.00'), Decimal('1000.00'))  # $200+ with reasonable upper limit
+                }
+                min_budget, max_budget = tier_ranges[self.tier]
+                if not (min_budget <= self.budget <= max_budget):
+                    raise ValueError(
+                        f'{self.tier.value} tier budget must be between ${min_budget} and ${max_budget}. '
+                        f'Provided: ${self.budget}'
+                    )
+
+            # Set default estimated_duration if not provided
+            if self.estimated_duration is None:
+                duration_defaults = {
+                    ReviewTier.QUICK: 10,
+                    ReviewTier.STANDARD: 20,
+                    ReviewTier.DEEP: 45
+                }
+                self.estimated_duration = duration_defaults[self.tier]
+
+        else:  # FREE review
+            # Tier should be null for free reviews
+            if self.tier is not None:
+                raise ValueError('Tier should not be set for free reviews')
+            # Expert-specific fields should be null for free reviews
+            if self.feedback_priority is not None:
+                raise ValueError('feedback_priority is only for expert reviews')
+            if self.specific_questions is not None:
+                raise ValueError('specific_questions is only for expert reviews')
+            if self.context is not None:
+                raise ValueError('context is only for expert reviews')
+            if self.estimated_duration is not None:
+                raise ValueError('estimated_duration is only for expert reviews')
+
+        return self
+
 
 class ReviewRequestCreate(ReviewRequestBase):
     """Schema for creating a review request"""
@@ -128,6 +222,13 @@ class ReviewRequestUpdate(BaseModel):
         le=10,
         description="Number of reviews requested (1-10)"
     )
+
+    # Expert review tier fields
+    tier: Optional[ReviewTier] = None
+    feedback_priority: Optional[FeedbackPriority] = None
+    specific_questions: Optional[List[str]] = Field(None, max_length=10)
+    context: Optional[str] = Field(None, max_length=5000)
+    estimated_duration: Optional[int] = Field(None, ge=1, le=180)
 
     @field_validator('title')
     @classmethod

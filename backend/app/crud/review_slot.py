@@ -253,7 +253,17 @@ async def claim_review_slot(
     claim_hours: int = 72
 ) -> ReviewSlot:
     """
-    Claim a review slot for a reviewer (with row-level locking)
+    DEPRECATED: Use app.services.claim_service.claim_review_by_slot_id() instead.
+
+    This function is maintained for backward compatibility but the claim_service
+    provides a consolidated, more robust implementation with better error handling
+    and validation.
+
+    Use claim_service.claim_review_by_slot_id() which:
+    - Provides unified claiming logic across browse and review-slots APIs
+    - Better validation and error messages
+    - Consistent transaction management
+    - Returns properly refreshed slots
 
     Args:
         db: Database session
@@ -323,7 +333,15 @@ async def abandon_review_slot(
     reviewer_id: int
 ) -> ReviewSlot:
     """
-    Abandon a claimed review slot
+    DEPRECATED: Use app.services.claim_service.unclaim_review_slot() instead.
+
+    This function is maintained for backward compatibility but the claim_service
+    provides a consolidated implementation.
+
+    Use claim_service.unclaim_review_slot() which:
+    - Provides unified unclaim/abandon logic across APIs
+    - Better error handling with ClaimValidationError
+    - Consistent transaction management
 
     Args:
         db: Database session

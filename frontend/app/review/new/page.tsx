@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ContentType, ReviewType, createReview, updateReview } from "@/lib/api/reviews";
+import { ContentType, ReviewType, ReviewTier, FeedbackPriority, createReview, updateReview } from "@/lib/api/reviews";
 import { Button } from "@/components/ui/button";
 import { ContentTypeStep } from "@/components/review-flow/content-type-step";
 import { BasicInfoStep } from "@/components/review-flow/basic-info-step";
@@ -32,7 +32,7 @@ import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { getErrorMessage } from "@/lib/api/client";
 import { UploadedFile } from "@/components/ui/file-upload";
 
-// Form state interface - Enhanced with new fields
+// Form state interface - Enhanced with new tier fields
 interface FormState {
   contentType: ContentType | null;
   title: string;
@@ -45,6 +45,13 @@ interface FormState {
   budget: number;
   numberOfReviews: number; // Number of reviews requested (1-10)
   reviewId: number | null;
+
+  // Expert review tier fields
+  tier: ReviewTier | null;
+  feedback_priority: FeedbackPriority | null;
+  specific_questions: string[];
+  context: string;
+  estimated_duration: number | null;
 }
 
 // Validation errors interface
@@ -72,7 +79,7 @@ export default function NewReviewPage() {
   const [encouragingMessage, setEncouragingMessage] = useState("");
   const [showEncouragement, setShowEncouragement] = useState(false);
 
-  // Form state - Enhanced with new fields
+  // Form state - Enhanced with new tier fields
   const [formState, setFormState] = useState<FormState>({
     contentType: null,
     title: "",
@@ -82,9 +89,16 @@ export default function NewReviewPage() {
     feedbackAreas: [],
     customFeedbackArea: "",
     reviewType: null,
-    budget: 49, // Default to junior tier
+    budget: 25, // Default to standard tier minimum
     numberOfReviews: 1, // Default to 1 review
     reviewId: null,
+
+    // Expert review tier fields
+    tier: null,
+    feedback_priority: null,
+    specific_questions: [],
+    context: "",
+    estimated_duration: null,
   });
 
   // Validate current step
@@ -211,6 +225,17 @@ export default function NewReviewPage() {
         .filter(Boolean)
         .join(", ");
 
+      // Calculate estimated_duration based on tier if not already set
+      let estimatedDuration = formState.estimated_duration;
+      if (formState.reviewType === "expert" && formState.tier && !estimatedDuration) {
+        const durationDefaults: Record<ReviewTier, number> = {
+          quick: 10,
+          standard: 20,
+          deep: 45,
+        };
+        estimatedDuration = durationDefaults[formState.tier];
+      }
+
       // Update the review with complete data and set status to "pending"
       await updateReview(formState.reviewId, {
         review_type: formState.reviewType,
@@ -218,6 +243,16 @@ export default function NewReviewPage() {
         status: "pending", // This makes it appear in browse marketplace
         feedback_areas: feedbackAreasStr || undefined,
         budget: formState.reviewType === "expert" ? formState.budget : undefined,
+        // Expert review tier fields
+        tier: formState.reviewType === "expert" ? formState.tier || undefined : undefined,
+        feedback_priority: formState.reviewType === "expert" ? formState.feedback_priority || undefined : undefined,
+        specific_questions: formState.reviewType === "expert" && formState.specific_questions.length > 0
+          ? formState.specific_questions
+          : undefined,
+        context: formState.reviewType === "expert" && formState.context.trim()
+          ? formState.context.trim()
+          : undefined,
+        estimated_duration: formState.reviewType === "expert" ? estimatedDuration : undefined,
       });
 
       // Show success state
@@ -330,11 +365,27 @@ export default function NewReviewPage() {
                 <ReviewTypeStep
                   selectedType={formState.reviewType}
                   budget={formState.budget}
+                  tier={formState.tier}
+                  feedbackPriority={formState.feedback_priority}
+                  specificQuestions={formState.specific_questions}
+                  context={formState.context}
                   onSelect={(type) =>
                     setFormState((prev) => ({ ...prev, reviewType: type }))
                   }
                   onBudgetChange={(budget) =>
                     setFormState((prev) => ({ ...prev, budget }))
+                  }
+                  onTierChange={(tier) =>
+                    setFormState((prev) => ({ ...prev, tier }))
+                  }
+                  onFeedbackPriorityChange={(priority) =>
+                    setFormState((prev) => ({ ...prev, feedback_priority: priority }))
+                  }
+                  onSpecificQuestionsChange={(questions) =>
+                    setFormState((prev) => ({ ...prev, specific_questions: questions }))
+                  }
+                  onContextChange={(context) =>
+                    setFormState((prev) => ({ ...prev, context }))
                   }
                 />
               );

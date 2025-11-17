@@ -29,10 +29,9 @@ import {
   DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { claimReviewSlot, formatPayment } from "@/lib/api/reviewer";
+import { claimReviewByRequestId, formatPayment } from "@/lib/api/reviewer";
 
 export interface ClaimButtonProps {
-  slotId: number;
   reviewRequestId: number;
   paymentAmount: number | null;
   reviewType: string;
@@ -42,7 +41,6 @@ export interface ClaimButtonProps {
 }
 
 export function ClaimButton({
-  slotId,
   reviewRequestId,
   paymentAmount,
   reviewType,
@@ -65,9 +63,10 @@ export function ClaimButton({
       setClaiming(true);
       setError(null);
 
-      await claimReviewSlot(slotId);
+      // Call the browse claim API which creates a ReviewSlot and returns slot_id
+      const response = await claimReviewByRequestId(reviewRequestId);
 
-      // Success! Redirect to review writing page
+      // Success! Redirect to review writing page using the returned slot_id
       setShowModal(false);
 
       // Call success callback if provided
@@ -75,9 +74,9 @@ export function ClaimButton({
         onClaimSuccess();
       }
 
-      // Small delay for visual feedback, then redirect
+      // Small delay for visual feedback, then redirect to the claimed slot
       setTimeout(() => {
-        router.push(`/reviewer/review/${slotId}`);
+        router.push(`/reviewer/review/${response.slot_id}`);
       }, 500);
     } catch (err: any) {
       console.error("Claim failed:", err);

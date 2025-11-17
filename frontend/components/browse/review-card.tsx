@@ -5,9 +5,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ClaimButton } from "@/components/reviewer/claim-button";
-import { BrowseReviewItem } from "@/lib/api/browse";
-import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle } from "lucide-react";
+import { BrowseReviewItem, ExpertReviewTier } from "@/lib/api/browse";
+import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle, Clock, Zap, Target } from "lucide-react";
 
 export interface ReviewCardProps extends React.HTMLAttributes<HTMLDivElement> {
   review: BrowseReviewItem;
@@ -133,6 +132,56 @@ export function ReviewCard({
       <Badge variant="success" size="sm" className="flex items-center gap-1">
         <Heart className="size-3 fill-current" />
         <span>Free</span>
+      </Badge>
+    );
+  };
+
+  // Get expert review tier badge with brand-compliant styling
+  const getTierBadge = () => {
+    if (review.review_type !== "expert" || !review.tier) return null;
+
+    const tierConfig = {
+      quick: {
+        label: "Quick",
+        icon: Zap,
+        variant: "success" as const,
+        bgClass: "bg-green-50 border-green-200/60 text-green-700",
+        iconClass: "text-green-600",
+      },
+      standard: {
+        label: "Standard",
+        icon: Target,
+        variant: "primary" as const,
+        bgClass: "bg-blue-50 border-blue-200/60 text-blue-700",
+        iconClass: "text-blue-600",
+      },
+      deep: {
+        label: "Deep",
+        icon: Star,
+        variant: "secondary" as const,
+        bgClass: "bg-purple-50 border-purple-200/60 text-purple-700",
+        iconClass: "text-purple-600",
+      },
+    };
+
+    const config = tierConfig[review.tier];
+    const Icon = config.icon;
+    const duration = review.estimated_duration ||
+      (review.tier === "quick" ? 10 : review.tier === "standard" ? 20 : 45);
+
+    return (
+      <Badge
+        size="sm"
+        className={cn(
+          "flex items-center gap-1.5 font-semibold border",
+          config.bgClass
+        )}
+      >
+        <Icon className={cn("size-3.5", config.iconClass)} />
+        <span>{config.label}</span>
+        <span className="opacity-60">•</span>
+        <Clock className="size-3 opacity-60" />
+        <span>{duration} min</span>
       </Badge>
     );
   };
@@ -311,6 +360,7 @@ export function ReviewCard({
         <div className="flex flex-wrap gap-3 items-center pointer-events-none">
           {getContentTypeBadge()}
           {getReviewTypeBadge()}
+          {getTierBadge()}
           {getClaimStatusBadge()}
           {getUrgencyBadge()}
           {/* Featured badge only shown if no image (fallback) */}
@@ -403,13 +453,22 @@ export function ReviewCard({
 
           {/* Metadata footer */}
           <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
-            {/* Price */}
-            <div className="flex items-center gap-1.5">
-              <DollarSign className="size-4 text-accent-blue" />
-              <span className="font-semibold text-gray-900">
-                {formatPrice(review.price, review.currency)}
-              </span>
-            </div>
+            {/* Price - highlighted for expert reviews */}
+            {review.review_type === "expert" && review.price ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-blue/10 border border-accent-blue/20">
+                <DollarSign className="size-4 text-accent-blue" />
+                <span className="font-bold text-accent-blue text-base">
+                  {formatPrice(review.price, review.currency)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <DollarSign className="size-4 text-accent-blue" />
+                <span className="font-semibold text-gray-900">
+                  {formatPrice(review.price, review.currency)}
+                </span>
+              </div>
+            )}
 
             {/* Deadline */}
             <div className="flex items-center gap-1.5">
@@ -428,51 +487,22 @@ export function ReviewCard({
 
           {/* IMPROVED: Actions with enhanced styling for premium cards + mobile-optimized */}
           <div className="flex flex-col sm:flex-row items-stretch gap-3">
+            {/* Single View Details button - claiming happens on detail page */}
             <Button
               asChild
-              variant="outline"
               size="sm"
               className={cn(
-                "flex-1 transition-all duration-200 min-h-[44px]",
-                isPremiumFeatured && "border-accent-blue/40 hover:border-accent-blue/70 hover:bg-accent-blue/5",
-                isHighImportance && !isPremiumFeatured && "border-accent-blue/30 hover:border-accent-blue/50",
-                !isHighImportance && "hover:border-gray-300"
+                "flex-1 bg-gradient-to-r from-accent-blue to-accent-peach transition-all duration-200 min-h-[44px]",
+                isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
+                isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg",
+                !isHighImportance && "hover:opacity-90"
               )}
             >
               <Link href={`/review/${review.id}`}>
                 View Details
+                <ArrowRight className="ml-1 size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </Button>
-            {review.slot_id ? (
-              <ClaimButton
-                slotId={review.slot_id}
-                reviewRequestId={review.id}
-                paymentAmount={review.price || null}
-                reviewType={review.review_type}
-                title={review.title}
-                className={cn(
-                  "flex-1",
-                  isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
-                  isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg"
-                )}
-              />
-            ) : (
-              <Button
-                asChild
-                size="sm"
-                className={cn(
-                  "flex-1 bg-gradient-to-r from-accent-blue to-accent-peach transition-all duration-200 min-h-[44px]",
-                  isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
-                  isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg",
-                  !isHighImportance && "hover:opacity-90"
-                )}
-              >
-                <Link href={`/review/${review.id}`}>
-                  View Details
-                  <ArrowRight className="ml-1 size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </Link>
-              </Button>
-            )}
           </div>
         </div>
       </div>

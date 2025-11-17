@@ -154,11 +154,35 @@ export interface ReviewSubmission {
 }
 
 /**
- * Claim a review slot
+ * Claim response from browse API
+ */
+export interface ClaimReviewResponse {
+  success: boolean;
+  message: string;
+  review_request_id: number;
+  slot_id: number;  // The newly created/claimed slot ID
+  reviews_claimed: number;
+  available_slots: number;
+  is_fully_claimed: boolean;
+}
+
+/**
+ * Claim a review slot by slot ID (legacy/direct claiming)
  * POST /api/v1/review-slots/{slot_id}/claim
+ * Use this when you already have a specific slot_id
  */
 export async function claimReviewSlot(slotId: number): Promise<ReviewSlot> {
   return apiClient.post<ReviewSlot>(`/review-slots/${slotId}/claim`);
+}
+
+/**
+ * Claim a review by review request ID (browse flow)
+ * POST /api/v1/reviews/{review_id}/claim
+ * This creates a new ReviewSlot record and returns the slot_id
+ * Use this when claiming from the browse marketplace
+ */
+export async function claimReviewByRequestId(reviewRequestId: number): Promise<ClaimReviewResponse> {
+  return apiClient.post<ClaimReviewResponse>(`/reviews/${reviewRequestId}/claim`);
 }
 
 /**

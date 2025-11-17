@@ -70,17 +70,18 @@ export function ActionBar({
       const result = await claimReviewSlot(review.id);
 
       toast.success("Slot claimed successfully!", {
-        description: "You can now start working on this review.",
+        description: "Redirecting to review writing page...",
       });
 
-      // Refresh the page to show updated data
-      router.refresh();
+      // Redirect to the claimed slot's review page using the returned slot_id
+      setTimeout(() => {
+        router.push(`/reviewer/review/${result.slot_id}`);
+      }, 500);
     } catch (error) {
       console.error("Error claiming slot:", error);
       toast.error("Failed to claim slot", {
         description: error instanceof Error ? error.message : "Please try again later.",
       });
-    } finally {
       setIsClaiming(false);
     }
   };

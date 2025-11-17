@@ -309,7 +309,13 @@ class BrowseCRUD:
                     urgency=urgency,
                     reviews_requested=review.reviews_requested,
                     reviews_claimed=review.reviews_claimed,
-                    available_slots=review.available_slots
+                    available_slots=review.available_slots,
+                    # Expert review tier fields (will be None for free reviews)
+                    tier=review.tier,
+                    feedback_priority=review.feedback_priority,
+                    specific_questions=review.specific_questions,
+                    context=review.context,
+                    estimated_duration=review.estimated_duration
                 )
                 browse_items.append(browse_item)
 

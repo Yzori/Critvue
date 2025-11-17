@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     Numeric,
     String,
     Text
@@ -49,6 +50,21 @@ class ReviewStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class ReviewTier(str, enum.Enum):
+    """Expert review tier levels"""
+    QUICK = "quick"  # $5-15, 5-10 minutes
+    STANDARD = "standard"  # $25-75, 15-20 minutes
+    DEEP = "deep"  # $100-200+, 30+ minutes
+
+
+class FeedbackPriority(str, enum.Enum):
+    """Primary focus area for the review"""
+    VALIDATION = "validation"  # Quick validation of approach/direction
+    SPECIFIC_FIXES = "specific_fixes"  # Specific issues to address
+    STRATEGIC_DIRECTION = "strategic_direction"  # High-level strategic guidance
+    COMPREHENSIVE = "comprehensive"  # Full comprehensive review
+
+
 class ReviewRequest(Base):
     """Review Request model for managing feedback requests"""
 
@@ -80,6 +96,34 @@ class ReviewRequest(Base):
 
     # Deadline for review completion (optional, UTC datetime)
     deadline = Column(DateTime, nullable=True, index=True)
+
+    # Expert review tier fields (nullable for FREE reviews - backward compatible)
+    tier = Column(
+        Enum(ReviewTier),
+        nullable=True,
+        index=True,
+        doc="Expert review tier: quick (5-10min), standard (15-20min), deep (30+ min). NULL for free reviews."
+    )
+    feedback_priority = Column(
+        Enum(FeedbackPriority),
+        nullable=True,
+        doc="Primary focus area for the review"
+    )
+    specific_questions = Column(
+        JSON,
+        nullable=True,
+        doc="JSON array of specific questions the requester wants answered"
+    )
+    context = Column(
+        Text,
+        nullable=True,
+        doc="Additional context about the project, target audience, goals, etc."
+    )
+    estimated_duration = Column(
+        Integer,
+        nullable=True,
+        doc="Estimated review duration in minutes based on tier"
+    )
 
     # Multi-review support
     reviews_requested = Column(
@@ -128,6 +172,8 @@ class ReviewRequest(Base):
         Index('idx_content_status', 'content_type', 'status', 'created_at'),
         # Index for multi-review queries (status + reviews_claimed)
         Index('idx_status_reviews_claimed', 'status', 'reviews_claimed'),
+        # Index for expert review tier filtering (review_type + tier)
+        Index('idx_review_type_tier', 'review_type', 'tier'),
     )
 
     # Relationships
