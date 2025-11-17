@@ -14,7 +14,7 @@ const PROTECTED_ROUTES = ["/dashboard", "/apply/expert/status", "/profile"];
 const AUTH_ROUTES = ["/login", "/register"];
 
 // Public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/about", "/pricing", "/contact", "/apply/expert", "/browse"];
+const PUBLIC_ROUTES = ["/", "/about", "/pricing", "/contact", "/apply/expert", "/browse", "/review", "/how-it-works"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,7 +29,8 @@ export async function middleware(request: NextRequest) {
 
   // Check if the current path is a public route
   const isPublicRoute =
-    PUBLIC_ROUTES.includes(pathname) || pathname.startsWith("/api");
+    PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/")) ||
+    pathname.startsWith("/api");
 
   // For public routes, allow access
   if (isPublicRoute && !isAuthRoute) {
