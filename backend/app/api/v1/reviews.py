@@ -194,6 +194,11 @@ async def get_review_request(
     """
     Get a specific review request by ID.
 
+    Users can view:
+    - Their own reviews (any status)
+    - Reviews they're assigned to as a reviewer
+    - Reviews available for claiming (PENDING or IN_REVIEW status)
+
     Args:
         review_id: ID of the review request
         current_user: Currently authenticated user
@@ -206,16 +211,39 @@ async def get_review_request(
         HTTPException: If not found or user doesn't have access
     """
     try:
+        # Get review without user_id filter first
         review = await review_crud.get_review_request(
             db=db,
             review_id=review_id,
-            user_id=current_user.id
+            user_id=None  # Don't filter by user
         )
 
         if not review:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Review request with id {review_id} not found"
+            )
+
+        # Check authorization
+        is_owner = review.user_id == current_user.id
+
+        # Check if user is a reviewer for this review
+        is_reviewer = any(
+            slot.reviewer_id == current_user.id
+            for slot in (review.slots or [])
+        )
+
+        # Reviews available for claiming (PENDING or IN_REVIEW with available slots)
+        is_available_for_claiming = review.status in [
+            ReviewStatus.PENDING,
+            ReviewStatus.IN_REVIEW
+        ] and review.reviews_claimed < review.reviews_requested
+
+        # Allow access if user is owner, reviewer, or review is available for claiming
+        if not (is_owner or is_reviewer or is_available_for_claiming):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to view this review"
             )
 
         # Prepare response with requester information
@@ -225,6 +253,27 @@ async def get_review_request(
         if hasattr(review, 'user') and review.user:
             response_data.requester_username = review.user.full_name or review.user.email.split('@')[0]
             response_data.requester_avatar = review.user.avatar_url
+
+        # Filter slots based on user role for privacy
+        if response_data.slots and not is_owner:
+            # Non-owners can only see:
+            # 1. Their own slots (any status)
+            # 2. Accepted slots from others (public)
+            # 3. Available slots (for claiming)
+            filtered_slots = []
+            for slot in response_data.slots:
+                # Show slot if it's the user's own slot
+                if slot.reviewer_id == current_user.id:
+                    filtered_slots.append(slot)
+                # Show accepted slots (public information)
+                elif slot.status == "accepted":
+                    filtered_slots.append(slot)
+                # Show available slots (for claiming)
+                elif slot.status == "available":
+                    filtered_slots.append(slot)
+                # Hide submitted/claimed/rejected slots from other reviewers
+
+            response_data.slots = filtered_slots
 
         return response_data
     except HTTPException:

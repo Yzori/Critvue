@@ -16,6 +16,7 @@ from app.schemas.review_slot import (
     ReviewSlotResponse,
     ReviewSlotPublicResponse,
     ReviewSlotListResponse,
+    ReviewerSlotListResponse,
     ReviewSubmit,
     ReviewAccept,
     ReviewReject,
@@ -23,6 +24,7 @@ from app.schemas.review_slot import (
     DisputeResolve,
     ReviewerSlotWithRequest,
 )
+from app.services.claim_service import claim_service, ClaimValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -57,25 +59,8 @@ async def claim_review_slot(
     **Rate Limit:** 20 requests per minute
     """
     try:
-        # Get the slot to check ownership
-        slot = await crud_review_slot.get_review_slot(db, slot_id)
-        if not slot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Review slot not found"
-            )
-
-        # Check if user is trying to claim their own review request
-        from app.models.review_request import ReviewRequest
-        request = await db.get(ReviewRequest, slot.review_request_id)
-        if request and request.user_id == current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You cannot claim review slots for your own requests"
-            )
-
-        # Claim the slot
-        claimed_slot = await crud_review_slot.claim_review_slot(
+        # Claim the slot using shared service
+        claimed_slot = await claim_service.claim_review_by_slot_id(
             db, slot_id, current_user.id
         )
 
@@ -83,7 +68,7 @@ async def claim_review_slot(
 
         return claimed_slot
 
-    except ValueError as e:
+    except ClaimValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
@@ -123,7 +108,8 @@ async def abandon_review_slot(
     **Rate Limit:** 20 requests per minute
     """
     try:
-        abandoned_slot = await crud_review_slot.abandon_review_slot(
+        # Abandon using shared service
+        abandoned_slot = await claim_service.unclaim_review_slot(
             db, slot_id, current_user.id
         )
 
@@ -131,15 +117,17 @@ async def abandon_review_slot(
 
         return abandoned_slot
 
-    except PermissionError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
-    except ValueError as e:
+    except ClaimValidationError as e:
+        # ClaimValidationError can include permission errors
+        error_msg = str(e)
+        if "don't own" in error_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=error_msg
+            )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+            detail=error_msg
         )
     except RuntimeError as e:
         raise HTTPException(
@@ -404,7 +392,7 @@ async def create_dispute(
 
 @router.get(
     "/my-slots",
-    response_model=ReviewSlotListResponse
+    response_model=ReviewerSlotListResponse
 )
 @limiter.limit("100/minute")
 async def get_my_review_slots(
@@ -449,8 +437,23 @@ async def get_my_review_slots(
             limit
         )
 
-        return ReviewSlotListResponse(
-            items=slots,
+        # Map slots to include review_request data
+        items_with_request = []
+        for slot in slots:
+            slot_dict = {
+                **slot.__dict__,
+                "review_request": {
+                    "id": slot.review_request.id,
+                    "title": slot.review_request.title,
+                    "description": slot.review_request.description,
+                    "content_type": slot.review_request.content_type.value,
+                    "status": slot.review_request.status.value,
+                } if slot.review_request else None
+            }
+            items_with_request.append(slot_dict)
+
+        return ReviewerSlotListResponse(
+            items=items_with_request,
             total=total,
             skip=skip,
             limit=limit,

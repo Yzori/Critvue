@@ -266,6 +266,15 @@ class ReviewerSlotWithRequest(ReviewSlotResponse):
     review_request: dict = Field(..., description="Minimal review request info")
 
 
+class ReviewerSlotListResponse(BaseModel):
+    """Schema for paginated list of review slots with request details (for reviewer dashboard)"""
+    items: List[ReviewerSlotWithRequest]
+    total: int
+    skip: int
+    limit: int
+    has_more: bool
+
+
 class ReviewerDashboard(BaseModel):
     """Dashboard data for reviewers"""
     active_claims: List[ReviewerSlotWithRequest] = Field(
