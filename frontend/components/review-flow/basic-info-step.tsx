@@ -30,10 +30,10 @@ export function BasicInfoStep({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Tell us about your work
+          Help the reviewer help you
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Provide some details so reviewers can give better feedback
+          Give the reviewer context so they can provide targeted, valuable feedback
         </p>
       </div>
 
@@ -42,12 +42,12 @@ export function BasicInfoStep({
         {/* Title Input */}
         <div className="space-y-2">
           <Label htmlFor="title" className="text-foreground">
-            Project Title
+            Give your work a title
           </Label>
           <Input
             id="title"
             type="text"
-            placeholder="What would you like reviewed?"
+            placeholder="E-commerce Dashboard Redesign"
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             aria-invalid={!!errors?.title}
@@ -58,18 +58,18 @@ export function BasicInfoStep({
             <p className="text-sm text-destructive">{errors.title}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            Give your project a clear, descriptive title
+            Make it clear and descriptive so reviewers know what to expect
           </p>
         </div>
 
         {/* Description Textarea */}
         <div className="space-y-2">
           <Label htmlFor="description" className="text-foreground">
-            Description
+            What should reviewers know?
           </Label>
           <Textarea
             id="description"
-            placeholder="Tell us more about your work... What are you working on? What specific feedback are you looking for?"
+            placeholder="I'm redesigning our checkout flow to reduce drop-off rates. The main concern is whether the payment step feels trustworthy enough. I'd also love feedback on the overall visual hierarchy..."
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             aria-invalid={!!errors?.description}
@@ -81,7 +81,7 @@ export function BasicInfoStep({
             <p className="text-sm text-destructive">{errors.description}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            Include context, goals, and any specific areas you'd like feedback on
+            Share the context, your goals, and what kind of feedback would be most helpful
           </p>
         </div>
       </div>

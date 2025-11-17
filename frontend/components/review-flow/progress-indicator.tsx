@@ -21,7 +21,7 @@ interface StepInfo {
   shortLabel: string;
 }
 
-// Step configuration
+// Step configuration - Updated for 7-step flow
 const stepConfig: StepInfo[] = [
   {
     number: 1,
@@ -31,9 +31,9 @@ const stepConfig: StepInfo[] = [
   },
   {
     number: 2,
-    label: "Basic Info",
-    shortLabel: "Info",
-    icon: <FileText className="size-4" />,
+    label: "Feedback Goals",
+    shortLabel: "Goals",
+    icon: <MessageSquare className="size-4" />,
   },
   {
     number: 3,
@@ -43,9 +43,9 @@ const stepConfig: StepInfo[] = [
   },
   {
     number: 4,
-    label: "Feedback Areas",
-    shortLabel: "Areas",
-    icon: <MessageSquare className="size-4" />,
+    label: "Basic Info",
+    shortLabel: "Info",
+    icon: <FileText className="size-4" />,
   },
   {
     number: 5,
@@ -55,7 +55,13 @@ const stepConfig: StepInfo[] = [
   },
   {
     number: 6,
-    label: "Review & Submit",
+    label: "Number of Reviews",
+    shortLabel: "Number",
+    icon: <MessageSquare className="size-4" />,
+  },
+  {
+    number: 7,
+    label: "Preview & Confirm",
     shortLabel: "Submit",
     icon: <CheckCircle className="size-4" />,
   },

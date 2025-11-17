@@ -74,6 +74,9 @@ async def create_review_request(
         )
 
         return ReviewRequestResponse.model_validate(review)
+    except HTTPException:
+        # Re-raise HTTPException as-is (preserves status code like 403)
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -110,12 +110,12 @@ export function NumberOfReviewsStep({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          How many reviews?
+          How many perspectives would you like?
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto">
           {reviewType === "free"
-            ? "Free reviews are limited to 3 maximum"
-            : "Getting multiple perspectives provides more comprehensive feedback"}
+            ? "Free community reviews are limited to 3"
+            : "Multiple reviewers give you diverse, well-rounded feedback"}
         </p>
       </div>
 

@@ -95,42 +95,42 @@ interface TierConfig {
 const tierConfigs: TierConfig[] = [
   {
     tier: "quick",
-    name: "Quick",
+    name: "Quick Feedback",
     priceRange: "$5-15",
     minPrice: 5,
     maxPrice: 15,
-    estimatedTime: "5-10 min",
-    description: "Fast feedback on specific questions",
+    estimatedTime: "24-48 hours",
+    description: "Surface-level insights and quick wins",
     icon: <Zap className="size-5 text-white" />,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
-    features: ["Quick validation", "Specific answers", "5-10 minute review"],
+    features: ["Quick validation", "200-500 words", "Best for early drafts"],
   },
   {
     tier: "standard",
-    name: "Standard",
+    name: "Standard Review",
     priceRange: "$25-75",
     minPrice: 25,
     maxPrice: 75,
-    estimatedTime: "15-20 min",
-    description: "Comprehensive review with detailed feedback",
+    estimatedTime: "3-5 days",
+    description: "Thorough analysis with actionable insights",
     icon: <Target className="size-5 text-white" />,
     color: "text-accent-peach",
     bgColor: "bg-accent-peach/5",
-    features: ["Detailed analysis", "Video walkthrough", "15-20 minute review"],
+    features: ["Detailed feedback", "500-1000 words", "Best for production-ready work"],
   },
   {
     tier: "deep",
-    name: "Deep",
+    name: "Deep Dive Analysis",
     priceRange: "$100-200+",
     minPrice: 100,
     maxPrice: 1000,
-    estimatedTime: "30+ min",
-    description: "In-depth analysis with strategic guidance",
+    estimatedTime: "5-7 days",
+    description: "Comprehensive critique with strategic guidance",
     icon: <Compass className="size-5 text-white" />,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
-    features: ["Comprehensive analysis", "Strategic direction", "30+ minute deep dive"],
+    features: ["Strategic direction", "1000+ words", "Best for critical projects"],
   },
 ];
 
@@ -186,6 +186,18 @@ export function ReviewTypeStep({
   const [showWhyExpert, setShowWhyExpert] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [newQuestion, setNewQuestion] = useState("");
+  const [showTierSelection, setShowTierSelection] = useState(false);
+
+  // Handle expert selection - show tier selection view
+  const handleExpertSelect = () => {
+    onSelect("expert");
+    setShowTierSelection(true);
+  };
+
+  // Handle back to type selection
+  const handleBackToTypeSelection = () => {
+    setShowTierSelection(false);
+  };
 
   // Handle tier selection and auto-update budget
   const handleTierSelect = (selectedTier: ReviewTier) => {
@@ -214,15 +226,294 @@ export function ReviewTypeStep({
     onSpecificQuestionsChange(specificQuestions.filter((_, i) => i !== index));
   };
 
+  // Show tier selection view when expert is selected
+  if (selectedType === "expert" && showTierSelection) {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        {/* Header with back button */}
+        <div className="text-center space-y-2">
+          <button
+            onClick={handleBackToTypeSelection}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          >
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to review type
+          </button>
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Choose your expert review tier
+          </h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Select the depth of feedback that fits your needs
+          </p>
+        </div>
+
+        {/* Social Proof */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-peach/5 border border-accent-peach/20">
+            <Star className="size-4 text-accent-peach fill-accent-peach" />
+            <span className="text-sm font-semibold text-foreground">
+              4.9/5 from 2,000+ expert reviews
+            </span>
+          </div>
+        </div>
+
+        {/* Tier Cards - Large and prominent */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
+          {tierConfigs.map((tierConfig) => (
+            <button
+              key={tierConfig.tier}
+              onClick={() => handleTierSelect(tierConfig.tier)}
+              className={`
+                relative p-6 rounded-2xl border-2 transition-all duration-200
+                text-left hover:shadow-lg active:scale-[0.98] flex flex-col
+                ${
+                  tier === tierConfig.tier
+                    ? "border-accent-blue bg-accent-blue/5 shadow-[0_0_0_3px_rgba(59,130,246,0.1)]"
+                    : "border-border hover:border-accent-blue/30"
+                }
+              `}
+            >
+              {/* Icon */}
+              <div
+                className={`
+                  size-12 rounded-xl bg-gradient-to-br mb-4
+                  flex items-center justify-center
+                  ${
+                    tierConfig.tier === "quick"
+                      ? "from-blue-500 to-blue-600"
+                      : tierConfig.tier === "standard"
+                      ? "from-accent-peach to-orange-600"
+                      : "from-purple-500 to-purple-600"
+                  }
+                  ${tier === tierConfig.tier ? "scale-110" : ""}
+                  transition-transform duration-200
+                `}
+              >
+                {tierConfig.icon}
+              </div>
+
+              {/* Name */}
+              <h3 className="font-bold text-xl text-foreground mb-2">
+                {tierConfig.name}
+              </h3>
+
+              {/* Price Range */}
+              <p className="text-2xl font-bold text-accent-blue mb-2">
+                {tierConfig.priceRange}
+              </p>
+
+              {/* Estimated Time */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                <Clock className="size-4" />
+                <span>{tierConfig.estimatedTime}</span>
+              </div>
+
+              {/* Description */}
+              <p className="text-sm text-muted-foreground mb-4 flex-1">
+                {tierConfig.description}
+              </p>
+
+              {/* Features */}
+              <ul className="space-y-2 mb-4">
+                {tierConfig.features.map((feature, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-xs text-foreground">
+                    <Check className="size-3.5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Selected indicator */}
+              {tier === tierConfig.tier && (
+                <div className="absolute top-4 right-4 size-7 rounded-full bg-accent-blue flex items-center justify-center">
+                  <Check className="size-4 text-white" strokeWidth={3} />
+                </div>
+              )}
+
+              {/* Selection text */}
+              <div className="pt-3 border-t border-border mt-auto">
+                <span
+                  className={`text-sm font-medium ${
+                    tier === tierConfig.tier
+                      ? "text-accent-blue"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {tier === tierConfig.tier ? "Selected" : "Select this tier"}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Rest of expert configuration appears AFTER tier selection */}
+        {tier && (
+          <>
+            {/* Budget Adjustment */}
+            <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold text-foreground">
+                    Adjust Budget (Optional)
+                  </Label>
+                  <span className="text-2xl font-bold text-accent-peach">
+                    ${budget}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Fine-tune your budget within the {tierConfigs.find((t) => t.tier === tier)?.name} tier range
+                </p>
+
+                {/* Budget Slider */}
+                <div className="relative pt-2">
+                  <input
+                    type="range"
+                    min={tierConfigs.find((t) => t.tier === tier)?.minPrice}
+                    max={tierConfigs.find((t) => t.tier === tier)?.maxPrice}
+                    step={tier === "quick" ? 1 : tier === "standard" ? 5 : 10}
+                    value={budget}
+                    onChange={(e) => onBudgetChange(Number(e.target.value))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer bg-accent-peach/20
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:size-5
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:bg-accent-peach
+                      [&::-webkit-slider-thumb]:shadow-lg
+                      [&::-webkit-slider-thumb]:cursor-pointer
+                      [&::-moz-range-thumb]:size-5
+                      [&::-moz-range-thumb]:rounded-full
+                      [&::-moz-range-thumb]:bg-accent-peach
+                      [&::-moz-range-thumb]:border-0
+                      [&::-moz-range-thumb]:cursor-pointer"
+                    aria-label="Budget slider"
+                  />
+                </div>
+
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>${tierConfigs.find((t) => t.tier === tier)?.minPrice}</span>
+                  <span>${tierConfigs.find((t) => t.tier === tier)?.maxPrice}{tier === "deep" ? "+" : ""}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Specific Questions */}
+            <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold text-foreground">
+                    Specific Questions (Optional)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Ask up to 10 specific questions for the reviewer to address
+                  </p>
+                </div>
+
+                {/* Question List */}
+                {specificQuestions.length > 0 && (
+                  <div className="space-y-2">
+                    {specificQuestions.map((question, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 rounded-lg bg-accent-blue/5 border border-accent-blue/20"
+                      >
+                        <span className="text-sm font-semibold text-accent-blue flex-shrink-0 mt-0.5">
+                          {index + 1}.
+                        </span>
+                        <p className="text-sm text-foreground flex-1">
+                          {question}
+                        </p>
+                        <button
+                          onClick={() => handleRemoveQuestion(index)}
+                          className="flex-shrink-0 size-6 rounded-full hover:bg-red-100 flex items-center justify-center text-muted-foreground hover:text-red-600 transition-colors"
+                          aria-label="Remove question"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Question Input */}
+                {specificQuestions.length < 10 && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="What specific question would you like answered?"
+                        value={newQuestion}
+                        onChange={(e) => setNewQuestion(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddQuestion();
+                          }
+                        }}
+                        maxLength={500}
+                        className="flex-1"
+                      />
+                      <button
+                        onClick={handleAddQuestion}
+                        disabled={!newQuestion.trim()}
+                        className="px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 min-h-[44px]"
+                        aria-label="Add question"
+                      >
+                        <Plus className="size-4" />
+                        <span className="hidden sm:inline">Add</span>
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {specificQuestions.length}/10 questions • {newQuestion.length}/500 characters
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Context */}
+            <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold text-foreground">
+                    Project Context (Optional)
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Share any additional context about your project, goals, or constraints
+                  </p>
+                </div>
+
+                <Textarea
+                  placeholder="Example: This is a redesign of our company's homepage. Our goal is to improve conversion rates while maintaining brand consistency. We're particularly concerned about mobile experience..."
+                  value={context}
+                  onChange={(e) => onContextChange(e.target.value)}
+                  maxLength={5000}
+                  rows={6}
+                  className="resize-none"
+                />
+
+                <p className="text-xs text-muted-foreground text-right">
+                  {context.length}/5000 characters
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Default view: Show Free vs Expert selection
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Choose your review type
+          Choose your reviewers
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Select the level of feedback that works for you
+          What level of depth do you need?
         </p>
       </div>
 
@@ -231,7 +522,7 @@ export function ReviewTypeStep({
         {reviewTypes.map((option) => (
           <button
             key={option.type}
-            onClick={() => onSelect(option.type)}
+            onClick={() => option.type === "expert" ? handleExpertSelect() : onSelect(option.type)}
             className={`
               group relative overflow-hidden rounded-2xl bg-card
               border-2 transition-all duration-200

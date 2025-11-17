@@ -77,10 +77,10 @@ export function ContentTypeStep({ selectedType, onSelect }: ContentTypeStepProps
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          What would you like reviewed?
+          What would you like feedback on?
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Select the type of content you're working on
+          Choose the type of work you'd like to share
         </p>
       </div>
 
