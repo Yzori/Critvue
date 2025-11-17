@@ -3,6 +3,7 @@ import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/contexts/QueryProvider";
 import { Navigation } from "@/components/navigation/navigation";
+import { MainWrapper } from "@/components/layout/main-wrapper";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -40,9 +41,9 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <Navigation />
-            <main className="pt-16 md:pt-20 pb-24 lg:pb-0">
+            <MainWrapper>
               {children}
-            </main>
+            </MainWrapper>
           </AuthProvider>
           <Toaster
             position="bottom-right"

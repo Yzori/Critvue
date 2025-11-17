@@ -116,6 +116,18 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
+              {/* Human-centric badge */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Badge variant="info" size="lg" className="shadow-lg">
+                  <Users className="size-4 mr-1.5" />
+                  Human Expertise in the AI Age
+                </Badge>
+              </motion.div>
+
               {/* Headline - Kinetic typography - Optimized for 320px */}
               <h1 className="text-[32px] leading-[1.15] sm:text-5xl lg:text-6xl font-bold text-gray-900 sm:leading-tight">
                 Turn feedback into your{" "}
@@ -134,9 +146,9 @@ export default function HomePage() {
                 </motion.span>
               </h1>
 
-              {/* Supporting text - Concise for mobile */}
+              {/* Supporting text - Concise for mobile - Updated to emphasize human value */}
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed">
-                Instant AI analysis, or detailed expert critique from industry professionals.
+                AI handles the patterns. <span className="font-semibold text-gray-900">Human experts bring the insights that matter.</span> Get both—because the best feedback comes from understanding, not just analysis.
               </p>
 
               {/* Social proof - Premium stats with gradients - Optimized for 320px */}
@@ -268,7 +280,7 @@ export default function HomePage() {
                 >
                   <Button
                     size="lg"
-                    onClick={() => router.push("/auth/register")}
+                    onClick={() => router.push("/register")}
                     className="w-full bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-2xl text-white font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] group touch-manipulation relative overflow-hidden"
                   >
                     {/* Shimmer effect */}
@@ -433,8 +445,8 @@ export default function HomePage() {
                 step: "2",
                 icon: MessageSquare,
                 title: "Get Feedback",
-                description: "AI insights or human expert reviews",
-                details: "Choose instant AI analysis or wait 24 hours for detailed expert critique.",
+                description: "AI for speed, humans for depth",
+                details: "Choose instant AI analysis for quick wins, or expert human reviews for strategic insights that transform your work.",
               },
               {
                 step: "3",
@@ -499,6 +511,155 @@ export default function HomePage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Why Human Expertise Matters - NEW SECTION */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12 md:mb-16"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="info" size="lg" className="mb-4">
+              <Shield className="size-4 mr-1.5" />
+              Why Human Expertise
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              What AI misses (and why you need real insight)
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+              In the age of AI, human understanding is more valuable than ever. Here's what only human experts can provide.
+            </p>
+          </motion.div>
+
+          {/* Comparison Grid */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+            {/* Context & Nuance */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-gray-200 hover:border-accent-blue/50 shadow-lg hover:shadow-2xl transition-all duration-300 group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-accent-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
+              <div className="relative">
+                <div className="size-14 md:size-16 rounded-2xl bg-gradient-to-br from-blue-500 to-accent-blue flex items-center justify-center mb-6 ring-2 ring-accent-blue/20 group-hover:ring-accent-blue/40 transition-all">
+                  <Target className="size-7 md:size-8 text-white" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  Context & Nuance
+                </h3>
+                <div className="space-y-3 text-sm md:text-base">
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-gray-600">AI</span>
+                    </div>
+                    <p className="text-gray-600">Spots patterns in data</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-accent-blue flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle className="size-3.5 text-white" />
+                    </div>
+                    <p className="text-gray-900 font-semibold">Understands <em>why</em> they matter for your goals</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Empathy & Intent */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-gray-200 hover:border-accent-peach/50 shadow-lg hover:shadow-2xl transition-all duration-300 group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-accent-peach/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
+              <div className="relative">
+                <div className="size-14 md:size-16 rounded-2xl bg-gradient-to-br from-orange-500 to-accent-peach flex items-center justify-center mb-6 ring-2 ring-accent-peach/20 group-hover:ring-accent-peach/40 transition-all">
+                  <Users className="size-7 md:size-8 text-white" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  Empathy & Audience
+                </h3>
+                <div className="space-y-3 text-sm md:text-base">
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-gray-600">AI</span>
+                    </div>
+                    <p className="text-gray-600">Measures metrics and engagement</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-accent-peach flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle className="size-3.5 text-white" />
+                    </div>
+                    <p className="text-gray-900 font-semibold">Feels the emotional impact on real people</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Strategic Thinking */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-gray-200 hover:border-green-500/50 shadow-lg hover:shadow-2xl transition-all duration-300 group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
+              <div className="relative">
+                <div className="size-14 md:size-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6 ring-2 ring-green-500/20 group-hover:ring-green-500/40 transition-all">
+                  <TrendingUp className="size-7 md:size-8 text-white" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  Strategic Judgment
+                </h3>
+                <div className="space-y-3 text-sm md:text-base">
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-gray-600">AI</span>
+                    </div>
+                    <p className="text-gray-600">Processes data and recommends</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="size-6 rounded-full bg-green-500 flex items-center justify-center shrink-0 mt-0.5">
+                      <CheckCircle className="size-3.5 text-white" />
+                    </div>
+                    <p className="text-gray-900 font-semibold">Makes judgment calls for your unique situation</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Bottom CTA with compelling message */}
+          <motion.div
+            className="mt-12 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-6">
+              <strong className="text-gray-900">AI can analyze. Only humans can truly understand.</strong> That's why our expert reviewers combine industry experience with genuine empathy for your creative vision.
+            </p>
+            <Button
+              size="lg"
+              onClick={() => router.push("/browse")}
+              className="bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-xl text-white font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] group touch-manipulation"
+            >
+              <span className="flex items-center gap-2">
+                Meet Our Expert Reviewers
+                <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
@@ -614,7 +775,7 @@ export default function HomePage() {
                   Free Forever
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Free</h3>
-                <p className="text-gray-600">Get started with community reviews</p>
+                <p className="text-gray-600">Get started with AI-assisted reviews</p>
               </div>
 
               <div className="mb-8">
@@ -626,10 +787,10 @@ export default function HomePage() {
 
               <ul className="space-y-4 mb-8">
                 {[
-                  "3 community reviews/month",
-                  "AI-powered analysis",
-                  "All content types",
-                  "Get results in seconds",
+                  "3 AI-powered reviews/month",
+                  "Instant pattern analysis",
+                  "All content types supported",
+                  "Perfect for quick iterations",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle className="size-5 text-green-600 mt-0.5 shrink-0" />
@@ -724,10 +885,10 @@ export default function HomePage() {
               <div className="mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold text-sm mb-4">
                   <Award className="size-4" />
-                  Expert Quality
+                  Human Expertise
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Expert Reviews</h3>
-                <p className="text-gray-600">Professional human expertise</p>
+                <p className="text-gray-600">Context, empathy & strategic insight AI can't replicate</p>
               </div>
 
               <div className="mb-8">
@@ -741,7 +902,7 @@ export default function HomePage() {
               <ul className="space-y-4 mb-8">
                 {[
                   "Professional human reviewers",
-                  "In-depth personalized critique",
+                  "Personalized critique for your goals",
                   "Industry-specific expertise",
                   "24-hour turnaround",
                   "Direct communication",
@@ -807,21 +968,21 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {[
               {
-                quote: "The AI feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
+                quote: "AI gave me metrics and patterns. But the human reviewer told me WHY they mattered for my specific audience and what to prioritize. That's the insight that actually improved my work.",
                 author: "Sarah Chen",
                 role: "Frontend Developer",
                 rating: 5,
                 avatar: "SC",
               },
               {
-                quote: "Getting my portfolio reviewed by an expert designer completely transformed my work. The feedback was detailed and actionable.",
+                quote: "The expert caught cultural nuances and emotional resonance that no AI could understand. They saw my design through the eyes of real users, not just algorithms.",
                 author: "Marcus Johnson",
                 role: "UX Designer",
                 rating: 5,
                 avatar: "MJ",
               },
               {
-                quote: "I've tried other platforms, but Critvue's reviewers actually understand my niche. The turnaround time is incredible too.",
+                quote: "I've tried AI tools, but Critvue's human reviewers actually understand context and intent. They give strategic advice, not just surface-level observations.",
                 author: "Priya Patel",
                 role: "Content Creator",
                 rating: 5,
@@ -1039,7 +1200,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                onClick={() => router.push("/auth/register")}
+                onClick={() => router.push("/register")}
                 className="w-full sm:w-auto bg-white text-accent-blue hover:bg-gray-50 font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-xl hover:shadow-2xl transition-all duration-300 touch-manipulation"
               >
                 <span className="flex items-center justify-center gap-2">
@@ -1085,7 +1246,7 @@ export default function HomePage() {
           >
             <Button
               size="lg"
-              onClick={() => router.push("/auth/register")}
+              onClick={() => router.push("/register")}
               className="w-full bg-gradient-to-r from-accent-blue to-accent-peach text-white font-semibold text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300 group touch-manipulation"
             >
               <motion.span
@@ -1523,7 +1684,7 @@ function Footer({ router }: { router: any }) {
       >
         <div className="px-6 py-3">
           <Button
-            onClick={() => router.push("/auth/register")}
+            onClick={() => router.push("/register")}
             className="w-full h-14 bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-lg text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation"
           >
             Get Started Free

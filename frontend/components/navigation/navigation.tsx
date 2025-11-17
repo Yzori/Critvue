@@ -37,6 +37,15 @@ export function Navigation({ transparent = false }: NavigationProps) {
   const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
 
+  // Hide navigation on auth pages (they have their own layout)
+  const isAuthPage = pathname.startsWith("/login") ||
+                     pathname.startsWith("/register") ||
+                     pathname.startsWith("/password-reset");
+
+  if (isAuthPage) {
+    return null;
+  }
+
   // Determine active bottom nav item based on current path
   const getActiveBottomNavId = () => {
     if (pathname === "/") return "home";

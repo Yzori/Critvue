@@ -246,7 +246,7 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
                       Log In
                     </Button>
                   </Link>
-                  <Link href="/signup">
+                  <Link href="/register">
                     <Button
                       size="sm"
                       className={cn(

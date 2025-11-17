@@ -287,7 +287,7 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
         {/* CTA for non-authenticated users */}
         {!user && (
           <div className="p-4 space-y-2 border-t border-border">
-            <Link href="/signup" onClick={onClose}>
+            <Link href="/register" onClick={onClose}>
               <Button
                 className={cn(
                   "w-full bg-gradient-to-r from-accent-blue to-accent-peach",
