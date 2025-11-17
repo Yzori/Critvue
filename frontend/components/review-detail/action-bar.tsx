@@ -52,7 +52,9 @@ export function ActionBar({
   // Check if user can claim a slot
   const canClaimSlot = React.useMemo(() => {
     if (!currentUserId || isOwner) return false;
-    if (review.status !== "pending") return false;
+
+    // Allow claiming if review is pending or in_review with available slots
+    if (review.status !== "pending" && review.status !== "in_review") return false;
 
     // Check if there are available slots
     const availableSlots = review.slots?.filter((s) => s.status === "available").length || 0;
