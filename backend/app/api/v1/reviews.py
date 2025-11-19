@@ -64,9 +64,8 @@ async def create_review_request(
             data=review_data
         )
 
-        # Increment review count for free tier users (community reviews only)
-        if review_data.review_type == ReviewType.FREE:
-            await SubscriptionService.increment_review_count(current_user, db)
+        # NOTE: Review count is incremented when status changes to PENDING (on submission)
+        # NOT when creating a draft review to avoid counting abandoned drafts
 
         security_logger.logger.info(
             f"Review request created: id={review.id}, user={current_user.email}, "
@@ -320,6 +319,28 @@ async def update_review_request(
         HTTPException: If not found, user doesn't have access, or review cannot be edited
     """
     try:
+        # Get the current review to check status transition
+        from app.models.review_request import ReviewStatus, ReviewType
+        current_review = await review_crud.get_review_request(
+            db=db,
+            review_id=review_id,
+            user_id=current_user.id
+        )
+
+        if not current_review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Review request with id {review_id} not found"
+            )
+
+        # Check if status is changing from DRAFT to PENDING
+        original_status = current_review.status
+        is_status_changing_to_pending = (
+            update_data.status == ReviewStatus.PENDING and
+            original_status != ReviewStatus.PENDING
+        )
+
+        # Update the review
         review = await review_crud.update_review_request(
             db=db,
             review_id=review_id,
@@ -331,6 +352,14 @@ async def update_review_request(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Review request with id {review_id} not found"
+            )
+
+        # Increment review count when free review is submitted (DRAFT → PENDING)
+        if is_status_changing_to_pending and review.review_type == ReviewType.FREE:
+            await SubscriptionService.increment_review_count(current_user, db)
+            security_logger.logger.info(
+                f"Incremented review count for user {current_user.email}: "
+                f"review {review.id} submitted"
             )
 
         security_logger.logger.info(
