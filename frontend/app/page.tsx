@@ -128,9 +128,10 @@ export default function HomePage() {
                 </Badge>
               </motion.div>
 
-              {/* Headline - Kinetic typography - Optimized for 320px */}
+              {/* Headline - Dual value proposition */}
               <h1 className="text-[32px] leading-[1.15] sm:text-5xl lg:text-6xl font-bold text-gray-900 sm:leading-tight">
-                Turn feedback into your{" "}
+                Level up your work—
+                <br />
                 <motion.span
                   className="inline-block bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent"
                   animate={{
@@ -142,13 +143,14 @@ export default function HomePage() {
                     ease: "easeInOut",
                   }}
                 >
-                  creative edge
+                  or get paid to review it
                 </motion.span>
               </h1>
 
-              {/* Supporting text - Concise for mobile - Updated to emphasize human value */}
+              {/* Supporting text - Dual marketplace messaging */}
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed">
-                AI handles the patterns. <span className="font-semibold text-gray-900">Human experts bring the insights that matter.</span> Get both—because the best feedback comes from understanding, not just analysis.
+                <span className="font-semibold text-gray-900">Creators level up fast.</span> Reviewers get paid for their expertise.
+                Critvue blends AI + human insight to make feedback valuable for everyone.
               </p>
 
               {/* Social proof - Premium stats with gradients - Optimized for 320px */}
@@ -231,9 +233,9 @@ export default function HomePage() {
                   />
                 </motion.div>
 
-                {/* Turnaround Stat */}
+                {/* Reviewer Earnings Stat - NEW */}
                 <motion.div
-                  className="relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 bg-gradient-to-br from-blue-500 via-accent-blue to-indigo-500 shadow-xl hover:shadow-2xl transition-all duration-500 group"
+                  className="relative overflow-hidden rounded-xl sm:rounded-2xl p-3 sm:p-5 md:p-6 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 shadow-xl hover:shadow-2xl transition-all duration-500 group"
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: 0.5, duration: 0.5, type: "spring" }}
@@ -247,7 +249,7 @@ export default function HomePage() {
                       animate={{ rotate: [0, 5, -5, 0] }}
                       transition={{ delay: 0.7, duration: 2, repeat: Infinity, repeatDelay: 3 }}
                     >
-                      <Clock className="size-4 sm:size-6 md:size-7 text-white drop-shadow-lg" />
+                      <Award className="size-4 sm:size-6 md:size-7 text-white drop-shadow-lg" />
                     </motion.div>
                     <motion.div
                       className="text-xl sm:text-3xl md:text-4xl font-black text-white mb-0.5 sm:mb-1 drop-shadow-md"
@@ -255,10 +257,10 @@ export default function HomePage() {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.7, duration: 0.6, type: "spring", bounce: 0.5 }}
                     >
-                      &lt;24h
+                      $50-150
                     </motion.div>
                     <div className="text-[10px] sm:text-sm font-semibold text-white/90 tracking-wide uppercase leading-tight">
-                      Turnaround
+                      Per Review
                     </div>
                   </div>
 
@@ -270,7 +272,7 @@ export default function HomePage() {
                 </motion.div>
               </div>
 
-              {/* CTAs - Full width on mobile with enhanced micro-interactions */}
+              {/* CTAs - Dual focus: Creator and Reviewer paths */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <motion.div
                   className="w-full sm:w-auto"
@@ -281,13 +283,14 @@ export default function HomePage() {
                   <Button
                     size="lg"
                     onClick={() => router.push("/register")}
-                    className="w-full bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-2xl text-white font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] group touch-manipulation relative overflow-hidden"
+                    className="w-full bg-gradient-to-r from-accent-blue to-blue-600 hover:shadow-2xl text-white font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] group touch-manipulation relative overflow-hidden"
                   >
                     {/* Shimmer effect */}
                     <span className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                     <span className="relative flex items-center justify-center gap-2">
-                      <span className="hidden min-[360px]:inline">Get Your First Review Free</span>
-                      <span className="min-[360px]:hidden">First Review Free</span>
+                      <Palette className="size-5" />
+                      <span className="hidden min-[360px]:inline">Get Feedback</span>
+                      <span className="min-[360px]:hidden">Get Feedback</span>
                       <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                   </Button>
@@ -300,11 +303,17 @@ export default function HomePage() {
                 >
                   <Button
                     size="lg"
-                    variant="outline"
-                    onClick={() => router.push("/browse")}
-                    className="w-full border-2 border-accent-blue/30 hover:border-accent-blue hover:bg-accent-blue/5 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[48px] touch-manipulation"
+                    onClick={() => router.push("/apply/expert")}
+                    className="w-full bg-gradient-to-r from-accent-peach to-orange-500 hover:shadow-2xl text-white font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] group touch-manipulation relative overflow-hidden"
                   >
-                    Browse Reviewers
+                    {/* Shimmer effect */}
+                    <span className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                    <span className="relative flex items-center justify-center gap-2">
+                      <Award className="size-5" />
+                      <span className="hidden min-[360px]:inline">Become a Reviewer</span>
+                      <span className="min-[360px]:hidden">Become Reviewer</span>
+                      <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
                   </Button>
                 </motion.div>
               </div>
@@ -410,6 +419,198 @@ export default function HomePage() {
               </div>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Choose Your Path - Dual Marketplace Toggle */}
+      <section className="relative py-16 md:py-24 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30">
+        {/* Animated gradient background */}
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-tr from-accent-blue/5 via-transparent to-accent-peach/5"
+          animate={{
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-10 md:mb-14"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="info" size="lg" className="mb-5 shadow-lg">
+              <Users className="size-4 mr-1.5" />
+              Choose Your Path
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+              For creators and reviewers
+            </h2>
+
+            {/* Enhanced segmented control with gradient backgrounds */}
+            <motion.div
+              className="inline-flex items-center gap-1 p-1 sm:p-1.5 rounded-2xl bg-gradient-to-r from-white via-gray-50 to-white border-2 border-gray-200/50 shadow-2xl backdrop-blur-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              <motion.button
+                onClick={() => setPerspective("creator")}
+                className={cn(
+                  "relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
+                  perspective === "creator"
+                    ? "text-white shadow-xl"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                )}
+                whileHover={perspective !== "creator" ? { scale: 1.02 } : {}}
+                whileTap={{ scale: 0.98 }}
+              >
+                {perspective === "creator" && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-blue-500 via-accent-blue to-blue-600"
+                    layoutId="activeTab"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <Palette className="size-5" />
+                  <span className="whitespace-nowrap">I'm a Creator</span>
+                </span>
+              </motion.button>
+              <motion.button
+                onClick={() => setPerspective("reviewer")}
+                className={cn(
+                  "relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
+                  perspective === "reviewer"
+                    ? "text-white shadow-xl"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                )}
+                whileHover={perspective !== "reviewer" ? { scale: 1.02 } : {}}
+                whileTap={{ scale: 0.98 }}
+              >
+                {perspective === "reviewer" && (
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-orange-500 via-accent-peach to-amber-500"
+                    layoutId="activeTab"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  <Award className="size-5" />
+                  <span className="whitespace-nowrap">I'm a Reviewer</span>
+                </span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+
+          {/* Perspective content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={perspective}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
+            >
+              {perspective === "creator" ? (
+                <>
+                  {/* Creator benefits grid */}
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      {
+                        icon: Target,
+                        title: "Actionable Feedback",
+                        description: "Get specific, implementable suggestions on what matters most",
+                        color: "blue"
+                      },
+                      {
+                        icon: Clock,
+                        title: "24h Turnaround",
+                        description: "Most reviews completed within 24 hours—fast enough to keep shipping",
+                        color: "blue"
+                      },
+                      {
+                        icon: TrendingUp,
+                        title: "Track Improvement",
+                        description: "See your growth over time with detailed progress analytics",
+                        color: "blue"
+                      },
+                      {
+                        icon: Shield,
+                        title: "100% Confidential",
+                        description: "Your work stays private and secure—we never share without permission",
+                        color: "blue"
+                      },
+                    ].map((item, i) => (
+                      <BenefitCard key={i} {...item} delay={i * 0.05} />
+                    ))}
+                  </div>
+
+                  {/* Creator CTA */}
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      size="lg"
+                      onClick={() => router.push("/register")}
+                      className="w-full sm:w-auto bg-gradient-to-r from-accent-blue to-blue-600 hover:shadow-2xl text-white font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] group touch-manipulation"
+                    >
+                      <span className="flex items-center gap-2">
+                        Get Your First Review Free
+                        <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Reviewer benefits grid */}
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    {[
+                      {
+                        icon: Award,
+                        title: "Earn $50-150 per Review",
+                        description: "Turn your expertise into income—set your own rates",
+                        color: "peach"
+                      },
+                      {
+                        icon: Users,
+                        title: "Build Your Reputation",
+                        description: "Showcase your expertise with a public profile and verified reviews",
+                        color: "peach"
+                      },
+                      {
+                        icon: Zap,
+                        title: "Flexible Schedule",
+                        description: "Review when it works for you—no commitments, just opportunities",
+                        color: "peach"
+                      },
+                      {
+                        icon: TrendingUp,
+                        title: "Help Creators Succeed",
+                        description: "Make a real impact by sharing insights that transform work",
+                        color: "peach"
+                      },
+                    ].map((item, i) => (
+                      <BenefitCard key={i} {...item} delay={i * 0.05} />
+                    ))}
+                  </div>
+
+                  {/* Reviewer CTA */}
+                  <div className="flex justify-center pt-4">
+                    <Button
+                      size="lg"
+                      onClick={() => router.push("/apply/expert")}
+                      className="w-full sm:w-auto bg-gradient-to-r from-accent-peach to-orange-500 hover:shadow-2xl text-white font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] group touch-manipulation"
+                    >
+                      <span className="flex items-center gap-2">
+                        Start Earning as a Reviewer
+                        <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </Button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
@@ -740,6 +941,249 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Earnings for Reviewers - MUST HAVE SECTION */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-green-50 via-emerald-50/30 to-teal-50/30">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            className="text-center mb-12 md:mb-16"
+            {...getMobileAnimation()}
+          >
+            <Badge variant="success" size="lg" className="mb-4">
+              <Award className="size-4 mr-1.5" />
+              For Reviewers
+            </Badge>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Turn your expertise into income
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+              Join our community of expert reviewers earning $50-$150 per review on their own schedule
+            </p>
+          </motion.div>
+
+          {/* Earnings highlights grid */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+            {/* Average Earnings */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-green-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative">
+                <div className="size-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mb-6 ring-2 ring-green-500/20">
+                  <Award className="size-8 text-white" />
+                </div>
+                <div className="text-4xl sm:text-5xl font-black text-gray-900 mb-2">$50-150</div>
+                <div className="text-lg font-semibold text-gray-700 mb-2">Per Review</div>
+                <p className="text-sm text-gray-600">
+                  Set your own rates based on your expertise and review complexity
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Payment Speed */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-blue-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative">
+                <div className="size-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center mb-6 ring-2 ring-blue-500/20">
+                  <Clock className="size-8 text-white" />
+                </div>
+                <div className="text-4xl sm:text-5xl font-black text-gray-900 mb-2">24h</div>
+                <div className="text-lg font-semibold text-gray-700 mb-2">Payment Release</div>
+                <p className="text-sm text-gray-600">
+                  Get paid 24 hours after review acceptance—fast, reliable payments
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Flexibility */}
+            <motion.div
+              className="relative p-8 rounded-3xl bg-white border-2 border-orange-200 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative">
+                <div className="size-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center mb-6 ring-2 ring-orange-500/20">
+                  <Zap className="size-8 text-white" />
+                </div>
+                <div className="text-4xl sm:text-5xl font-black text-gray-900 mb-2">100%</div>
+                <div className="text-lg font-semibold text-gray-700 mb-2">Flexible</div>
+                <p className="text-sm text-gray-600">
+                  Work when you want—no minimums, no commitments, just opportunities
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Sample earning scenarios */}
+          <motion.div
+            className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-gray-200 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+          >
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center">
+              Real earning examples
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "Part-Time",
+                  reviews: "2-3 reviews/week",
+                  earnings: "$400-900",
+                  period: "per month",
+                  color: "blue"
+                },
+                {
+                  title: "Active",
+                  reviews: "5-7 reviews/week",
+                  earnings: "$1,000-2,100",
+                  period: "per month",
+                  color: "green"
+                },
+                {
+                  title: "Expert",
+                  reviews: "10+ reviews/week",
+                  earnings: "$2,000-6,000",
+                  period: "per month",
+                  color: "purple"
+                },
+              ].map((scenario, i) => (
+                <motion.div
+                  key={i}
+                  className={cn(
+                    "p-6 rounded-2xl border-2 transition-all duration-300",
+                    scenario.color === "blue" && "border-blue-200 bg-blue-50/50 hover:border-blue-300",
+                    scenario.color === "green" && "border-green-200 bg-green-50/50 hover:border-green-300",
+                    scenario.color === "purple" && "border-purple-200 bg-purple-50/50 hover:border-purple-300"
+                  )}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-gray-900 mb-2">{scenario.title}</div>
+                    <div className="text-sm text-gray-600 mb-4">{scenario.reviews}</div>
+                    <div className="text-3xl font-black text-gray-900 mb-1">{scenario.earnings}</div>
+                    <div className="text-sm text-gray-500">{scenario.period}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <p className="text-center text-sm text-gray-500 mt-6">
+              * Actual earnings vary based on review complexity, your expertise level, and time invested
+            </p>
+          </motion.div>
+
+          {/* How payouts work */}
+          <motion.div
+            className="grid md:grid-cols-2 gap-8 mb-12"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 border border-gray-200 shadow-lg">
+              <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <CheckCircle className="size-6 text-green-500" />
+                How you get paid
+              </h4>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <div className="size-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-green-600">1</span>
+                  </div>
+                  <span>Complete a review and submit to the creator</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="size-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-green-600">2</span>
+                  </div>
+                  <span>Creator accepts review (or auto-accepts after 48 hours)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="size-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-green-600">3</span>
+                  </div>
+                  <span>Payment released to your account within 24 hours</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="size-6 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-green-600">4</span>
+                  </div>
+                  <span>Withdraw anytime via Stripe Connect</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 border border-gray-200 shadow-lg">
+              <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Shield className="size-6 text-blue-500" />
+                Payment protection
+              </h4>
+              <ul className="space-y-3 text-gray-700">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="size-5 text-green-500 mt-0.5 shrink-0" />
+                  <span><strong>Escrow protection</strong> - Funds held securely until acceptance</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="size-5 text-green-500 mt-0.5 shrink-0" />
+                  <span><strong>Auto-accept</strong> - Get paid even if creator doesn't respond</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="size-5 text-green-500 mt-0.5 shrink-0" />
+                  <span><strong>Dispute resolution</strong> - Fair mediation for any conflicts</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="size-5 text-green-500 mt-0.5 shrink-0" />
+                  <span><strong>100% guarantee</strong> - You get paid for quality work, always</span>
+                </li>
+              </ul>
+            </div>
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div
+            className="text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+          >
+            <Button
+              size="lg"
+              onClick={() => router.push("/apply/expert")}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold px-10 py-7 text-lg rounded-2xl min-h-[60px] shadow-xl hover:shadow-2xl transition-all duration-300 group"
+            >
+              <span className="flex items-center gap-2">
+                Apply to Become a Reviewer
+                <ArrowRight className="size-6 group-hover:translate-x-1 transition-transform" />
+              </span>
+            </Button>
+            <p className="text-sm text-gray-500 mt-4">
+              Application review typically takes 24-48 hours
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Pricing - Simple & Transparent */}
       <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
@@ -957,10 +1401,10 @@ export default function HomePage() {
               Testimonials
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Loved by creators worldwide
+              Loved by creators and reviewers
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              Join 2,500+ creators getting better feedback every day
+              Join thousands of creators leveling up—and experts earning from their knowledge
             </p>
           </motion.div>
 
@@ -971,33 +1415,75 @@ export default function HomePage() {
                 quote: "AI gave me metrics and patterns. But the human reviewer told me WHY they mattered for my specific audience and what to prioritize. That's the insight that actually improved my work.",
                 author: "Sarah Chen",
                 role: "Frontend Developer",
+                type: "creator",
                 rating: 5,
                 avatar: "SC",
+              },
+              {
+                quote: "I earned $2,400 last month reviewing designs in my spare time. It's amazing getting paid for what I already love doing—and helping creators improve their work feels genuinely rewarding.",
+                author: "Alex Rivera",
+                role: "Senior Product Designer • Reviewer",
+                type: "reviewer",
+                rating: 5,
+                avatar: "AR",
               },
               {
                 quote: "The expert caught cultural nuances and emotional resonance that no AI could understand. They saw my design through the eyes of real users, not just algorithms.",
                 author: "Marcus Johnson",
                 role: "UX Designer",
+                type: "creator",
                 rating: 5,
                 avatar: "MJ",
+              },
+              {
+                quote: "As a freelance developer, Critvue gives me a steady income stream between projects. I can review 5-10 codebases a week and earn $800-1500. Complete flexibility, no meetings.",
+                author: "Jamie Park",
+                role: "Full-Stack Developer • Reviewer",
+                type: "reviewer",
+                rating: 5,
+                avatar: "JP",
               },
               {
                 quote: "I've tried AI tools, but Critvue's human reviewers actually understand context and intent. They give strategic advice, not just surface-level observations.",
                 author: "Priya Patel",
                 role: "Content Creator",
+                type: "creator",
                 rating: 5,
                 avatar: "PP",
+              },
+              {
+                quote: "I review writing samples while my kids nap. $50-100 per review, 30-45 minutes each. I've made over $6K in 3 months. It's the perfect side income for a stay-at-home parent with expertise.",
+                author: "Taylor Morrison",
+                role: "Former Editor • Reviewer",
+                type: "reviewer",
+                rating: 5,
+                avatar: "TM",
               },
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                className="relative p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300"
+                className={cn(
+                  "relative p-6 sm:p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300",
+                  testimonial.type === "reviewer"
+                    ? "border-2 border-green-200"
+                    : "border border-gray-200"
+                )}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
                 whileHover={{ y: -4 }}
               >
+                {/* Reviewer badge */}
+                {testimonial.type === "reviewer" && (
+                  <div className="absolute top-4 right-4">
+                    <Badge variant="success" size="sm">
+                      <Award className="size-3 mr-1" />
+                      Reviewer
+                    </Badge>
+                  </div>
+                )}
+
                 {/* Stars */}
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
@@ -1025,162 +1511,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Dual Perspective - Premium Toggle Design */}
-      <section className="relative py-16 md:py-24 overflow-hidden">
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30" />
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-tr from-accent-blue/5 via-transparent to-accent-peach/5"
-          animate={{
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        />
-
-        <div className="relative max-w-7xl mx-auto px-6">
-          <motion.div
-            className="text-center mb-10 md:mb-14"
-            {...getMobileAnimation()}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Badge variant="info" size="lg" className="mb-5 shadow-lg">
-                Choose Your Path
-              </Badge>
-            </motion.div>
-            <motion.h2
-              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.5 }}
-            >
-              For creators and reviewers
-            </motion.h2>
-
-            {/* Enhanced segmented control with gradient backgrounds - Horizontal at all sizes with responsive text */}
-            <motion.div
-              className="inline-flex items-center gap-1 p-1 sm:p-1.5 rounded-2xl bg-gradient-to-r from-white via-gray-50 to-white border-2 border-gray-200/50 shadow-2xl backdrop-blur-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <motion.button
-                onClick={() => setPerspective("creator")}
-                className={cn(
-                  "relative px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
-                  perspective === "creator"
-                    ? "text-white shadow-xl"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                )}
-                whileHover={perspective !== "creator" ? { scale: 1.02 } : {}}
-                whileTap={{ scale: 0.98 }}
-              >
-                {perspective === "creator" && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-500 via-accent-blue to-blue-600"
-                    layoutId="activeTab"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
-                  <Palette className="size-4 sm:size-5" />
-                  <span className="whitespace-nowrap">
-                    <span className="hidden min-[360px]:inline">I'm a </span>Creator
-                  </span>
-                </span>
-              </motion.button>
-              <motion.button
-                onClick={() => setPerspective("reviewer")}
-                className={cn(
-                  "relative px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
-                  perspective === "reviewer"
-                    ? "text-white shadow-xl"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                )}
-                whileHover={perspective !== "reviewer" ? { scale: 1.02 } : {}}
-                whileTap={{ scale: 0.98 }}
-              >
-                {perspective === "reviewer" && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-orange-500 via-accent-peach to-amber-500"
-                    layoutId="activeTab"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2">
-                  <Award className="size-4 sm:size-5" />
-                  <span className="whitespace-nowrap">
-                    <span className="hidden min-[360px]:inline">I'm a </span>Reviewer
-                  </span>
-                </span>
-              </motion.button>
-            </motion.div>
-          </motion.div>
-
-          {/* Perspective content - Stacked on mobile */}
-          <motion.div
-            key={perspective}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-6"
-          >
-            {perspective === "creator" ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { icon: Target, title: "Actionable Feedback", description: "Specific critique on what matters most" },
-                  { icon: Clock, title: "Fast Turnaround", description: "Most reviews within 24 hours" },
-                  { icon: Shield, title: "Secure & Private", description: "Your work stays confidential" },
-                  { icon: TrendingUp, title: "Track Improvement", description: "See your growth over time" },
-                ].map((item, i) => (
-                  <BenefitCard key={i} {...item} color="blue" delay={i * 0.05} />
-                ))}
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { icon: Award, title: "Earn Money", description: "$50-150 per review" },
-                  { icon: Users, title: "Build Reputation", description: "Showcase your expertise" },
-                  { icon: Zap, title: "Flexible Schedule", description: "Review when it works for you" },
-                  { icon: TrendingUp, title: "Help Creators", description: "Make a real impact" },
-                ].map((item, i) => (
-                  <BenefitCard key={i} {...item} color="peach" delay={i * 0.05} />
-                ))}
-              </div>
-            )}
-
-            {/* CTA - Thumb zone on mobile */}
-            <div className="flex justify-center pt-6">
-              <Button
-                size="lg"
-                onClick={() => router.push(perspective === "creator" ? "/review/new" : "/apply/expert")}
-                className={cn(
-                  "w-full sm:w-auto font-semibold px-6 sm:px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] touch-manipulation",
-                  perspective === "creator"
-                    ? "bg-accent-blue hover:bg-accent-blue/90 text-white"
-                    : "bg-accent-peach hover:bg-accent-peach/90 text-white"
-                )}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <span className="hidden min-[360px]:inline">
-                    {perspective === "creator" ? "Get Your First Review Free" : "Become a Reviewer"}
-                  </span>
-                  <span className="min-[360px]:hidden">
-                    {perspective === "creator" ? "First Review Free" : "Become Reviewer"}
-                  </span>
-                  <ArrowRight className="size-5" />
-                </span>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Note: Additional sections (Pricing, Testimonials, Stats) to be added later */}
 
       {/* Final CTA - Thumb Zone Optimized */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-accent-blue via-accent-blue/90 to-accent-peach">
