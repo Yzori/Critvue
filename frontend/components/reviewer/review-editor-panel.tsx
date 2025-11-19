@@ -157,63 +157,59 @@ export function ReviewEditorPanel({
             onClick={() => setIsBriefCollapsed(!isBriefCollapsed)}
             className="w-full flex items-center justify-between p-3 rounded-lg bg-white/50 border border-border/50 hover:bg-white/70 transition-colors"
           >
-            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-              💬 Creator's Brief
-              {isBriefCollapsed && (
-                <span className="text-xs font-normal text-muted-foreground">
-                  (Click to view)
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                💬 Creator's Brief
+                {isBriefCollapsed && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    (Click to view)
+                  </span>
+                )}
+              </p>
+              {/* Deadline badge when collapsed */}
+              {isBriefCollapsed && slot.status !== "submitted" && slot.claim_deadline && (
+                <span className={cn(
+                  "text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1",
+                  urgency === "danger" ? "bg-red-100 text-red-700" :
+                  urgency === "warning" ? "bg-amber-100 text-amber-700" :
+                  "bg-green-100 text-green-700"
+                )}>
+                  ⏱ {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`} left
                 </span>
               )}
-            </p>
+            </div>
             {isBriefCollapsed ? (
-              <ChevronDown className="size-4 text-muted-foreground" />
+              <ChevronDown className="size-4 text-muted-foreground shrink-0" />
             ) : (
-              <ChevronUp className="size-4 text-muted-foreground" />
+              <ChevronUp className="size-4 text-muted-foreground shrink-0" />
             )}
           </button>
           {!isBriefCollapsed && (
-            <div className="mt-2 p-4 rounded-lg bg-white/50 border border-border/50">
-              <p className="text-sm text-foreground leading-relaxed">
+            <div className="mt-2 p-4 rounded-lg bg-white/50 border border-border/50 relative">
+              {/* Deadline badge when expanded - top right corner */}
+              {slot.status !== "submitted" && slot.claim_deadline && (
+                <div className={cn(
+                  "absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5",
+                  urgency === "danger" ? "bg-red-100 text-red-700 ring-1 ring-red-300" :
+                  urgency === "warning" ? "bg-amber-100 text-amber-700 ring-1 ring-amber-300" :
+                  "bg-green-100 text-green-700 ring-1 ring-green-300"
+                )}>
+                  <span className={cn(
+                    "size-1.5 rounded-full",
+                    urgency === "danger" ? "bg-red-600 animate-pulse" :
+                    urgency === "warning" ? "bg-amber-600 animate-pulse" :
+                    "bg-green-600"
+                  )} />
+                  {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`} left
+                </div>
+              )}
+              <p className="text-sm text-foreground leading-relaxed pr-20">
                 {slot.review_request?.description || "No specific guidance provided"}
               </p>
             </div>
           )}
         </div>
       </div>
-
-      {/* Deadline Warning Banner */}
-      {slot.status !== "submitted" && slot.claim_deadline && (
-        <div
-          className={cn(
-            "flex items-center gap-3 p-4 rounded-xl border",
-            urgencyStyle.bg,
-            urgencyStyle.border
-          )}
-        >
-          <AlertCircle className={cn("size-5 flex-shrink-0", urgencyStyle.text)} />
-          <div className="flex-1">
-            <p className={cn("font-semibold text-sm", urgencyStyle.text)}>
-              {hoursRemaining < 1
-                ? "Deadline has passed!"
-                : hoursRemaining < 6
-                  ? "Urgent: Deadline approaching soon!"
-                  : hoursRemaining < 24
-                    ? "Deadline is today"
-                    : "Time remaining"}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {hoursRemaining < 1
-                ? "Please submit as soon as possible"
-                : hoursRemaining < 24
-                  ? `${hoursRemaining} hour${hoursRemaining !== 1 ? "s" : ""} left to submit`
-                  : `${Math.floor(hoursRemaining / 24)} day${Math.floor(hoursRemaining / 24) !== 1 ? "s" : ""} left to submit`}
-            </p>
-          </div>
-          <Badge variant={urgencyStyle.badge} size="sm" showDot pulse>
-            {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`}
-          </Badge>
-        </div>
-      )}
 
       {/* Smart Review Editor */}
       <SmartReviewEditor

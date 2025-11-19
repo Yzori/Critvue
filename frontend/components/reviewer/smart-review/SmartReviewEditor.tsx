@@ -12,7 +12,7 @@
 "use client";
 
 import * as React from "react";
-import { Save, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, ArrowLeft, ArrowRight } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,7 +48,6 @@ import { PhaseNavigation } from "./PhaseNavigation";
 import { Phase1QuickAssessment as Phase1Component } from "./Phase1QuickAssessment";
 import { Phase2RubricRatings as Phase2Component } from "./Phase2RubricRatings";
 import { Phase3DetailedFeedback as Phase3Component } from "./Phase3DetailedFeedback";
-import { QualityIndicators } from "./QualityIndicators";
 
 interface SmartReviewEditorProps {
   slotId: number;
@@ -85,10 +84,6 @@ export function SmartReviewEditor({
   // Loading state
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
-
-  // Track if user has started interacting (for delaying quality indicators)
-  const [hasInteracted, setHasInteracted] = React.useState(false);
-  const [showQualityPanel, setShowQualityPanel] = React.useState(true);
 
   // Sticky CTA bar scroll state (mobile only)
   const [showStickyCTA, setShowStickyCTA] = React.useState(true);
@@ -198,13 +193,6 @@ export function SmartReviewEditor({
       }
     };
   }, [draft, saveToBackend]);
-
-  // Track user interaction for delayed quality indicators
-  React.useEffect(() => {
-    if (draft.phase1_quick_assessment || draft.phase2_rubric || draft.phase3_detailed_feedback) {
-      setHasInteracted(true);
-    }
-  }, [draft]);
 
   // Scroll behavior for sticky CTA bar (mobile only)
   React.useEffect(() => {
@@ -376,7 +364,7 @@ export function SmartReviewEditor({
       </div>
 
       {/* Step-by-step wizard layout */}
-      <div className="space-y-6 max-w-4xl mx-auto pb-40 lg:pb-6">
+      <div className="space-y-6 max-w-4xl mx-auto pb-20 lg:pb-6">
         {/* Step Progress Indicator */}
         <div className="flex items-center justify-center gap-2 md:gap-3">
           {/* Step 1 */}
@@ -497,6 +485,7 @@ export function SmartReviewEditor({
               onChange={handlePhase3Change}
               contentType={contentType}
               imageUrl={imageUrl}
+              selectedFocusAreas={draft.phase1_quick_assessment?.primary_focus_areas}
             />
           )}
 
@@ -601,113 +590,6 @@ export function SmartReviewEditor({
         </div>
       </div>
 
-      {/* Responsive Quality Score Panel */}
-      {hasInteracted && (
-        <>
-          {/* Desktop: Floating Panel (left side to avoid sidebar) */}
-          <div className="hidden lg:block fixed bottom-6 left-6 w-80 z-40">
-            <div className="rounded-xl border-2 border-accent-blue/30 bg-card shadow-2xl">
-              {/* Collapsible Header */}
-              <button
-                onClick={() => setShowQualityPanel(!showQualityPanel)}
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors rounded-t-xl"
-              >
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="size-5 text-accent-blue" />
-                  <span className="font-semibold text-sm">Score: {qualityMetrics.completeness_score}%</span>
-                </div>
-                {showQualityPanel ? (
-                  <ChevronDown className="size-4 text-muted-foreground" />
-                ) : (
-                  <ChevronUp className="size-4 text-muted-foreground" />
-                )}
-              </button>
-
-              {/* Expandable Content */}
-              {showQualityPanel && (
-                <div className="p-4 pt-0 border-t border-border">
-                  <QualityIndicators metrics={qualityMetrics} />
-
-                  {/* Contextual Tips Based on Phase */}
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">
-                      💡 Phase {currentPhase} Tips:
-                    </p>
-                    {currentPhase === 1 && (
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Rate honestly and consider all aspects</li>
-                        <li>• Select focus areas that truly matter</li>
-                      </ul>
-                    )}
-                    {currentPhase === 2 && (
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Be specific with each dimension</li>
-                        <li>• Use the full 1-5 scale thoughtfully</li>
-                      </ul>
-                    )}
-                    {currentPhase === 3 && (
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Balance positive and constructive feedback</li>
-                        <li>• Make suggestions actionable and specific</li>
-                      </ul>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Mobile: Bottom Sticky Bar */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t-2 border-accent-blue/30 shadow-2xl">
-            <button
-              onClick={() => setShowQualityPanel(!showQualityPanel)}
-              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <TrendingUp className="size-5 text-accent-blue" />
-                <span className="font-semibold text-sm">Review Score: {qualityMetrics.completeness_score}%</span>
-              </div>
-              {showQualityPanel ? (
-                <ChevronDown className="size-4 text-muted-foreground" />
-              ) : (
-                <ChevronUp className="size-4 text-muted-foreground" />
-              )}
-            </button>
-
-            {/* Expandable Content - Slide up from bottom */}
-            {showQualityPanel && (
-              <div className="p-4 pt-0 border-t border-border max-h-[50vh] overflow-y-auto">
-                <QualityIndicators metrics={qualityMetrics} />
-
-                {/* Contextual Tips Based on Phase */}
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">
-                    💡 Phase {currentPhase} Tips:
-                  </p>
-                  {currentPhase === 1 && (
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Rate honestly and consider all aspects</li>
-                      <li>• Select focus areas that truly matter</li>
-                    </ul>
-                  )}
-                  {currentPhase === 2 && (
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Be specific with each dimension</li>
-                      <li>• Use the full 1-5 scale thoughtfully</li>
-                    </ul>
-                  )}
-                  {currentPhase === 3 && (
-                    <ul className="text-xs text-muted-foreground space-y-1">
-                      <li>• Balance positive and constructive feedback</li>
-                      <li>• Make suggestions actionable and specific</li>
-                    </ul>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
 
       {/* Submit confirmation dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
