@@ -13,6 +13,7 @@ import {
   Settings,
   HelpCircle,
   LogOut,
+  FileEdit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,8 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
   // Secondary navigation items (authenticated users only)
   const secondaryNavItems: DrawerNavItem[] = [
     { label: "Profile", href: "/profile", icon: User },
+    // Show "My Reviews" for all users - everyone can give reviews
+    { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Help & Support", href: "/help", icon: HelpCircle },
   ];

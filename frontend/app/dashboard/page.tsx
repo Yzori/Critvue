@@ -50,6 +50,7 @@ function DashboardContent() {
   // Hydrate state from URL params and localStorage after mount
   useEffect(() => {
     const urlRole = searchParams?.get("role");
+
     if (urlRole === "creator" || urlRole === "reviewer") {
       setActiveRole(urlRole);
     } else {
@@ -216,25 +217,14 @@ function DashboardContent() {
         )}
       </AnimatePresence>
 
-      {/* Dashboard Content - Animated transitions */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeRole}
-          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={prefersReducedMotion ? false : { opacity: 0, y: -20 }}
-          transition={{
-            duration: prefersReducedMotion ? 0 : 0.3,
-            ease: "easeInOut"
-          }}
-        >
-          {activeRole === "creator" ? (
-            <CreatorDashboard />
-          ) : (
-            <ReviewerDashboard />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {/* Dashboard Content - Conditional rendering without animation to fix useEffect issue */}
+      <div>
+        {activeRole === "creator" ? (
+          <CreatorDashboard />
+        ) : (
+          <ReviewerDashboard />
+        )}
+      </div>
     </div>
   );
 }

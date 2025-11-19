@@ -56,13 +56,58 @@ export default function ReviewerDashboard() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Fetch dashboard data
-  const fetchDashboard = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // Fetch dashboard data on mount
+  React.useEffect(() => {
+    let cancelled = false;
 
-      // Fetch all data in parallel
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all data in parallel
+        const [dashboardData, claimed, submitted, accepted] = await Promise.all([
+          getReviewerDashboard(),
+          getMyReviews("claimed"),
+          getMyReviews("submitted"),
+          getMyReviews("accepted"),
+        ]);
+
+        if (cancelled) {
+          return;
+        }
+
+        setDashboard(dashboardData);
+        setActiveReviews(claimed);
+        setSubmittedReviews(submitted);
+        setCompletedReviews(accepted.slice(0, 5)); // Show last 5
+      } catch (err) {
+        if (!cancelled) {
+          console.error("[ReviewerDashboard] Error fetching dashboard:", err);
+          setError("Failed to load dashboard. Please try again.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  // Handle abandon review
+  const handleAbandonReview = async (slotId: number) => {
+    // Refresh after abandon
+    setLoading(true);
+    await abandonReviewSlot(slotId);
+
+    // Re-fetch data
+    try {
       const [dashboardData, claimed, submitted, accepted] = await Promise.all([
         getReviewerDashboard(),
         getMyReviews("claimed"),
@@ -73,24 +118,12 @@ export default function ReviewerDashboard() {
       setDashboard(dashboardData);
       setActiveReviews(claimed);
       setSubmittedReviews(submitted);
-      setCompletedReviews(accepted.slice(0, 5)); // Show last 5
+      setCompletedReviews(accepted.slice(0, 5));
     } catch (err) {
-      console.error("Error fetching dashboard:", err);
-      setError("Failed to load dashboard. Please try again.");
+      console.error("Error refreshing after abandon:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  React.useEffect(() => {
-    fetchDashboard();
-  }, [fetchDashboard]);
-
-  // Handle abandon review
-  const handleAbandonReview = async (slotId: number) => {
-    await abandonReviewSlot(slotId);
-    // Refresh dashboard
-    await fetchDashboard();
   };
 
   const contentTypeConfig = {

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
@@ -89,6 +89,8 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const menuItems: MenuItem[] = [
     { label: "Profile", href: "/profile", icon: User },
+    // Show "My Reviews" for all users - everyone can give reviews
+    { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Billing", href: "/billing", icon: CreditCard },
     { label: "Help & Support", href: "/help", icon: HelpCircle, separator: true },

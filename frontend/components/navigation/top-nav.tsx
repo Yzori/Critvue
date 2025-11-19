@@ -34,9 +34,11 @@ export interface TopNavProps extends React.HTMLAttributes<HTMLElement> {
   onMenuClick?: () => void; // Opens mobile drawer
 }
 
-const navItems: NavItem[] = [
+const getNavItems = (isAuthenticated: boolean): NavItem[] => [
   { label: "Browse", href: "/browse", showOn: "tablet" },
   { label: "Dashboard", href: "/dashboard", showOn: "tablet" },
+  // Show "My Reviews" for all authenticated users - everyone can give reviews
+  ...(isAuthenticated ? [{ label: "My Reviews", href: "/reviewer/hub", showOn: "desktop" as const }] : []),
   { label: "How It Works", href: "/how-it-works", showOn: "desktop" },
 ];
 
@@ -54,6 +56,9 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
   ) => {
     const pathname = usePathname();
     const [hasScrolled, setHasScrolled] = React.useState(false);
+
+    // Get navigation items - show reviewer links for all authenticated users
+    const navItems = getNavItems(!!user);
 
     // Detect scroll for shadow effect
     React.useEffect(() => {
