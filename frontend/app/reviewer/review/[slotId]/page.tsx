@@ -29,16 +29,11 @@ import {
   AlertCircle,
   ArrowLeft,
   ExternalLink,
-  Palette,
-  Code,
-  Video,
-  Mic,
-  FileText,
-  Image as ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getReviewSlot,
+  getMyReviews,
   loadDraft,
   calculateHoursRemaining,
   getDeadlineUrgency,
@@ -46,6 +41,7 @@ import {
   type ReviewSlot,
   type ReviewDraft,
 } from "@/lib/api/reviewer";
+import { getContentTypeConfig } from "@/lib/constants/content-types";
 
 export default function ReviewWritingPage() {
   const router = useRouter();
@@ -91,6 +87,26 @@ export default function ReviewWritingPage() {
     fetchData();
   }, [slotId]);
 
+  // Auto-redirect to hub mode if reviewer has 2+ active reviews
+  React.useEffect(() => {
+    const checkForHubMode = async () => {
+      try {
+        // Use multi-status query (single API call)
+        const allActive = await getMyReviews("claimed,submitted");
+
+        // If 2+ reviews, redirect to hub mode
+        if (allActive.length >= 2) {
+          router.push(`/reviewer/hub?slot=${slotId}`);
+        }
+      } catch (err) {
+        // Silently fail - stay on single review page
+        console.error("Error checking for hub mode:", err);
+      }
+    };
+
+    checkForHubMode();
+  }, [slotId, router]);
+
   // Update countdown every minute
   React.useEffect(() => {
     if (!slot?.claim_deadline) return;
@@ -101,45 +117,6 @@ export default function ReviewWritingPage() {
 
     return () => clearInterval(interval);
   }, [slot]);
-
-  const contentTypeConfig = {
-    design: {
-      icon: <Palette className="size-5" />,
-      color: "text-blue-600",
-      bg: "bg-blue-500/10",
-      label: "Design",
-    },
-    code: {
-      icon: <Code className="size-5" />,
-      color: "text-blue-600",
-      bg: "bg-blue-500/10",
-      label: "Code",
-    },
-    video: {
-      icon: <Video className="size-5" />,
-      color: "text-purple-600",
-      bg: "bg-purple-500/10",
-      label: "Video",
-    },
-    audio: {
-      icon: <Mic className="size-5" />,
-      color: "text-pink-600",
-      bg: "bg-pink-500/10",
-      label: "Audio",
-    },
-    writing: {
-      icon: <FileText className="size-5" />,
-      color: "text-green-600",
-      bg: "bg-green-500/10",
-      label: "Writing",
-    },
-    art: {
-      icon: <ImageIcon className="size-5" />,
-      color: "text-amber-600",
-      bg: "bg-amber-500/10",
-      label: "Art",
-    },
-  };
 
   if (loading) {
     return (
@@ -175,10 +152,8 @@ export default function ReviewWritingPage() {
   }
 
   const urgency = getDeadlineUrgency(hoursRemaining);
-  const config =
-    contentTypeConfig[
-      slot.review_request?.content_type as keyof typeof contentTypeConfig
-    ] || contentTypeConfig.design;
+  const config = getContentTypeConfig(slot.review_request?.content_type);
+  const Icon = config.icon;
 
   const urgencyConfig = {
     danger: {
@@ -211,7 +186,7 @@ export default function ReviewWritingPage() {
           variant="outline"
           size="icon"
           onClick={() => router.push("/dashboard?role=reviewer")}
-          className="flex-shrink-0"
+          className="flex-shrink-0 min-h-[48px] min-w-[48px]"
         >
           <ArrowLeft className="size-5" />
         </Button>
@@ -297,7 +272,7 @@ export default function ReviewWritingPage() {
             </Label>
             <div className="mt-2 flex items-center gap-2">
               <div className={cn("size-8 rounded-lg flex items-center justify-center", config.bg)}>
-                <div className={config.color}>{config.icon}</div>
+                <Icon className={cn("size-5", config.color)} />
               </div>
               <span className="text-sm font-medium">{config.label}</span>
             </div>

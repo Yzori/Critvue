@@ -132,14 +132,18 @@ export interface ReviewerEarnings {
   acceptance_rate: number;
 }
 
+export interface FeedbackSection {
+  section_id: string;
+  section_label: string;
+  content: string;
+  word_count?: number;
+  required: boolean;
+}
+
 export interface ReviewDraft {
-  draft_text: string;
-  draft_rating: number | null;
-  draft_attachments: Array<{
-    file_url: string;
-    file_name: string;
-    file_type: string;
-  }>;
+  sections: FeedbackSection[];
+  rating: number | null;
+  last_saved_at?: string;
 }
 
 export interface ReviewSubmission {
@@ -204,9 +208,11 @@ export async function getReviewerDashboard(): Promise<ReviewerDashboard> {
 /**
  * Get all review slots for current reviewer
  * GET /api/v1/review-slots/my-slots
+ *
+ * @param status - Single status or comma-separated statuses (e.g., "claimed,submitted")
  */
 export async function getMyReviews(
-  status?: ReviewSlot["status"]
+  status?: ReviewSlot["status"] | string
 ): Promise<ReviewSlot[]> {
   const params = new URLSearchParams();
   if (status) {
@@ -244,7 +250,10 @@ export async function saveDraft(
 ): Promise<{ success: boolean; last_saved_at: string }> {
   return apiClient.post<{ success: boolean; last_saved_at: string }>(
     `/review-slots/${slotId}/save-draft`,
-    draftData
+    {
+      sections: draftData.sections,
+      rating: draftData.rating
+    }
   );
 }
 

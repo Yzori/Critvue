@@ -157,7 +157,7 @@ async def get_slots_for_request(
 async def get_user_review_slots(
     db: AsyncSession,
     user_id: int,
-    status: Optional[ReviewSlotStatus] = None,
+    status: Optional[List[ReviewSlotStatus]] = None,
     skip: int = 0,
     limit: int = 20
 ) -> Tuple[List[ReviewSlot], int]:
@@ -167,7 +167,7 @@ async def get_user_review_slots(
     Args:
         db: Database session
         user_id: Reviewer user ID
-        status: Optional status filter
+        status: Optional status filter - can be a single status or list of statuses
         skip: Pagination offset
         limit: Pagination limit
 
@@ -182,7 +182,14 @@ async def get_user_review_slots(
     )
 
     if status:
-        query = query.where(ReviewSlot.status == status.value)
+        # Support both single status and list of statuses
+        if isinstance(status, list):
+            # Multiple statuses - use IN clause
+            status_values = [s.value for s in status]
+            query = query.where(ReviewSlot.status.in_(status_values))
+        else:
+            # Single status (backward compatibility)
+            query = query.where(ReviewSlot.status == status.value)
 
     # Get total count
     count_query = select(func.count()).select_from(query.subquery())
@@ -423,21 +430,45 @@ async def submit_review(
     if feedback_sections:
         import json
         import html
+        from bleach import clean
+
+        # Allowed HTML tags (basic formatting only)
+        ALLOWED_TAGS = ['b', 'i', 'u', 'br', 'p', 'ul', 'ol', 'li', 'strong', 'em']
 
         try:
-            # Store structured sections
-            slot.feedback_sections = json.dumps(feedback_sections) if isinstance(feedback_sections, list) else feedback_sections
+            # Sanitize feedback sections to prevent XSS
+            sanitized_sections = []
+            for section in feedback_sections:
+                sanitized_section = section.copy()
+                sanitized_section['content'] = clean(
+                    sanitized_section['content'],
+                    tags=ALLOWED_TAGS,
+                    strip=True
+                )
+                sanitized_sections.append(sanitized_section)
 
-            # Store annotations if provided
+            # Store sanitized structured sections
+            slot.feedback_sections = json.dumps(sanitized_sections)
+
+            # Store annotations if provided (sanitize content fields)
             if annotations:
-                slot.annotations = json.dumps(annotations) if isinstance(annotations, list) else annotations
+                sanitized_annotations = []
+                for annotation in annotations:
+                    sanitized_annotation = annotation.copy()
+                    if 'content' in sanitized_annotation:
+                        sanitized_annotation['content'] = clean(
+                            sanitized_annotation['content'],
+                            tags=ALLOWED_TAGS,
+                            strip=True
+                        )
+                    sanitized_annotations.append(sanitized_annotation)
+                slot.annotations = json.dumps(sanitized_annotations)
 
-            # Generate review_text from sections for backward compatibility
-            # Sanitize HTML to prevent XSS attacks
+            # Generate review_text from sanitized sections for backward compatibility
             if not review_text:
                 review_text = "\n\n".join([
                     f"**{html.escape(section['section_label'])}**\n{html.escape(section['content'])}"
-                    for section in feedback_sections
+                    for section in sanitized_sections
                 ])
         except (json.JSONDecodeError, KeyError, TypeError) as e:
             logger.error(f"Failed to process structured feedback for slot {slot_id}: {e}")

@@ -23,6 +23,9 @@ from app.schemas.review_slot import (
     ReviewDispute,
     DisputeResolve,
     ReviewerSlotWithRequest,
+    DraftSave,
+    DraftResponse,
+    DraftSaveSuccess,
 )
 from app.services.claim_service import claim_service, ClaimValidationError
 
@@ -213,6 +216,164 @@ async def submit_review(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while submitting the review"
+        )
+
+
+# ===== Draft Operations =====
+
+@router.post(
+    "/{slot_id}/save-draft",
+    response_model=DraftSaveSuccess,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("60/minute")  # Higher limit for frequent auto-saves
+async def save_review_draft(
+    request: Request,
+    slot_id: int,
+    draft_data: DraftSave,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Auto-save review draft
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot
+    - Slot must be in 'claimed' status
+
+    **Rate Limit:** 60 requests per minute (for frequent auto-saves)
+    """
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if slot.status.value != "claimed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot save draft for non-claimed slot"
+            )
+
+        # Save draft sections as JSON with sanitization
+        import json
+        from datetime import datetime
+        from bleach import clean
+
+        # Allowed HTML tags (basic formatting only)
+        ALLOWED_TAGS = ['b', 'i', 'u', 'br', 'p', 'ul', 'ol', 'li', 'strong', 'em']
+
+        # Sanitize and convert sections to dict
+        sections_data = []
+        for section in draft_data.sections:
+            section_dict = section.model_dump()
+            # Sanitize HTML content to prevent XSS
+            section_dict['content'] = clean(
+                section_dict['content'],
+                tags=ALLOWED_TAGS,
+                strip=True
+            )
+            sections_data.append(section_dict)
+
+        slot.draft_sections = json.dumps(sections_data)
+
+        # Save draft rating if provided
+        if draft_data.rating is not None:
+            slot.rating = draft_data.rating
+
+        slot.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(slot)
+
+        logger.info(f"User {current_user.id} saved draft for slot {slot_id}")
+
+        return DraftSaveSuccess(
+            success=True,
+            last_saved_at=slot.updated_at
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while saving draft"
+        )
+
+
+@router.get(
+    "/{slot_id}/draft",
+    response_model=DraftResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("60/minute")
+async def load_review_draft(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Load saved review draft
+
+    Returns 404 if no draft exists (which is valid - frontend handles this)
+    """
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if not slot.draft_sections:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No draft found"
+            )
+
+        # Parse draft sections from JSON
+        import json
+        from app.schemas.review_slot import FeedbackSection
+
+        draft_sections_data = json.loads(slot.draft_sections) if isinstance(slot.draft_sections, str) else slot.draft_sections
+
+        # Convert to FeedbackSection objects
+        sections = [FeedbackSection(**section) for section in draft_sections_data]
+
+        logger.info(f"User {current_user.id} loaded draft for slot {slot_id}")
+
+        return DraftResponse(
+            sections=sections,
+            rating=slot.rating,
+            last_saved_at=slot.updated_at
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while loading draft"
         )
 
 
@@ -515,24 +676,28 @@ async def get_my_review_slots(
     Get all review slots for the current user (as reviewer)
 
     **Query Parameters:**
-    - status: Filter by slot status (optional)
+    - status: Filter by slot status - single status OR comma-separated list (e.g., "claimed,submitted")
     - skip: Pagination offset (default: 0)
     - limit: Page size (default: 20, max: 100)
 
     **Rate Limit:** 100 requests per minute (higher limit to support dashboard components)
     """
     try:
-        # Validate status if provided
+        # Validate status if provided (supports multiple statuses)
         from app.models.review_slot import ReviewSlotStatus
-        status_filter = None
+        status_filters = None
         if status:
-            try:
-                status_filter = ReviewSlotStatus(status)
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status: {status}"
-                )
+            # Split by comma to support multiple statuses
+            status_list = [s.strip() for s in status.split(',')]
+            status_filters = []
+            for s in status_list:
+                try:
+                    status_filters.append(ReviewSlotStatus(s))
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid status: {s}"
+                    )
 
         # Limit max page size
         limit = min(limit, 100)
@@ -540,24 +705,28 @@ async def get_my_review_slots(
         slots, total = await crud_review_slot.get_user_review_slots(
             db,
             current_user.id,
-            status_filter,
+            status_filters,
             skip,
             limit
         )
 
-        # Map slots to include review_request data
+        # Use Pydantic serialization (more efficient, avoids N+1 queries)
+        # Since review_request is already eagerly loaded via selectinload in CRUD,
+        # we can efficiently serialize it without additional queries
         items_with_request = []
         for slot in slots:
-            slot_dict = {
-                **slot.__dict__,
-                "review_request": {
-                    "id": slot.review_request.id,
-                    "title": slot.review_request.title,
-                    "description": slot.review_request.description,
-                    "content_type": slot.review_request.content_type.value,
-                    "status": slot.review_request.status.value,
-                } if slot.review_request else None
-            }
+            # Convert slot to dict using Pydantic, then add review_request
+            slot_dict = ReviewSlotResponse.model_validate(slot).model_dump()
+
+            # Add review_request data (already loaded, no additional query)
+            slot_dict["review_request"] = {
+                "id": slot.review_request.id,
+                "title": slot.review_request.title,
+                "description": slot.review_request.description,
+                "content_type": slot.review_request.content_type.value,
+                "status": slot.review_request.status.value,
+            } if slot.review_request else None
+
             items_with_request.append(slot_dict)
 
         return ReviewerSlotListResponse(

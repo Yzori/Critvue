@@ -180,12 +180,12 @@ export function ClaimButton({
               {/* Commitment Notice */}
               <div className="p-4 rounded-lg bg-amber-50 border border-amber-200/50">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="size-5 text-amber-700 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-amber-900 mb-1">
                       Please Note
                     </p>
-                    <ul className="text-xs text-amber-800 space-y-1">
+                    <ul className="text-xs text-amber-900 space-y-1">
                       <li>• You have 72 hours to submit your review</li>
                       <li>• The slot will be auto-abandoned if you don't submit in time</li>
                       <li>• You can only claim one slot per review request</li>
@@ -199,7 +199,7 @@ export function ClaimButton({
             {error && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="size-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="size-4 text-red-700 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               </div>

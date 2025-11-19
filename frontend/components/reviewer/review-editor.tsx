@@ -51,16 +51,22 @@ export function ReviewEditor({
   initialDraft,
   onSubmitSuccess,
 }: ReviewEditorProps) {
-  // Form state
-  const [reviewText, setReviewText] = React.useState(
-    initialDraft?.draft_text || ""
-  );
+  // Form state - Convert from structured sections to simple text
+  const [reviewText, setReviewText] = React.useState(() => {
+    if (!initialDraft?.sections || initialDraft.sections.length === 0) {
+      return "";
+    }
+    // Combine all sections into single text field
+    return initialDraft.sections
+      .map(section => `${section.section_label}:\n${section.content}`)
+      .join("\n\n");
+  });
   const [rating, setRating] = React.useState<number | null>(
-    initialDraft?.draft_rating || null
+    initialDraft?.rating || null
   );
   const [attachments, setAttachments] = React.useState<
     Array<{ file_url: string; file_name: string; file_type: string }>
-  >(initialDraft?.draft_attachments || []);
+  >([]);
 
   // Auto-save state
   const [saveStatus, setSaveStatus] = React.useState<
@@ -86,10 +92,21 @@ export function ReviewEditor({
     const timer = setTimeout(async () => {
       try {
         setSaveStatus("saving");
+
+        // Convert simple text to structured sections format
+        const sections = reviewText.trim() ? [
+          {
+            section_id: "general_feedback",
+            section_label: "Feedback",
+            content: reviewText,
+            word_count: reviewText.split(/\s+/).length,
+            required: true
+          }
+        ] : [];
+
         await saveDraft(slotId, {
-          draft_text: reviewText,
-          draft_rating: rating,
-          draft_attachments: attachments,
+          sections,
+          rating,
         });
         setSaveStatus("saved");
         setLastSaved(new Date());
@@ -110,10 +127,21 @@ export function ReviewEditor({
   const handleManualSave = async () => {
     try {
       setSaveStatus("saving");
+
+      // Convert simple text to structured sections format
+      const sections = reviewText.trim() ? [
+        {
+          section_id: "general_feedback",
+          section_label: "Feedback",
+          content: reviewText,
+          word_count: reviewText.split(/\s+/).length,
+          required: true
+        }
+      ] : [];
+
       await saveDraft(slotId, {
-        draft_text: reviewText,
-        draft_rating: rating,
-        draft_attachments: attachments,
+        sections,
+        rating,
       });
       setSaveStatus("saved");
       setLastSaved(new Date());
@@ -218,14 +246,14 @@ export function ReviewEditor({
         <Label htmlFor="rating" className="text-base font-semibold">
           Your Rating
         </Label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 sm:gap-2">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
               type="button"
               onClick={() => setRating(star)}
               className={cn(
-                "size-12 rounded-lg transition-all duration-200",
+                "size-14 sm:size-12 rounded-lg transition-all duration-200",
                 "flex items-center justify-center",
                 "hover:scale-110 active:scale-95",
                 rating && star <= rating
@@ -236,7 +264,7 @@ export function ReviewEditor({
             >
               <Star
                 className={cn(
-                  "size-6",
+                  "size-7 sm:size-6",
                   rating && star <= rating && "fill-current"
                 )}
               />

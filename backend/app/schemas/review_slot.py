@@ -83,6 +83,44 @@ class Annotation(BaseModel):
     )
 
 
+class DraftSave(BaseModel):
+    """Schema for saving review draft"""
+    sections: List[FeedbackSection] = Field(
+        default=[],
+        description="Draft sections with feedback content"
+    )
+    rating: Optional[int] = Field(None, ge=1, le=5, description="Draft rating")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "sections": [
+                    {
+                        "section_id": "overview",
+                        "section_label": "Overview",
+                        "content": "This design shows strong use of color...",
+                        "word_count": 45,
+                        "required": True
+                    }
+                ],
+                "rating": 4
+            }
+        }
+
+
+class DraftResponse(BaseModel):
+    """Response when loading draft"""
+    sections: List[FeedbackSection] = Field(default=[])
+    rating: Optional[int] = None
+    last_saved_at: Optional[datetime] = None
+
+
+class DraftSaveSuccess(BaseModel):
+    """Response after successfully saving draft"""
+    success: bool = True
+    last_saved_at: datetime
+
+
 class ReviewSubmit(BaseModel):
     """Schema for submitting a review (supports both structured and legacy formats)"""
     # Legacy format (backward compatible)
