@@ -23,7 +23,8 @@ import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ReviewEditor } from "@/components/reviewer/review-editor";
+import { Label } from "@/components/ui/label";
+import { SmartReviewEditor } from "@/components/reviewer/smart-review";
 import {
   Clock,
   AlertCircle,
@@ -41,6 +42,7 @@ import {
   type ReviewSlot,
   type ReviewDraft,
 } from "@/lib/api/reviewer";
+import { getReviewFiles, type FileResponse } from "@/lib/api/files";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
 
 export default function ReviewWritingPage() {
@@ -51,6 +53,7 @@ export default function ReviewWritingPage() {
   // State
   const [slot, setSlot] = React.useState<ReviewSlot | null>(null);
   const [draft, setDraft] = React.useState<ReviewDraft | null>(null);
+  const [files, setFiles] = React.useState<FileResponse[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -71,6 +74,17 @@ export default function ReviewWritingPage() {
 
         setSlot(slotData);
         setDraft(draftData);
+
+        // Fetch uploaded files for the review request
+        if (slotData.review_request_id) {
+          try {
+            const filesData = await getReviewFiles(slotData.review_request_id);
+            setFiles(filesData);
+          } catch (filesError) {
+            console.log("No files found for this review");
+            setFiles([]);
+          }
+        }
 
         // Calculate initial deadline
         if (slotData.claim_deadline) {
@@ -250,9 +264,16 @@ export default function ReviewWritingPage() {
             </p>
           </div>
 
-          <ReviewEditor
+          <SmartReviewEditor
             slotId={slotId}
-            initialDraft={draft}
+            contentType={slot?.review_request?.content_type || "design"}
+            imageUrl={
+              // For design/art reviews, pass the first image file URL
+              (slot?.review_request?.content_type === "design" ||
+               slot?.review_request?.content_type === "art")
+                ? files.find((f) => f.file_type.startsWith("image/"))?.file_url || undefined
+                : undefined
+            }
             onSubmitSuccess={() => {
               router.push("/dashboard?role=reviewer");
             }}
@@ -334,13 +355,5 @@ export default function ReviewWritingPage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <label className={cn("block text-sm font-medium", className)}>
-      {children}
-    </label>
   );
 }

@@ -166,6 +166,19 @@ class Phase2RubricRatings(BaseModel):
         return v
 
 
+class VisualAnnotation(BaseModel):
+    """Visual annotation pin-point on an image"""
+    id: str = Field(..., description="Unique annotation ID (client-generated UUID)")
+    x: float = Field(..., ge=0, le=100, description="X coordinate as percentage (0-100)")
+    y: float = Field(..., ge=0, le=100, description="Y coordinate as percentage (0-100)")
+    comment: str = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="Comment for this annotation point"
+    )
+
+
 class Phase3DetailedFeedback(BaseModel):
     """Phase 3: Detailed feedback with strengths and improvements"""
     strengths: List[str] = Field(
@@ -184,6 +197,11 @@ class Phase3DetailedFeedback(BaseModel):
         None,
         max_length=5000,
         description="Additional notes or context (optional)"
+    )
+    visual_annotations: Optional[List[VisualAnnotation]] = Field(
+        None,
+        max_length=20,
+        description="Visual annotations for design/art reviews (optional, max 20)"
     )
 
     @field_validator('strengths', 'improvements')

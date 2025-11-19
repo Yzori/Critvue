@@ -17,20 +17,19 @@
 
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
-import { ReviewEditor } from "@/components/reviewer/review-editor";
+import { SmartReviewEditor } from "@/components/reviewer/smart-review";
 import {
   AlertCircle,
 } from "lucide-react";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
 import { cn } from "@/lib/utils";
 import {
-  loadDraft,
   calculateHoursRemaining,
   getDeadlineUrgency,
   formatPayment,
   type ReviewSlot,
-  type ReviewDraft,
 } from "@/lib/api/reviewer";
+import { getReviewFiles, type FileResponse } from "@/lib/api/files";
 
 interface ReviewEditorPanelProps {
   slot: ReviewSlot;
@@ -41,13 +40,24 @@ export function ReviewEditorPanel({
   slot,
   onSubmitSuccess,
 }: ReviewEditorPanelProps) {
-  const [draft, setDraft] = React.useState<ReviewDraft | null>(null);
   const [hoursRemaining, setHoursRemaining] = React.useState(0);
+  const [files, setFiles] = React.useState<FileResponse[]>([]);
 
-  // Load draft
+  // Fetch files for the review request
   React.useEffect(() => {
-    loadDraft(slot.id).then(setDraft);
-  }, [slot.id]);
+    const fetchFiles = async () => {
+      if (slot.review_request_id) {
+        try {
+          const filesData = await getReviewFiles(slot.review_request_id);
+          setFiles(filesData);
+        } catch (error) {
+          console.error("Error fetching files:", error);
+          setFiles([]);
+        }
+      }
+    };
+    fetchFiles();
+  }, [slot.review_request_id]);
 
   // Calculate deadline
   React.useEffect(() => {
@@ -95,6 +105,19 @@ export function ReviewEditorPanel({
   };
 
   const urgencyStyle = urgencyConfig[urgency];
+
+  // Calculate imageUrl for design/art reviews
+  const imageUrl = React.useMemo(() => {
+    const isDesignOrArt = slot.review_request?.content_type === "design" ||
+                         slot.review_request?.content_type === "art";
+
+    if (isDesignOrArt) {
+      const imageFile = files.find((f) => f.file_type.startsWith("image/"));
+      return imageFile?.file_url || undefined;
+    }
+
+    return undefined;
+  }, [slot.review_request?.content_type, files]);
 
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -162,25 +185,13 @@ export function ReviewEditorPanel({
         </p>
       </div>
 
-      {/* Review Editor */}
-      <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]">
-        <div className="mb-6">
-          <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">
-            {slot.status === "submitted" ? "Your Review" : "Write Your Review"}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {slot.status === "submitted"
-              ? "This review has been submitted and is awaiting acceptance."
-              : "Provide detailed, constructive feedback. Your draft is saved automatically."}
-          </p>
-        </div>
-
-        <ReviewEditor
-          slotId={slot.id}
-          initialDraft={draft}
-          onSubmitSuccess={onSubmitSuccess || (() => {})}
-        />
-      </div>
+      {/* Smart Review Editor */}
+      <SmartReviewEditor
+        slotId={slot.id}
+        contentType={slot.review_request?.content_type || "code"}
+        imageUrl={imageUrl}
+        onSubmitSuccess={onSubmitSuccess}
+      />
     </div>
   );
 }

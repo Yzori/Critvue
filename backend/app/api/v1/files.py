@@ -92,7 +92,7 @@ async def upload_review_file(
                 detail="Failed to save file metadata"
             )
 
-        security_logger.info(
+        security_logger.logger.info(
             f"File uploaded: review_id={review_id}, file_id={review_file.id}, "
             f"user={current_user.email}, size={review_file.file_size_mb:.2f}MB"
         )
@@ -102,7 +102,7 @@ async def upload_review_file(
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.error(
+        security_logger.logger.error(
             f"Failed to upload file for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise HTTPException(
@@ -202,20 +202,20 @@ async def upload_review_files_batch(
                 detail=f"All file uploads failed: {'; '.join(errors)}"
             )
 
-        security_logger.info(
+        security_logger.logger.info(
             f"Batch upload: review_id={review_id}, user={current_user.email}, "
             f"success={len(uploaded_files)}, failed={len(errors)}"
         )
 
         if errors:
-            security_logger.warning(f"Partial upload failures: {'; '.join(errors)}")
+            security_logger.logger.warning(f"Partial upload failures: {'; '.join(errors)}")
 
         return uploaded_files
 
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.error(
+        security_logger.logger.error(
             f"Failed batch upload for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise HTTPException(
@@ -249,14 +249,27 @@ async def list_review_files(
         HTTPException: If review not found or user doesn't have access
     """
     try:
-        # Get the review request with files
+        # Get the review request with files (without ownership check)
         review = await review_crud.get_review_request(
             db=db,
             review_id=review_id,
-            user_id=current_user.id
+            user_id=None  # Don't filter by owner yet
         )
 
         if not review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Review request with id {review_id} not found"
+            )
+
+        # Check if user has access (either owner or reviewer)
+        is_owner = review.user_id == current_user.id
+        is_reviewer = any(
+            slot.reviewer_id == current_user.id
+            for slot in (review.slots or [])
+        )
+
+        if not (is_owner or is_reviewer):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Review request with id {review_id} not found"
@@ -267,7 +280,7 @@ async def list_review_files(
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.error(
+        security_logger.logger.error(
             f"Failed to list files for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise HTTPException(
@@ -340,7 +353,7 @@ async def delete_review_file(
         await db.delete(file_to_delete)
         await db.commit()
 
-        security_logger.info(
+        security_logger.logger.info(
             f"File deleted: review_id={review_id}, file_id={file_id}, "
             f"user={current_user.email}"
         )
@@ -349,7 +362,7 @@ async def delete_review_file(
         raise
     except Exception as e:
         await db.rollback()
-        security_logger.error(
+        security_logger.logger.error(
             f"Failed to delete file {file_id} for review {review_id}, "
             f"user {current_user.email}: {str(e)}"
         )
