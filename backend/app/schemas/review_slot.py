@@ -121,6 +121,173 @@ class DraftSaveSuccess(BaseModel):
     last_saved_at: datetime
 
 
+# ===== Smart Adaptive Review Editor Schemas =====
+
+class Phase1QuickAssessment(BaseModel):
+    """Phase 1: Quick assessment with overall rating and focus areas"""
+    overall_rating: int = Field(..., ge=1, le=5, description="Overall rating (1-5 stars)")
+    primary_focus_areas: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=6,
+        description="Selected focus areas (e.g., ['functionality', 'security'])"
+    )
+    quick_summary: str = Field(
+        ...,
+        min_length=50,
+        max_length=300,
+        description="Brief summary (50-300 chars)"
+    )
+
+    @field_validator('quick_summary')
+    @classmethod
+    def validate_summary(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError('Summary cannot be empty')
+        return v
+
+
+class Phase2RubricRatings(BaseModel):
+    """Phase 2: Content-specific rubric ratings"""
+    content_type: str = Field(..., description="Content type: code, design, writing")
+    ratings: dict[str, int] = Field(
+        ...,
+        description="Dimension ratings (e.g., {'functionality': 5, 'code_quality': 4})"
+    )
+
+    @field_validator('ratings')
+    @classmethod
+    def validate_ratings(cls, v: dict[str, int]) -> dict[str, int]:
+        """Validate all ratings are 1-5"""
+        for dimension, rating in v.items():
+            if not (1 <= rating <= 5):
+                raise ValueError(f'Rating for {dimension} must be between 1 and 5')
+        return v
+
+
+class Phase3DetailedFeedback(BaseModel):
+    """Phase 3: Detailed feedback with strengths and improvements"""
+    strengths: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=10,
+        description="List of strengths (2-10 items recommended)"
+    )
+    improvements: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=10,
+        description="List of improvements (2-10 items recommended)"
+    )
+    additional_notes: Optional[str] = Field(
+        None,
+        max_length=5000,
+        description="Additional notes or context (optional)"
+    )
+
+    @field_validator('strengths', 'improvements')
+    @classmethod
+    def validate_items(cls, v: List[str]) -> List[str]:
+        """Validate list items are not empty"""
+        validated = []
+        for item in v:
+            stripped = item.strip()
+            if stripped:
+                validated.append(stripped)
+        if not validated:
+            raise ValueError('List cannot be empty')
+        return validated
+
+
+class QualityMetrics(BaseModel):
+    """Auto-calculated quality metrics"""
+    completeness_score: int = Field(..., ge=0, le=100, description="Completeness (0-100%)")
+    estimated_tone: str = Field(..., description="Tone: professional, casual, critical, encouraging")
+    clarity_score: int = Field(..., ge=0, le=100, description="Clarity (0-100%)")
+    actionability_score: int = Field(..., ge=0, le=100, description="Actionability (0-100%)")
+
+
+class SmartReviewMetadata(BaseModel):
+    """Metadata about the review process"""
+    version: str = Field(default="1.0", description="Schema version")
+    created_at: datetime
+    last_updated_at: datetime
+    time_spent_seconds: int = Field(..., ge=0, description="Time spent on review")
+    phases_completed: List[str] = Field(
+        ...,
+        description="Completed phases: ['phase1', 'phase2', 'phase3']"
+    )
+
+
+class SmartReviewDraft(BaseModel):
+    """Draft for Smart Adaptive Review Editor"""
+    phase1_quick_assessment: Optional[Phase1QuickAssessment] = None
+    phase2_rubric: Optional[Phase2RubricRatings] = None
+    phase3_detailed_feedback: Optional[Phase3DetailedFeedback] = None
+    quality_metrics: Optional[QualityMetrics] = None
+    metadata: Optional[SmartReviewMetadata] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "phase1_quick_assessment": {
+                    "overall_rating": 4,
+                    "primary_focus_areas": ["functionality", "code_quality"],
+                    "quick_summary": "Well-structured code with good separation of concerns. Some performance optimizations needed."
+                },
+                "phase2_rubric": {
+                    "content_type": "code",
+                    "ratings": {
+                        "functionality": 5,
+                        "code_quality": 4,
+                        "security": 4,
+                        "test_coverage": 3
+                    }
+                },
+                "phase3_detailed_feedback": {
+                    "strengths": [
+                        "Clear function names and good documentation",
+                        "Proper error handling throughout"
+                    ],
+                    "improvements": [
+                        "Add unit tests for edge cases",
+                        "Consider memoization for expensive calculations"
+                    ],
+                    "additional_notes": "Overall excellent work. Focus on test coverage for production readiness."
+                }
+            }
+        }
+
+
+class SmartReviewSubmit(BaseModel):
+    """Submit review with Smart Adaptive Review Editor structure"""
+    smart_review: SmartReviewDraft
+    attachments: Optional[List[dict]] = Field(default=None)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "smart_review": {
+                    "phase1_quick_assessment": {
+                        "overall_rating": 4,
+                        "primary_focus_areas": ["functionality", "code_quality"],
+                        "quick_summary": "Well-structured code with some improvements needed."
+                    },
+                    "phase2_rubric": {
+                        "content_type": "code",
+                        "ratings": {"functionality": 5, "code_quality": 4}
+                    },
+                    "phase3_detailed_feedback": {
+                        "strengths": ["Clear naming", "Good error handling"],
+                        "improvements": ["Add tests", "Optimize performance"]
+                    }
+                },
+                "attachments": []
+            }
+        }
+
+
 class ReviewSubmit(BaseModel):
     """Schema for submitting a review (supports both structured and legacy formats)"""
     # Legacy format (backward compatible)

@@ -26,6 +26,8 @@ from app.schemas.review_slot import (
     DraftSave,
     DraftResponse,
     DraftSaveSuccess,
+    SmartReviewDraft,
+    SmartReviewSubmit,
 )
 from app.services.claim_service import claim_service, ClaimValidationError
 
@@ -374,6 +376,371 @@ async def load_review_draft(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while loading draft"
+        )
+
+
+# ===== Smart Adaptive Review Editor Endpoints =====
+
+@router.get(
+    "/rubrics/{content_type}",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("20/minute")
+async def get_rubric(
+    request: Request,
+    content_type: str
+):
+    """
+    Get rubric configuration for a content type
+
+    **Content Types:** code, design, writing
+
+    Returns focus areas, rating dimensions, and section prompts
+    for the specified content type.
+
+    **Rate Limit:** 20 requests per minute
+    """
+    from app.constants.review_rubrics import get_rubric as get_rubric_config
+
+    try:
+        rubric = get_rubric_config(content_type)
+        return rubric
+    except Exception as e:
+        logger.error(f"Error getting rubric for content type {content_type}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching rubric"
+        )
+
+
+@router.post(
+    "/{slot_id}/smart-review/save-draft",
+    response_model=DraftSaveSuccess,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("60/minute")  # Higher limit for frequent auto-saves
+async def save_smart_review_draft(
+    request: Request,
+    slot_id: int,
+    draft_data: SmartReviewDraft,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Save Smart Adaptive Review Editor draft
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot
+    - Slot must be in 'claimed' status
+
+    **Rate Limit:** 60 requests per minute (for frequent auto-saves)
+    """
+    import json
+    from datetime import datetime
+    from bleach import clean
+
+    # Allowed HTML tags (basic formatting only)
+    ALLOWED_TAGS = ['b', 'i', 'u', 'br', 'p', 'ul', 'ol', 'li', 'strong', 'em']
+
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if slot.status != "claimed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot save draft for non-claimed slot"
+            )
+
+        # Convert draft to dict and sanitize
+        draft_dict = draft_data.model_dump(exclude_none=True)
+
+        # Sanitize Phase 1 quick summary
+        if draft_dict.get('phase1_quick_assessment'):
+            phase1 = draft_dict['phase1_quick_assessment']
+            if 'quick_summary' in phase1:
+                phase1['quick_summary'] = clean(
+                    phase1['quick_summary'],
+                    tags=ALLOWED_TAGS,
+                    strip=True
+                )
+
+        # Sanitize Phase 3 detailed feedback
+        if draft_dict.get('phase3_detailed_feedback'):
+            phase3 = draft_dict['phase3_detailed_feedback']
+
+            # Sanitize strengths list
+            if 'strengths' in phase3:
+                phase3['strengths'] = [
+                    clean(item, tags=ALLOWED_TAGS, strip=True)
+                    for item in phase3['strengths']
+                ]
+
+            # Sanitize improvements list
+            if 'improvements' in phase3:
+                phase3['improvements'] = [
+                    clean(item, tags=ALLOWED_TAGS, strip=True)
+                    for item in phase3['improvements']
+                ]
+
+            # Sanitize additional notes
+            if 'additional_notes' in phase3:
+                phase3['additional_notes'] = clean(
+                    phase3['additional_notes'],
+                    tags=ALLOWED_TAGS,
+                    strip=True
+                )
+
+        # Save as JSON in draft_sections field
+        slot.draft_sections = json.dumps(draft_dict)
+
+        # Also save overall rating for backward compatibility
+        if draft_dict.get('phase1_quick_assessment', {}).get('overall_rating'):
+            slot.rating = draft_dict['phase1_quick_assessment']['overall_rating']
+
+        slot.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(slot)
+
+        logger.info(f"User {current_user.id} saved Smart Review draft for slot {slot_id}")
+
+        return DraftSaveSuccess(
+            success=True,
+            last_saved_at=slot.updated_at
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving Smart Review draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while saving draft"
+        )
+
+
+@router.get(
+    "/{slot_id}/smart-review/draft",
+    response_model=SmartReviewDraft,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("30/minute")
+async def get_smart_review_draft(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get Smart Adaptive Review Editor draft
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot
+    - Slot must be in 'claimed' status
+
+    **Rate Limit:** 30 requests per minute
+    """
+    import json
+
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        # Parse draft_sections JSON
+        if slot.draft_sections:
+            draft_data = json.loads(slot.draft_sections)
+            return SmartReviewDraft(**draft_data)
+        else:
+            # Return empty draft
+            return SmartReviewDraft()
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading Smart Review draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while loading draft"
+        )
+
+
+@router.post(
+    "/{slot_id}/smart-review/submit",
+    response_model=ReviewSlotResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("20/minute")
+async def submit_smart_review(
+    request: Request,
+    slot_id: int,
+    review_data: SmartReviewSubmit,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Submit a Smart Adaptive Review
+
+    **Requirements:**
+    - Slot must be in 'claimed' status
+    - User must be the reviewer who claimed the slot
+    - Phase 1 and Phase 2 must be completed
+    - Phase 3 is recommended but optional
+
+    **Rate Limit:** 20 requests per minute
+    """
+    import json
+    from bleach import clean
+    from datetime import datetime
+
+    # Allowed HTML tags (basic formatting only)
+    ALLOWED_TAGS = ['b', 'i', 'u', 'br', 'p', 'ul', 'ol', 'li', 'strong', 'em']
+
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if slot.status != "claimed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot submit review for non-claimed slot"
+            )
+
+        # Validate required phases
+        smart_review = review_data.smart_review
+        if not smart_review.phase1_quick_assessment:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phase 1 (Quick Assessment) is required"
+            )
+
+        if not smart_review.phase2_rubric:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Phase 2 (Rubric Ratings) is required"
+            )
+
+        # Sanitize and convert to dict
+        review_dict = smart_review.model_dump(exclude_none=True)
+
+        # Sanitize Phase 1
+        if review_dict.get('phase1_quick_assessment'):
+            phase1 = review_dict['phase1_quick_assessment']
+            if 'quick_summary' in phase1:
+                phase1['quick_summary'] = clean(
+                    phase1['quick_summary'],
+                    tags=ALLOWED_TAGS,
+                    strip=True
+                )
+
+        # Sanitize Phase 3 if present
+        if review_dict.get('phase3_detailed_feedback'):
+            phase3 = review_dict['phase3_detailed_feedback']
+
+            if 'strengths' in phase3:
+                phase3['strengths'] = [
+                    clean(item, tags=ALLOWED_TAGS, strip=True)
+                    for item in phase3['strengths']
+                ]
+
+            if 'improvements' in phase3:
+                phase3['improvements'] = [
+                    clean(item, tags=ALLOWED_TAGS, strip=True)
+                    for item in phase3['improvements']
+                ]
+
+            if 'additional_notes' in phase3:
+                phase3['additional_notes'] = clean(
+                    phase3['additional_notes'],
+                    tags=ALLOWED_TAGS,
+                    strip=True
+                )
+
+        # Save structured feedback
+        slot.feedback_sections = json.dumps(review_dict)
+
+        # Extract overall rating for backward compatibility
+        slot.rating = smart_review.phase1_quick_assessment.overall_rating
+
+        # Generate review_text summary for backward compatibility
+        summary_parts = []
+
+        # Add quick summary
+        summary_parts.append(f"**Summary:** {smart_review.phase1_quick_assessment.quick_summary}")
+
+        # Add strengths if present
+        if smart_review.phase3_detailed_feedback and smart_review.phase3_detailed_feedback.strengths:
+            summary_parts.append("\n**Strengths:**")
+            for strength in smart_review.phase3_detailed_feedback.strengths:
+                summary_parts.append(f"- {strength}")
+
+        # Add improvements if present
+        if smart_review.phase3_detailed_feedback and smart_review.phase3_detailed_feedback.improvements:
+            summary_parts.append("\n**Areas for Improvement:**")
+            for improvement in smart_review.phase3_detailed_feedback.improvements:
+                summary_parts.append(f"- {improvement}")
+
+        # Add additional notes if present
+        if smart_review.phase3_detailed_feedback and smart_review.phase3_detailed_feedback.additional_notes:
+            summary_parts.append(f"\n**Additional Notes:**\n{smart_review.phase3_detailed_feedback.additional_notes}")
+
+        slot.review_text = "\n".join(summary_parts)
+
+        # Update status
+        slot.status = "submitted"
+        slot.submitted_at = datetime.utcnow()
+
+        # Set auto-accept deadline (7 days from now)
+        from datetime import timedelta
+        slot.auto_accept_at = datetime.utcnow() + timedelta(days=7)
+
+        await db.commit()
+        await db.refresh(slot)
+
+        logger.info(f"User {current_user.id} submitted Smart Review for slot {slot_id}")
+
+        return slot
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting Smart Review for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while submitting the review"
         )
 
 
