@@ -124,7 +124,7 @@ export default function HomePage() {
               >
                 <Badge variant="info" size="lg" className="shadow-lg">
                   <Users className="size-4 mr-1.5" />
-                  Human Expertise in the AI Age
+                  Real Human Feedback
                 </Badge>
               </motion.div>
 
@@ -1219,7 +1219,7 @@ export default function HomePage() {
                   Free Forever
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">Free</h3>
-                <p className="text-gray-600">Get started with AI-assisted reviews</p>
+                <p className="text-gray-600">Get started with community reviews</p>
               </div>
 
               <div className="mb-8">
@@ -1231,8 +1231,8 @@ export default function HomePage() {
 
               <ul className="space-y-4 mb-8">
                 {[
-                  "3 AI-powered reviews/month",
-                  "Instant pattern analysis",
+                  "3 community reviews/month",
+                  "Quick turnaround",
                   "All content types supported",
                   "Perfect for quick iterations",
                 ].map((feature, i) => (
@@ -1245,11 +1245,11 @@ export default function HomePage() {
 
               <Button
                 size="lg"
-                onClick={() => router.push("/review/new?type=ai")}
+                onClick={() => router.push("/review/new")}
                 className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <span className="hidden min-[360px]:inline">Try AI Review Free</span>
-                <span className="min-[360px]:hidden">Try Free</span>
+                <span className="hidden min-[360px]:inline">Start Free</span>
+                <span className="min-[360px]:hidden">Start Free</span>
                 <ArrowRight className="ml-2 size-5" />
               </Button>
             </motion.div>
@@ -1412,7 +1412,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {[
               {
-                quote: "AI gave me metrics and patterns. But the human reviewer told me WHY they mattered for my specific audience and what to prioritize. That's the insight that actually improved my work.",
+                quote: "The structured feedback format helped me see patterns in my work I'd never noticed. But it was the human reviewer's insight on WHY those patterns mattered for my specific audience that actually improved my work.",
                 author: "Sarah Chen",
                 role: "Frontend Developer",
                 type: "creator",

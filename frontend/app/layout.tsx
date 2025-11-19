@@ -21,8 +21,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Critvue - AI & Human Feedback for Creators",
-  description: "Get structured, high-quality feedback on your creative work using AI and expert human reviewers.",
+  title: "Critvue - Expert Human Feedback for Creators",
+  description: "Get structured, high-quality feedback on your creative work from experienced human reviewers. Level up your skills or earn money by reviewing.",
 };
 
 export default function RootLayout({

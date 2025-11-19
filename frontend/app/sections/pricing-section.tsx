@@ -12,24 +12,10 @@ import { cn } from "@/lib/utils";
  * Progressive enhancement to side-by-side on desktop
  */
 export default function PricingSection({ router }: { router: any }) {
-  const [expandedTier, setExpandedTier] = useState<number>(1); // Default to "Most Popular"
+  const [expandedTier, setExpandedTier] = useState<number>(0); // Default to "Most Popular"
   const prefersReducedMotion = useReducedMotion();
 
   const pricingTiers = [
-    {
-      name: "AI Review",
-      price: "Free",
-      period: "forever",
-      description: "Perfect for quick feedback",
-      features: [
-        "GPT-4 powered analysis",
-        "Instant feedback",
-        "Basic recommendations",
-        "Unlimited reviews",
-      ],
-      cta: "Start Free",
-      popular: false,
-    },
     {
       name: "Junior Expert",
       price: "$49",
@@ -77,7 +63,7 @@ export default function PricingSection({ router }: { router: any }) {
             Choose the expertise level you need
           </h2>
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-            From quick AI insights to deep expert reviews
+            From experienced creators to industry veterans
           </p>
         </motion.div>
 

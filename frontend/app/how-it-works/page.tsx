@@ -72,7 +72,7 @@ export default function HowItWorksPage() {
     {
       icon: Sparkles,
       headline: "Pick your perfect reviewer",
-      description: "AI for instant insights, Community for peer perspective, or Expert for professional validation.",
+      description: "Community reviewers for peer perspective, or Expert reviewers for professional validation.",
     },
     {
       icon: Target,
@@ -195,7 +195,7 @@ export default function HowItWorksPage() {
 
             {/* Subheadline */}
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
-              Submit code, design, or video. Choose AI, community, or expert review. Grow faster with feedback that actually helps.
+              Submit code, design, or video. Choose community or expert review. Grow faster with feedback that actually helps.
             </p>
 
             {/* Segmented Control Toggle */}
@@ -379,7 +379,7 @@ export default function HowItWorksPage() {
               Choose your review type
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              From instant AI feedback to expert human critique
+              From community peer feedback to expert critique
             </p>
           </motion.div>
 
@@ -395,9 +395,6 @@ export default function HowItWorksPage() {
                     <th className="px-6 py-5 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Feature
                     </th>
-                    <th className="px-6 py-5 text-center text-sm font-bold text-accent-blue uppercase tracking-wider border-l-2 border-accent-blue/20">
-                      AI Review
-                    </th>
                     <th className="px-6 py-5 text-center text-sm font-bold text-green-700 uppercase tracking-wider border-l-2 border-green-200">
                       Community Review
                     </th>
@@ -409,9 +406,6 @@ export default function HowItWorksPage() {
                 <tbody className="divide-y divide-gray-200">
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-semibold text-gray-900">Cost</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-blue/10">
-                      <span className="font-bold text-accent-blue">Free forever</span>
-                    </td>
                     <td className="px-6 py-5 text-center border-l-2 border-green-100">
                       <span className="font-bold text-green-700">Free (3/month)</span>
                       <br />
@@ -425,9 +419,6 @@ export default function HowItWorksPage() {
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-semibold text-gray-900">Turnaround</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-blue/10 font-medium text-gray-700">
-                      Instant
-                    </td>
                     <td className="px-6 py-5 text-center border-l-2 border-green-100 font-medium text-gray-700">
                       24-48 hours
                     </td>
@@ -437,9 +428,6 @@ export default function HowItWorksPage() {
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-semibold text-gray-900">Best For</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-blue/10 text-sm text-gray-700">
-                      Quick iterations, syntax checks
-                    </td>
                     <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
                       Peer perspective, general feedback
                     </td>
@@ -449,9 +437,6 @@ export default function HowItWorksPage() {
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-semibold text-gray-900">Depth</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-blue/10 text-sm text-gray-700">
-                      Technical analysis
-                    </td>
                     <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
                       Thoughtful critique
                     </td>
@@ -461,9 +446,6 @@ export default function HowItWorksPage() {
                   </tr>
                   <tr className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-5 font-semibold text-gray-900">Reviewers</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-blue/10 text-sm text-gray-700">
-                      AI agents
-                    </td>
                     <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
                       Verified creators
                     </td>
@@ -476,15 +458,9 @@ export default function HowItWorksPage() {
             </motion.div>
 
             {/* CTAs below table */}
-            <div className="grid grid-cols-3 gap-6 mt-8">
+            <div className="grid grid-cols-2 gap-6 mt-8">
               <Button
-                onClick={() => router.push("/review/new?type=ai")}
-                className="bg-gradient-to-r from-accent-blue to-blue-600 hover:from-accent-blue/90 hover:to-blue-600/90 text-white font-semibold py-6 text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
-              >
-                Try AI Review
-              </Button>
-              <Button
-                onClick={() => router.push("/review/new?type=community")}
+                onClick={() => router.push("/review/new")}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-6 text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
               >
                 Get Community Feedback
@@ -502,49 +478,10 @@ export default function HowItWorksPage() {
           <div className="md:hidden">
             <div className="relative">
               <div className="flex overflow-x-auto gap-4 pb-6 snap-x snap-mandatory scrollbar-hide -mx-6 px-6">
-                {/* AI Review Card */}
-                <motion.div
-                  className="min-w-[85vw] snap-center rounded-3xl border-2 border-accent-blue/30 bg-gradient-to-br from-white to-blue-50/30 shadow-xl overflow-hidden"
-                  {...getFadeInAnimation(0.1)}
-                >
-                  <div className="p-6 bg-gradient-to-r from-accent-blue to-blue-600 text-white">
-                    <h3 className="text-2xl font-bold mb-1">AI Review</h3>
-                    <p className="text-blue-100 text-sm">Instant feedback</p>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Cost</div>
-                      <div className="text-xl font-bold text-accent-blue">Free forever</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Turnaround</div>
-                      <div className="text-lg font-medium text-gray-900">Instant</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Best For</div>
-                      <div className="text-sm text-gray-600">Quick iterations, syntax checks</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Depth</div>
-                      <div className="text-sm text-gray-600">Technical analysis</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Reviewers</div>
-                      <div className="text-sm text-gray-600">AI agents</div>
-                    </div>
-                    <Button
-                      onClick={() => router.push("/review/new?type=ai")}
-                      className="w-full bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold py-4 rounded-2xl min-h-[48px] shadow-lg"
-                    >
-                      Try AI Review
-                    </Button>
-                  </div>
-                </motion.div>
-
                 {/* Community Review Card */}
                 <motion.div
                   className="min-w-[85vw] snap-center rounded-3xl border-2 border-green-300 bg-gradient-to-br from-white to-green-50/30 shadow-xl overflow-hidden"
-                  {...getFadeInAnimation(0.2)}
+                  {...getFadeInAnimation(0.1)}
                 >
                   <div className="p-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                     <h3 className="text-2xl font-bold mb-1">Community Review</h3>
@@ -576,7 +513,7 @@ export default function HowItWorksPage() {
                       <div className="text-sm text-gray-600">Verified creators</div>
                     </div>
                     <Button
-                      onClick={() => router.push("/review/new?type=community")}
+                      onClick={() => router.push("/review/new")}
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-2xl min-h-[48px] shadow-lg"
                     >
                       Get Community Feedback
@@ -587,7 +524,7 @@ export default function HowItWorksPage() {
                 {/* Expert Review Card */}
                 <motion.div
                   className="min-w-[85vw] snap-center rounded-3xl border-2 border-accent-peach/30 bg-gradient-to-br from-white to-orange-50/30 shadow-xl overflow-hidden"
-                  {...getFadeInAnimation(0.3)}
+                  {...getFadeInAnimation(0.2)}
                 >
                   <div className="p-6 bg-gradient-to-r from-accent-peach to-orange-500 text-white">
                     <h3 className="text-2xl font-bold mb-1">Expert Review</h3>
@@ -630,8 +567,7 @@ export default function HowItWorksPage() {
 
               {/* Indicator dots */}
               <div className="flex justify-center gap-2 mt-4">
-                <div className="size-2 rounded-full bg-accent-blue" />
-                <div className="size-2 rounded-full bg-gray-300" />
+                <div className="size-2 rounded-full bg-green-600" />
                 <div className="size-2 rounded-full bg-gray-300" />
               </div>
             </div>
@@ -666,7 +602,7 @@ export default function HowItWorksPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {[
               {
-                quote: "The AI feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
+                quote: "The structured feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
                 author: "Sarah Chen",
                 role: "Frontend Developer",
                 rating: 5,
