@@ -10,7 +10,25 @@
 "use client";
 
 import * as React from "react";
-import { Star, Info, HelpCircle } from "lucide-react";
+import {
+  Star,
+  Info,
+  HelpCircle,
+  Code2,
+  Shield,
+  Sparkles,
+  TestTube,
+  Eye,
+  Accessibility,
+  Palette,
+  MousePointer,
+  FileText,
+  List,
+  BookOpen,
+  Heart,
+  CheckCircle2,
+  ChevronDown,
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Tooltip,
@@ -23,6 +41,107 @@ import {
   Phase2RubricRatings as Phase2Data,
   RatingDimension,
 } from "@/lib/types/smart-review";
+
+// Dimension icon and color mapping
+const getDimensionStyle = (dimensionId: string) => {
+  const styles = {
+    // Code dimensions
+    functionality: {
+      icon: Code2,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+      border: "border-blue-200",
+      accentBg: "bg-blue-100",
+    },
+    code_quality: {
+      icon: Sparkles,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      border: "border-purple-200",
+      accentBg: "bg-purple-100",
+    },
+    security: {
+      icon: Shield,
+      color: "text-red-600",
+      bg: "bg-red-50",
+      border: "border-red-200",
+      accentBg: "bg-red-100",
+    },
+    test_coverage: {
+      icon: TestTube,
+      color: "text-green-600",
+      bg: "bg-green-50",
+      border: "border-green-200",
+      accentBg: "bg-green-100",
+    },
+    // Design dimensions
+    visual_hierarchy: {
+      icon: Eye,
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      border: "border-indigo-200",
+      accentBg: "bg-indigo-100",
+    },
+    accessibility: {
+      icon: Accessibility,
+      color: "text-teal-600",
+      bg: "bg-teal-50",
+      border: "border-teal-200",
+      accentBg: "bg-teal-100",
+    },
+    brand_alignment: {
+      icon: Palette,
+      color: "text-pink-600",
+      bg: "bg-pink-50",
+      border: "border-pink-200",
+      accentBg: "bg-pink-100",
+    },
+    usability: {
+      icon: MousePointer,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+      border: "border-orange-200",
+      accentBg: "bg-orange-100",
+    },
+    // Writing dimensions
+    clarity: {
+      icon: FileText,
+      color: "text-cyan-600",
+      bg: "bg-cyan-50",
+      border: "border-cyan-200",
+      accentBg: "bg-cyan-100",
+    },
+    structure: {
+      icon: List,
+      color: "text-violet-600",
+      bg: "bg-violet-50",
+      border: "border-violet-200",
+      accentBg: "bg-violet-100",
+    },
+    grammar: {
+      icon: BookOpen,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+      accentBg: "bg-emerald-100",
+    },
+    engagement: {
+      icon: Heart,
+      color: "text-rose-600",
+      bg: "bg-rose-50",
+      border: "border-rose-200",
+      accentBg: "bg-rose-100",
+    },
+  };
+
+  return styles[dimensionId as keyof typeof styles] || {
+    icon: CheckCircle2,
+    color: "text-gray-600",
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+    accentBg: "bg-gray-100",
+  };
+};
 
 interface Phase2RubricRatingsProps {
   data: Phase2Data | null;
@@ -159,6 +278,8 @@ export function Phase2RubricRatings({
         {dimensions.map((dimension) => {
           const isCollapsed = collapsedDimensions.has(dimension.id);
           const rating = ratings[dimension.id];
+          const style = getDimensionStyle(dimension.id);
+          const DimensionIcon = style.icon;
 
           // Collapsed summary view
           if (isCollapsed && rating) {
@@ -167,11 +288,16 @@ export function Phase2RubricRatings({
                 key={dimension.id}
                 type="button"
                 onClick={() => toggleDimension(dimension.id)}
-                className="w-full rounded-xl border border-green-200 bg-green-50/50 p-3 flex items-center justify-between gap-3 hover:bg-green-50 transition-colors touch-manipulation"
+                className={cn(
+                  "w-full rounded-xl border p-3 flex items-center justify-between gap-3 transition-all touch-manipulation animate-in slide-in-from-top-2 duration-200",
+                  style.border,
+                  style.bg,
+                  "hover:shadow-sm"
+                )}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className="size-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
-                    <span className="text-lg font-bold text-green-700">✓</span>
+                  <div className={cn("size-10 rounded-lg flex items-center justify-center shrink-0", style.accentBg)}>
+                    <DimensionIcon className={cn("size-5", style.color)} />
                   </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">
@@ -196,7 +322,7 @@ export function Phase2RubricRatings({
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">Tap to edit</span>
+                  <ChevronDown className="size-4 text-muted-foreground" />
                 </div>
               </button>
             );
@@ -206,10 +332,17 @@ export function Phase2RubricRatings({
           return (
             <div
               key={dimension.id}
-              className="rounded-xl border border-border bg-card p-4 space-y-3"
+              className={cn(
+                "rounded-xl border p-4 space-y-3 transition-all animate-in fade-in-50 duration-200",
+                style.border,
+                style.bg
+              )}
             >
-              {/* Dimension Header */}
-              <div className="flex items-start gap-2">
+              {/* Dimension Header with Icon */}
+              <div className="flex items-start gap-3">
+                <div className={cn("size-10 rounded-lg flex items-center justify-center shrink-0", style.accentBg)}>
+                  <DimensionIcon className={cn("size-5", style.color)} />
+                </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Label className="text-base font-semibold">
@@ -228,9 +361,12 @@ export function Phase2RubricRatings({
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs">
                           <p className="font-medium mb-2">{dimension.description}</p>
-                          <ul className="text-xs space-y-1">
+                          <ul className="text-xs space-y-1.5">
                             {dimension.criteria.map((criterion, i) => (
-                              <li key={i}>• {criterion}</li>
+                              <li key={i} className="flex items-start gap-1.5">
+                                <span className={cn("size-1 rounded-full mt-1.5 shrink-0", style.color.replace('text-', 'bg-'))} />
+                                <span>{criterion}</span>
+                              </li>
                             ))}
                           </ul>
                         </TooltipContent>
@@ -281,14 +417,15 @@ export function Phase2RubricRatings({
               </div>
 
               {/* Criteria Checklist */}
-              <div className="pt-2 border-t border-border">
-                <p className="text-xs font-medium text-muted-foreground mb-2">
-                  Evaluation Criteria:
+              <div className={cn("pt-3 border-t", style.border)}>
+                <p className="text-xs font-semibold text-foreground mb-2.5 flex items-center gap-1.5">
+                  <span className={cn("size-1 rounded-full", style.color.replace('text-', 'bg-'))} />
+                  Evaluation Criteria
                 </p>
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {dimension.criteria.map((criterion, i) => (
-                    <li key={i} className="text-xs text-muted-foreground flex items-start">
-                      <span className="text-accent-blue mr-1.5">•</span>
+                    <li key={i} className="text-xs text-foreground flex items-start gap-2 leading-relaxed">
+                      <span className={cn("size-1.5 rounded-full mt-1.5 shrink-0", style.color.replace('text-', 'bg-'))} />
                       <span>{criterion}</span>
                     </li>
                   ))}
