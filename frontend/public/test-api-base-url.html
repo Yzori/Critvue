@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API Base URL</title>
+    <style>
+        body { font-family: system-ui; max-width: 800px; margin: 50px auto; padding: 20px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>API Base URL Test</h1>
+    <button onclick="testAPIBaseURL()">Test API Client</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPIBaseURL() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Testing...</p>';
+
+            // Test 1: Check what the API_BASE_URL is in browser context
+            const API_BASE_URL = "http://localhost:8000/api/v1"; // Should match .env.local
+            
+            result.innerHTML += `<p><strong>Expected Base URL:</strong> ${API_BASE_URL}</p>`;
+
+            // Test 2: Try to fetch from backend directly
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    credentials: 'include'
+                });
+                
+                result.innerHTML += `<p class="success">✓ Backend reachable! Status: ${response.status}</p>`;
+                result.innerHTML += `<pre>${await response.text()}</pre>`;
+            } catch (error) {
+                result.innerHTML += `<p class="error">❌ Backend NOT reachable: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

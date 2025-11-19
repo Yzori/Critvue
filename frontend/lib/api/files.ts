@@ -77,7 +77,7 @@ export async function uploadFile(
 
     // Set up request
     // Authentication is handled via httpOnly cookies sent automatically
-    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews/${reviewId}/files`);
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/files`);
     xhr.withCredentials = true; // Send httpOnly cookies with request
 
     // Send request
@@ -142,7 +142,7 @@ export async function uploadFiles(
 
     // Set up request
     // Authentication is handled via httpOnly cookies sent automatically
-    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/api/v1/reviews/${reviewId}/files/batch`);
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/reviews/${reviewId}/files/batch`);
     xhr.withCredentials = true; // Send httpOnly cookies with request
 
     // Send request

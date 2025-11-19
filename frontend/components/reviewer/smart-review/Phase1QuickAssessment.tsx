@@ -28,12 +28,14 @@ import {
 interface Phase1QuickAssessmentProps {
   data: Phase1Data | null;
   focusAreas: FocusArea[];
+  contentType?: string;
   onChange: (data: Phase1Data) => void;
 }
 
 export function Phase1QuickAssessment({
   data,
   focusAreas,
+  contentType = "code",
   onChange,
 }: Phase1QuickAssessmentProps) {
   const [rating, setRating] = React.useState(data?.overall_rating || 0);
@@ -41,6 +43,19 @@ export function Phase1QuickAssessment({
     data?.primary_focus_areas || []
   );
   const [summary, setSummary] = React.useState(data?.quick_summary || "");
+
+  // Contextual placeholder based on content type
+  const getPlaceholder = () => {
+    const placeholders = {
+      code: "What's your gut take on this code? Clean? Complex? Security concerns?",
+      design: "What's your first impression of this design? Does it feel cohesive? Any standout elements?",
+      art: "How does this artwork make you feel? What catches your eye first?",
+      writing: "What's the overall vibe of this piece? Clear? Engaging? Any tone issues?",
+      music: "How does this sound to you? What's the energy? Production quality?",
+      video: "What's your take on this video? Pacing? Visual quality? Storytelling?",
+    };
+    return placeholders[contentType as keyof typeof placeholders] || placeholders.code;
+  };
 
   // Update parent when any field changes
   React.useEffect(() => {
@@ -162,53 +177,152 @@ export function Phase1QuickAssessment({
         )}
       </div>
 
-      {/* Quick Summary */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Label htmlFor="quick-summary" className="text-lg font-semibold">
-            Quick Summary
-          </Label>
+      {/* Quick Summary - Modernized */}
+      <div className="space-y-3">
+        {/* Conversational Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <Label htmlFor="quick-summary" className="text-lg font-semibold text-foreground">
+              In a nutshell...
+            </Label>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Share your first impression with the creator
+            </p>
+          </div>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>
               <button
                 type="button"
-                className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                className="size-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-colors shrink-0"
                 aria-label="Tips for writing a good summary"
               >
                 <HelpCircle className="size-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              <p className="text-xs">Briefly summarize your overall impression in 50-300 characters. Focus on the big picture.</p>
+              <p className="text-xs font-medium mb-1">💡 Writing Tips:</p>
+              <ul className="text-xs space-y-1">
+                <li>• Focus on your honest first impression</li>
+                <li>• Be specific but concise (80-150 chars is ideal)</li>
+                <li>• Mention what stood out most to you</li>
+              </ul>
             </TooltipContent>
           </Tooltip>
         </div>
-        <Textarea
-          id="quick-summary"
-          placeholder="e.g., 'Well-structured code with good separation of concerns. Some performance optimizations needed.'"
-          value={summary}
-          onChange={(e) => setSummary(e.target.value)}
-          className={cn(
-            "min-h-[100px] text-base resize-y",
-            "focus:ring-2 focus:ring-accent-blue/50"
-          )}
-          aria-describedby="summary-char-count"
-          maxLength={300}
-        />
-        <div
-          id="summary-char-count"
-          className="flex items-center justify-between text-sm"
-        >
-          <span className={charCountColor}>
-            {charCount} character{charCount !== 1 ? "s" : ""}
-          </span>
-          <span className="text-muted-foreground">
-            {charCount < 50
-              ? `${50 - charCount} more needed`
-              : charCount > 300
-                ? `${charCount - 300} over limit`
-                : "✓ Good"}
-          </span>
+
+        {/* Modern Textarea with Enhanced Styling */}
+        <div className="relative">
+          <Textarea
+            id="quick-summary"
+            placeholder={getPlaceholder()}
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            className={cn(
+              "min-h-[120px] text-base resize-y",
+              "rounded-xl border-2 shadow-inner",
+              "bg-gradient-to-br from-white to-gray-50/30",
+              "px-4 py-3.5 leading-relaxed",
+              "placeholder:text-muted-foreground/60 placeholder:italic",
+              "focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue/50",
+              "transition-all duration-200",
+              charCount >= 50 && charCount <= 300 && "border-green-300 bg-green-50/20",
+              charCount > 300 && "border-red-300 bg-red-50/20"
+            )}
+            aria-describedby="summary-progress"
+            maxLength={300}
+          />
+          {/* Character Count Badge - Floating */}
+          <div className="absolute bottom-3 right-3 flex items-center gap-2">
+            <span className={cn(
+              "text-xs font-medium px-2 py-1 rounded-full",
+              charCount < 50 && "bg-amber-100 text-amber-700",
+              charCount >= 50 && charCount <= 150 && "bg-green-100 text-green-700",
+              charCount > 150 && charCount <= 300 && "bg-blue-100 text-blue-700",
+              charCount > 300 && "bg-red-100 text-red-700"
+            )}>
+              {charCount}
+            </span>
+          </div>
+        </div>
+
+        {/* Visual Progress Meter */}
+        <div id="summary-progress" className="space-y-2">
+          {/* Progress Bar */}
+          <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+            {/* Ideal range indicator (80-150 chars) */}
+            <div
+              className="absolute h-full bg-green-200/40"
+              style={{ left: '26.67%', width: '23.33%' }}
+            />
+            {/* Progress fill */}
+            <div
+              className={cn(
+                "absolute h-full transition-all duration-300 rounded-full",
+                charCount < 50 && "bg-amber-400",
+                charCount >= 50 && charCount <= 150 && "bg-green-500",
+                charCount > 150 && charCount <= 300 && "bg-blue-500",
+                charCount > 300 && "bg-red-500"
+              )}
+              style={{ width: `${Math.min((charCount / 300) * 100, 100)}%` }}
+            />
+            {/* Milestone markers */}
+            <div className="absolute top-0 h-full w-px bg-gray-300" style={{ left: '16.67%' }} />
+            <div className="absolute top-0 h-full w-px bg-green-400" style={{ left: '26.67%' }} />
+            <div className="absolute top-0 h-full w-px bg-green-400" style={{ left: '50%' }} />
+          </div>
+
+          {/* Progress Labels */}
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-4">
+              <span className={cn(
+                "font-medium",
+                charCount >= 50 ? "text-green-600" : "text-muted-foreground"
+              )}>
+                {charCount >= 50 ? "✓" : "○"} 50 min
+              </span>
+              <span className={cn(
+                "font-medium",
+                charCount >= 80 && charCount <= 150 ? "text-green-600" : "text-muted-foreground"
+              )}>
+                80-150 ideal
+              </span>
+            </div>
+            <span className="text-muted-foreground">300 max</span>
+          </div>
+
+          {/* Contextual Feedback */}
+          <div className="text-xs font-medium">
+            {charCount === 0 && (
+              <p className="text-muted-foreground italic">
+                💭 Start typing your honest first impression...
+              </p>
+            )}
+            {charCount > 0 && charCount < 50 && (
+              <p className="text-amber-600">
+                📝 Keep going! {50 - charCount} more character{50 - charCount !== 1 ? 's' : ''} to reach minimum
+              </p>
+            )}
+            {charCount >= 50 && charCount < 80 && (
+              <p className="text-green-600">
+                ✓ Good! Consider adding a bit more detail (ideal: 80-150 chars)
+              </p>
+            )}
+            {charCount >= 80 && charCount <= 150 && (
+              <p className="text-green-600 flex items-center gap-1">
+                <span className="text-base">✨</span> Perfect length! Clear and concise
+              </p>
+            )}
+            {charCount > 150 && charCount <= 300 && (
+              <p className="text-blue-600">
+                📊 Detailed summary ({300 - charCount} characters remaining)
+              </p>
+            )}
+            {charCount > 300 && (
+              <p className="text-red-600">
+                ⚠️ {charCount - 300} character{charCount - 300 !== 1 ? 's' : ''} over limit - please shorten
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

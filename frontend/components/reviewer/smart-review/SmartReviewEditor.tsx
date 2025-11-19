@@ -468,6 +468,7 @@ export function SmartReviewEditor({
             <Phase1Component
               data={draft.phase1_quick_assessment || null}
               focusAreas={rubric.focus_areas}
+              contentType={contentType}
               onChange={handlePhase1Change}
             />
           )}
