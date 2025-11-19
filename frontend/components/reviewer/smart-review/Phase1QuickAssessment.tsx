@@ -164,12 +164,25 @@ export function Phase1QuickAssessment({
 
       {/* Quick Summary */}
       <div className="space-y-2">
-        <Label htmlFor="quick-summary" className="text-lg font-semibold">
-          Quick Summary
-        </Label>
-        <p className="text-sm text-muted-foreground">
-          Briefly summarize your overall impression (50-300 characters)
-        </p>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="quick-summary" className="text-lg font-semibold">
+            Quick Summary
+          </Label>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                aria-label="Tips for writing a good summary"
+              >
+                <HelpCircle className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p className="text-xs">Briefly summarize your overall impression in 50-300 characters. Focus on the big picture.</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <Textarea
           id="quick-summary"
           placeholder="e.g., 'Well-structured code with good separation of concerns. Some performance optimizations needed.'"

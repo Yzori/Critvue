@@ -12,7 +12,7 @@
 "use client";
 
 import * as React from "react";
-import { Save, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, TrendingUp, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -89,6 +89,11 @@ export function SmartReviewEditor({
   // Track if user has started interacting (for delaying quality indicators)
   const [hasInteracted, setHasInteracted] = React.useState(false);
   const [showQualityPanel, setShowQualityPanel] = React.useState(true);
+
+  // Sticky CTA bar scroll state (mobile only)
+  const [showStickyCTA, setShowStickyCTA] = React.useState(true);
+  const lastScrollY = React.useRef(0);
+  const scrollTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
   // Auto-save timer ref
   const autoSaveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -201,12 +206,64 @@ export function SmartReviewEditor({
     }
   }, [draft]);
 
+  // Scroll behavior for sticky CTA bar (mobile only)
+  React.useEffect(() => {
+    const handleScroll = () => {
+      // Clear existing timeout
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+
+      // Debounce scroll handler
+      scrollTimeout.current = setTimeout(() => {
+        const currentScrollY = window.scrollY;
+
+        // Always show at top of page
+        if (currentScrollY < 50) {
+          setShowStickyCTA(true);
+          lastScrollY.current = currentScrollY;
+          return;
+        }
+
+        // Show on scroll up, hide on scroll down
+        if (currentScrollY < lastScrollY.current) {
+          // Scrolling up
+          setShowStickyCTA(true);
+        } else if (currentScrollY > lastScrollY.current) {
+          // Scrolling down
+          setShowStickyCTA(false);
+        }
+
+        lastScrollY.current = currentScrollY;
+      }, 10); // 10ms debounce for smooth response
+    };
+
+    // Only add listener on mobile/tablet
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleScroll);
+      }
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+    };
+  }, []);
+
   // Manual save handler
   const handleManualSave = async () => {
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
     await saveToBackend();
+  };
+
+  // Save draft handler (for sticky CTA bar)
+  const handleSaveDraft = async () => {
+    await handleManualSave();
   };
 
   // Phase 1 change handler
@@ -319,7 +376,7 @@ export function SmartReviewEditor({
       </div>
 
       {/* Step-by-step wizard layout */}
-      <div className="space-y-6 max-w-4xl mx-auto pb-32 lg:pb-6">
+      <div className="space-y-6 max-w-4xl mx-auto pb-40 lg:pb-6">
         {/* Step Progress Indicator */}
         <div className="flex items-center justify-center gap-2 md:gap-3">
           {/* Step 1 */}
@@ -443,14 +500,14 @@ export function SmartReviewEditor({
             />
           )}
 
-          {/* Phase Navigation */}
-          <div className="flex items-center justify-between pt-8 mt-8 border-t border-border">
+          {/* Phase Navigation - Desktop Only */}
+          <div className="hidden lg:flex items-center justify-between pt-8 mt-8 border-t border-border">
             <Button
               variant="outline"
               onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
               disabled={currentPhase === 1}
               size="lg"
-              className="h-14 md:h-12"
+              className="h-12"
             >
               ← Previous
             </Button>
@@ -459,7 +516,7 @@ export function SmartReviewEditor({
                 onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
                 disabled={!phaseCompletion[currentPhase]}
                 size="lg"
-                className="h-14 md:h-12"
+                className="h-12"
               >
                 Next →
               </Button>
@@ -467,7 +524,7 @@ export function SmartReviewEditor({
               <Button
                 onClick={() => setShowSubmitDialog(true)}
                 disabled={!canSubmit}
-                className="bg-green-600 hover:bg-green-700 h-14 md:h-12"
+                className="bg-green-600 hover:bg-green-700 h-12"
                 size="lg"
               >
                 <CheckCircle2 className="size-5 mr-2" />
@@ -477,6 +534,71 @@ export function SmartReviewEditor({
           </div>
         </div>
 
+      </div>
+
+      {/* Sticky Bottom CTA Bar - Mobile Only */}
+      <div
+        className={cn(
+          "lg:hidden fixed bottom-0 left-0 right-0 z-50",
+          "bg-card border-t-2 border-border shadow-2xl",
+          "transition-transform duration-300 ease-in-out",
+          showStickyCTA ? "translate-y-0" : "translate-y-full"
+        )}
+      >
+        <div className="flex items-center justify-between gap-2 p-3 safe-area-inset-bottom">
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
+            disabled={currentPhase === 1}
+            className="h-12 min-w-[48px] touch-manipulation"
+            aria-label="Go to previous phase"
+          >
+            <ArrowLeft className="size-5 mr-1" />
+            <span className="hidden xs:inline">Back</span>
+          </Button>
+
+          {/* Save Draft Button */}
+          <Button
+            variant="outline"
+            onClick={handleSaveDraft}
+            disabled={saveStatus === "saving" || Object.keys(draft).length === 0}
+            className="h-12 min-w-[48px] flex-1 max-w-[140px] touch-manipulation"
+            aria-label="Save draft"
+          >
+            {saveStatus === "saving" ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <>
+                <Save className="size-5" />
+                <span className="hidden xs:inline ml-1">Save</span>
+              </>
+            )}
+          </Button>
+
+          {/* Next/Submit Button */}
+          {currentPhase < 3 ? (
+            <Button
+              onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
+              disabled={!phaseCompletion[currentPhase]}
+              className="h-12 min-w-[48px] touch-manipulation"
+              aria-label="Go to next phase"
+            >
+              <span className="hidden xs:inline">Next</span>
+              <ArrowRight className="size-5 ml-1" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setShowSubmitDialog(true)}
+              disabled={!canSubmit}
+              className="bg-green-600 hover:bg-green-700 h-12 min-w-[48px] touch-manipulation"
+              aria-label="Submit review"
+            >
+              <CheckCircle2 className="size-5" />
+              <span className="hidden xs:inline ml-1">Submit</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Responsive Quality Score Panel */}

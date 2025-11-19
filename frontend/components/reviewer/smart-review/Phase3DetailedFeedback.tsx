@@ -10,11 +10,17 @@
 "use client";
 
 import * as React from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation } from "@/lib/types/smart-review";
 import { ImageAnnotation } from "./ImageAnnotation";
@@ -44,6 +50,7 @@ export function Phase3DetailedFeedback({
   const [visualAnnotations, setVisualAnnotations] = React.useState<VisualAnnotation[]>(
     data?.visual_annotations || []
   );
+  const [notesExpanded, setNotesExpanded] = React.useState(false);
 
   // Determine if we should show image annotations (for design/art content)
   const showImageAnnotations = (contentType === "design" || contentType === "art") && imageUrl;
@@ -103,22 +110,34 @@ export function Phase3DetailedFeedback({
   const validImprovementsCount = improvements.filter((i) => i.trim().length > 0).length;
 
   return (
-    <div className="space-y-8">
-      {/* Strengths */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-lg font-semibold">✅ Strengths</Label>
-            <p className="text-sm text-muted-foreground mt-1">
-              What works well? List specific positives (1-10 items)
-            </p>
+    <TooltipProvider>
+      <div className="space-y-6">
+        {/* Strengths - Color-coded green background */}
+        <div className="rounded-xl border border-green-200 bg-green-50/50 p-4 md:p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-semibold">✅ Strengths</Label>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Tips for listing strengths"
+                  >
+                    <HelpCircle className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Be specific: Reference exact elements, lines, or sections that work well</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {validStrengthsCount > 0 && (
+              <span className="text-sm font-medium text-green-600">
+                {validStrengthsCount} item{validStrengthsCount !== 1 ? "s" : ""}
+              </span>
+            )}
           </div>
-          {validStrengthsCount > 0 && (
-            <span className="text-sm font-medium text-green-600">
-              {validStrengthsCount} item{validStrengthsCount !== 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
 
         <div className="space-y-2">
           {strengths.map((strength, index) => (
@@ -153,29 +172,40 @@ export function Phase3DetailedFeedback({
             variant="outline"
             size="sm"
             onClick={addStrength}
-            className="w-full"
+            className="w-full min-h-[48px]"
           >
             <Plus className="size-4 mr-2" />
             Add Strength
           </Button>
         )}
-      </div>
-
-      {/* Areas for Improvement */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-lg font-semibold">🔧 Areas for Improvement</Label>
-            <p className="text-sm text-muted-foreground mt-1">
-              What could be better? List specific, actionable suggestions (1-10 items)
-            </p>
-          </div>
-          {validImprovementsCount > 0 && (
-            <span className="text-sm font-medium text-amber-600">
-              {validImprovementsCount} item{validImprovementsCount !== 1 ? "s" : ""}
-            </span>
-          )}
         </div>
+
+        {/* Areas for Improvement - Color-coded amber background */}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 md:p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label className="text-lg font-semibold">🔧 Areas for Improvement</Label>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Tips for improvement suggestions"
+                  >
+                    <HelpCircle className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-xs">Be actionable: Suggest concrete steps for improvement, not just problems</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            {validImprovementsCount > 0 && (
+              <span className="text-sm font-medium text-amber-600">
+                {validImprovementsCount} item{validImprovementsCount !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
 
         <div className="space-y-2">
           {improvements.map((improvement, index) => (
@@ -210,13 +240,13 @@ export function Phase3DetailedFeedback({
             variant="outline"
             size="sm"
             onClick={addImprovement}
-            className="w-full"
+            className="w-full min-h-[48px]"
           >
             <Plus className="size-4 mr-2" />
             Add Improvement
           </Button>
         )}
-      </div>
+        </div>
 
       {/* Visual Annotations (Design/Art only) */}
       {showImageAnnotations && (
@@ -235,35 +265,70 @@ export function Phase3DetailedFeedback({
         </div>
       )}
 
-      {/* Additional Notes */}
-      <div className="space-y-3">
-        <div>
-          <Label htmlFor="additional-notes" className="text-lg font-semibold">
-            📝 Additional Notes (Optional)
-          </Label>
-          <p className="text-sm text-muted-foreground mt-1">
-            Any other context, explanations, or suggestions
-          </p>
+      {/* Additional Notes - Collapsible with blue background */}
+      <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 md:p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Label className="text-lg font-semibold">📝 Additional Notes (Optional)</Label>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label="About additional notes"
+                >
+                  <HelpCircle className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs">Add any context, explanations, or suggestions that don't fit in the categories above</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setNotesExpanded(!notesExpanded)}
+            className="min-h-[48px] text-sm font-medium"
+          >
+            {notesExpanded ? (
+              <>
+                <ChevronUp className="size-4 mr-1" />
+                Hide
+              </>
+            ) : (
+              <>
+                <ChevronDown className="size-4 mr-1" />
+                Add optional notes
+              </>
+            )}
+          </Button>
         </div>
-        <Textarea
-          id="additional-notes"
-          placeholder="Add any additional context that doesn't fit in the categories above..."
-          value={additionalNotes}
-          onChange={(e) => setAdditionalNotes(e.target.value)}
-          className={cn(
-            "min-h-[150px] text-base resize-y",
-            "focus:ring-2 focus:ring-accent-blue/50"
-          )}
-          maxLength={5000}
-        />
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {additionalNotes.length} / 5000 characters
-          </span>
-          {additionalNotes.length > 0 && (
-            <span className="text-green-600">✓ Notes added</span>
-          )}
-        </div>
+
+        {notesExpanded && (
+          <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+            <Textarea
+              id="additional-notes"
+              placeholder="Add any additional context that doesn't fit in the categories above..."
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              className={cn(
+                "min-h-[150px] text-base resize-y",
+                "focus:ring-2 focus:ring-accent-blue/50"
+              )}
+              maxLength={5000}
+            />
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">
+                {additionalNotes.length} / 5000 characters
+              </span>
+              {additionalNotes.length > 0 && (
+                <span className="text-green-600">✓ Notes added</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress Summary */}
@@ -321,20 +386,7 @@ export function Phase3DetailedFeedback({
         )}
       </div>
 
-      {/* Tips */}
-      <div className="rounded-xl border border-accent-blue/30 bg-accent-blue/5 p-4">
-        <p className="text-sm font-medium text-accent-blue mb-2">
-          💡 Tips for Great Feedback:
-        </p>
-        <ul className="text-xs space-y-1 text-muted-foreground">
-          <li>• Be specific: Reference exact elements, lines, or sections</li>
-          <li>• Be actionable: Suggest concrete steps for improvement</li>
-          <li>• Be balanced: Highlight both strengths and areas to improve</li>
-          <li>
-            • Be constructive: Frame suggestions positively and supportively
-          </li>
-        </ul>
-      </div>
     </div>
+    </TooltipProvider>
   );
 }

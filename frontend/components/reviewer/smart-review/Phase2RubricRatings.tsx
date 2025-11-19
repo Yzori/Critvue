@@ -10,7 +10,7 @@
 "use client";
 
 import * as React from "react";
-import { Star, Info } from "lucide-react";
+import { Star, Info, HelpCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Tooltip,
@@ -62,14 +62,53 @@ export function Phase2RubricRatings({
   const totalCount = dimensions.length;
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div>
-        <h3 className="text-lg font-semibold mb-1">Rate Specific Dimensions</h3>
-        <p className="text-sm text-muted-foreground">
-          Rate each dimension from 1 (poor) to 5 (excellent)
-        </p>
-      </div>
+    <TooltipProvider>
+      <div className="space-y-5">
+        {/* Header */}
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Rate Specific Dimensions</h3>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="size-5 flex items-center justify-center text-muted-foreground hover:text-foreground"
+                  aria-label="Rating guide"
+                >
+                  <HelpCircle className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-sm">
+                <p className="font-medium mb-2 text-xs">Rating Guide:</p>
+                <div className="grid grid-cols-5 gap-2 text-xs">
+                  <div>
+                    <p className="font-medium">1 - Poor</p>
+                    <p className="text-muted-foreground">Major issues</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">2 - Fair</p>
+                    <p className="text-muted-foreground">Needs work</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">3 - Good</p>
+                    <p className="text-muted-foreground">Acceptable</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">4 - Great</p>
+                    <p className="text-muted-foreground">Above average</p>
+                  </div>
+                  <div>
+                    <p className="font-medium">5 - Excellent</p>
+                    <p className="text-muted-foreground">Outstanding</p>
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Rate each dimension from 1 (poor) to 5 (excellent)
+          </p>
+        </div>
 
       {/* Rating Dimensions */}
       <div className="space-y-4">
@@ -199,32 +238,7 @@ export function Phase2RubricRatings({
         )}
       </div>
 
-      {/* Rating Guide */}
-      <div className="rounded-xl border border-accent-blue/30 bg-accent-blue/5 p-4">
-        <p className="text-sm font-medium text-accent-blue mb-2">Rating Guide:</p>
-        <div className="grid grid-cols-5 gap-2 text-xs">
-          <div>
-            <p className="font-medium">1 - Poor</p>
-            <p className="text-muted-foreground">Major issues</p>
-          </div>
-          <div>
-            <p className="font-medium">2 - Fair</p>
-            <p className="text-muted-foreground">Needs work</p>
-          </div>
-          <div>
-            <p className="font-medium">3 - Good</p>
-            <p className="text-muted-foreground">Acceptable</p>
-          </div>
-          <div>
-            <p className="font-medium">4 - Great</p>
-            <p className="text-muted-foreground">Above average</p>
-          </div>
-          <div>
-            <p className="font-medium">5 - Excellent</p>
-            <p className="text-muted-foreground">Outstanding</p>
-          </div>
-        </div>
-      </div>
     </div>
+    </TooltipProvider>
   );
 }
