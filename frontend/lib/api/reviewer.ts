@@ -322,7 +322,9 @@ export function getDeadlineUrgency(
 /**
  * Format payment amount
  */
-export function formatPayment(amount: number | null): string {
-  if (amount === null || amount === 0) return "Free";
-  return `$${amount.toFixed(2)}`;
+export function formatPayment(amount: number | string | null): string {
+  if (amount === null || amount === 0 || amount === "0") return "Free";
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(numAmount) || numAmount === 0) return "Free";
+  return `$${numAmount.toFixed(2)}`;
 }
