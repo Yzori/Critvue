@@ -52,6 +52,11 @@ class ReviewRequestBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=255)
     description: str = Field(..., min_length=10, max_length=5000)
     content_type: ContentType
+    content_subcategory: Optional[str] = Field(
+        None,
+        max_length=50,
+        description="Optional subcategory for more specific content type (e.g., 'frontend', 'ui_ux', 'illustration')"
+    )
     review_type: ReviewType = ReviewType.FREE
     feedback_areas: Optional[str] = Field(None, max_length=1000)
     budget: Optional[Decimal] = Field(None, ge=0, decimal_places=2)

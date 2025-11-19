@@ -82,6 +82,12 @@ class ReviewRequest(Base):
 
     # Content and review type
     content_type = Column(Enum(ContentType), nullable=False, index=True)
+    content_subcategory = Column(
+        String(50),
+        nullable=True,
+        index=True,
+        doc="Optional subcategory for more specific content type (e.g., 'frontend', 'ui_ux', 'illustration')"
+    )
     review_type = Column(Enum(ReviewType), nullable=False, default=ReviewType.FREE)
 
     # Status tracking
@@ -170,6 +176,8 @@ class ReviewRequest(Base):
         Index('idx_status_deadline', 'status', 'deadline'),
         # Index for content type filtering in browse
         Index('idx_content_status', 'content_type', 'status', 'created_at'),
+        # Index for subcategory filtering (content_type + subcategory + status)
+        Index('idx_content_subcategory', 'content_type', 'content_subcategory', 'status'),
         # Index for multi-review queries (status + reviews_claimed)
         Index('idx_status_reviews_claimed', 'status', 'reviews_claimed'),
         # Index for expert review tier filtering (review_type + tier)
