@@ -137,7 +137,7 @@ export function Phase3DetailedFeedback({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeStrength(index)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 size-12 md:size-11"
                   aria-label="Remove strength"
                 >
                   <X className="size-4" />
@@ -194,7 +194,7 @@ export function Phase3DetailedFeedback({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeImprovement(index)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 size-12 md:size-11"
                   aria-label="Remove improvement"
                 >
                   <X className="size-4" />
@@ -313,9 +313,11 @@ export function Phase3DetailedFeedback({
           </li>
         </ul>
         {validStrengthsCount >= 2 && validImprovementsCount >= 2 && (
-          <p className="text-xs text-green-600 mt-2">
-            ✓ Excellent! Your feedback is comprehensive and actionable.
-          </p>
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs font-medium text-green-600 flex items-center gap-1">
+              <span className="text-base">🎯</span> Excellent! Your feedback is comprehensive and actionable.
+            </p>
+          </div>
         )}
       </div>
 

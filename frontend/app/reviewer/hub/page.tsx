@@ -19,7 +19,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { ActiveReviewsSidebar } from "@/components/reviewer/active-reviews-sidebar";
 import { ReviewEditorPanel } from "@/components/reviewer/review-editor-panel";
 import { MobileReviewDrawer } from "@/components/reviewer/mobile-review-drawer";
@@ -27,6 +27,7 @@ import {
   getMyReviews,
   type ReviewSlot,
 } from "@/lib/api/reviewer";
+import { cn } from "@/lib/utils";
 
 export default function ReviewerHubPage() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function ReviewerHubPage() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
 
   // Fetch all active reviews
   React.useEffect(() => {
@@ -207,12 +209,66 @@ export default function ReviewerHubPage() {
         </div>
 
         {/* Sidebar - 30% - Desktop only */}
-        <div className="hidden lg:block w-[400px] border-l border-border bg-card overflow-y-auto">
-          <ActiveReviewsSidebar
-            slots={allSlots}
-            currentSlotId={currentSlot.id}
-            onSlotChange={handleSlotChange}
-          />
+        <div
+          className={cn(
+            "hidden lg:flex flex-col border-l border-border bg-card transition-all duration-300",
+            isSidebarCollapsed ? "w-[60px]" : "w-[400px]"
+          )}
+        >
+          {/* Collapse/Expand Button */}
+          <div className="flex items-center justify-between p-3 border-b border-border">
+            {!isSidebarCollapsed && (
+              <span className="text-sm font-semibold text-foreground">Active Reviews</span>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className={cn(
+                "flex-shrink-0",
+                isSidebarCollapsed && "mx-auto"
+              )}
+              title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isSidebarCollapsed ? (
+                <ChevronLeft className="size-4" />
+              ) : (
+                <ChevronRight className="size-4" />
+              )}
+            </Button>
+          </div>
+
+          {/* Sidebar Content */}
+          {!isSidebarCollapsed && (
+            <div className="flex-1 overflow-y-auto">
+              <ActiveReviewsSidebar
+                slots={allSlots}
+                currentSlotId={currentSlot.id}
+                onSlotChange={handleSlotChange}
+              />
+            </div>
+          )}
+
+          {/* Collapsed State - Show minimal info */}
+          {isSidebarCollapsed && (
+            <div className="flex-1 overflow-y-auto p-2 space-y-2">
+              {allSlots.map((slot, index) => (
+                <button
+                  key={slot.id}
+                  onClick={() => handleSlotChange(slot.id)}
+                  className={cn(
+                    "w-full size-10 rounded-lg flex items-center justify-center text-xs font-bold transition-colors",
+                    slot.id === currentSlot.id
+                      ? "bg-accent-blue text-white"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  )}
+                  title={slot.review_request?.title || `Review ${index + 1}`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -62,17 +62,17 @@ export function Phase2RubricRatings({
   const totalCount = dimensions.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-semibold mb-2">Rate Specific Dimensions</h3>
+        <h3 className="text-lg font-semibold mb-1">Rate Specific Dimensions</h3>
         <p className="text-sm text-muted-foreground">
           Rate each dimension from 1 (poor) to 5 (excellent)
         </p>
       </div>
 
       {/* Rating Dimensions */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {dimensions.map((dimension) => (
           <div
             key={dimension.id}
@@ -114,7 +114,7 @@ export function Phase2RubricRatings({
             </div>
 
             {/* Star Rating */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 md:gap-3">
               {[1, 2, 3, 4, 5].map((star) => {
                 const isSelected = (ratings[dimension.id] || 0) >= star;
                 return (
@@ -123,9 +123,9 @@ export function Phase2RubricRatings({
                     type="button"
                     onClick={() => setRating(dimension.id, star)}
                     className={cn(
-                      "size-12 sm:size-10 rounded-lg transition-all duration-200",
+                      "size-12 md:size-11 rounded-lg transition-all duration-200",
                       "flex items-center justify-center",
-                      "hover:scale-110 active:scale-95",
+                      "hover:scale-105 active:scale-95",
                       "touch-manipulation",
                       isSelected
                         ? "text-amber-400 bg-amber-50 border-2 border-amber-300"
@@ -136,7 +136,7 @@ export function Phase2RubricRatings({
                   >
                     <Star
                       className={cn(
-                        "size-6 sm:size-5",
+                        "size-6 md:size-5",
                         isSelected && "fill-current"
                       )}
                     />
@@ -191,7 +191,11 @@ export function Phase2RubricRatings({
           </div>
         </div>
         {completedCount === totalCount && (
-          <p className="text-xs text-green-600 mt-2">✓ All dimensions rated!</p>
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs font-medium text-green-600 flex items-center gap-1">
+              <span className="text-base">✨</span> Great work! All dimensions have been rated.
+            </p>
+          </div>
         )}
       </div>
 

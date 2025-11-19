@@ -12,7 +12,7 @@
 "use client";
 
 import * as React from "react";
-import { Save, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Loader2, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -85,6 +85,10 @@ export function SmartReviewEditor({
   // Loading state
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+
+  // Track if user has started interacting (for delaying quality indicators)
+  const [hasInteracted, setHasInteracted] = React.useState(false);
+  const [showQualityPanel, setShowQualityPanel] = React.useState(true);
 
   // Auto-save timer ref
   const autoSaveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -190,6 +194,13 @@ export function SmartReviewEditor({
     };
   }, [draft, saveToBackend]);
 
+  // Track user interaction for delayed quality indicators
+  React.useEffect(() => {
+    if (draft.phase1_quick_assessment || draft.phase2_rubric || draft.phase3_detailed_feedback) {
+      setHasInteracted(true);
+    }
+  }, [draft]);
+
   // Manual save handler
   const handleManualSave = async () => {
     if (autoSaveTimerRef.current) {
@@ -286,125 +297,295 @@ export function SmartReviewEditor({
 
   return (
     <div className={cn("space-y-6", className)}>
-      {/* Header with save status */}
-      <div className="flex items-center justify-between pb-4 border-b border-border">
-        <div>
-          <h2 className="text-2xl font-bold">Write Your Review</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Follow the 3-phase process to create a comprehensive review
-          </p>
-        </div>
-
-        {/* Save status indicator */}
-        <div className="flex items-center gap-3">
-          {saveStatus === "saving" && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              <span>Saving...</span>
-            </div>
-          )}
-          {saveStatus === "saved" && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle2 className="size-4" />
-              <span>Saved</span>
-            </div>
-          )}
-          {saveStatus === "error" && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
-              <AlertCircle className="size-4" />
-              <span>Save failed</span>
-            </div>
-          )}
-          {lastSaved && saveStatus === "idle" && (
-            <span className="text-xs text-muted-foreground">
-              Last saved {new Date(lastSaved).toLocaleTimeString()}
-            </span>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleManualSave}
-            disabled={saveStatus === "saving"}
-          >
-            <Save className="size-4 mr-2" />
-            Save Draft
-          </Button>
-        </div>
+      {/* Compact save status bar */}
+      <div className="flex items-center justify-end gap-3">
+        {saveStatus === "saving" && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3 animate-spin" />
+            <span>Saving...</span>
+          </div>
+        )}
+        {saveStatus === "saved" && (
+          <div className="flex items-center gap-2 text-xs text-green-600">
+            <CheckCircle2 className="size-3" />
+            <span>Saved</span>
+          </div>
+        )}
+        {lastSaved && saveStatus === "idle" && (
+          <span className="text-xs text-muted-foreground">
+            Last saved {new Date(lastSaved).toLocaleTimeString()}
+          </span>
+        )}
       </div>
 
-      {/* Main content: 3-column layout on desktop, stacked on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left sidebar: Phase navigation (desktop) */}
-        <div className="lg:col-span-3">
-          <PhaseNavigation
-            currentPhase={currentPhase}
-            onPhaseChange={handlePhaseChange}
-            phaseCompletion={phaseCompletion}
-          />
+      {/* Step-by-step wizard layout */}
+      <div className="space-y-6 max-w-4xl mx-auto pb-32 lg:pb-6">
+        {/* Step Progress Indicator */}
+        <div className="flex items-center justify-center gap-2 md:gap-3">
+          {/* Step 1 */}
+          <button
+            onClick={() => handlePhaseChange(1)}
+            className={cn(
+              "flex items-center gap-2 rounded-lg transition-all",
+              "min-h-[48px] md:min-h-[44px] touch-manipulation",
+              "p-2 md:px-4 md:py-2",
+              currentPhase === 1
+                ? "bg-accent-blue text-white shadow-md"
+                : phaseCompletion[1]
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
+              {phaseCompletion[1] ? "✓" : "1"}
+            </div>
+            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Quick Assessment</span>
+          </button>
+
+          {/* Connector */}
+          <div className={cn(
+            "h-0.5 w-4 md:w-8 transition-colors shrink-0",
+            phaseCompletion[1] ? "bg-green-500" : "bg-border"
+          )} />
+
+          {/* Step 2 */}
+          <button
+            onClick={() => handlePhaseChange(2)}
+            disabled={!phaseCompletion[1]}
+            className={cn(
+              "flex items-center gap-2 rounded-lg transition-all",
+              "min-h-[48px] md:min-h-[44px] touch-manipulation",
+              "p-2 md:px-4 md:py-2",
+              currentPhase === 2
+                ? "bg-accent-blue text-white shadow-md"
+                : phaseCompletion[2]
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
+          >
+            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
+              {phaseCompletion[2] ? "✓" : "2"}
+            </div>
+            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Rubric Ratings</span>
+          </button>
+
+          {/* Connector */}
+          <div className={cn(
+            "h-0.5 w-4 md:w-8 transition-colors shrink-0",
+            phaseCompletion[2] ? "bg-green-500" : "bg-border"
+          )} />
+
+          {/* Step 3 */}
+          <button
+            onClick={() => handlePhaseChange(3)}
+            disabled={!phaseCompletion[2]}
+            className={cn(
+              "flex items-center gap-2 rounded-lg transition-all",
+              "min-h-[48px] md:min-h-[44px] touch-manipulation",
+              "p-2 md:px-4 md:py-2",
+              currentPhase === 3
+                ? "bg-accent-blue text-white shadow-md"
+                : "bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+            )}
+          >
+            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
+              3
+            </div>
+            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Detailed Feedback</span>
+          </button>
         </div>
 
-        {/* Center: Current phase content */}
-        <div className="lg:col-span-6">
-          <div className="rounded-xl border border-border bg-card p-6">
-            {currentPhase === 1 && (
-              <Phase1Component
-                data={draft.phase1_quick_assessment || null}
-                focusAreas={rubric.focus_areas}
-                onChange={handlePhase1Change}
-              />
-            )}
-            {currentPhase === 2 && (
-              <Phase2Component
-                data={draft.phase2_rubric || null}
-                dimensions={rubric.rating_dimensions}
-                contentType={contentType}
-                onChange={handlePhase2Change}
-              />
-            )}
-            {currentPhase === 3 && (
-              <Phase3Component
-                data={draft.phase3_detailed_feedback || null}
-                onChange={handlePhase3Change}
-                contentType={contentType}
-                imageUrl={imageUrl}
-              />
-            )}
-
-            {/* Phase navigation buttons */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-              <Button
-                variant="outline"
-                onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
-                disabled={currentPhase === 1}
-              >
-                Previous Phase
-              </Button>
-              {currentPhase < 3 ? (
-                <Button
-                  onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
-                  disabled={!phaseCompletion[currentPhase]}
-                >
-                  Next Phase
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => setShowSubmitDialog(true)}
-                  disabled={!canSubmit}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle2 className="size-4 mr-2" />
-                  Submit Review
-                </Button>
-              )}
+        {/* Current Phase Content */}
+        <div className="rounded-2xl border-2 border-accent-blue/20 bg-card p-4 sm:p-6 md:p-8 shadow-lg">
+          {/* Phase Header */}
+          <div className="mb-6 pb-6 border-b border-border">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="size-10 rounded-full bg-accent-blue text-white flex items-center justify-center font-bold text-lg">
+                {currentPhase}
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold">
+                  {currentPhase === 1 && "Quick Assessment"}
+                  {currentPhase === 2 && "Rubric Ratings"}
+                  {currentPhase === 3 && "Detailed Feedback"}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {currentPhase === 1 && "Provide your overall rating and first impressions"}
+                  {currentPhase === 2 && "Rate specific dimensions of the work"}
+                  {currentPhase === 3 && "Share detailed strengths, improvements, and annotations"}
+                </p>
+              </div>
             </div>
+          </div>
+
+          {/* Phase Content */}
+          {currentPhase === 1 && (
+            <Phase1Component
+              data={draft.phase1_quick_assessment || null}
+              focusAreas={rubric.focus_areas}
+              onChange={handlePhase1Change}
+            />
+          )}
+          {currentPhase === 2 && (
+            <Phase2Component
+              data={draft.phase2_rubric || null}
+              dimensions={rubric.rating_dimensions}
+              contentType={contentType}
+              onChange={handlePhase2Change}
+            />
+          )}
+          {currentPhase === 3 && (
+            <Phase3Component
+              data={draft.phase3_detailed_feedback || null}
+              onChange={handlePhase3Change}
+              contentType={contentType}
+              imageUrl={imageUrl}
+            />
+          )}
+
+          {/* Phase Navigation */}
+          <div className="flex items-center justify-between pt-8 mt-8 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
+              disabled={currentPhase === 1}
+              size="lg"
+              className="h-14 md:h-12"
+            >
+              ← Previous
+            </Button>
+            {currentPhase < 3 ? (
+              <Button
+                onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
+                disabled={!phaseCompletion[currentPhase]}
+                size="lg"
+                className="h-14 md:h-12"
+              >
+                Next →
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setShowSubmitDialog(true)}
+                disabled={!canSubmit}
+                className="bg-green-600 hover:bg-green-700 h-14 md:h-12"
+                size="lg"
+              >
+                <CheckCircle2 className="size-5 mr-2" />
+                Submit Review
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Right sidebar: Quality indicators */}
-        <div className="lg:col-span-3">
-          <QualityIndicators metrics={qualityMetrics} />
-        </div>
       </div>
+
+      {/* Responsive Quality Score Panel */}
+      {hasInteracted && (
+        <>
+          {/* Desktop: Floating Panel (left side to avoid sidebar) */}
+          <div className="hidden lg:block fixed bottom-6 left-6 w-80 z-40">
+            <div className="rounded-xl border-2 border-accent-blue/30 bg-card shadow-2xl">
+              {/* Collapsible Header */}
+              <button
+                onClick={() => setShowQualityPanel(!showQualityPanel)}
+                className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors rounded-t-xl"
+              >
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="size-5 text-accent-blue" />
+                  <span className="font-semibold text-sm">Score: {qualityMetrics.completeness_score}%</span>
+                </div>
+                {showQualityPanel ? (
+                  <ChevronDown className="size-4 text-muted-foreground" />
+                ) : (
+                  <ChevronUp className="size-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {/* Expandable Content */}
+              {showQualityPanel && (
+                <div className="p-4 pt-0 border-t border-border">
+                  <QualityIndicators metrics={qualityMetrics} />
+
+                  {/* Contextual Tips Based on Phase */}
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">
+                      💡 Phase {currentPhase} Tips:
+                    </p>
+                    {currentPhase === 1 && (
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Rate honestly and consider all aspects</li>
+                        <li>• Select focus areas that truly matter</li>
+                      </ul>
+                    )}
+                    {currentPhase === 2 && (
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Be specific with each dimension</li>
+                        <li>• Use the full 1-5 scale thoughtfully</li>
+                      </ul>
+                    )}
+                    {currentPhase === 3 && (
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Balance positive and constructive feedback</li>
+                        <li>• Make suggestions actionable and specific</li>
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile: Bottom Sticky Bar */}
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t-2 border-accent-blue/30 shadow-2xl">
+            <button
+              onClick={() => setShowQualityPanel(!showQualityPanel)}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="size-5 text-accent-blue" />
+                <span className="font-semibold text-sm">Review Score: {qualityMetrics.completeness_score}%</span>
+              </div>
+              {showQualityPanel ? (
+                <ChevronDown className="size-4 text-muted-foreground" />
+              ) : (
+                <ChevronUp className="size-4 text-muted-foreground" />
+              )}
+            </button>
+
+            {/* Expandable Content - Slide up from bottom */}
+            {showQualityPanel && (
+              <div className="p-4 pt-0 border-t border-border max-h-[50vh] overflow-y-auto">
+                <QualityIndicators metrics={qualityMetrics} />
+
+                {/* Contextual Tips Based on Phase */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">
+                    💡 Phase {currentPhase} Tips:
+                  </p>
+                  {currentPhase === 1 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Rate honestly and consider all aspects</li>
+                      <li>• Select focus areas that truly matter</li>
+                    </ul>
+                  )}
+                  {currentPhase === 2 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Be specific with each dimension</li>
+                      <li>• Use the full 1-5 scale thoughtfully</li>
+                    </ul>
+                  )}
+                  {currentPhase === 3 && (
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      <li>• Balance positive and constructive feedback</li>
+                      <li>• Make suggestions actionable and specific</li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Submit confirmation dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
