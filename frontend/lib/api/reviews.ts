@@ -22,6 +22,7 @@ export interface CreateReviewRequest {
   title: string;
   description: string;
   content_type: ContentType;
+  content_subcategory?: string; // Optional subcategory for specialized workflows
   review_type: ReviewType;
   reviews_requested?: number; // Number of reviews requested (1-10)
   budget?: number; // Budget for expert reviews
@@ -42,6 +43,7 @@ export interface CreateReviewResponse {
   title: string;
   description: string;
   content_type: ContentType;
+  content_subcategory?: string; // Optional subcategory for specialized workflows
   review_type: ReviewType;
   status: string;
   created_at: string;

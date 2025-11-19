@@ -37,6 +37,7 @@ import { UploadedFile } from "@/components/ui/file-upload";
 // Form state interface - Enhanced with new tier fields and feedback goals
 interface FormState {
   contentType: ContentType | null;
+  contentSubcategory: string | null; // NEW: Subcategory for specialized review workflows
   feedbackGoals: FeedbackGoal[]; // NEW: Moved to step 2
   uploadedFiles: UploadedFile[];
   externalLinks: string[];
@@ -90,6 +91,7 @@ export default function NewReviewPage() {
   // Form state - Enhanced with new tier fields and feedback goals
   const [formState, setFormState] = useState<FormState>({
     contentType: null,
+    contentSubcategory: null, // NEW: Subcategory for specialized workflows
     feedbackGoals: [], // NEW: Step 2
     uploadedFiles: [],
     externalLinks: [],
@@ -213,6 +215,7 @@ export default function NewReviewPage() {
           title: "Draft", // Placeholder, will be updated in step 4
           description: "Work in progress", // Placeholder, will be updated in step 4
           content_type: formState.contentType!,
+          content_subcategory: formState.contentSubcategory || undefined,
           review_type: "free", // Temporary, will be updated later
         });
 
@@ -364,12 +367,17 @@ export default function NewReviewPage() {
         {(() => {
           switch (currentStep) {
             case 1:
-              // Step 1: Content Type Selection
+              // Step 1: Content Type Selection (with subcategories)
               return (
                 <ContentTypeStep
                   selectedType={formState.contentType}
-                  onSelect={(type) =>
-                    setFormState((prev) => ({ ...prev, contentType: type }))
+                  selectedSubcategory={formState.contentSubcategory}
+                  onSelect={(type, subcategory) =>
+                    setFormState((prev) => ({
+                      ...prev,
+                      contentType: type,
+                      contentSubcategory: subcategory
+                    }))
                   }
                 />
               );
