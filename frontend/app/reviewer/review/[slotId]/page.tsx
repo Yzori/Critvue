@@ -267,6 +267,7 @@ export default function ReviewWritingPage() {
           <SmartReviewEditor
             slotId={slotId}
             contentType={slot?.review_request?.content_type || "design"}
+            contentSubcategory={slot?.review_request?.content_subcategory}
             imageUrl={
               // For design/art reviews, pass the first image file URL
               (slot?.review_request?.content_type === "design" ||

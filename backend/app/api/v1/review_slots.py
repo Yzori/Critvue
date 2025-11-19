@@ -388,25 +388,34 @@ async def load_review_draft(
 @limiter.limit("20/minute")
 async def get_rubric(
     request: Request,
-    content_type: str
+    content_type: str,
+    subcategory: str = None
 ):
     """
-    Get rubric configuration for a content type
+    Get rubric configuration for a content type and optional subcategory
 
-    **Content Types:** code, design, writing
+    **Content Types:** code, design, writing, art, audio, video
 
-    Returns focus areas, rating dimensions, and section prompts
-    for the specified content type.
+    **Subcategories (optional):**
+    - code: frontend, backend, database, devops, mobile, algorithm
+    - design: ui_ux, branding, marketing, web_design, mobile_design, print
+    - art: illustration, traditional, 3d_modeling, concept_art, character_design, digital_painting
+    - audio: voiceover, podcast, music, sound_design, mixing
+    - video: filmed, edited_clip, animation, game_capture, tutorial, short_form
+    - writing: blog_article, technical, creative, marketing_copy, script, academic
+
+    Returns focus areas, rating dimensions, and section prompts.
+    If subcategory is provided, returns specialized rubric with additional rating dimensions.
 
     **Rate Limit:** 20 requests per minute
     """
     from app.constants.review_rubrics import get_rubric as get_rubric_config
 
     try:
-        rubric = get_rubric_config(content_type)
+        rubric = get_rubric_config(content_type, subcategory)
         return rubric
     except Exception as e:
-        logger.error(f"Error getting rubric for content type {content_type}: {e}")
+        logger.error(f"Error getting rubric for content type {content_type} (subcategory: {subcategory}): {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while fetching rubric"

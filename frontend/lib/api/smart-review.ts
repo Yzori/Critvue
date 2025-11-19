@@ -10,10 +10,11 @@ import {
 } from '@/lib/types/smart-review';
 
 /**
- * Get rubric configuration for a content type
+ * Get rubric configuration for a content type and optional subcategory
  */
-export async function getRubric(contentType: string): Promise<ContentRubric> {
-  return apiClient.get<ContentRubric>(`/review-slots/rubrics/${contentType}`);
+export async function getRubric(contentType: string, subcategory?: string | null): Promise<ContentRubric> {
+  const params = subcategory ? `?subcategory=${subcategory}` : '';
+  return apiClient.get<ContentRubric>(`/review-slots/rubrics/${contentType}${params}`);
 }
 
 /**

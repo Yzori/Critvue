@@ -52,6 +52,7 @@ import { Phase3DetailedFeedback as Phase3Component } from "./Phase3DetailedFeedb
 interface SmartReviewEditorProps {
   slotId: number;
   contentType: string;
+  contentSubcategory?: string | null; // Optional subcategory for specialized rubrics
   imageUrl?: string; // Optional image URL for design/art reviews with visual annotations
   onSubmitSuccess?: () => void;
   className?: string;
@@ -62,6 +63,7 @@ type SaveStatus = "idle" | "saving" | "saved" | "error";
 export function SmartReviewEditor({
   slotId,
   contentType,
+  contentSubcategory,
   imageUrl,
   onSubmitSuccess,
   className,
@@ -100,8 +102,8 @@ export function SmartReviewEditor({
       setLoadError(null);
 
       try {
-        // Load rubric
-        const rubricData = await getRubric(contentType);
+        // Load rubric (with optional subcategory for specialized rubrics)
+        const rubricData = await getRubric(contentType, contentSubcategory);
         setRubric(rubricData);
 
         // Load existing draft if available

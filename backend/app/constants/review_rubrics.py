@@ -386,18 +386,1178 @@ WRITING_RUBRIC: ContentRubric = {
 }
 
 
+# ===== ART REVIEW RUBRIC =====
+
+ART_FOCUS_AREAS: List[FocusArea] = [
+    {
+        "id": "composition",
+        "label": "Composition",
+        "description": "Is the composition balanced and visually appealing?"
+    },
+    {
+        "id": "technique",
+        "label": "Technique",
+        "description": "Is the technical execution skillful?"
+    },
+    {
+        "id": "color_use",
+        "label": "Color & Lighting",
+        "description": "Are colors and lighting effective?"
+    },
+    {
+        "id": "originality",
+        "label": "Originality",
+        "description": "Is the concept creative and unique?"
+    },
+    {
+        "id": "detail",
+        "label": "Detail & Finish",
+        "description": "Is the level of detail appropriate?"
+    },
+    {
+        "id": "emotional_impact",
+        "label": "Emotional Impact",
+        "description": "Does it evoke the intended emotion?"
+    },
+]
+
+ART_RATING_DIMENSIONS: List[RatingDimension] = [
+    {
+        "id": "composition",
+        "label": "Composition",
+        "description": "Is the composition balanced and guides the viewer's eye effectively?",
+        "criteria": [
+            "Rule of thirds applied",
+            "Visual balance achieved",
+            "Focal point is clear"
+        ]
+    },
+    {
+        "id": "technique",
+        "label": "Technique",
+        "description": "Is the technical execution skillful and appropriate?",
+        "criteria": [
+            "Brushwork/linework is controlled",
+            "Values and contrast work well",
+            "Anatomy/perspective is accurate"
+        ]
+    },
+    {
+        "id": "color_lighting",
+        "label": "Color & Lighting",
+        "description": "Are color choices and lighting effective?",
+        "criteria": [
+            "Color harmony present",
+            "Lighting is believable",
+            "Mood is conveyed through color"
+        ]
+    },
+    {
+        "id": "originality",
+        "label": "Originality",
+        "description": "Is the concept creative and shows unique perspective?",
+        "criteria": [
+            "Fresh take on subject matter",
+            "Personal style evident",
+            "Avoids clichés"
+        ]
+    },
+]
+
+ART_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
+    "strengths": {
+        "id": "strengths",
+        "label": "✅ Strengths",
+        "prompt": "What works well in this artwork?",
+        "placeholder": "List specific strengths (e.g., 'Strong composition', 'Excellent use of color'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "improvements": {
+        "id": "improvements",
+        "label": "🔧 Artistic Suggestions",
+        "prompt": "What artistic improvements would you suggest?",
+        "placeholder": "List specific suggestions (e.g., 'Refine hand anatomy', 'Add more contrast'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "additional_notes": {
+        "id": "additional_notes",
+        "label": "📝 Additional Notes",
+        "prompt": "Any other feedback or context?",
+        "placeholder": "Add any additional context, explanations, or suggestions...",
+        "required": False,
+        "min_items": 0
+    }
+}
+
+ART_RUBRIC: ContentRubric = {
+    "content_type": "art",
+    "focus_areas": ART_FOCUS_AREAS,
+    "rating_dimensions": ART_RATING_DIMENSIONS,
+    "section_prompts": ART_SECTION_PROMPTS
+}
+
+
+# ===== AUDIO REVIEW RUBRIC =====
+
+AUDIO_FOCUS_AREAS: List[FocusArea] = [
+    {
+        "id": "sound_quality",
+        "label": "Sound Quality",
+        "description": "Is the audio clear and professional?"
+    },
+    {
+        "id": "mixing",
+        "label": "Mixing & Balance",
+        "description": "Are all elements balanced well?"
+    },
+    {
+        "id": "pacing",
+        "label": "Pacing & Flow",
+        "description": "Does the audio flow naturally?"
+    },
+    {
+        "id": "vocal_performance",
+        "label": "Performance",
+        "description": "Is the vocal/musical performance strong?"
+    },
+    {
+        "id": "production",
+        "label": "Production Value",
+        "description": "Does it sound polished and professional?"
+    },
+    {
+        "id": "engagement",
+        "label": "Engagement",
+        "description": "Does it hold the listener's attention?"
+    },
+]
+
+AUDIO_RATING_DIMENSIONS: List[RatingDimension] = [
+    {
+        "id": "sound_quality",
+        "label": "Sound Quality",
+        "description": "Is the audio clear, crisp, and free of technical issues?",
+        "criteria": [
+            "No background noise or hiss",
+            "Clear dialogue/vocals",
+            "No clipping or distortion"
+        ]
+    },
+    {
+        "id": "mixing_balance",
+        "label": "Mixing & Balance",
+        "description": "Are all audio elements balanced properly?",
+        "criteria": [
+            "Vocals sit well in the mix",
+            "Music doesn't overpower dialogue",
+            "Panning creates good stereo image"
+        ]
+    },
+    {
+        "id": "pacing_flow",
+        "label": "Pacing & Flow",
+        "description": "Does the audio have good rhythm and pacing?",
+        "criteria": [
+            "Natural transitions",
+            "Good use of pauses/silence",
+            "Maintains energy throughout"
+        ]
+    },
+    {
+        "id": "production_value",
+        "label": "Production Value",
+        "description": "Does it sound polished and professional?",
+        "criteria": [
+            "Appropriate EQ and compression",
+            "Professional sound design",
+            "Mastering levels appropriate"
+        ]
+    },
+]
+
+AUDIO_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
+    "strengths": {
+        "id": "strengths",
+        "label": "✅ Strengths",
+        "prompt": "What works well in this audio?",
+        "placeholder": "List specific strengths (e.g., 'Clear vocal delivery', 'Great mix balance'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "improvements": {
+        "id": "improvements",
+        "label": "🔧 Audio Suggestions",
+        "prompt": "What audio improvements would you suggest?",
+        "placeholder": "List specific suggestions (e.g., 'Reduce sibilance', 'Add more bass'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "additional_notes": {
+        "id": "additional_notes",
+        "label": "📝 Additional Notes",
+        "prompt": "Any other feedback or context?",
+        "placeholder": "Add any additional context, explanations, or suggestions...",
+        "required": False,
+        "min_items": 0
+    }
+}
+
+AUDIO_RUBRIC: ContentRubric = {
+    "content_type": "audio",
+    "focus_areas": AUDIO_FOCUS_AREAS,
+    "rating_dimensions": AUDIO_RATING_DIMENSIONS,
+    "section_prompts": AUDIO_SECTION_PROMPTS
+}
+
+
+# ===== VIDEO REVIEW RUBRIC =====
+
+VIDEO_FOCUS_AREAS: List[FocusArea] = [
+    {
+        "id": "visual_quality",
+        "label": "Visual Quality",
+        "description": "Is the video crisp and well-lit?"
+    },
+    {
+        "id": "editing",
+        "label": "Editing & Pacing",
+        "description": "Are cuts smooth and pacing good?"
+    },
+    {
+        "id": "storytelling",
+        "label": "Storytelling",
+        "description": "Does it tell a compelling story?"
+    },
+    {
+        "id": "audio_quality",
+        "label": "Audio Quality",
+        "description": "Is the audio clear and balanced?"
+    },
+    {
+        "id": "creativity",
+        "label": "Creativity",
+        "description": "Are creative choices effective?"
+    },
+    {
+        "id": "engagement",
+        "label": "Viewer Engagement",
+        "description": "Does it hold attention throughout?"
+    },
+]
+
+VIDEO_RATING_DIMENSIONS: List[RatingDimension] = [
+    {
+        "id": "visual_quality",
+        "label": "Visual Quality",
+        "description": "Is the video well-shot with good lighting and composition?",
+        "criteria": [
+            "Proper exposure and color",
+            "Stable footage (or intentional camera movement)",
+            "Good composition in each shot"
+        ]
+    },
+    {
+        "id": "editing_pacing",
+        "label": "Editing & Pacing",
+        "description": "Are edits smooth and does pacing work well?",
+        "criteria": [
+            "Smooth transitions",
+            "Cuts on action where appropriate",
+            "Maintains good rhythm"
+        ]
+    },
+    {
+        "id": "storytelling",
+        "label": "Storytelling",
+        "description": "Does it effectively communicate the intended message/story?",
+        "criteria": [
+            "Clear narrative structure",
+            "Engaging opening",
+            "Satisfying conclusion"
+        ]
+    },
+    {
+        "id": "audio_quality",
+        "label": "Audio Quality",
+        "description": "Is the audio clear and properly mixed?",
+        "criteria": [
+            "Clear dialogue/narration",
+            "Music enhances without overpowering",
+            "Sound effects appropriate"
+        ]
+    },
+]
+
+VIDEO_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
+    "strengths": {
+        "id": "strengths",
+        "label": "✅ Strengths",
+        "prompt": "What works well in this video?",
+        "placeholder": "List specific strengths (e.g., 'Great pacing', 'Excellent b-roll'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "improvements": {
+        "id": "improvements",
+        "label": "🔧 Video Suggestions",
+        "prompt": "What video improvements would you suggest?",
+        "placeholder": "List specific suggestions (e.g., 'Tighten intro', 'Improve audio levels'...)",
+        "required": True,
+        "min_items": 2
+    },
+    "additional_notes": {
+        "id": "additional_notes",
+        "label": "📝 Additional Notes",
+        "prompt": "Any other feedback or context?",
+        "placeholder": "Add any additional context, explanations, or suggestions...",
+        "required": False,
+        "min_items": 0
+    }
+}
+
+VIDEO_RUBRIC: ContentRubric = {
+    "content_type": "video",
+    "focus_areas": VIDEO_FOCUS_AREAS,
+    "rating_dimensions": VIDEO_RATING_DIMENSIONS,
+    "section_prompts": VIDEO_SECTION_PROMPTS
+}
+
+
 # ===== RUBRIC REGISTRY =====
 
 RUBRICS: Dict[str, ContentRubric] = {
     "code": CODE_RUBRIC,
     "design": DESIGN_RUBRIC,
     "writing": WRITING_RUBRIC,
+    "art": ART_RUBRIC,
+    "audio": AUDIO_RUBRIC,
+    "video": VIDEO_RUBRIC,
 }
 
 
-def get_rubric(content_type: str) -> ContentRubric:
-    """Get rubric for a content type, with fallback to code rubric"""
-    return RUBRICS.get(content_type, CODE_RUBRIC)
+# ===== SUBCATEGORY-SPECIFIC RUBRIC OVERRIDES =====
+
+# Subcategory rating dimensions that add to or override base rubric dimensions
+# Format: {content_type: {subcategory_id: [additional_rating_dimensions]}}
+
+SUBCATEGORY_RATING_OVERRIDES: Dict[str, Dict[str, List[RatingDimension]]] = {
+    "code": {
+        "frontend": [
+            {
+                "id": "component_architecture",
+                "label": "Component Architecture",
+                "description": "Are components well-structured and reusable?",
+                "criteria": [
+                    "Single responsibility principle",
+                    "Props interface is clean",
+                    "Reusability considered"
+                ]
+            },
+            {
+                "id": "accessibility",
+                "label": "Accessibility (a11y)",
+                "description": "Is the UI accessible to all users?",
+                "criteria": [
+                    "Semantic HTML used",
+                    "ARIA labels where needed",
+                    "Keyboard navigation works"
+                ]
+            },
+        ],
+        "backend": [
+            {
+                "id": "api_design",
+                "label": "API Design",
+                "description": "Is the API well-designed and RESTful?",
+                "criteria": [
+                    "Consistent endpoint naming",
+                    "Proper HTTP methods used",
+                    "Error responses are clear"
+                ]
+            },
+            {
+                "id": "data_validation",
+                "label": "Data Validation",
+                "description": "Is input validation comprehensive?",
+                "criteria": [
+                    "All inputs validated",
+                    "Type checking present",
+                    "Edge cases handled"
+                ]
+            },
+        ],
+        "database": [
+            {
+                "id": "schema_design",
+                "label": "Schema Design",
+                "description": "Is the database schema well-designed?",
+                "criteria": [
+                    "Normalization appropriate",
+                    "Relationships defined correctly",
+                    "Indexes on key columns"
+                ]
+            },
+            {
+                "id": "query_efficiency",
+                "label": "Query Efficiency",
+                "description": "Are queries optimized for performance?",
+                "criteria": [
+                    "N+1 queries avoided",
+                    "Proper use of indexes",
+                    "Joins used efficiently"
+                ]
+            },
+        ],
+        "devops": [
+            {
+                "id": "infrastructure_as_code",
+                "label": "Infrastructure as Code",
+                "description": "Is infrastructure properly defined in code?",
+                "criteria": [
+                    "Declarative config used",
+                    "Version controlled",
+                    "Environment parity maintained"
+                ]
+            },
+            {
+                "id": "deployment_strategy",
+                "label": "Deployment Strategy",
+                "description": "Is the deployment process reliable?",
+                "criteria": [
+                    "Zero-downtime deployment",
+                    "Rollback plan exists",
+                    "Health checks implemented"
+                ]
+            },
+        ],
+        "mobile": [
+            {
+                "id": "platform_guidelines",
+                "label": "Platform Guidelines",
+                "description": "Does it follow iOS/Android platform guidelines?",
+                "criteria": [
+                    "Native patterns followed",
+                    "Platform-specific UI conventions",
+                    "System integration appropriate"
+                ]
+            },
+            {
+                "id": "responsive_design",
+                "label": "Responsive Design",
+                "description": "Does it work across different screen sizes?",
+                "criteria": [
+                    "Adaptive layouts",
+                    "Orientation changes handled",
+                    "Safe area insets respected"
+                ]
+            },
+        ],
+        "algorithm": [
+            {
+                "id": "time_complexity",
+                "label": "Time Complexity",
+                "description": "Is the algorithm time-efficient?",
+                "criteria": [
+                    "Big-O analysis correct",
+                    "Optimal algorithm chosen",
+                    "No unnecessary loops"
+                ]
+            },
+            {
+                "id": "space_complexity",
+                "label": "Space Complexity",
+                "description": "Is memory usage efficient?",
+                "criteria": [
+                    "Space complexity analyzed",
+                    "In-place operations used where possible",
+                    "No memory leaks"
+                ]
+            },
+        ],
+    },
+    "design": {
+        "ui_ux": [
+            {
+                "id": "user_flow",
+                "label": "User Flow",
+                "description": "Is the user journey intuitive?",
+                "criteria": [
+                    "Clear navigation paths",
+                    "Logical task flows",
+                    "Minimal friction points"
+                ]
+            },
+            {
+                "id": "interaction_design",
+                "label": "Interaction Design",
+                "description": "Are interactions clear and delightful?",
+                "criteria": [
+                    "Micro-interactions enhance UX",
+                    "Feedback on user actions",
+                    "Loading states handled"
+                ]
+            },
+        ],
+        "branding": [
+            {
+                "id": "brand_consistency",
+                "label": "Brand Consistency",
+                "description": "Is branding consistent across touchpoints?",
+                "criteria": [
+                    "Logo variations appropriate",
+                    "Color palette cohesive",
+                    "Typography system defined"
+                ]
+            },
+            {
+                "id": "brand_personality",
+                "label": "Brand Personality",
+                "description": "Does it convey the intended brand personality?",
+                "criteria": [
+                    "Visual style matches brand voice",
+                    "Emotional tone appropriate",
+                    "Target audience considered"
+                ]
+            },
+        ],
+        "marketing": [
+            {
+                "id": "visual_impact",
+                "label": "Visual Impact",
+                "description": "Does it grab attention effectively?",
+                "criteria": [
+                    "Strong focal point",
+                    "Eye-catching design",
+                    "Message is clear at a glance"
+                ]
+            },
+            {
+                "id": "call_to_action",
+                "label": "Call to Action",
+                "description": "Is the CTA clear and compelling?",
+                "criteria": [
+                    "CTA stands out",
+                    "Action is obvious",
+                    "Urgency/value communicated"
+                ]
+            },
+        ],
+        "web_design": [
+            {
+                "id": "responsive_layout",
+                "label": "Responsive Layout",
+                "description": "Does it work across all device sizes?",
+                "criteria": [
+                    "Mobile-first approach",
+                    "Breakpoints well-chosen",
+                    "Content reflows naturally"
+                ]
+            },
+            {
+                "id": "page_performance",
+                "label": "Page Performance",
+                "description": "Are design choices performance-friendly?",
+                "criteria": [
+                    "Images optimized",
+                    "Minimal layout shifts",
+                    "Fast loading considered"
+                ]
+            },
+        ],
+        "mobile_design": [
+            {
+                "id": "thumb_zone",
+                "label": "Thumb Zone",
+                "description": "Are key actions within easy thumb reach?",
+                "criteria": [
+                    "Primary actions in thumb zone",
+                    "44×44px minimum touch targets",
+                    "Bottom navigation considered"
+                ]
+            },
+            {
+                "id": "platform_patterns",
+                "label": "Platform Patterns",
+                "description": "Does it follow iOS/Android design patterns?",
+                "criteria": [
+                    "Native components used",
+                    "Platform conventions followed",
+                    "Gesture patterns appropriate"
+                ]
+            },
+        ],
+        "print": [
+            {
+                "id": "print_production",
+                "label": "Print Production",
+                "description": "Is it ready for professional printing?",
+                "criteria": [
+                    "CMYK color mode",
+                    "Bleed and crop marks present",
+                    "Resolution sufficient (300dpi+)"
+                ]
+            },
+            {
+                "id": "readability",
+                "label": "Readability",
+                "description": "Is text easily readable when printed?",
+                "criteria": [
+                    "Font sizes appropriate",
+                    "Line spacing comfortable",
+                    "Contrast sufficient for print"
+                ]
+            },
+        ],
+    },
+    "art": {
+        "illustration": [
+            {
+                "id": "style_consistency",
+                "label": "Style Consistency",
+                "description": "Is the illustration style consistent?",
+                "criteria": [
+                    "Line weight consistent",
+                    "Rendering style unified",
+                    "Color palette cohesive"
+                ]
+            },
+            {
+                "id": "concept_clarity",
+                "label": "Concept Clarity",
+                "description": "Is the concept clearly communicated?",
+                "criteria": [
+                    "Message is clear",
+                    "Symbolism works",
+                    "Narrative is readable"
+                ]
+            },
+        ],
+        "traditional": [
+            {
+                "id": "medium_mastery",
+                "label": "Medium Mastery",
+                "description": "Is the traditional medium well-executed?",
+                "criteria": [
+                    "Medium properties understood",
+                    "Technique appropriate for medium",
+                    "Material handling skillful"
+                ]
+            },
+            {
+                "id": "value_structure",
+                "label": "Value Structure",
+                "description": "Are light and shadow values strong?",
+                "criteria": [
+                    "Value range used fully",
+                    "Form defined by values",
+                    "Lighting is believable"
+                ]
+            },
+        ],
+        "3d_modeling": [
+            {
+                "id": "topology",
+                "label": "Topology",
+                "description": "Is the 3D mesh topology clean and efficient?",
+                "criteria": [
+                    "Edge flow follows form",
+                    "No unnecessary polygons",
+                    "Deformation-ready topology"
+                ]
+            },
+            {
+                "id": "texturing",
+                "label": "Texturing & Materials",
+                "description": "Are textures and materials realistic?",
+                "criteria": [
+                    "UV mapping clean",
+                    "Texture resolution appropriate",
+                    "Materials physically plausible"
+                ]
+            },
+        ],
+        "concept_art": [
+            {
+                "id": "design_variation",
+                "label": "Design Variation",
+                "description": "Are multiple design iterations shown?",
+                "criteria": [
+                    "Exploration is evident",
+                    "Variations are distinct",
+                    "Best option is clear"
+                ]
+            },
+            {
+                "id": "functional_design",
+                "label": "Functional Design",
+                "description": "Does the design work functionally?",
+                "criteria": [
+                    "Proportions make sense",
+                    "Mechanical parts plausible",
+                    "Design serves purpose"
+                ]
+            },
+        ],
+        "character_design": [
+            {
+                "id": "silhouette",
+                "label": "Silhouette",
+                "description": "Is the character silhouette strong and recognizable?",
+                "criteria": [
+                    "Readable from silhouette alone",
+                    "Distinctive shape language",
+                    "Personality evident in silhouette"
+                ]
+            },
+            {
+                "id": "expression",
+                "label": "Expression & Personality",
+                "description": "Does the design convey personality?",
+                "criteria": [
+                    "Facial expression clear",
+                    "Body language communicative",
+                    "Character traits visible"
+                ]
+            },
+        ],
+        "digital_painting": [
+            {
+                "id": "rendering_quality",
+                "label": "Rendering Quality",
+                "description": "Is the painting skillfully rendered?",
+                "criteria": [
+                    "Forms are well-defined",
+                    "Edges are intentional",
+                    "Detail level appropriate"
+                ]
+            },
+            {
+                "id": "atmospheric_perspective",
+                "label": "Atmospheric Perspective",
+                "description": "Is depth conveyed through atmosphere?",
+                "criteria": [
+                    "Distance affects value/color",
+                    "Depth cues present",
+                    "Atmospheric effects believable"
+                ]
+            },
+        ],
+    },
+    "audio": {
+        "voiceover": [
+            {
+                "id": "vocal_clarity",
+                "label": "Vocal Clarity",
+                "description": "Is the voice clear and easy to understand?",
+                "criteria": [
+                    "Articulation is crisp",
+                    "Pacing is appropriate",
+                    "Energy level matches content"
+                ]
+            },
+            {
+                "id": "emotional_delivery",
+                "label": "Emotional Delivery",
+                "description": "Does the performance convey the right emotion?",
+                "criteria": [
+                    "Tone matches message",
+                    "Inflection is natural",
+                    "Emotion feels authentic"
+                ]
+            },
+        ],
+        "podcast": [
+            {
+                "id": "content_flow",
+                "label": "Content Flow",
+                "description": "Does the podcast flow naturally?",
+                "criteria": [
+                    "Smooth transitions between topics",
+                    "Pacing keeps interest",
+                    "Natural conversation rhythm"
+                ]
+            },
+            {
+                "id": "audio_consistency",
+                "label": "Audio Consistency",
+                "description": "Is audio quality consistent throughout?",
+                "criteria": [
+                    "Volume levels consistent",
+                    "Background noise minimal",
+                    "All speakers clear"
+                ]
+            },
+        ],
+        "music": [
+            {
+                "id": "composition",
+                "label": "Composition",
+                "description": "Is the musical composition strong?",
+                "criteria": [
+                    "Melody is memorable",
+                    "Harmonic progression works",
+                    "Song structure is effective"
+                ]
+            },
+            {
+                "id": "arrangement",
+                "label": "Arrangement",
+                "description": "Is the instrumentation well-arranged?",
+                "criteria": [
+                    "Instruments complement each other",
+                    "Frequency spectrum balanced",
+                    "Dynamic range used effectively"
+                ]
+            },
+        ],
+        "sound_design": [
+            {
+                "id": "sonic_creativity",
+                "label": "Sonic Creativity",
+                "description": "Are sound design choices creative and fitting?",
+                "criteria": [
+                    "Sounds match visuals/action",
+                    "Creative sound selection",
+                    "Layering adds depth"
+                ]
+            },
+            {
+                "id": "spatial_audio",
+                "label": "Spatial Audio",
+                "description": "Is the stereo/spatial field used effectively?",
+                "criteria": [
+                    "Panning creates space",
+                    "Depth through reverb/delay",
+                    "Immersive soundscape"
+                ]
+            },
+        ],
+        "mixing": [
+            {
+                "id": "frequency_balance",
+                "label": "Frequency Balance",
+                "description": "Are frequencies well-balanced across the spectrum?",
+                "criteria": [
+                    "No frequency masking",
+                    "EQ enhances clarity",
+                    "Full spectrum utilized"
+                ]
+            },
+            {
+                "id": "dynamics_processing",
+                "label": "Dynamics Processing",
+                "description": "Is compression and limiting appropriate?",
+                "criteria": [
+                    "Dynamics controlled but natural",
+                    "No over-compression artifacts",
+                    "Punch and energy maintained"
+                ]
+            },
+        ],
+    },
+    "video": {
+        "filmed": [
+            {
+                "id": "cinematography",
+                "label": "Cinematography",
+                "description": "Is the camerawork and framing professional?",
+                "criteria": [
+                    "Shot composition strong",
+                    "Camera movements intentional",
+                    "Lighting enhances mood"
+                ]
+            },
+            {
+                "id": "color_grading",
+                "label": "Color Grading",
+                "description": "Is the color grade consistent and enhances the story?",
+                "criteria": [
+                    "Color tone matches mood",
+                    "Grading is consistent",
+                    "Skin tones natural"
+                ]
+            },
+        ],
+        "edited_clip": [
+            {
+                "id": "cut_timing",
+                "label": "Cut Timing",
+                "description": "Are edits well-timed and rhythmic?",
+                "criteria": [
+                    "Cuts on action",
+                    "Beat and rhythm present",
+                    "Montage pacing effective"
+                ]
+            },
+            {
+                "id": "transition_style",
+                "label": "Transition Style",
+                "description": "Are transitions appropriate and seamless?",
+                "criteria": [
+                    "Transitions enhance story",
+                    "Not overused or distracting",
+                    "Style is consistent"
+                ]
+            },
+        ],
+        "animation": [
+            {
+                "id": "motion_quality",
+                "label": "Motion Quality",
+                "description": "Is the animation smooth and well-timed?",
+                "criteria": [
+                    "Easing curves natural",
+                    "Timing feels right",
+                    "Motion has weight/physics"
+                ]
+            },
+            {
+                "id": "design_cohesion",
+                "label": "Design Cohesion",
+                "description": "Do all visual elements work together?",
+                "criteria": [
+                    "Style is unified",
+                    "Color palette cohesive",
+                    "Visual hierarchy clear"
+                ]
+            },
+        ],
+        "game_capture": [
+            {
+                "id": "capture_quality",
+                "label": "Capture Quality",
+                "description": "Is the game footage captured at high quality?",
+                "criteria": [
+                    "High resolution/framerate",
+                    "No lag or stuttering",
+                    "Game audio balanced with commentary"
+                ]
+            },
+            {
+                "id": "commentary",
+                "label": "Commentary",
+                "description": "Is commentary engaging and adds value?",
+                "criteria": [
+                    "Commentary is entertaining",
+                    "Provides useful information",
+                    "Energy level appropriate"
+                ]
+            },
+        ],
+        "tutorial": [
+            {
+                "id": "instructional_clarity",
+                "label": "Instructional Clarity",
+                "description": "Are instructions clear and easy to follow?",
+                "criteria": [
+                    "Steps are well-explained",
+                    "Visual aids support learning",
+                    "Pacing allows for comprehension"
+                ]
+            },
+            {
+                "id": "production_value",
+                "label": "Production Value",
+                "description": "Does the tutorial look professional?",
+                "criteria": [
+                    "Screen recordings crisp",
+                    "Graphics enhance understanding",
+                    "Audio is clear"
+                ]
+            },
+        ],
+        "short_form": [
+            {
+                "id": "hook",
+                "label": "Hook",
+                "description": "Does it grab attention in the first 3 seconds?",
+                "criteria": [
+                    "Strong opening hook",
+                    "Immediately engaging",
+                    "Curiosity created"
+                ]
+            },
+            {
+                "id": "retention",
+                "label": "Retention",
+                "description": "Does it maintain interest until the end?",
+                "criteria": [
+                    "Fast pacing throughout",
+                    "Visual variety keeps interest",
+                    "Satisfying payoff"
+                ]
+            },
+        ],
+    },
+    "writing": {
+        "blog_article": [
+            {
+                "id": "seo_optimization",
+                "label": "SEO Optimization",
+                "description": "Is the article optimized for search engines?",
+                "criteria": [
+                    "Keywords naturally integrated",
+                    "Meta description compelling",
+                    "Headings structured hierarchically"
+                ]
+            },
+            {
+                "id": "reader_engagement",
+                "label": "Reader Engagement",
+                "description": "Does it keep readers engaged?",
+                "criteria": [
+                    "Scannable with subheadings",
+                    "Short paragraphs",
+                    "Examples and stories"
+                ]
+            },
+        ],
+        "technical": [
+            {
+                "id": "technical_accuracy",
+                "label": "Technical Accuracy",
+                "description": "Is technical information correct and precise?",
+                "criteria": [
+                    "Facts are accurate",
+                    "Code examples work",
+                    "Technical terms used correctly"
+                ]
+            },
+            {
+                "id": "documentation_completeness",
+                "label": "Documentation Completeness",
+                "description": "Is all necessary information included?",
+                "criteria": [
+                    "All parameters documented",
+                    "Examples provided",
+                    "Edge cases addressed"
+                ]
+            },
+        ],
+        "creative": [
+            {
+                "id": "character_development",
+                "label": "Character Development",
+                "description": "Are characters well-developed and believable?",
+                "criteria": [
+                    "Characters feel real",
+                    "Motivations are clear",
+                    "Character arcs present"
+                ]
+            },
+            {
+                "id": "narrative_voice",
+                "label": "Narrative Voice",
+                "description": "Is the narrative voice strong and consistent?",
+                "criteria": [
+                    "Voice is distinctive",
+                    "POV is consistent",
+                    "Style enhances story"
+                ]
+            },
+        ],
+        "marketing_copy": [
+            {
+                "id": "persuasiveness",
+                "label": "Persuasiveness",
+                "description": "Does the copy persuade and motivate action?",
+                "criteria": [
+                    "Benefits clearly stated",
+                    "Objections addressed",
+                    "Urgency created"
+                ]
+            },
+            {
+                "id": "brand_voice",
+                "label": "Brand Voice",
+                "description": "Does it match the brand's voice and tone?",
+                "criteria": [
+                    "Tone appropriate for brand",
+                    "Messaging on-brand",
+                    "Target audience considered"
+                ]
+            },
+        ],
+        "script": [
+            {
+                "id": "dialogue_quality",
+                "label": "Dialogue Quality",
+                "description": "Is the dialogue natural and character-driven?",
+                "criteria": [
+                    "Sounds like real speech",
+                    "Each character distinct",
+                    "Subtext present"
+                ]
+            },
+            {
+                "id": "scene_structure",
+                "label": "Scene Structure",
+                "description": "Are scenes well-structured with clear beats?",
+                "criteria": [
+                    "Each scene has purpose",
+                    "Conflict and tension present",
+                    "Scene transitions smooth"
+                ]
+            },
+        ],
+        "academic": [
+            {
+                "id": "research_depth",
+                "label": "Research Depth",
+                "description": "Is the research thorough and well-sourced?",
+                "criteria": [
+                    "Sources are credible",
+                    "Research is comprehensive",
+                    "Citations are proper"
+                ]
+            },
+            {
+                "id": "argument_strength",
+                "label": "Argument Strength",
+                "description": "Is the argument logical and well-supported?",
+                "criteria": [
+                    "Thesis is clear",
+                    "Evidence supports claims",
+                    "Counter-arguments addressed"
+                ]
+            },
+        ],
+    },
+}
+
+
+def get_rubric(content_type: str, subcategory: str = None) -> ContentRubric:
+    """
+    Get rubric for a content type and optional subcategory.
+
+    If subcategory is provided, returns a merged rubric that combines:
+    - Base rubric for the content type
+    - Subcategory-specific rating dimensions
+
+    Falls back to code rubric if content type not found.
+    """
+    # Get base rubric for content type
+    base_rubric = RUBRICS.get(content_type, CODE_RUBRIC).copy()
+
+    # If no subcategory, return base rubric
+    if not subcategory:
+        return base_rubric
+
+    # Check if subcategory has specific overrides
+    if content_type in SUBCATEGORY_RATING_OVERRIDES:
+        subcategory_overrides = SUBCATEGORY_RATING_OVERRIDES[content_type].get(subcategory, [])
+
+        if subcategory_overrides:
+            # Create merged rubric with subcategory dimensions added
+            merged_rubric = base_rubric.copy()
+            # Combine base rating dimensions with subcategory-specific ones
+            merged_rubric["rating_dimensions"] = base_rubric["rating_dimensions"] + subcategory_overrides
+            return merged_rubric
+
+    # No subcategory overrides found, return base rubric
+    return base_rubric
 
 
 def get_focus_areas(content_type: str) -> List[FocusArea]:

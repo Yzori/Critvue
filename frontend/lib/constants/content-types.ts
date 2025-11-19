@@ -41,7 +41,7 @@ import {
   Radio,
   Music,
   Headphones,
-  Waveform,
+  Waves,
   Film,
   Scissors,
   Play,
@@ -277,7 +277,7 @@ export const CONTENT_TYPE_CONFIG = {
       {
         id: "sound_design",
         label: "Sound Design",
-        icon: Waveform,
+        icon: Waves,
         description: "SFX, foley, ambience, game audio, film sound",
         supportsAnnotations: true,
         annotationType: "waveform",
