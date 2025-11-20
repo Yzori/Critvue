@@ -236,8 +236,15 @@ export function ReviewCard({
     <div
       className={cn(
         "review-card group relative overflow-hidden transition-all duration-300 will-change-transform",
-        // Border radius: larger for large cards (2025 professional standard)
-        size === "large" ? "rounded-3xl" : "rounded-2xl",
+        // Border radius: consistent rounded corners
+        "rounded-2xl",
+
+        // Max height constraints to prevent oversized cards
+        size === "small" && "max-h-[280px]",
+        size === "medium" && "max-h-[320px]",
+        size === "wide" && "max-h-[320px]",
+        size === "large" && "max-h-[360px]",
+        size === "tall" && "max-h-[400px]",
 
         // IMPROVED: Professional glassmorphism following 2025 trends
         // Premium featured cards: Maximum glass effect
@@ -317,9 +324,9 @@ export function ReviewCard({
       {/* Card content */}
       <div
         className={cn(
-          "relative flex flex-col h-full gap-3",
-          // IMPROVED: Tighter padding for better height control
-          size === "small" ? "p-4" : size === "large" ? "p-5 md:p-6" : "p-4 md:p-5"
+          "relative flex flex-col h-full gap-2.5",
+          // Compact padding for efficient space usage
+          "p-4"
         )}
       >
         {/* IMPROVED: Preview image with enhanced presentation */}
@@ -356,8 +363,8 @@ export function ReviewCard({
           </div>
         )}
 
-        {/* IMPROVED: Badges - removed Featured (now on image for premium cards) */}
-        <div className="flex flex-wrap gap-3 items-center pointer-events-none">
+        {/* Compact badge row with reduced spacing */}
+        <div className="flex flex-wrap gap-1.5 items-center pointer-events-none">
           {getContentTypeBadge()}
           {getReviewTypeBadge()}
           {getTierBadge()}
@@ -376,18 +383,13 @@ export function ReviewCard({
           className={cn(
             "transition-colors duration-200",
             "group-hover:text-accent-blue",
-            // Premium featured: Bold, larger, more space
-            isPremiumFeatured && "font-bold",
-            // High importance: Semibold with prominence
-            isHighImportance && !isPremiumFeatured && "font-semibold",
-            // Standard: Semibold
-            !isHighImportance && "font-semibold",
-            // IMPROVED: Tighter line-clamping for better height control
-            size === "small" && "text-sm line-clamp-2 leading-snug",
-            size === "medium" && "text-base md:text-lg line-clamp-2 leading-snug",
-            size === "large" && "text-xl md:text-2xl line-clamp-2 leading-tight",
-            size === "wide" && "text-lg md:text-xl line-clamp-2 leading-snug",
-            size === "tall" && "text-base md:text-lg line-clamp-2 leading-snug",
+            "font-semibold",
+            // Tight line-clamping for compact cards
+            size === "small" && "text-sm line-clamp-2 leading-tight",
+            size === "medium" && "text-base line-clamp-2 leading-tight",
+            size === "wide" && "text-base md:text-lg line-clamp-2 leading-tight",
+            size === "large" && "text-lg md:text-xl line-clamp-2 leading-tight",
+            size === "tall" && "text-base md:text-lg line-clamp-2 leading-tight",
             // Text color hierarchy
             isPremiumFeatured ? "text-gray-900" : "text-gray-800"
           )}
@@ -399,11 +401,9 @@ export function ReviewCard({
         {size !== "small" && (
           <p
             className={cn(
-              "text-gray-600 leading-relaxed",
-              // IMPROVED: Tighter line-clamping to reduce height
-              size === "large" ? "text-sm md:text-base line-clamp-3" : "text-sm line-clamp-2",
-              size === "wide" && "line-clamp-2",
-              size === "tall" && "line-clamp-3"
+              "text-gray-600 text-sm leading-snug",
+              // Tight line-clamping for compact vertical rhythm
+              "line-clamp-2"
             )}
           >
             {review.description}
@@ -451,19 +451,19 @@ export function ReviewCard({
             </div>
           )}
 
-          {/* Metadata footer */}
-          <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
+          {/* Metadata footer - compact spacing */}
+          <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
             {/* Price - highlighted for expert reviews */}
             {review.review_type === "expert" && review.price ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent-blue/10 border border-accent-blue/20">
-                <DollarSign className="size-4 text-accent-blue" />
-                <span className="font-bold text-accent-blue text-base">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent-blue/10 border border-accent-blue/20">
+                <DollarSign className="size-3.5 text-accent-blue" />
+                <span className="font-bold text-accent-blue text-sm">
                   {formatPrice(review.price, review.currency)}
                 </span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <DollarSign className="size-4 text-accent-blue" />
+              <div className="flex items-center gap-1">
+                <DollarSign className="size-3.5 text-accent-blue" />
                 <span className="font-semibold text-gray-900">
                   {formatPrice(review.price, review.currency)}
                 </span>
@@ -471,15 +471,15 @@ export function ReviewCard({
             )}
 
             {/* Deadline */}
-            <div className="flex items-center gap-1.5">
-              <Calendar className="size-4" />
+            <div className="flex items-center gap-1">
+              <Calendar className="size-3.5" />
               <span>{formatDeadline(review.deadline)}</span>
             </div>
 
             {/* Creator rating */}
             {review.creator_rating && (
-              <div className="flex items-center gap-1.5">
-                <Star className="size-4 text-amber-500 fill-amber-500" />
+              <div className="flex items-center gap-1">
+                <Star className="size-3.5 text-amber-500 fill-amber-500" />
                 <span>{review.creator_rating.toFixed(1)}</span>
               </div>
             )}

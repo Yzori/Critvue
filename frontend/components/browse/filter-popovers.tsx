@@ -192,7 +192,7 @@ export function ReviewTypePopover({
 // Sort Popover (Radio Group)
 // ============================================================================
 
-export type SortOption = "recent" | "price_high" | "price_low" | "deadline";
+export type SortOption = "recent" | "price_high" | "price_low" | "deadline" | "popular";
 
 export interface SortPopoverProps {
   selected: SortOption;
@@ -203,9 +203,9 @@ export interface SortPopoverProps {
 export function SortPopover({ selected, onChange, onClose }: SortPopoverProps) {
   const options: Array<{ value: SortOption; label: string; icon?: string }> = [
     { value: "recent", label: "Most Recent", icon: "🕐" },
-    { value: "price_high", label: "Highest Paid", icon: "💰" },
-    { value: "price_low", label: "Lowest Paid", icon: "💵" },
-    { value: "deadline", label: "Urgent", icon: "⚡" },
+    { value: "deadline", label: "Expiring Soon", icon: "⚡" },
+    { value: "price_high", label: "Highest Paying", icon: "💰" },
+    { value: "popular", label: "Most Popular Reviewer", icon: "⭐" },
   ];
 
   const handleSelect = (value: SortOption) => {

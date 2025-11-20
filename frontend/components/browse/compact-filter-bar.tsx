@@ -66,9 +66,10 @@ export function CompactFilterBar({
   const getSortLabel = (sort: SortOption): string => {
     const labels = {
       recent: "Recent",
-      price_high: "Highest Paid",
+      price_high: "Highest Paying",
       price_low: "Lowest Paid",
-      deadline: "Urgent",
+      deadline: "Expiring Soon",
+      popular: "Popular Reviewer",
     };
     return labels[sort];
   };

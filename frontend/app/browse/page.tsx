@@ -13,17 +13,19 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 /**
- * Browse Page - Modern marketplace with Bento Grid layout
+ * Browse Page - Smart Two-Tier Marketplace Layout
  *
  * Features:
+ * - Two-tier layout: Paid/Featured reviews at top, Free reviews below
+ * - Section 1: 2-column grid for paid opportunities (larger cards)
+ * - Section 2: 3-4 column grid for free reviews (compact cards)
+ * - Smart card sizing based on review type and slot availability
+ * - Enhanced sort options: Recent, Expiring Soon, Highest Paying, Popular Reviewer
+ * - Glassmorphism aesthetic with visual hierarchy
+ * - Responsive filters: Desktop popovers, mobile bottom sheet
  * - Public page (no auth required)
- * - Bento Grid layout with variable card sizes
- * - Glassmorphism aesthetic
- * - Filter chips on desktop, bottom sheet on mobile
- * - Skeleton loading states
- * - Empty state handling
- * - Responsive design
- * - Infinite scroll ready (pagination support)
+ * - Skeleton loading states and empty state handling
+ * - Pagination ready for infinite scroll
  */
 export default function BrowsePage() {
   // State
@@ -35,7 +37,7 @@ export default function BrowsePage() {
   // Filter state
   const [contentType, setContentType] = React.useState<ContentType | "all">("all");
   const [reviewType, setReviewType] = React.useState<ReviewType | "all">("all");
-  const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline">("recent");
+  const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline" | "popular">("recent");
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Fetch reviews
@@ -74,87 +76,51 @@ export default function BrowsePage() {
     setSearchQuery("");
   };
 
-  // Screen size detection for responsive card sizing
-  const [screenSize, setScreenSize] = React.useState<"mobile" | "tablet" | "desktop" | "large">("desktop");
+  // Split reviews into two tiers: Featured/Paid and Others
+  const splitReviews = React.useMemo(() => {
+    const featuredPaid: BrowseReviewItem[] = [];
+    const others: BrowseReviewItem[] = [];
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 640) setScreenSize("mobile");
-      else if (width < 1024) setScreenSize("tablet");
-      else if (width < 1536) setScreenSize("desktop");
-      else setScreenSize("large");
-    };
+    reviews.forEach((review) => {
+      // Tier 1: Paid/Expert reviews OR featured reviews
+      if (review.review_type === "expert" || review.is_featured) {
+        featuredPaid.push(review);
+      } else {
+        // Tier 2: Free reviews
+        others.push(review);
+      }
+    });
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    return { featuredPaid, others };
+  }, [reviews]);
 
-  // Calculate importance score for intelligent card sizing
-  const calculateImportance = (review: BrowseReviewItem): number => {
-    let score = 50; // Base score
+  // Smart card sizing for Featured/Paid section (2-column grid)
+  const getFeaturedCardSize = (
+    review: BrowseReviewItem,
+    index: number
+  ): "medium" | "wide" => {
+    // Keep all cards in the paid section as medium or wide only
+    // No large cards to avoid oversized cards
+    const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
 
-    // Expert reviews are more important
-    if (review.review_type === "expert") score += 25;
+    // Wide cards for urgency or every 3rd card for variety
+    if (almostFull || index % 3 === 0) return "wide";
 
-    // Higher price = more important
-    const price = review.price || 0;
-    if (price > 150) score += 20;
-    else if (price > 100) score += 15;
-    else if (price > 75) score += 10;
-
-    // Urgent reviews stand out
-    if (review.urgency === "high") score += 20;
-    else if (review.urgency === "medium") score += 8;
-
-    // Featured flag - strongest indicator
-    if (review.is_featured) score += 35;
-
-    return Math.min(score, 100);
+    // Default to medium
+    return "medium";
   };
 
-  // IMPROVED: Clean, predictable card sizing following 60-30-10 design rule
-  // 60% standard cards, 30% featured cards, 10% accent cards
-  const getCardSize = (
-    review: BrowseReviewItem,
-    index: number,
-    _totalReviews: number
-  ): "small" | "medium" | "large" | "wide" | "tall" => {
-    // Mobile: Maintain visual hierarchy with limited size variation
-    if (screenSize === "mobile") {
-      const importanceScore = calculateImportance(review);
-      // Even on mobile, featured content should stand out slightly
-      return importanceScore >= 85 ? "wide" : "medium";
-    }
+  // Smart card sizing for Others section (3-4 column grid)
+  const getOthersCardSize = (
+    review: BrowseReviewItem
+  ): "small" | "medium" => {
+    const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
 
-    // Calculate importance score
-    const importanceScore = calculateImportance(review);
+    // Medium for almost full (show progress bar)
+    if (almostFull) return "medium";
 
-    // PREMIUM FEATURED (85+): Hero cards - maximum visual impact
-    if (importanceScore >= 85) {
-      // Alternate between large square and wide for variety
-      return index % 2 === 0 ? "large" : "wide";
-    }
-
-    // HIGH IMPORTANCE (70-84): Featured cards - prominent but not dominating
-    if (importanceScore >= 70) {
-      // Use a clean 1-2-3 pattern for predictable rhythm
-      const pattern = index % 3;
-      if (pattern === 0) return "wide"; // 2x1
-      if (pattern === 1 && screenSize === "desktop") return "tall"; // 1x2 on desktop only
-      return "medium"; // 1x1
-    }
-
-    // MEDIUM IMPORTANCE (55-69): Standard cards with occasional accent
-    if (importanceScore >= 55) {
-      // Every 5th card gets a wide layout for visual interest
-      if (index % 5 === 0) return "wide";
-      return "medium";
-    }
-
-    // STANDARD (< 55): Regular grid items
-    return "medium";
+    // Small for standard free reviews
+    return "small";
   };
 
   return (
@@ -206,7 +172,7 @@ export default function BrowsePage() {
       />
 
       {/* Main content */}
-      <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error state */}
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
@@ -223,85 +189,152 @@ export default function BrowsePage() {
           </div>
         )}
 
-        {/* Professional Bento Grid Layout */}
-        <div
-          className={cn(
-            "grid",
-            // FIXED: Explicit grid template columns for proper card spanning
-            "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-            // IMPROVED: Smaller row units for tighter control (10px units, reduced from 12px)
-            "auto-rows-[10px]",
-            // FIXED: Dense packing to eliminate white space gaps
-            "[grid-auto-flow:dense]",
-            // Responsive gaps - tighter for professional density
-            "gap-3 sm:gap-4 lg:gap-5"
-          )}
-          role="list"
-          aria-label="Browse review requests"
-        >
-          {/* Loading state */}
-          {loading && <ReviewCardSkeletonGrid count={8} />}
+        {/* Loading state */}
+        {loading && <ReviewCardSkeletonGrid count={8} />}
 
-          {/* Empty state */}
-          {!loading && reviews.length === 0 && (
-            <EmptyState onClearFilters={handleResetFilters} />
-          )}
+        {/* Empty state */}
+        {!loading && reviews.length === 0 && (
+          <EmptyState onClearFilters={handleResetFilters} />
+        )}
 
-          {/* IMPROVED: Review cards with grid spans and refined entrance animations */}
-          {!loading &&
-            reviews.map((review, index) => {
-              const cardSize = getCardSize(review, index, reviews.length);
-              const importance = calculateImportance(review);
-
-              // MASONRY-STYLE: Calculate grid span based on card size
-              // Using 10px row units with h-full cards filling cells:
-              // - small: 12 units = 120px (compact, tight)
-              // - medium: 16 units = 160px (standard)
-              // - wide: 16 units = 160px (standard height, 2x width)
-              // - tall: 24 units = 240px (featured content)
-              // - large: 24 units = 240px (hero cards)
-              const getSpanClass = (size: typeof cardSize) => {
-                switch (size) {
-                  case "large":
-                    // 2 columns × 2 rows (large card) - 240px height
-                    return "col-span-1 sm:col-span-2 row-span-[16] sm:row-span-[24]";
-                  case "wide":
-                    // 2 columns × 1 row (wide card) - 160px height
-                    return "col-span-1 sm:col-span-2 row-span-[16]";
-                  case "tall":
-                    // 1 column × 2 rows (tall card, desktop+ only) - 240px height
-                    return "col-span-1 row-span-[16] lg:row-span-[24]";
-                  case "small":
-                    // 1 column × 1 row (compact) - 120px height
-                    return "col-span-1 row-span-[12]";
-                  case "medium":
-                  default:
-                    // 1 column × 1 row (standard) - 160px height
-                    return "col-span-1 row-span-[16]";
-                }
-              };
-
-              return (
-                <div
-                  key={review.id}
-                  role="listitem"
-                  className={getSpanClass(cardSize)}
-                >
-                  <ReviewCard
-                    review={review}
-                    size={cardSize}
-                    importance={importance}
-                    className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
-                    style={{
-                      // Staggered animation with reduced delay for smoother flow
-                      animationDelay: `${Math.min(index * 40, 800)}ms`,
-                      animationFillMode: "backwards",
-                    }}
-                  />
+        {/* Two-Tier Layout: Featured/Paid + All Others */}
+        {!loading && reviews.length > 0 && (
+          <div className="space-y-12">
+            {/* SECTION 1: Featured/Paid Reviews (Top Priority) */}
+            {splitReviews.featuredPaid.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Paid Opportunities
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Expert reviews with compensation
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {splitReviews.featuredPaid.length} {splitReviews.featuredPaid.length === 1 ? "opportunity" : "opportunities"}
+                  </div>
                 </div>
-              );
-            })}
-        </div>
+
+                {/* 2-column grid for featured/paid (larger cards) */}
+                <div
+                  className={cn(
+                    "grid",
+                    "grid-cols-1 md:grid-cols-2",
+                    "auto-rows-[10px]",
+                    "gap-4"
+                  )}
+                  role="list"
+                  aria-label="Featured and paid review opportunities"
+                >
+                  {splitReviews.featuredPaid.map((review, index) => {
+                    const cardSize = getFeaturedCardSize(review, index);
+
+                    // Calculate grid span for 2-column layout
+                    const getSpanClass = (size: typeof cardSize) => {
+                      switch (size) {
+                        case "wide":
+                          // 2 columns × compact height (140px)
+                          return "col-span-1 md:col-span-2 row-span-[14]";
+                        case "medium":
+                        default:
+                          // 1 column × compact height (140px)
+                          return "col-span-1 row-span-[14]";
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={review.id}
+                        role="listitem"
+                        className={getSpanClass(cardSize)}
+                      >
+                        <ReviewCard
+                          review={review}
+                          size={cardSize}
+                          importance={90} // High importance for featured/paid
+                          className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
+                          style={{
+                            animationDelay: `${Math.min(index * 50, 600)}ms`,
+                            animationFillMode: "backwards",
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* SECTION 2: All Other Reviews (Free/Standard) */}
+            {splitReviews.others.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      Free Reviews
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Community feedback and portfolio building
+                    </p>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {splitReviews.others.length} {splitReviews.others.length === 1 ? "review" : "reviews"}
+                  </div>
+                </div>
+
+                {/* 3-4 column grid for free reviews (compact cards) */}
+                <div
+                  className={cn(
+                    "grid",
+                    "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                    "auto-rows-[10px]",
+                    "gap-4"
+                  )}
+                  role="list"
+                  aria-label="Free review opportunities"
+                >
+                  {splitReviews.others.map((review, index) => {
+                    const cardSize = getOthersCardSize(review);
+
+                    // Calculate grid span for 3-4 column layout
+                    const getSpanClass = (size: typeof cardSize) => {
+                      switch (size) {
+                        case "medium":
+                          // Standard card with progress bar (140px)
+                          return "col-span-1 row-span-[14]";
+                        case "small":
+                        default:
+                          // Compact free review card (120px)
+                          return "col-span-1 row-span-[12]";
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={review.id}
+                        role="listitem"
+                        className={getSpanClass(cardSize)}
+                      >
+                        <ReviewCard
+                          review={review}
+                          size={cardSize}
+                          importance={50} // Standard importance for free reviews
+                          className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
+                          style={{
+                            animationDelay: `${Math.min(index * 30, 800)}ms`,
+                            animationFillMode: "backwards",
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
 
         {/* Load more section (placeholder for pagination/infinite scroll) */}
         {!loading && reviews.length > 0 && (
@@ -344,31 +377,30 @@ export default function BrowsePage() {
         }
 
         /*
-         * Professional Bento Grid Layout (v3 - FIXED)
+         * Smart Two-Tier Marketplace Layout
          *
-         * FIXED: Uses explicit Tailwind grid-template-columns instead of custom CSS
-         * - grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-         * - auto-rows-[minmax(280px,auto)] for consistent row heights
-         * - Cards span properly: col-span-2, row-span-2, etc.
-         * - Eliminates white space and layout inconsistencies
+         * Design Strategy:
+         * - Two-tier system prioritizes paid opportunities
+         * - Section 1: Featured/Paid (2-column grid, larger cards)
+         * - Section 2: Free Reviews (3-4 column grid, compact cards)
          *
-         * IMPROVED: Maintains natural flow (no grid-auto-flow: dense)
-         * - Logical reading order (top-to-bottom, left-to-right)
-         * - Visual order matches DOM order for accessibility
-         * - Predictable layout that users can scan naturally
-         * - Intelligent card sizing algorithm creates visual hierarchy
+         * Card Sizing Logic:
+         * - Paid reviews: Large cards with prominent pricing
+         * - Almost full slots: Medium cards with progress bar (urgency)
+         * - Free reviews: Small compact cards
+         * - Featured reviews: Large spotlight cards
          *
-         * Design principles:
-         * - 60-30-10 rule: 60% standard cards, 30% featured, 10% hero
-         * - Importance-based sizing creates natural focal points
-         * - Asymmetric variety without chaos
-         * - Professional density with breathing room
+         * Grid Layouts:
+         * - Featured/Paid: 1 col mobile, 2 col desktop (lg:grid-cols-2)
+         * - Free Reviews: 1→2→3→4 responsive columns
+         * - Auto-rows: 10px units for precise height control
          *
-         * Accessibility compliance:
-         * - Logical DOM order preserved visually
-         * - role="list" and role="listitem" maintain semantics
-         * - Keyboard navigation follows visual layout
-         * - Meets WCAG 2.1 Level AA (meaningful sequence)
+         * Accessibility:
+         * - Semantic section elements with descriptive headings
+         * - role="list" and role="listitem" for screen readers
+         * - Logical DOM order matches visual hierarchy
+         * - Keyboard navigation follows natural flow
+         * - WCAG 2.1 Level AA compliant
          */
       `}</style>
     </div>
