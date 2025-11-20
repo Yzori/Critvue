@@ -9,6 +9,9 @@ import { CompactFilterBar } from "@/components/browse/compact-filter-bar";
 import { FilterBottomSheet } from "@/components/browse/filter-bottom-sheet";
 import { EmptyState } from "@/components/browse/empty-state";
 import { ReviewCardSkeletonGrid } from "@/components/browse/review-card-skeleton";
+import { FeaturedHero } from "@/components/browse/hero/featured-hero";
+import { CategoryCards } from "@/components/browse/hero/category-cards";
+import { PickedForYou } from "@/components/browse/hero/picked-for-you";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
@@ -76,22 +79,40 @@ export default function BrowsePage() {
     setSearchQuery("");
   };
 
-  // Split reviews into two tiers: Featured/Paid and Others
+  // Split reviews into tiers: Hero Featured, Paid/Expert, Recommended, and Others
   const splitReviews = React.useMemo(() => {
+    const heroFeatured: BrowseReviewItem[] = [];
+    const recommended: BrowseReviewItem[] = [];
     const featuredPaid: BrowseReviewItem[] = [];
     const others: BrowseReviewItem[] = [];
 
     reviews.forEach((review) => {
-      // Tier 1: Paid/Expert reviews OR featured reviews
-      if (review.review_type === "expert" || review.is_featured) {
+      // Hero tier: Top 3-5 featured opportunities for carousel
+      if (review.is_featured && heroFeatured.length < 5) {
+        heroFeatured.push(review);
+      }
+      // Recommended tier: High-value or well-matched reviews (limit to 3 for focus)
+      else if (
+        (review.review_type === "expert" && (review.price ?? 0) > 75) ||
+        (review.creator_rating && review.creator_rating >= 4.5)
+      ) {
+        if (recommended.length < 3) {
+          recommended.push(review);
+        } else {
+          featuredPaid.push(review);
+        }
+      }
+      // Paid tier: Expert reviews OR featured reviews not in hero
+      else if (review.review_type === "expert" || review.is_featured) {
         featuredPaid.push(review);
-      } else {
-        // Tier 2: Free reviews
+      }
+      // Free tier
+      else {
         others.push(review);
       }
     });
 
-    return { featuredPaid, others };
+    return { heroFeatured, recommended, featuredPaid, others };
   }, [reviews]);
 
   // Smart card sizing for Featured/Paid section (2-column grid)
@@ -197,9 +218,33 @@ export default function BrowsePage() {
           <EmptyState onClearFilters={handleResetFilters} />
         )}
 
-        {/* Two-Tier Layout: Featured/Paid + All Others */}
+        {/* Discovery Experience: Hero + Personalized + Categories */}
         {!loading && reviews.length > 0 && (
           <div className="space-y-12">
+            {/* Hero Section - Featured Carousel */}
+            {splitReviews.heroFeatured.length > 0 && (
+              <FeaturedHero featuredReviews={splitReviews.heroFeatured} />
+            )}
+
+            {/* Picked For You - Personalized Recommendations (Top Priority for Logged-in Users) */}
+            {splitReviews.recommended.length > 0 && (
+              <PickedForYou
+                recommendations={splitReviews.recommended.slice(0, 3)}
+                userSkills={["React", "TypeScript", "UI/UX"]} // TODO: Get from user profile
+              />
+            )}
+
+            {/* Category Cards - Interactive Browse */}
+            <CategoryCards
+              onCategorySelect={(category) => setContentType(category)}
+              selectedCategory={contentType}
+            />
+          </div>
+        )}
+
+        {/* Two-Tier Layout: Featured/Paid + All Others */}
+        {!loading && reviews.length > 0 && (
+          <div className="space-y-12 mt-12">
             {/* SECTION 1: Featured/Paid Reviews (Top Priority) */}
             {splitReviews.featuredPaid.length > 0 && (
               <section>
