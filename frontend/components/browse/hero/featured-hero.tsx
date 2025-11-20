@@ -83,7 +83,7 @@ export function FeaturedHero({ featuredReviews }: FeaturedHeroProps) {
   };
 
   return (
-    <section className="relative w-full h-[500px] md:h-[600px] rounded-3xl overflow-hidden group">
+    <section className="relative w-full h-[400px] md:h-[480px] rounded-3xl overflow-hidden group">
       {/* Background Images with Fade Transition */}
       <div className="absolute inset-0">
         {featuredReviews.map((review, index) => (
@@ -104,12 +104,12 @@ export function FeaturedHero({ featuredReviews }: FeaturedHeroProps) {
                 />
               </div>
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-blue via-accent-peach to-accent-sage" />
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
             )}
 
-            {/* Gradient Overlays for Text Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+            {/* Stronger Gradient Overlays for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
           </div>
         ))}
       </div>

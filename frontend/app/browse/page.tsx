@@ -12,6 +12,8 @@ import { ReviewCardSkeletonGrid } from "@/components/browse/review-card-skeleton
 import { FeaturedHero } from "@/components/browse/hero/featured-hero";
 import { CategoryCards } from "@/components/browse/hero/category-cards";
 import { PickedForYou } from "@/components/browse/hero/picked-for-you";
+import { PremiumHeroCard } from "@/components/browse/premium-hero-card";
+import { CommunityGalleryCard } from "@/components/browse/community-gallery-card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
@@ -245,16 +247,16 @@ export default function BrowsePage() {
         {/* Two-Tier Layout: Featured/Paid + All Others */}
         {!loading && reviews.length > 0 && (
           <div className="space-y-12 mt-12">
-            {/* SECTION 1: Featured/Paid Reviews (Top Priority) */}
+            {/* SECTION 1: Marketplace Showcase - Premium Paid Opportunities */}
             {splitReviews.featuredPaid.length > 0 && (
               <section>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                      Paid Opportunities
+                      Premium Marketplace
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      Expert reviews with compensation
+                      Exclusive paid opportunities with top compensation
                     </p>
                   </div>
                   <div className="text-sm text-gray-500">
@@ -262,119 +264,115 @@ export default function BrowsePage() {
                   </div>
                 </div>
 
-                {/* 2-column grid for featured/paid (larger cards) */}
+                {/* Clean Premium Container - Subtle Refinement */}
                 <div
                   className={cn(
-                    "grid",
-                    "grid-cols-1 md:grid-cols-2",
-                    "auto-rows-[10px]",
-                    "gap-4"
+                    "relative overflow-hidden rounded-2xl p-4",
+                    "bg-gray-50/50",
+                    "border border-gray-200",
+                    "shadow-sm"
                   )}
-                  role="list"
-                  aria-label="Featured and paid review opportunities"
                 >
-                  {splitReviews.featuredPaid.map((review, index) => {
-                    const cardSize = getFeaturedCardSize(review, index);
-
-                    // Calculate grid span for 2-column layout
-                    const getSpanClass = (size: typeof cardSize) => {
-                      switch (size) {
-                        case "wide":
-                          // 2 columns × compact height (140px)
-                          return "col-span-1 md:col-span-2 row-span-[14]";
-                        case "medium":
-                        default:
-                          // 1 column × compact height (140px)
-                          return "col-span-1 row-span-[14]";
-                      }
-                    };
-
-                    return (
-                      <div
-                        key={review.id}
-                        role="listitem"
-                        className={getSpanClass(cardSize)}
-                      >
-                        <ReviewCard
-                          review={review}
-                          size={cardSize}
-                          importance={90} // High importance for featured/paid
-                          className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
-                          style={{
-                            animationDelay: `${Math.min(index * 50, 600)}ms`,
-                            animationFillMode: "backwards",
-                          }}
-                        />
+                  {/* Marketplace Showcase Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                    {/* LEFT: Hero Featured Card (60% width = 3/5 columns) */}
+                    {splitReviews.featuredPaid[0] && (
+                      <div className="lg:col-span-3">
+                        <PremiumHeroCard review={splitReviews.featuredPaid[0]} />
                       </div>
-                    );
-                  })}
+                    )}
+
+                    {/* RIGHT: Supporting Grid (40% width = 2/5 columns) */}
+                    {splitReviews.featuredPaid.length > 1 && (
+                      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                        {splitReviews.featuredPaid.slice(1, 5).map((review, index) => (
+                          <div
+                            key={review.id}
+                            className="h-full min-h-[220px]"
+                          >
+                            <ReviewCard
+                              review={review}
+                              size="medium"
+                              importance={70 - (index * 5)}
+                              className="animate-in fade-in slide-in-from-right-4 duration-500 h-full opacity-95"
+                              style={{
+                                animationDelay: `${(index + 1) * 100}ms`,
+                                animationFillMode: "backwards",
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Show remaining paid reviews in standard grid if more than 5 */}
+                  {splitReviews.featuredPaid.length > 5 && (
+                    <div className="mt-6 pt-6 border-t border-gray-200/50">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {splitReviews.featuredPaid.slice(5).map((review, index) => (
+                          <div
+                            key={review.id}
+                            className="h-full min-h-[180px]"
+                          >
+                            <ReviewCard
+                              review={review}
+                              size="small"
+                              importance={70}
+                              className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
+                              style={{
+                                animationDelay: `${(index + 5) * 50}ms`,
+                                animationFillMode: "backwards",
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
 
-            {/* SECTION 2: All Other Reviews (Free/Standard) */}
+            {/* SECTION 2: Community Gallery - Free Reviews */}
             {splitReviews.others.length > 0 && (
               <section>
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                      Free Reviews
+                      Community Gallery
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      Community feedback and portfolio building
+                      Help out fellow creators and earn good karma ✨
                     </p>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {splitReviews.others.length} {splitReviews.others.length === 1 ? "review" : "reviews"}
+                    {splitReviews.others.length} {splitReviews.others.length === 1 ? "opportunity" : "opportunities"}
                   </div>
                 </div>
 
-                {/* 3-4 column grid for free reviews (compact cards) */}
+                {/* Uniform Grid Layout for Community Gallery */}
                 <div
                   className={cn(
-                    "grid",
-                    "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
-                    "auto-rows-[10px]",
+                    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
                     "gap-4"
                   )}
                   role="list"
-                  aria-label="Free review opportunities"
+                  aria-label="Community gallery - free review opportunities"
                 >
-                  {splitReviews.others.map((review, index) => {
-                    const cardSize = getOthersCardSize(review);
-
-                    // Calculate grid span for 3-4 column layout
-                    const getSpanClass = (size: typeof cardSize) => {
-                      switch (size) {
-                        case "medium":
-                          // Standard card with progress bar (140px)
-                          return "col-span-1 row-span-[14]";
-                        case "small":
-                        default:
-                          // Compact free review card (120px)
-                          return "col-span-1 row-span-[12]";
-                      }
-                    };
-
-                    return (
-                      <div
-                        key={review.id}
-                        role="listitem"
-                        className={getSpanClass(cardSize)}
-                      >
-                        <ReviewCard
-                          review={review}
-                          size={cardSize}
-                          importance={50} // Standard importance for free reviews
-                          className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
-                          style={{
-                            animationDelay: `${Math.min(index * 30, 800)}ms`,
-                            animationFillMode: "backwards",
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
+                  {splitReviews.others.map((review, index) => (
+                    <div
+                      key={review.id}
+                      role="listitem"
+                      className="animate-in fade-in duration-500"
+                      style={{
+                        animationDelay: `${Math.min(index * 50, 1000)}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <CommunityGalleryCard review={review} />
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
