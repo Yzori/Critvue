@@ -26,13 +26,25 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# Temporary files
+Untitled.*
+**/temp/
+**/tmp/
+dev_emails/
+
 # Uploads
 uploads/
 
 # Testing
 coverage/
 .pytest_cache/
+htmlcov/
+.coverage
+*.html.test
+test-*.html
 
 # Database
 *.db
 *.sqlite3
+*.db.backup*
+*.db.bak

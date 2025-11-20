@@ -64,9 +64,8 @@ export default function ReviewerHubPage() {
         // If less than 2 reviews, redirect to single-review page
         if (combinedSlots.length < 2 && combinedSlots.length > 0 && combinedSlots[0]) {
           router.push(`/reviewer/review/${combinedSlots[0].id}`);
-        } else if (combinedSlots.length === 0) {
-          router.push("/dashboard?role=reviewer");
         }
+        // Don't redirect when there are no reviews - show empty state instead
       } catch (err) {
         console.error("Error fetching reviews:", err);
         setError("Failed to load reviews. Please try again.");
