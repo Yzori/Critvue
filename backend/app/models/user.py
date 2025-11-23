@@ -111,6 +111,8 @@ class User(Base):
     expert_applications = relationship("ExpertApplication", back_populates="user", cascade="all, delete-orphan")
     karma_transactions = relationship("KarmaTransaction", back_populates="user", cascade="all, delete-orphan")
     tier_milestones = relationship("TierMilestone", back_populates="user", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
+    notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

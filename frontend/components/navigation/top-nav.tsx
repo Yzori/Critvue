@@ -3,11 +3,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types/auth";
 import { UserMenu } from "./user-menu";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 /**
  * TopNav Component - Main Navigation Header
@@ -207,19 +208,7 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
               {/* Notifications - Desktop only, authenticated users */}
               {user &&
                 (variant === "full" || variant === "responsive") && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden lg:flex relative"
-                    aria-label="Notifications"
-                  >
-                    <Bell className="size-5" />
-                    {/* Notification badge - example */}
-                    <span
-                      className="absolute top-2 right-2 size-2 bg-accent-peach rounded-full"
-                      aria-hidden="true"
-                    />
-                  </Button>
+                  <NotificationBell />
                 )}
 
               {/* CTA Button - Tablet/Desktop */}

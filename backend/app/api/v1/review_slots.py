@@ -38,6 +38,15 @@ from app.services.review_karma_hooks import (
     on_dispute_created,
     on_dispute_resolved
 )
+from app.services.notification_triggers import (
+    notify_slot_claimed,
+    notify_slot_abandoned,
+    notify_review_submitted,
+    notify_review_accepted,
+    notify_review_rejected,
+    notify_dispute_created,
+    notify_dispute_resolved,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +85,9 @@ async def claim_review_slot(
         claimed_slot = await claim_service.claim_review_by_slot_id(
             db, slot_id, current_user.id
         )
+
+        # Send notification to requester
+        await notify_slot_claimed(db, slot_id, current_user.id)
 
         logger.info(f"User {current_user.id} claimed slot {slot_id}")
 
@@ -128,6 +140,9 @@ async def abandon_review_slot(
 
         # Award karma penalty for abandoning claim
         await on_claim_abandoned(db, abandoned_slot.id, current_user.id)
+
+        # Send notification to requester
+        await notify_slot_abandoned(db, slot_id, current_user.id)
 
         logger.info(f"User {current_user.id} abandoned slot {slot_id}")
 
@@ -207,6 +222,9 @@ async def submit_review(
 
         # Award karma for submitting review
         await on_review_submitted(db, submitted_slot.id, current_user.id)
+
+        # Send notification to requester
+        await notify_review_submitted(db, slot_id, current_user.id)
 
         logger.info(f"User {current_user.id} submitted review for slot {slot_id}")
 
@@ -756,6 +774,9 @@ async def submit_smart_review(
         # Award karma for submitting review
         await on_review_submitted(db, slot.id, current_user.id)
 
+        # Send notification to requester
+        await notify_review_submitted(db, slot_id, current_user.id)
+
         logger.info(f"User {current_user.id} submitted Smart Review for slot {slot_id}")
 
         return slot
@@ -907,6 +928,28 @@ async def accept_review(
             helpful_rating=accept_data.helpful_rating
         )
 
+        # Get karma info for notification
+        from app.models.user_tier import UserTier
+        from sqlalchemy import select
+        result = await db.execute(
+            select(UserTier).where(UserTier.user_id == accepted_slot.reviewer_id)
+        )
+        user_tier = result.scalar_one_or_none()
+        karma_earned = 50  # Base karma for accepted review
+        if accept_data.helpful_rating >= 4:
+            karma_earned += 10
+        new_karma = user_tier.karma_points if user_tier else karma_earned
+
+        # Send notification to reviewer
+        await notify_review_accepted(
+            db,
+            slot_id,
+            accepted_slot.reviewer_id,
+            accept_data.helpful_rating,
+            karma_earned,
+            new_karma
+        )
+
         logger.info(f"User {current_user.id} accepted review for slot {slot_id}")
 
         return accepted_slot
@@ -969,6 +1012,27 @@ async def reject_review(
 
         # Deduct karma for rejected review
         await on_review_rejected(db, rejected_slot.id, rejected_slot.reviewer_id)
+
+        # Get karma info for notification
+        from app.models.user_tier import UserTier
+        from sqlalchemy import select
+        result = await db.execute(
+            select(UserTier).where(UserTier.user_id == rejected_slot.reviewer_id)
+        )
+        user_tier = result.scalar_one_or_none()
+        karma_penalty = 25  # Karma penalty for rejected review
+        new_karma = user_tier.karma_points if user_tier else 0
+
+        # Send notification to reviewer
+        await notify_review_rejected(
+            db,
+            slot_id,
+            rejected_slot.reviewer_id,
+            reject_data.rejection_reason.value,
+            reject_data.rejection_notes,
+            karma_penalty,
+            new_karma
+        )
 
         logger.info(
             f"User {current_user.id} rejected review for slot {slot_id} "
@@ -1036,6 +1100,9 @@ async def create_dispute(
 
         # Track dispute creation (no karma change yet)
         await on_dispute_created(db, disputed_slot.id, current_user.id)
+
+        # Send notifications to requester and admins
+        await notify_dispute_created(db, slot_id, current_user.id)
 
         logger.info(f"User {current_user.id} created dispute for slot {slot_id}")
 
@@ -1291,6 +1358,15 @@ async def resolve_dispute(
             resolved_slot.id,
             resolved_slot.reviewer_id,
             resolution=resolution_data.resolution.value
+        )
+
+        # Send notifications to reviewer and requester
+        await notify_dispute_resolved(
+            db,
+            slot_id,
+            resolved_slot.reviewer_id,
+            resolution_data.resolution.value,
+            resolution_data.admin_notes
         )
 
         logger.info(
