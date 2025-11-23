@@ -915,6 +915,44 @@ class ApplicationService:
         self.db.add(probation)
         self.db.commit()
 
+        # TIER/REPUTATION SYSTEM: Fast-track to MASTER tier
+        # Import TierService for async context
+        try:
+            from app.services.tier_service import TierService
+            tier_service = TierService(self.db)
+
+            # Use asyncio to run the async method if needed, or make this method async
+            # For now, manually update the user's tier fields
+            from app.models.user import User, UserTier
+            user = self.db.query(User).filter(User.id == application.user_id).first()
+            if user:
+                # Set expert application approved flag
+                user.expert_application_approved = True
+
+                # Award minimum karma if below threshold
+                if (user.karma_points or 0) < 15000:
+                    user.karma_points = 15000
+
+                # Promote to MASTER tier
+                user.user_tier = UserTier.MASTER
+                user.tier_achieved_at = datetime.utcnow()
+
+                # Create milestone record
+                from app.models.tier_milestone import TierMilestone
+                milestone = TierMilestone(
+                    user_id=application.user_id,
+                    from_tier=UserTier.NOVICE,  # Assuming they started as novice
+                    to_tier=UserTier.MASTER,
+                    reason="Expert application approved (fast-track)",
+                    karma_at_promotion=user.karma_points or 0,
+                    achieved_at=datetime.utcnow()
+                )
+                self.db.add(milestone)
+                self.db.commit()
+        except ImportError:
+            # Tier system not available, continue without it
+            pass
+
         # Send approval notification
         self.notification_service.send_application_approved(
             application=application,

@@ -24,6 +24,9 @@ export interface ProfileResponse {
   total_reviews_received: number;
   avg_rating: number | null;
   avg_response_time_hours: number | null;
+  user_tier: string;
+  karma_points: number;
+  tier_achieved_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +50,9 @@ export interface ProfileData {
   verified: boolean;
   badges: string[];
   specialty_tags: string[];
+  user_tier: string;
+  karma_points: number;
+  tier_achieved_at?: string;
 }
 
 /**
@@ -105,6 +111,9 @@ export function transformProfileResponse(response: ProfileResponse): ProfileData
     verified: response.is_verified,
     badges: response.badges,
     specialty_tags: response.specialty_tags,
+    user_tier: response.user_tier,
+    karma_points: response.karma_points,
+    tier_achieved_at: response.tier_achieved_at || undefined,
   };
 }
 

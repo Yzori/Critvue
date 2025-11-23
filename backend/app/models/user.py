@@ -39,6 +39,16 @@ class SubscriptionStatus(str, enum.Enum):
     UNPAID = "unpaid"
 
 
+class UserTier(str, enum.Enum):
+    """User tier/reputation levels"""
+    NOVICE = "novice"
+    CONTRIBUTOR = "contributor"
+    SKILLED = "skilled"
+    TRUSTED_ADVISOR = "trusted_advisor"
+    EXPERT = "expert"
+    MASTER = "master"
+
+
 class User(Base):
     """User model for authentication and basic info"""
 
@@ -69,6 +79,17 @@ class User(Base):
     avg_rating = Column(Numeric(precision=3, scale=2), nullable=True)
     avg_response_time_hours = Column(Integer, nullable=True)
 
+    # Tier/Reputation System
+    user_tier = Column(Enum(UserTier, values_callable=lambda x: [e.value for e in x]), default=UserTier.NOVICE, nullable=False, index=True)
+    karma_points = Column(Integer, default=0, nullable=False, server_default='0', index=True)
+    tier_achieved_at = Column(DateTime, nullable=True)  # When current tier was achieved
+    expert_application_approved = Column(Boolean, default=False, nullable=False)  # Fast-track to MASTER
+    acceptance_rate = Column(Numeric(5, 2), nullable=True)  # Cached % of accepted reviews
+    accepted_reviews_count = Column(Integer, default=0, nullable=False, server_default='0')  # Count of accepted reviews
+    current_streak = Column(Integer, default=0, nullable=False, server_default='0')  # Current consecutive review days
+    longest_streak = Column(Integer, default=0, nullable=False, server_default='0')  # Best streak ever
+    last_review_date = Column(DateTime, nullable=True)  # For streak tracking
+
     # Subscription fields
     subscription_tier = Column(Enum(SubscriptionTier), default=SubscriptionTier.FREE, nullable=False)
     subscription_status = Column(Enum(SubscriptionStatus), nullable=True)
@@ -88,6 +109,8 @@ class User(Base):
     # Relationships
     review_requests = relationship("ReviewRequest", back_populates="user", cascade="all, delete-orphan")
     expert_applications = relationship("ExpertApplication", back_populates="user", cascade="all, delete-orphan")
+    karma_transactions = relationship("KarmaTransaction", back_populates="user", cascade="all, delete-orphan")
+    tier_milestones = relationship("TierMilestone", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

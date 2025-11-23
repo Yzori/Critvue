@@ -43,6 +43,8 @@ import {
 } from "@/components/profile/error-states";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { useAuth } from "@/contexts/AuthContext";
+import { TierBadge } from "@/components/tier/tier-badge";
+import { UserTier } from "@/lib/types/tier";
 
 /**
  * Profile Page
@@ -75,6 +77,9 @@ interface ProfileData {
   verified: boolean;
   badges: string[];
   specialty_tags: string[];
+  user_tier: string;
+  karma_points: number;
+  tier_achieved_at?: string;
 }
 
 export default function ProfilePage() {
@@ -256,6 +261,14 @@ export default function ProfilePage() {
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900">
                     {profileData.full_name}
                   </h1>
+
+                  {/* Tier Badge */}
+                  <TierBadge
+                    tier={profileData.user_tier as UserTier}
+                    size="lg"
+                    showName={true}
+                    showTooltip={true}
+                  />
 
                   {/* Star Rating */}
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 backdrop-blur-sm border border-gray-200/50 shadow-sm">
@@ -440,11 +453,31 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
+          {/* Karma Points */}
+          <motion.div
+            className="p-6 sm:p-8 rounded-2xl bg-white border-2 border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ delay: prefersReducedMotion ? 0 : 0.05 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-100/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative">
+              <div className="size-12 sm:size-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-4 shadow-lg">
+                <TrendingUp className="size-6 sm:size-7 text-white" />
+              </div>
+              <div className="text-3xl sm:text-4xl font-black text-gray-900 mb-1">
+                {profileData.karma_points}
+              </div>
+              <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                Karma Points
+              </div>
+            </div>
+          </motion.div>
+
           {/* Rating */}
           <motion.div
             className="p-6 sm:p-8 rounded-2xl bg-white border-2 border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
             whileHover={{ y: -4, scale: 1.02 }}
-            transition={{ delay: prefersReducedMotion ? 0 : 0.1 }}
+            transition={{ delay: prefersReducedMotion ? 0 : 0.15 }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-amber-100/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative">
@@ -476,26 +509,6 @@ export default function ProfilePage() {
               </div>
               <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                 Avg Response
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Member Since */}
-          <motion.div
-            className="p-6 sm:p-8 rounded-2xl bg-white border-2 border-gray-200/50 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
-            whileHover={{ y: -4, scale: 1.02 }}
-            transition={{ delay: prefersReducedMotion ? 0 : 0.3 }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-100/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="relative">
-              <div className="size-12 sm:size-14 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mb-4 shadow-lg">
-                <Calendar className="size-6 sm:size-7 text-white" />
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">
-                {new Date(profileData.member_since).getFullYear()}
-              </div>
-              <div className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                Member Since
               </div>
             </div>
           </motion.div>

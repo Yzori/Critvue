@@ -4,7 +4,7 @@ This module consolidates all claim-related business logic to avoid duplication
 between the browse API and review-slots API.
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 from datetime import datetime
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +19,52 @@ class ClaimValidationError(ValueError):
     pass
 
 
+class TierPermissionError(ValueError):
+    """Raised when user's tier doesn't allow claiming a paid review"""
+    pass
+
+
 class ClaimService:
     """Service for managing review slot claims"""
+
+    @staticmethod
+    async def check_tier_permissions(
+        db: AsyncSession,
+        user: User,
+        slot: ReviewSlot
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Check if user's tier allows claiming this review slot.
+
+        For free reviews: always allowed
+        For paid reviews: check tier requirements
+
+        Args:
+            db: Database session
+            user: User attempting to claim
+            slot: Review slot to claim
+
+        Returns:
+            Tuple of (can_claim, error_message)
+        """
+        # If slot has no payment, anyone can claim (free review)
+        if not slot.payment_amount or slot.payment_amount <= 0:
+            return True, None
+
+        # For paid reviews, check tier permissions
+        try:
+            from app.services.tier_service import TierService
+            tier_service = TierService(db)
+
+            can_claim, reason = await tier_service.can_claim_paid_review(
+                user=user,
+                review_budget=float(slot.payment_amount)
+            )
+
+            return can_claim, reason
+        except ImportError:
+            # Tier system not available, allow claim
+            return True, None
 
     @staticmethod
     async def claim_review_by_request_id(
@@ -121,6 +165,18 @@ class ClaimService:
                 "Complete or abandon your current claim before claiming another."
             )
 
+        # TIER PERMISSION CHECK: Verify user's tier allows claiming this slot
+        reviewer = await db.get(User, reviewer_id)
+        if reviewer:
+            can_claim, tier_error = await ClaimService.check_tier_permissions(
+                db=db,
+                user=reviewer,
+                slot=slot
+            )
+
+            if not can_claim:
+                raise TierPermissionError(tier_error or "Your tier doesn't allow claiming this paid review")
+
         # Claim the slot
         slot.claim(reviewer_id, claim_hours)
 
@@ -216,6 +272,18 @@ class ClaimService:
                 "Complete or abandon your current claim before claiming another."
             )
 
+        # TIER PERMISSION CHECK: Verify user's tier allows claiming this slot
+        reviewer = await db.get(User, reviewer_id)
+        if reviewer:
+            can_claim, tier_error = await ClaimService.check_tier_permissions(
+                db=db,
+                user=reviewer,
+                slot=slot
+            )
+
+            if not can_claim:
+                raise TierPermissionError(tier_error or "Your tier doesn't allow claiming this paid review")
+
         # Claim the slot
         slot.claim(reviewer_id, claim_hours)
 
@@ -266,6 +334,14 @@ class ClaimService:
 
         # Abandon the slot (this validates status internally)
         slot.abandon()
+
+        # KARMA PENALTY: Deduct karma for abandoning claim
+        try:
+            from app.services.review_karma_hooks import deduct_karma_for_abandonment
+            await deduct_karma_for_abandonment(db, slot)
+        except ImportError:
+            # Karma system not available
+            pass
 
         # Update review request's claimed counter
         review = await db.get(ReviewRequest, slot.review_request_id)

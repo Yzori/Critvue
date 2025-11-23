@@ -1,5 +1,5 @@
 """Database models for Critvue"""
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserTier
 from app.models.review_file import ReviewFile
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, AcceptanceType, RejectionReason, PaymentStatus, DisputeResolution
 from app.models.review_request import (
@@ -11,10 +11,13 @@ from app.models.review_request import (
     FeedbackPriority
 )
 from app.models.expert_application import ExpertApplication, ApplicationStatus
+from app.models.karma_transaction import KarmaTransaction, KarmaAction
+from app.models.tier_milestone import TierMilestone
 
 __all__ = [
     "User",
     "UserRole",
+    "UserTier",
     "ReviewRequest",
     "ReviewFile",
     "ReviewSlot",
@@ -30,4 +33,7 @@ __all__ = [
     "DisputeResolution",
     "ExpertApplication",
     "ApplicationStatus",
+    "KarmaTransaction",
+    "KarmaAction",
+    "TierMilestone",
 ]

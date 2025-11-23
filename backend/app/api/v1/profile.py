@@ -88,6 +88,9 @@ async def get_my_profile(
         total_reviews_received=current_user.total_reviews_received,
         avg_rating=current_user.avg_rating,
         avg_response_time_hours=current_user.avg_response_time_hours,
+        user_tier=current_user.user_tier.value,
+        karma_points=current_user.karma_points,
+        tier_achieved_at=current_user.tier_achieved_at,
         created_at=current_user.created_at,
         updated_at=current_user.updated_at,
     )
@@ -137,6 +140,9 @@ async def get_user_profile(
         total_reviews_received=user.total_reviews_received,
         avg_rating=user.avg_rating,
         avg_response_time_hours=user.avg_response_time_hours,
+        user_tier=user.user_tier.value,
+        karma_points=user.karma_points,
+        tier_achieved_at=user.tier_achieved_at,
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
@@ -192,6 +198,9 @@ async def update_my_profile(
         total_reviews_received=updated_user.total_reviews_received,
         avg_rating=updated_user.avg_rating,
         avg_response_time_hours=updated_user.avg_response_time_hours,
+        user_tier=updated_user.user_tier.value,
+        karma_points=updated_user.karma_points,
+        tier_achieved_at=updated_user.tier_achieved_at,
         created_at=updated_user.created_at,
         updated_at=updated_user.updated_at,
     )

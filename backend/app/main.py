@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 from app.services.scheduler import start_background_jobs, stop_background_jobs
@@ -54,6 +54,7 @@ app.include_router(profile.router, prefix="/api/v1")  # User profiles
 app.include_router(portfolio.router, prefix="/api/v1")  # Portfolio projects
 app.include_router(expert_applications.router)  # Expert reviewer applications (already has /api/v1 prefix)
 app.include_router(subscriptions.router, prefix="/api/v1")  # Subscription management
+app.include_router(tier_system.router, prefix="/api/v1")  # Tier/karma system
 
 # Configure CORS
 app.add_middleware(

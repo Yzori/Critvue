@@ -30,6 +30,14 @@ from app.schemas.review_slot import (
     SmartReviewSubmit,
 )
 from app.services.claim_service import claim_service, ClaimValidationError
+from app.services.review_karma_hooks import (
+    on_review_submitted,
+    on_review_accepted,
+    on_review_rejected,
+    on_claim_abandoned,
+    on_dispute_created,
+    on_dispute_resolved
+)
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +126,9 @@ async def abandon_review_slot(
             db, slot_id, current_user.id
         )
 
+        # Award karma penalty for abandoning claim
+        await on_claim_abandoned(db, abandoned_slot.id, current_user.id)
+
         logger.info(f"User {current_user.id} abandoned slot {slot_id}")
 
         return abandoned_slot
@@ -193,6 +204,9 @@ async def submit_review(
             feedback_sections,
             annotations
         )
+
+        # Award karma for submitting review
+        await on_review_submitted(db, submitted_slot.id, current_user.id)
 
         logger.info(f"User {current_user.id} submitted review for slot {slot_id}")
 
@@ -739,6 +753,9 @@ async def submit_smart_review(
         await db.commit()
         await db.refresh(slot)
 
+        # Award karma for submitting review
+        await on_review_submitted(db, slot.id, current_user.id)
+
         logger.info(f"User {current_user.id} submitted Smart Review for slot {slot_id}")
 
         return slot
@@ -882,6 +899,14 @@ async def accept_review(
             accept_data.helpful_rating
         )
 
+        # Award karma for accepted review (includes helpful rating bonus)
+        await on_review_accepted(
+            db,
+            accepted_slot.id,
+            accepted_slot.reviewer_id,
+            helpful_rating=accept_data.helpful_rating
+        )
+
         logger.info(f"User {current_user.id} accepted review for slot {slot_id}")
 
         return accepted_slot
@@ -941,6 +966,9 @@ async def reject_review(
             reject_data.rejection_reason,
             reject_data.rejection_notes
         )
+
+        # Deduct karma for rejected review
+        await on_review_rejected(db, rejected_slot.id, rejected_slot.reviewer_id)
 
         logger.info(
             f"User {current_user.id} rejected review for slot {slot_id} "
@@ -1005,6 +1033,9 @@ async def create_dispute(
             current_user.id,
             dispute_data.dispute_reason
         )
+
+        # Track dispute creation (no karma change yet)
+        await on_dispute_created(db, disputed_slot.id, current_user.id)
 
         logger.info(f"User {current_user.id} created dispute for slot {slot_id}")
 
@@ -1252,6 +1283,14 @@ async def resolve_dispute(
             current_user.id,
             resolution_data.resolution,
             resolution_data.admin_notes
+        )
+
+        # Award/deduct karma based on dispute resolution
+        await on_dispute_resolved(
+            db,
+            resolved_slot.id,
+            resolved_slot.reviewer_id,
+            resolution=resolution_data.resolution.value
         )
 
         logger.info(
