@@ -23,6 +23,7 @@
  */
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 import {
   Plus,
@@ -80,6 +81,7 @@ export function QuickActionBar({
   autoHide = true,
   className,
 }: QuickActionBarProps) {
+  const router = useRouter();
   const [isVisible, setIsVisible] = React.useState(true);
   const [lastScrollY, setLastScrollY] = React.useState(0);
 
@@ -92,21 +94,29 @@ export function QuickActionBar({
           label: "New Review",
           icon: <Plus className="size-4" />,
           shortcut: "N",
-          action: () => console.log("New review"),
+          action: () => router.push("/request-review"),
         },
         {
           id: "search",
           label: "Search",
           icon: <Search className="size-4" />,
           shortcut: "/",
-          action: () => console.log("Search"),
+          action: () => {
+            // Trigger command palette by dispatching keyboard event
+            const event = new KeyboardEvent("keydown", {
+              key: "k",
+              metaKey: true,
+              bubbles: true,
+            });
+            document.dispatchEvent(event);
+          },
         },
         {
           id: "accept-all",
           label: "Accept All",
           icon: <CheckCircle2 className="size-4" />,
           shortcut: "A",
-          action: () => console.log("Accept all"),
+          action: () => console.log("Accept all - TODO: Implement bulk accept"),
           badge: 3,
         },
         {
@@ -114,7 +124,7 @@ export function QuickActionBar({
           label: "Filter",
           icon: <Filter className="size-4" />,
           shortcut: "F",
-          action: () => console.log("Filter"),
+          action: () => console.log("Filter - TODO: Implement filter modal"),
         },
       ];
     }
@@ -126,31 +136,39 @@ export function QuickActionBar({
         label: "Browse",
         icon: <Briefcase className="size-4" />,
         shortcut: "B",
-        action: () => console.log("Browse reviews"),
+        action: () => router.push("/browse"),
       },
       {
         id: "search",
         label: "Search",
         icon: <Search className="size-4" />,
         shortcut: "/",
-        action: () => console.log("Search"),
+        action: () => {
+          // Trigger command palette by dispatching keyboard event
+          const event = new KeyboardEvent("keydown", {
+            key: "k",
+            metaKey: true,
+            bubbles: true,
+          });
+          document.dispatchEvent(event);
+        },
       },
       {
         id: "continue-draft",
         label: "Continue Draft",
         icon: <FileText className="size-4" />,
         shortcut: "C",
-        action: () => console.log("Continue draft"),
+        action: () => console.log("Continue draft - TODO: Navigate to latest draft"),
       },
       {
         id: "earnings",
         label: "Earnings",
         icon: <TrendingUp className="size-4" />,
         shortcut: "E",
-        action: () => console.log("View earnings"),
+        action: () => router.push("/reviewer/earnings"),
       },
     ];
-  }, [role]);
+  }, [role, router]);
 
   const displayActions = actions || defaultActions;
 

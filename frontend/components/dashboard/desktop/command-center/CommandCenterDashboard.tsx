@@ -31,6 +31,8 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Palette,
   Briefcase,
@@ -93,6 +95,7 @@ export function CommandCenterDashboard({
   className,
 }: CommandCenterDashboardProps) {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [urgentActions, setUrgentActions] = React.useState<UrgentAction[]>([]);
@@ -205,12 +208,15 @@ export function CommandCenterDashboard({
       {/* Top Bar */}
       <div className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-6">
             {/* Left: Logo + Role Toggle */}
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-foreground">
+              <Link
+                href="/"
+                className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
+              >
                 Critvue
-              </h1>
+              </Link>
 
               {/* Role Toggle */}
               <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border">
@@ -248,28 +254,57 @@ export function CommandCenterDashboard({
               </div>
             </div>
 
-            {/* Center: Command Palette Trigger */}
-            <button
-              onClick={() => setIsCommandPaletteOpen(true)}
-              className={cn(
-                "flex items-center gap-3",
-                "px-4 py-2",
-                "rounded-xl",
-                "border border-border",
-                "bg-muted/30",
-                "hover:bg-muted/50",
-                "transition-colors",
-                "text-muted-foreground",
-                "hover:text-foreground",
-                "min-w-[300px]"
-              )}
-            >
-              <CommandIcon className="size-4" />
-              <span className="text-sm">Search or type a command...</span>
-              <kbd className="ml-auto px-2 py-1 rounded bg-background border border-border text-xs font-mono">
-                ⌘K
-              </kbd>
-            </button>
+            {/* Center: Navigation Links + Command Palette */}
+            <div className="flex items-center gap-4 flex-1 justify-center">
+              {/* Navigation Links */}
+              <nav className="flex items-center gap-1">
+                <Link
+                  href="/browse"
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    pathname?.startsWith("/browse")
+                      ? "text-accent-blue bg-accent-blue/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  Browse
+                </Link>
+                <Link
+                  href="/how-it-works"
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    pathname?.startsWith("/how-it-works")
+                      ? "text-accent-blue bg-accent-blue/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  How It Works
+                </Link>
+              </nav>
+
+              {/* Command Palette Trigger */}
+              <button
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className={cn(
+                  "flex items-center gap-3",
+                  "px-4 py-2",
+                  "rounded-xl",
+                  "border border-border",
+                  "bg-muted/30",
+                  "hover:bg-muted/50",
+                  "transition-colors",
+                  "text-muted-foreground",
+                  "hover:text-foreground",
+                  "min-w-[240px]"
+                )}
+              >
+                <CommandIcon className="size-4" />
+                <span className="text-sm">Search...</span>
+                <kbd className="ml-auto px-2 py-1 rounded bg-background border border-border text-xs font-mono">
+                  ⌘K
+                </kbd>
+              </button>
+            </div>
 
             {/* Right: User Menu */}
             <div className="flex items-center gap-2">
