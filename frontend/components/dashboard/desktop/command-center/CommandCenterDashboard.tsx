@@ -206,7 +206,7 @@ export function CommandCenterDashboard({
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-6 py-8 mt-20">
+      <main className="max-w-[1600px] mx-auto px-6 py-8 mt-6">
         {/* Welcome Section with Role Toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -235,7 +235,7 @@ export function CommandCenterDashboard({
                   "font-medium text-sm transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
                   role === "creator"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-accent-blue text-white shadow-lg shadow-accent-blue/25"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 aria-pressed={role === "creator"}
@@ -250,7 +250,7 @@ export function CommandCenterDashboard({
                   "font-medium text-sm transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
                   role === "reviewer"
-                    ? "bg-background text-foreground shadow-sm"
+                    ? "bg-accent-blue text-white shadow-lg shadow-accent-blue/25"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 aria-pressed={role === "reviewer"}
