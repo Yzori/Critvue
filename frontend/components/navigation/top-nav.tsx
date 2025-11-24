@@ -81,7 +81,7 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
         ref={ref}
         className={cn(
           // Layout
-          "fixed top-0 left-0 right-0 z-50",
+          "fixed top-0 left-0 right-0 z-[100]",
           "h-16 md:h-20",
           // Safe area insets for notched devices
           "pt-safe",

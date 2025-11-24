@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const { logout } = useAuth();
   const [isOpen, setIsOpen] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(false);
+  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, right: 0 });
   const menuRef = React.useRef<HTMLDivElement>(null);
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 
@@ -48,6 +50,17 @@ export function UserMenu({ user }: UserMenuProps) {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Calculate dropdown position when opened
+  React.useEffect(() => {
+    if (isOpen && buttonRef.current && !isMobile) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8, // 8px gap
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [isOpen, isMobile]);
 
   // Close on outside click
   React.useEffect(() => {
@@ -110,7 +123,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const initials = getInitials(user.full_name || user.email);
 
   return (
-    <div className="relative">
+    <div className="relative z-[100]">
       {/* Avatar Button */}
       <button
         ref={buttonRef}
@@ -148,49 +161,60 @@ export function UserMenu({ user }: UserMenuProps) {
       </button>
 
       {/* Responsive Menu: Bottom Sheet (Mobile) or Dropdown (Desktop) */}
-      {isOpen && (
-        <>
-          {/* Backdrop (Mobile only) */}
-          {isMobile && (
-            <div
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] md:hidden animate-in fade-in duration-200"
-              onClick={() => setIsOpen(false)}
-            />
-          )}
-
-          <div
-            ref={menuRef}
-            className={cn(
-              isMobile
-                ? [
-                    // Mobile: Bottom Sheet
-                    "fixed left-0 right-0 bottom-0",
-                    "rounded-t-3xl",
-                    "max-h-[80vh]",
-                    "z-[100]",
-                    // Animation
-                    "animate-in slide-in-from-bottom duration-300",
-                    "md:hidden",
-                  ]
-                : [
-                    // Desktop: Dropdown
-                    "absolute top-full right-0 mt-2",
-                    "w-56",
-                    // Animation
-                    "animate-in fade-in slide-in-from-top-4 duration-200",
-                    "hidden md:block",
-                  ],
-              // Common styles
-              "bg-background/95 backdrop-blur-xl",
-              "border border-border",
-              "shadow-lg",
-              "z-[60]",
-              "overflow-hidden"
+      {isOpen &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
+            {/* Backdrop (Mobile only) */}
+            {isMobile && (
+              <div
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] md:hidden animate-in fade-in duration-200"
+                onClick={() => setIsOpen(false)}
+              />
             )}
-            style={isMobile ? {} : { borderRadius: "1rem" }}
-            role="menu"
-            aria-orientation="vertical"
-          >
+
+            <div
+              ref={menuRef}
+              className={cn(
+                isMobile
+                  ? [
+                      // Mobile: Bottom Sheet
+                      "fixed left-0 right-0 bottom-0",
+                      "rounded-t-3xl",
+                      "max-h-[80vh]",
+                      "z-[100]",
+                      // Animation
+                      "animate-in slide-in-from-bottom duration-300",
+                      "md:hidden",
+                    ]
+                  : [
+                      // Desktop: Dropdown - using fixed positioning
+                      "fixed",
+                      "w-56",
+                      // Animation
+                      "animate-in fade-in slide-in-from-top-4 duration-200",
+                      "hidden md:block",
+                    ],
+                // Common styles
+                "bg-background",
+                "border border-border",
+                "shadow-2xl",
+                "!z-[99999]",
+                "overflow-hidden"
+              )}
+              style={
+                isMobile
+                  ? { zIndex: 99999 }
+                  : {
+                      borderRadius: "1rem",
+                      top: `${dropdownPosition.top}px`,
+                      right: `${dropdownPosition.right}px`,
+                      zIndex: 99999,
+                    }
+              }
+              role="menu"
+              aria-orientation="vertical"
+            >
             {/* Drag Handle (Mobile only) */}
             {isMobile && (
               <div className="flex justify-center py-4 md:hidden">
@@ -281,8 +305,9 @@ export function UserMenu({ user }: UserMenuProps) {
             })}
           </div>
         </div>
-        </>
-      )}
+          </>,
+          document.body
+        )}
     </div>
   );
 }
