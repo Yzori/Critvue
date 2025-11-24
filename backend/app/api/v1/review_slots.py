@@ -949,7 +949,7 @@ async def accept_review(
         )
 
         # Get karma info for notification
-        from app.models.user_tier import UserTier
+        from app.models.user import UserTier
         from sqlalchemy import select
         result = await db.execute(
             select(UserTier).where(UserTier.user_id == accepted_slot.reviewer_id)
@@ -1034,7 +1034,7 @@ async def reject_review(
         await on_review_rejected(db, rejected_slot.id, rejected_slot.reviewer_id)
 
         # Get karma info for notification
-        from app.models.user_tier import UserTier
+        from app.models.user import UserTier
         from sqlalchemy import select
         result = await db.execute(
             select(UserTier).where(UserTier.user_id == rejected_slot.reviewer_id)

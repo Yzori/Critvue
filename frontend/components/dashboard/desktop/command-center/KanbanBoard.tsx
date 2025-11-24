@@ -455,11 +455,23 @@ export function getDefaultColumns(role: "creator" | "reviewer"): Omit<
       title: "Submitted",
       subtitle: "Awaiting acceptance",
       icon: <Send className="size-5" />,
-      color: "bg-green-500/10 text-green-600",
+      color: "bg-amber-500/10 text-amber-600",
       emptyState: {
         icon: <Send className="size-8" />,
         title: "No submitted reviews",
         description: "Submit your reviews to track them here.",
+      },
+    },
+    {
+      id: "completed",
+      title: "Completed",
+      subtitle: "Accepted reviews",
+      icon: <CheckCircle2 className="size-5" />,
+      color: "bg-green-500/10 text-green-600",
+      emptyState: {
+        icon: <CheckCircle2 className="size-8" />,
+        title: "No completed reviews yet",
+        description: "Completed reviews will show up here.",
       },
     },
   ];

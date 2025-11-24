@@ -790,6 +790,112 @@ async def get_desktop_reviewer_submitted(
         )
 
 
+@router.get("/desktop/reviewer/completed")
+@limiter.limit("200/minute")
+async def get_desktop_reviewer_completed(
+    request: Request,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    sort_by: str = Query("updated_at", description="Sort by: updated_at, rating, payment_amount"),
+    sort_order: str = Query("desc", description="Sort order: asc, desc"),
+    rating_min: Optional[int] = Query(None, ge=1, le=5),
+    min_payment: Optional[float] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Desktop-optimized endpoint for completed reviews (accepted or paid).
+
+    **Rate Limit**: 200 requests per minute
+    """
+    try:
+        skip = (page - 1) * page_size
+
+        # Query completed reviews (accepted or paid status)
+        query = (
+            select(ReviewSlot)
+            .where(
+                and_(
+                    ReviewSlot.reviewer_id == current_user.id,
+                    or_(
+                        ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value,
+                        ReviewSlot.status == ReviewSlotStatus.PAID.value
+                    )
+                )
+            )
+            .options(selectinload(ReviewSlot.review_request))
+        )
+
+        # Apply filters
+        if rating_min is not None:
+            query = query.where(ReviewSlot.rating >= rating_min)
+
+        if min_payment is not None:
+            query = query.where(ReviewSlot.payment_amount >= min_payment)
+
+        # Apply sorting
+        query = apply_sorting(query, sort_by, sort_order, ReviewSlot)
+
+        # Get total count
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await db.execute(count_query)
+        total = total_result.scalar() or 0
+
+        # Apply pagination
+        query = query.offset(skip).limit(page_size)
+        result = await db.execute(query)
+        slots = list(result.scalars().all())
+
+        # Format response
+        items = []
+        total_earned = 0
+
+        for slot in slots:
+            payment_amount = float(slot.payment_amount) if slot.payment_amount else 0
+            total_earned += payment_amount
+
+            items.append({
+                "slot_id": slot.id,
+                "review_request": {
+                    "id": slot.review_request.id,
+                    "title": slot.review_request.title,
+                    "content_type": slot.review_request.content_type.value,
+                    "description": slot.review_request.description  # Full description
+                } if slot.review_request else None,
+                "submitted_at": slot.submitted_at.isoformat() if slot.submitted_at else None,
+                "accepted_at": slot.updated_at.isoformat() if slot.updated_at else None,
+                "rating": slot.rating,
+                "payment_amount": payment_amount,
+                "status": slot.status
+            })
+
+        return {
+            "items": items,
+            "pagination": {
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": (total + page_size - 1) // page_size,
+                "has_more": (skip + len(slots)) < total
+            },
+            "summary": {
+                "completed_count": total,
+                "total_earned": total_earned
+            },
+            "filters": {
+                "rating_min": rating_min,
+                "min_payment": min_payment
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting desktop completed reviews for user {current_user.id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load completed reviews"
+        )
+
+
 # ===== Desktop-Specific Endpoints =====
 
 @router.get("/desktop/overview")

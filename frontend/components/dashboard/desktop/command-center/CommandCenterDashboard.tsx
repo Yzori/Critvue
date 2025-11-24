@@ -60,11 +60,13 @@ import {
   getMyRequests,
   getActiveReviews,
   getSubmittedReviews,
+  getCompletedReviews,
   getDashboardStats,
   type PendingReviewItem,
   type MyRequestItem,
   type ActiveReviewItem,
   type SubmittedReviewItem,
+  type CompletedReviewItem,
 } from "@/lib/api/dashboard";
 
 export interface CommandCenterDashboardProps {
@@ -180,6 +182,9 @@ export function CommandCenterDashboard({
       // Load submitted reviews
       const submittedResponse = await getSubmittedReviews(1, 20);
 
+      // Load completed reviews
+      const completedResponse = await getCompletedReviews(1, 20);
+
       // Transform to urgent actions
       const urgent = activeResponse.items
         .filter((item) =>
@@ -192,7 +197,8 @@ export function CommandCenterDashboard({
       // Transform to kanban columns
       const columns = transformReviewerDataToKanban(
         activeResponse.items,
-        submittedResponse.items
+        submittedResponse.items,
+        completedResponse.items
       );
 
       setKanbanColumns(columns);
@@ -430,7 +436,8 @@ function transformCreatorDataToKanban(
 
 function transformReviewerDataToKanban(
   activeReviews: ActiveReviewItem[],
-  submittedReviews: SubmittedReviewItem[]
+  submittedReviews: SubmittedReviewItem[],
+  completedReviews: CompletedReviewItem[]
 ): KanbanColumn[] {
   const baseColumns = getDefaultColumns("reviewer");
 
@@ -467,9 +474,22 @@ function transformReviewerDataToKanban(
     onView: () => window.location.href = `/reviewer/review/${item.slot_id}`,
   }));
 
+  // Completed column: Accepted reviews
+  const completedItems: ReviewActionCardProps[] = completedReviews.map((item) => ({
+    id: item.slot_id,
+    title: item.review_request?.title || "Untitled",
+    contentType: item.review_request?.content_type as any || "design",
+    status: "completed",
+    timeText: item.accepted_at ? new Date(item.accepted_at).toLocaleDateString() : "",
+    earnings: item.payment_amount,
+    rating: item.rating,
+    onView: () => window.location.href = `/reviewer/review/${item.slot_id}`,
+  }));
+
   return [
     { ...baseColumns[0], items: availableItems },
     { ...baseColumns[1], items: workingOnItems },
     { ...baseColumns[2], items: submittedItems },
+    { ...baseColumns[3], items: completedItems },
   ];
 }

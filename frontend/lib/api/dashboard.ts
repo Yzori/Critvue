@@ -163,6 +163,34 @@ export interface SubmittedReviewsResponse {
   };
 }
 
+export interface CompletedReviewItem {
+  slot_id: number;
+  review_request: {
+    id: number;
+    title: string;
+    content_type: string;
+  } | null;
+  submitted_at: string | null;
+  accepted_at: string | null;
+  rating?: number;
+  payment_amount: number;
+  status: string;
+}
+
+export interface CompletedReviewsResponse {
+  items: CompletedReviewItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    has_more: boolean;
+  };
+  summary: {
+    completed_count: number;
+    total_earned: number;
+  };
+}
+
 export interface DashboardStats {
   period: "week" | "month" | "all_time";
   role: "creator" | "reviewer";
@@ -311,6 +339,27 @@ export async function getSubmittedReviews(
 
   return apiClient.get<SubmittedReviewsResponse>(
     `/dashboard/reviewer/submitted?${params}`
+  );
+}
+
+/**
+ * Get completed reviews (accepted or paid) for reviewer
+ * Sorted by accepted date (most recent first)
+ *
+ * @param page Page number (default: 1)
+ * @param limit Items per page (default: 10, max: 50)
+ */
+export async function getCompletedReviews(
+  page: number = 1,
+  limit: number = 10
+): Promise<CompletedReviewsResponse> {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+
+  return apiClient.get<CompletedReviewsResponse>(
+    `/dashboard/reviewer/completed?${params}`
   );
 }
 
