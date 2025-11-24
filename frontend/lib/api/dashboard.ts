@@ -269,7 +269,7 @@ export async function getActionsNeeded(
   });
 
   return apiClient.get<ActionsNeededResponse>(
-    `/dashboard/creator/actions-needed?${params}`,
+    `/dashboard/desktop/creator/actions-needed?${params}`,
     options
   );
 }
@@ -296,7 +296,7 @@ export async function getMyRequests(
   }
 
   return apiClient.get<MyRequestsResponse>(
-    `/dashboard/creator/my-requests?${params}`
+    `/dashboard/desktop/creator/my-requests?${params}`
   );
 }
 
@@ -317,7 +317,7 @@ export async function getActiveReviews(
   });
 
   return apiClient.get<ActiveReviewsResponse>(
-    `/dashboard/reviewer/active?${params}`
+    `/dashboard/desktop/reviewer/active?${params}`
   );
 }
 
@@ -338,7 +338,7 @@ export async function getSubmittedReviews(
   });
 
   return apiClient.get<SubmittedReviewsResponse>(
-    `/dashboard/reviewer/submitted?${params}`
+    `/dashboard/desktop/reviewer/submitted?${params}`
   );
 }
 
@@ -359,7 +359,7 @@ export async function getCompletedReviews(
   });
 
   return apiClient.get<CompletedReviewsResponse>(
-    `/dashboard/reviewer/completed?${params}`
+    `/dashboard/desktop/reviewer/completed?${params}`
   );
 }
 

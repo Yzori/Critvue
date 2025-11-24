@@ -30,7 +30,13 @@ export async function apiClient<T = any>(
     },
   };
 
-  let response = await fetch(url, config);
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } catch (error) {
+    // Network error (no response from server)
+    throw new ApiClientError(0, { detail: "Unable to connect to server. Please check your internet connection." }, endpoint);
+  }
 
   // Handle 401 errors - try to refresh token
   if (response.status === 401 && !endpoint.includes('/auth/refresh')) {
@@ -55,7 +61,7 @@ export async function apiClient<T = any>(
   // Handle non-OK responses
   if (!response.ok) {
     const errorData: ApiError = await response.json().catch(() => ({}));
-    throw new ApiClientError(response.status, errorData);
+    throw new ApiClientError(response.status, errorData, endpoint);
   }
 
   // Parse JSON response
@@ -68,39 +74,95 @@ export async function apiClient<T = any>(
 export class ApiClientError extends Error {
   constructor(
     public status: number,
-    public data: ApiError
+    public data: ApiError,
+    public endpoint?: string
   ) {
-    super(getErrorMessage(data));
+    super(getErrorMessageFromApiError(status, data));
     this.name = 'ApiClientError';
+  }
+
+  /**
+   * Check if this is a network/connectivity error
+   */
+  isNetworkError(): boolean {
+    return this.status === 0;
+  }
+
+  /**
+   * Check if this is a client error (4xx)
+   */
+  isClientError(): boolean {
+    return this.status >= 400 && this.status < 500;
+  }
+
+  /**
+   * Check if this is a server error (5xx)
+   */
+  isServerError(): boolean {
+    return this.status >= 500;
+  }
+
+  /**
+   * Check if this error is retryable (network issues or 5xx)
+   */
+  isRetryable(): boolean {
+    return this.isNetworkError() || this.isServerError() || this.status === 429;
   }
 }
 
 /**
- * Helper function to extract error message from API error response
+ * Map HTTP status codes to user-friendly messages
+ */
+function getStatusMessage(status: number): string {
+  const statusMessages: Record<number, string> = {
+    400: "Invalid request. Please check your input.",
+    401: "Please log in to continue.",
+    403: "You don't have permission to perform this action.",
+    404: "The requested resource was not found.",
+    409: "This action conflicts with the current state.",
+    422: "The data provided is invalid.",
+    429: "Too many requests. Please wait a moment.",
+    500: "Server error. Please try again later.",
+    502: "Service temporarily unavailable.",
+    503: "Service is currently unavailable. Please try again later.",
+    504: "Request timed out. Please try again.",
+  };
+  return statusMessages[status] || `Request failed (${status})`;
+}
+
+/**
+ * Extract error message from API error response with status context
+ */
+function getErrorMessageFromApiError(status: number, apiError: ApiError): string {
+  // Handle validation errors (array of error objects)
+  if (Array.isArray(apiError?.detail)) {
+    return apiError.detail.map((err) => err.msg).join(", ");
+  }
+
+  // Handle string error messages from API
+  if (typeof apiError?.detail === "string") {
+    return apiError.detail;
+  }
+
+  if (apiError?.message) {
+    return apiError.message;
+  }
+
+  // Fall back to status-based message
+  return getStatusMessage(status);
+}
+
+/**
+ * Helper function to extract error message from any error
  */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof ApiClientError) {
-    const apiError = error.data;
-
-    // Handle validation errors (array of error objects)
-    if (Array.isArray(apiError?.detail)) {
-      return apiError.detail
-        .map((err) => err.msg)
-        .join(", ");
-    }
-
-    // Handle string error messages
-    if (typeof apiError?.detail === "string") {
-      return apiError.detail;
-    }
-
-    if (apiError?.message) {
-      return apiError.message;
-    }
+    // ApiClientError already has a well-formatted message from getErrorMessageFromApiError
+    return error.message;
   }
 
   if (error instanceof Error) {
-    // Network errors
+    // Network errors from fetch
     if (error.message === "Failed to fetch") {
       return "Unable to connect to server. Please check your internet connection.";
     }
@@ -109,6 +171,20 @@ export function getErrorMessage(error: unknown): string {
   }
 
   return "An unexpected error occurred. Please try again.";
+}
+
+/**
+ * Check if an error is retryable
+ */
+export function isRetryableError(error: unknown): boolean {
+  if (error instanceof ApiClientError) {
+    return error.isRetryable();
+  }
+  // Network errors are retryable
+  if (error instanceof Error && error.message === "Failed to fetch") {
+    return true;
+  }
+  return false;
 }
 
 /**

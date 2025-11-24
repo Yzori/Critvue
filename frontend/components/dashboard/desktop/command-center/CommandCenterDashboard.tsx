@@ -41,6 +41,8 @@ import {
   Bell,
   Settings,
   LogOut,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -68,6 +70,7 @@ import {
   type SubmittedReviewItem,
   type CompletedReviewItem,
 } from "@/lib/api/dashboard";
+import { getErrorMessage, isRetryableError } from "@/lib/api/client";
 
 export interface CommandCenterDashboardProps {
   /**
@@ -102,6 +105,7 @@ export function CommandCenterDashboard({
   const [isLoading, setIsLoading] = React.useState(true);
   const [urgentActions, setUrgentActions] = React.useState<UrgentAction[]>([]);
   const [kanbanColumns, setKanbanColumns] = React.useState<KanbanColumn[]>([]);
+  const [error, setError] = React.useState<{ message: string; isRetryable: boolean } | null>(null);
 
   // Keyboard shortcut to open command palette (Cmd/Ctrl + K)
   React.useEffect(() => {
@@ -129,6 +133,7 @@ export function CommandCenterDashboard({
 
   async function loadDashboardData() {
     setIsLoading(true);
+    setError(null);
 
     try {
       if (role === "creator") {
@@ -136,83 +141,77 @@ export function CommandCenterDashboard({
       } else {
         await loadReviewerData();
       }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error);
+    } catch (err) {
+      console.error("Error loading dashboard data:", err);
+      setError({
+        message: getErrorMessage(err),
+        isRetryable: isRetryableError(err),
+      });
+      // Set empty columns on error
+      setKanbanColumns(getDefaultColumns(role).map(col => ({ ...col, items: [] })));
     } finally {
       setIsLoading(false);
     }
   }
 
   async function loadCreatorData() {
-    try {
-      // Load actions needed (pending reviews)
-      const actionsResponse = await getActionsNeeded(1, 20);
+    // Load actions needed (pending reviews)
+    const actionsResponse = await getActionsNeeded(1, 20);
 
-      // Load all requests
-      const requestsResponse = await getMyRequests(undefined, 1, 50);
+    // Load all requests
+    const requestsResponse = await getMyRequests(undefined, 1, 50);
 
-      // Transform to urgent actions
-      const urgent = actionsResponse.items
-        .filter((item) =>
-          item.urgency_level === "CRITICAL" || item.urgency_level === "HIGH"
-        )
-        .map(transformToUrgentAction);
+    // Transform to urgent actions
+    const urgent = actionsResponse.items
+      .filter((item) =>
+        item.urgency_level === "CRITICAL" || item.urgency_level === "HIGH"
+      )
+      .map(transformToUrgentAction);
 
-      setUrgentActions(urgent);
+    setUrgentActions(urgent);
 
-      // Transform to kanban columns
-      const columns = transformCreatorDataToKanban(
-        actionsResponse.items,
-        requestsResponse.items
-      );
+    // Transform to kanban columns
+    const columns = transformCreatorDataToKanban(
+      actionsResponse.items,
+      requestsResponse.items
+    );
 
-      setKanbanColumns(columns);
-    } catch (error) {
-      console.error("Error loading creator data:", error);
-      // Set empty columns on error
-      setKanbanColumns(getDefaultColumns("creator").map(col => ({ ...col, items: [] })));
-    }
+    setKanbanColumns(columns);
   }
 
   async function loadReviewerData() {
-    try {
-      // Load active reviews
-      const activeResponse = await getActiveReviews(1, 20);
+    // Load active reviews
+    const activeResponse = await getActiveReviews(1, 20);
 
-      // Load submitted reviews
-      const submittedResponse = await getSubmittedReviews(1, 20);
+    // Load submitted reviews
+    const submittedResponse = await getSubmittedReviews(1, 20);
 
-      // Load completed reviews
-      const completedResponse = await getCompletedReviews(1, 20);
+    // Load completed reviews
+    const completedResponse = await getCompletedReviews(1, 20);
 
-      // Transform to urgent actions
-      const urgent = activeResponse.items
-        .filter((item) =>
-          item.urgency_level === "CRITICAL" || item.urgency_level === "HIGH"
-        )
-        .map(transformActiveToUrgentAction);
+    // Transform to urgent actions
+    const urgent = activeResponse.items
+      .filter((item) =>
+        item.urgency_level === "CRITICAL" || item.urgency_level === "HIGH"
+      )
+      .map(transformActiveToUrgentAction);
 
-      setUrgentActions(urgent);
+    setUrgentActions(urgent);
 
-      // Transform to kanban columns
-      const columns = transformReviewerDataToKanban(
-        activeResponse.items,
-        submittedResponse.items,
-        completedResponse.items
-      );
+    // Transform to kanban columns
+    const columns = transformReviewerDataToKanban(
+      activeResponse.items,
+      submittedResponse.items,
+      completedResponse.items
+    );
 
-      setKanbanColumns(columns);
-    } catch (error) {
-      console.error("Error loading reviewer data:", error);
-      // Set empty columns on error
-      setKanbanColumns(getDefaultColumns("reviewer").map(col => ({ ...col, items: [] })));
-    }
+    setKanbanColumns(columns);
   }
 
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-6 py-8 mt-6">
+      <div className="max-w-[1600px] mx-auto px-6 py-8 mt-6">
         {/* Welcome Section with Role Toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -278,6 +277,39 @@ export function CommandCenterDashboard({
           </div>
         </motion.div>
 
+        {/* Error Alert */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/30"
+          >
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="size-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Failed to load dashboard data
+                </p>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                  {error.message}
+                </p>
+              </div>
+              {error.isRetryable && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => loadDashboardData()}
+                  disabled={isLoading}
+                  className="flex-shrink-0 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/50"
+                >
+                  <RefreshCw className={cn("size-4 mr-2", isLoading && "animate-spin")} />
+                  Retry
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        )}
+
         {/* Urgent Actions Card */}
         {urgentActions.length > 0 && (
           <UrgentActionsCard
@@ -293,7 +325,7 @@ export function CommandCenterDashboard({
           columns={kanbanColumns}
           isLoading={isLoading}
         />
-      </main>
+      </div>
 
       {/* Command Palette */}
       <CommandPalette

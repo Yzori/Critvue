@@ -817,10 +817,7 @@ async def get_desktop_reviewer_completed(
             .where(
                 and_(
                     ReviewSlot.reviewer_id == current_user.id,
-                    or_(
-                        ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value,
-                        ReviewSlot.status == ReviewSlotStatus.PAID.value
-                    )
+                    ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value
                 )
             )
             .options(selectinload(ReviewSlot.review_request))
