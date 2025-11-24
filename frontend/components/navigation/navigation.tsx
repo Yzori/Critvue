@@ -119,7 +119,7 @@ export function Navigation({ transparent = false }: NavigationProps) {
       )}
 
       {/* FAB - Mobile only, authenticated users only */}
-      {isAuthenticated && <FAB href="/request-review" label="Request Review" />}
+      {isAuthenticated && <FAB href="/review/new" label="Request Review" />}
     </>
   );
 }

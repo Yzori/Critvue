@@ -29,7 +29,7 @@ export interface FABProps extends React.HTMLAttributes<HTMLAnchorElement> {
 const FAB = React.forwardRef<HTMLAnchorElement, FABProps>(
   (
     {
-      href = "/request-review",
+      href = "/review/new",
       onClick,
       icon,
       label = "Request Review",

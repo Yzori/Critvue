@@ -94,7 +94,7 @@ export function QuickActionBar({
           label: "New Review",
           icon: <Plus className="size-4" />,
           shortcut: "N",
-          action: () => router.push("/request-review"),
+          action: () => router.push("/review/new"),
         },
         {
           id: "search",
