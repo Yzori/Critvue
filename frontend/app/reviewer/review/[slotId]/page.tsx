@@ -215,70 +215,125 @@ export default function ReviewWritingPage() {
             <Badge variant="secondary" size="sm">
               {formatPayment(slot.payment_amount)}
             </Badge>
+            {slot.status === "submitted" && (
+              <Badge variant="success" size="sm">
+                ✓ Submitted
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Deadline Warning Banner */}
-      <div
-        className={cn(
-          "flex items-center gap-3 p-4 rounded-xl border",
-          urgencyStyle.bg,
-          urgencyStyle.border
-        )}
-      >
-        <AlertCircle className={cn("size-5 flex-shrink-0", urgencyStyle.text)} />
-        <div className="flex-1">
-          <p className={cn("font-semibold text-sm", urgencyStyle.text)}>
-            {hoursRemaining < 1
-              ? "Deadline has passed!"
-              : hoursRemaining < 6
-                ? "Urgent: Deadline approaching soon!"
+      {/* Deadline Warning Banner - Only show for claimed reviews */}
+      {slot.status === "claimed" && (
+        <div
+          className={cn(
+            "flex items-center gap-3 p-4 rounded-xl border",
+            urgencyStyle.bg,
+            urgencyStyle.border
+          )}
+        >
+          <AlertCircle className={cn("size-5 flex-shrink-0", urgencyStyle.text)} />
+          <div className="flex-1">
+            <p className={cn("font-semibold text-sm", urgencyStyle.text)}>
+              {hoursRemaining < 1
+                ? "Deadline has passed!"
+                : hoursRemaining < 6
+                  ? "Urgent: Deadline approaching soon!"
+                  : hoursRemaining < 24
+                    ? "Deadline is today"
+                    : "Time remaining"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {hoursRemaining < 1
+                ? "Please submit as soon as possible"
                 : hoursRemaining < 24
-                  ? "Deadline is today"
-                  : "Time remaining"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {hoursRemaining < 1
-              ? "Please submit as soon as possible"
-              : hoursRemaining < 24
-                ? `${hoursRemaining} hour${hoursRemaining !== 1 ? "s" : ""} left to submit`
-                : `${Math.floor(hoursRemaining / 24)} day${Math.floor(hoursRemaining / 24) !== 1 ? "s" : ""} left to submit`}
-          </p>
+                  ? `${hoursRemaining} hour${hoursRemaining !== 1 ? "s" : ""} left to submit`
+                  : `${Math.floor(hoursRemaining / 24)} day${Math.floor(hoursRemaining / 24) !== 1 ? "s" : ""} left to submit`}
+            </p>
+          </div>
+          <Badge variant={urgencyStyle.badge} size="sm" showDot pulse>
+            {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`}
+          </Badge>
         </div>
-        <Badge variant={urgencyStyle.badge} size="sm" showDot pulse>
-          {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`}
-        </Badge>
-      </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Editor - Takes 2 columns on desktop */}
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]">
-          <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">
-              Write Your Review
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Provide detailed, constructive feedback. Your draft is saved automatically.
-            </p>
-          </div>
+          {slot.status === "submitted" ? (
+            /* Submitted Confirmation View */
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-green-900">Review Submitted Successfully!</h2>
+                  <p className="text-sm text-green-700">
+                    Waiting for requester acceptance
+                  </p>
+                </div>
+              </div>
 
-          <SmartReviewEditor
-            slotId={slotId}
-            contentType={slot?.review_request?.content_type || "design"}
-            contentSubcategory={slot?.review_request?.content_subcategory}
-            imageUrl={
-              // For design/art reviews, pass the first image file URL
-              (slot?.review_request?.content_type === "design" ||
-               slot?.review_request?.content_type === "art")
-                ? files.find((f) => f.file_type.startsWith("image/"))?.file_url || undefined
-                : undefined
-            }
-            onSubmitSuccess={() => {
-              router.push("/dashboard?role=reviewer");
-            }}
-          />
+              <div className="p-5 bg-green-50 rounded-xl border-2 border-green-500/30">
+                <p className="text-sm font-medium text-green-900 mb-2">
+                  ⏰ Auto-accept Countdown
+                </p>
+                <p className="text-sm text-green-700">
+                  If the requester doesn't respond, your review will be automatically accepted on{" "}
+                  <strong>{slot.auto_accept_at ? new Date(slot.auto_accept_at).toLocaleDateString() : "7 days from submission"}</strong>
+                </p>
+              </div>
+
+              <div className="p-5 bg-green-50 rounded-xl border-2 border-green-500/30">
+                <p className="text-sm font-medium text-green-900 mb-2">
+                  💰 Payment Status
+                </p>
+                <p className="text-sm text-green-700">
+                  Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => router.push("/dashboard?role=reviewer")}
+                className="w-full"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          ) : (
+            /* Review Editor for claimed reviews */
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">
+                  Write Your Review
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Provide detailed, constructive feedback. Your draft is saved automatically.
+                </p>
+              </div>
+
+              <SmartReviewEditor
+                slotId={slotId}
+                contentType={slot?.review_request?.content_type || "design"}
+                contentSubcategory={slot?.review_request?.content_subcategory}
+                imageUrl={
+                  // For design/art reviews, pass the first image file URL
+                  (slot?.review_request?.content_type === "design" ||
+                   slot?.review_request?.content_type === "art")
+                    ? files.find((f) => f.file_type.startsWith("image/"))?.file_url || undefined
+                    : undefined
+                }
+                onSubmitSuccess={() => {
+                  router.push("/dashboard?role=reviewer");
+                }}
+              />
+            </>
+          )}
         </div>
 
         {/* Review Request Details - Sidebar */}

@@ -2,16 +2,20 @@
 
 import logging
 from typing import List, Optional
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.deps import get_current_user, get_db
 from app.crud import review_slot as crud_review_slot
 from app.models.user import User
-from app.models.review_slot import RejectionReason, DisputeResolution
+from app.models.review_slot import ReviewSlot, RejectionReason, DisputeResolution
+from app.models.review_request import ReviewRequest
 from app.schemas.review_slot import (
     ReviewSlotResponse,
     ReviewSlotPublicResponse,
@@ -390,7 +394,22 @@ async def load_review_draft(
 
         draft_sections_data = json.loads(slot.draft_sections) if isinstance(slot.draft_sections, str) else slot.draft_sections
 
-        # Convert to FeedbackSection objects
+        # Check if this is Smart Review data (dict with phase keys) or legacy data (list)
+        if isinstance(draft_sections_data, dict) and any(key.startswith('phase') for key in draft_sections_data.keys()):
+            # This is Smart Review data, not legacy draft data
+            # Return empty draft - frontend should use smart-review endpoint instead
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No legacy draft found. Use smart-review/draft endpoint instead."
+            )
+
+        # Convert to FeedbackSection objects (legacy format)
+        if not isinstance(draft_sections_data, list):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid draft format"
+            )
+
         sections = [FeedbackSection(**section) for section in draft_sections_data]
 
         logger.info(f"User {current_user.id} loaded draft for slot {slot_id}")
@@ -730,8 +749,9 @@ async def submit_smart_review(
                     strip=True
                 )
 
-        # Save structured feedback
-        slot.feedback_sections = json.dumps(review_dict)
+        # Save Smart Review data to draft_sections (keep feedback_sections for legacy format only)
+        slot.draft_sections = json.dumps(review_dict)
+        slot.feedback_sections = None  # Smart Reviews don't use the legacy feedback_sections format
 
         # Extract overall rating for backward compatibility
         slot.rating = smart_review.phase1_quick_assessment.overall_rating
@@ -1216,6 +1236,141 @@ async def get_my_review_slots(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while fetching review slots"
+        )
+
+
+@router.get(
+    "/pending-for-me",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("100/minute")
+async def get_pending_reviews_for_requester(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all submitted review slots waiting for acceptance by the current user (as requester)
+
+    Returns all slots with status='submitted' for review requests owned by the current user,
+    ordered by urgency (auto_accept_at ascending) so most urgent appear first.
+
+    **Rate Limit:** 100 requests per minute
+    """
+    try:
+        # Query for submitted slots on user's review requests
+        query = (
+            select(ReviewSlot)
+            .join(ReviewRequest)
+            .where(
+                and_(
+                    ReviewRequest.user_id == current_user.id,
+                    ReviewSlot.status == "submitted"
+                )
+            )
+            .options(
+                selectinload(ReviewSlot.review_request),
+                selectinload(ReviewSlot.reviewer)
+            )
+            .order_by(ReviewSlot.auto_accept_at.asc())  # Most urgent first
+        )
+
+        result = await db.execute(query)
+        slots = list(result.scalars().all())
+
+        # Convert to response with review_request data
+        items_with_request = []
+        for slot in slots:
+            # Use mode='json' to properly serialize datetime objects
+            slot_dict = ReviewSlotResponse.model_validate(slot).model_dump(mode='json')
+
+            # Add review_request summary
+            slot_dict["review_request"] = {
+                "id": slot.review_request.id,
+                "title": slot.review_request.title,
+                "description": slot.review_request.description,
+                "content_type": slot.review_request.content_type.value,
+            } if slot.review_request else None
+
+            items_with_request.append(slot_dict)
+
+        logger.info(f"Found {len(slots)} pending reviews for user {current_user.id}")
+        return JSONResponse(content=items_with_request)
+
+    except Exception as e:
+        logger.error(f"Error getting pending reviews for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching pending reviews"
+        )
+
+
+@router.get(
+    "/urgent-pending",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("100/minute")
+async def get_urgent_pending_count(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get count and list of urgent pending reviews (< 24 hours to auto-accept)
+
+    Returns slots that need immediate attention from the requester.
+
+    **Rate Limit:** 100 requests per minute
+    """
+    try:
+        # Calculate 24 hours from now
+        urgent_deadline = datetime.utcnow() + timedelta(hours=24)
+
+        # Query for submitted slots that auto-accept within 24 hours
+        query = (
+            select(ReviewSlot)
+            .join(ReviewRequest)
+            .where(
+                and_(
+                    ReviewRequest.user_id == current_user.id,
+                    ReviewSlot.status == "submitted",
+                    ReviewSlot.auto_accept_at < urgent_deadline
+                )
+            )
+            .options(
+                selectinload(ReviewSlot.review_request),
+                selectinload(ReviewSlot.reviewer)
+            )
+            .order_by(ReviewSlot.auto_accept_at.asc())
+        )
+
+        result = await db.execute(query)
+        slots = list(result.scalars().all())
+
+        # Convert to response with review_request data
+        items_with_request = []
+        for slot in slots:
+            # Use mode='json' to properly serialize datetime objects
+            slot_dict = ReviewSlotResponse.model_validate(slot).model_dump(mode='json')
+
+            slot_dict["review_request"] = {
+                "id": slot.review_request.id,
+                "title": slot.review_request.title,
+                "content_type": slot.review_request.content_type.value,
+            } if slot.review_request else None
+
+            items_with_request.append(slot_dict)
+
+        return JSONResponse(content={
+            "count": len(slots),
+            "slots": items_with_request
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting urgent pending reviews for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while fetching urgent pending reviews"
         )
 
 

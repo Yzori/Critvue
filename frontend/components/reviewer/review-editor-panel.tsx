@@ -211,13 +211,64 @@ export function ReviewEditorPanel({
         </div>
       </div>
 
-      {/* Smart Review Editor */}
-      <SmartReviewEditor
-        slotId={slot.id}
-        contentType={slot.review_request?.content_type || "code"}
-        imageUrl={imageUrl}
-        onSubmitSuccess={onSubmitSuccess}
-      />
+      {/* Conditional rendering based on status */}
+      {slot.status === "submitted" ? (
+        /* Submitted Confirmation View */
+        <div className="rounded-xl border-2 border-green-500/30 bg-green-50 p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
+              <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-green-900">Review Submitted Successfully!</h3>
+              <p className="text-sm text-green-700">
+                Waiting for requester acceptance
+              </p>
+            </div>
+          </div>
+
+          {slot.auto_accept_at && (
+            <div className="p-4 bg-white/50 rounded-lg">
+              <p className="text-sm font-medium text-green-900 mb-1">
+                ⏰ Auto-accept Countdown
+              </p>
+              <p className="text-xs text-green-700">
+                If the requester doesn't respond, your review will be automatically accepted on{" "}
+                <strong>{new Date(slot.auto_accept_at).toLocaleDateString()}</strong>
+              </p>
+            </div>
+          )}
+
+          <div className="p-4 bg-white/50 rounded-lg">
+            <p className="text-sm font-medium text-green-900 mb-2">
+              💰 Payment Status
+            </p>
+            <p className="text-xs text-green-700">
+              Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.location.href = "/dashboard?role=reviewer"}
+              className="flex-1"
+            >
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      ) : (
+        /* Smart Review Editor for claimed reviews */
+        <SmartReviewEditor
+          slotId={slot.id}
+          contentType={slot.review_request?.content_type || "code"}
+          imageUrl={imageUrl}
+          onSubmitSuccess={onSubmitSuccess}
+        />
+      )}
     </div>
   );
 }

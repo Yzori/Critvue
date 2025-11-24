@@ -30,6 +30,7 @@ import {
   Video,
   Mic,
   Image as ImageIcon,
+  AlertCircle,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -37,6 +38,7 @@ import { type CreateReviewResponse } from "@/lib/api/reviews";
 import { useReviews } from "@/hooks/useReviews";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import SubscriptionStatusCard from "./subscription-status-card";
+import { PendingFeedbacksSection } from "./pending-feedbacks-section";
 
 export default function CreatorDashboard() {
   const { user } = useAuth();
@@ -121,6 +123,9 @@ export default function CreatorDashboard() {
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      {/* Pending Feedbacks Section - NEW! Shows all submitted reviews awaiting action */}
+      <PendingFeedbacksSection />
+
       {/* Stats Section - Responsive Layout */}
       {/* Mobile: Bento Grid - Apple-style asymmetric layout */}
       <div className="lg:hidden grid grid-cols-2 gap-3 auto-rows-[minmax(100px,auto)]">
@@ -440,7 +445,7 @@ export default function CreatorDashboard() {
       </div>
 
       {/* Recent Reviews - Show on "activity" tab on mobile, always on desktop */}
-      <div className={`rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200 ${
+      <div id="reviews-section" className={`rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all duration-200 ${
         mobileSection !== "activity" ? "hidden lg:block" : ""
       }`}>
         <div className="flex items-center justify-between mb-4 sm:mb-6">

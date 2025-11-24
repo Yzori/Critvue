@@ -60,7 +60,11 @@ class User(Base):
     full_name = Column(String(255), nullable=True)
 
     # Role
-    role = Column(Enum(UserRole), default=UserRole.CREATOR, nullable=False)
+    role = Column(
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.CREATOR,
+        nullable=False
+    )
 
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
@@ -91,8 +95,15 @@ class User(Base):
     last_review_date = Column(DateTime, nullable=True)  # For streak tracking
 
     # Subscription fields
-    subscription_tier = Column(Enum(SubscriptionTier), default=SubscriptionTier.FREE, nullable=False)
-    subscription_status = Column(Enum(SubscriptionStatus), nullable=True)
+    subscription_tier = Column(
+        Enum(SubscriptionTier, values_callable=lambda x: [e.value for e in x]),
+        default=SubscriptionTier.FREE,
+        nullable=False
+    )
+    subscription_status = Column(
+        Enum(SubscriptionStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=True
+    )
     stripe_customer_id = Column(String(255), nullable=True, unique=True, index=True)
     stripe_subscription_id = Column(String(255), nullable=True, unique=True, index=True)
     subscription_end_date = Column(DateTime, nullable=True)

@@ -125,7 +125,11 @@ class Notification(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Notification content
-    type = Column(Enum(NotificationType), nullable=False, index=True)
+    type = Column(
+        Enum(NotificationType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        index=True
+    )
     title = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
 
@@ -145,11 +149,19 @@ class Notification(Base):
     action_label = Column(String(100), nullable=True)  # Button text (e.g., "View Review", "Claim Now")
 
     # Priority and channels
-    priority = Column(Enum(NotificationPriority), default=NotificationPriority.MEDIUM, nullable=False)
+    priority = Column(
+        Enum(NotificationPriority, values_callable=lambda x: [e.value for e in x]),
+        default=NotificationPriority.MEDIUM,
+        nullable=False
+    )
     channels = Column(JSON, nullable=False)  # Array of NotificationChannel values
 
     # Related entity tracking
-    entity_type = Column(Enum(EntityType), nullable=True, index=True)
+    entity_type = Column(
+        Enum(EntityType, values_callable=lambda x: [e.value for e in x]),
+        nullable=True,
+        index=True
+    )
     entity_id = Column(Integer, nullable=True, index=True)
 
     # Timestamps

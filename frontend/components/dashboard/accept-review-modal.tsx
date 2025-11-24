@@ -105,7 +105,7 @@ export function AcceptReviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <CheckCircle2 className="size-6 text-green-600" />
@@ -197,12 +197,13 @@ export function AcceptReviewModal({
                   <Checkbox
                     id={aspect.id}
                     checked={aspects[aspect.id as keyof typeof aspects]}
-                    onCheckedChange={(checked) =>
+                    onChange={(e) => {
+                      e.stopPropagation();
                       handleAspectChange(
                         aspect.id as keyof typeof aspects,
-                        checked as boolean
-                      )
-                    }
+                        e.target.checked
+                      );
+                    }}
                     className="mt-0.5 min-h-[24px] min-w-[24px]"
                   />
                   <div className="flex-1 min-w-0">

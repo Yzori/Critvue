@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, List, Dict, Any
-from sqlalchemy import func, select
+from sqlalchemy import func, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.karma_transaction import KarmaAction, KarmaTransaction
@@ -197,7 +197,7 @@ class KarmaService:
         stmt = select(
             func.count(ReviewSlot.id).label("total"),
             func.sum(
-                func.case(
+                case(
                     (ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value, 1),
                     else_=0
                 )

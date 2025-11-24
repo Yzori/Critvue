@@ -72,7 +72,11 @@ class KarmaTransaction(Base):
     )
 
     # Transaction details
-    action = Column(Enum(KarmaAction), nullable=False, index=True)
+    action = Column(
+        Enum(KarmaAction, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        index=True
+    )
     points = Column(Integer, nullable=False)  # Can be negative
     balance_after = Column(Integer, nullable=False)  # Snapshot of total karma after this transaction
     reason = Column(Text, nullable=True)  # Human-readable description for user display

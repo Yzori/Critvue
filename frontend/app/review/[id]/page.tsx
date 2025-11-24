@@ -377,7 +377,7 @@ export default function ReviewDetailPage() {
                 <User className="size-5 text-accent-sage" />
                 Review Slots ({review.slots?.length || 0})
               </h2>
-              <SlotsList slots={review.slots || []} />
+              <SlotsList slots={review.slots || []} isOwner={isOwner} />
             </div>
           </div>
         </section>

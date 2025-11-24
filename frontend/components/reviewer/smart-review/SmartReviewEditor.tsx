@@ -296,8 +296,11 @@ export function SmartReviewEditor({
         clearTimeout(autoSaveTimerRef.current);
       }
 
-      // Submit the review
-      await submitSmartReview(slotId, draft);
+      // Submit the review (wrap draft in SmartReviewSubmit structure)
+      await submitSmartReview(slotId, {
+        smart_review: draft,
+        attachments: []
+      });
 
       // Close dialog and call success callback
       setShowSubmitDialog(false);

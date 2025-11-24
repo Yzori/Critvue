@@ -81,17 +81,30 @@ class ReviewRequest(Base):
     description = Column(Text, nullable=False)
 
     # Content and review type
-    content_type = Column(Enum(ContentType), nullable=False, index=True)
+    content_type = Column(
+        Enum(ContentType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        index=True
+    )
     content_subcategory = Column(
         String(50),
         nullable=True,
         index=True,
         doc="Optional subcategory for more specific content type (e.g., 'frontend', 'ui_ux', 'illustration')"
     )
-    review_type = Column(Enum(ReviewType), nullable=False, default=ReviewType.FREE)
+    review_type = Column(
+        Enum(ReviewType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ReviewType.FREE
+    )
 
     # Status tracking
-    status = Column(Enum(ReviewStatus), nullable=False, default=ReviewStatus.DRAFT, index=True)
+    status = Column(
+        Enum(ReviewStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ReviewStatus.DRAFT,
+        index=True
+    )
 
     # Feedback areas (JSON stored as text for flexibility)
     # Example: "UI/UX, Color scheme, Typography" or specific questions
@@ -105,13 +118,13 @@ class ReviewRequest(Base):
 
     # Expert review tier fields (nullable for FREE reviews - backward compatible)
     tier = Column(
-        Enum(ReviewTier),
+        Enum(ReviewTier, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
         index=True,
         doc="Expert review tier: quick (5-10min), standard (15-20min), deep (30+ min). NULL for free reviews."
     )
     feedback_priority = Column(
-        Enum(FeedbackPriority),
+        Enum(FeedbackPriority, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
         doc="Primary focus area for the review"
     )

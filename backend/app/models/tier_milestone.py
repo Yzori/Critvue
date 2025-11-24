@@ -28,8 +28,14 @@ class TierMilestone(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Tier progression
-    from_tier = Column(Enum(UserTier), nullable=True)  # NULL for initial tier assignment
-    to_tier = Column(Enum(UserTier), nullable=False)
+    from_tier = Column(
+        Enum(UserTier, values_callable=lambda x: [e.value for e in x]),
+        nullable=True
+    )  # NULL for initial tier assignment
+    to_tier = Column(
+        Enum(UserTier, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
 
     # Context
     reason = Column(Text, nullable=True)  # e.g., "Reached 15,000 karma" or "Expert application approved"

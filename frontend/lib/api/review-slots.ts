@@ -227,16 +227,56 @@ export async function getReviewSlotStats(): Promise<ReviewSlotStats> {
 
 /**
  * Get pending reviews that need action from requester
+ * Returns all submitted review slots for the current user's review requests,
+ * ordered by urgency (most urgent first)
  */
-export async function getPendingReviewsForRequester(): Promise<ReviewSlotResponse[]> {
-  return apiClient.get<ReviewSlotResponse[]>("/review-slots/pending-for-me");
+export async function getPendingReviewsForRequester(): Promise<ReviewSlotWithRequest[]> {
+  return apiClient.get<ReviewSlotWithRequest[]>("/review-slots/pending-for-me");
 }
 
 /**
  * Get count of urgent pending reviews (< 24h to auto-accept)
+ * Returns slots that need immediate attention from the requester
  */
-export async function getUrgentPendingCount(): Promise<{ count: number; slots: ReviewSlotResponse[] }> {
-  return apiClient.get<{ count: number; slots: ReviewSlotResponse[] }>(
+export async function getUrgentPendingCount(): Promise<{ count: number; slots: ReviewSlotWithRequest[] }> {
+  return apiClient.get<{ count: number; slots: ReviewSlotWithRequest[] }>(
     "/review-slots/urgent-pending"
   );
+}
+
+/**
+ * Accept a submitted review
+ * Requester accepts the review and optionally provides a rating and testimonial
+ */
+export async function acceptReviewSlot(
+  slotId: number,
+  data: {
+    rating?: number;
+    aspects: {
+      thorough: boolean;
+      addressed_questions: boolean;
+      actionable: boolean;
+      professional: boolean;
+    };
+    testimonial?: string;
+  }
+): Promise<ReviewSlotResponse> {
+  return apiClient.post<ReviewSlotResponse>(`/review-slots/${slotId}/accept`, {
+    helpful_rating: data.rating,
+    // Note: aspects and testimonial are not used by backend yet, but included for future expansion
+  });
+}
+
+/**
+ * Reject a submitted review
+ * Requester rejects the review with a required reason
+ */
+export async function rejectReviewSlot(
+  slotId: number,
+  data: {
+    rejection_reason: string;
+    rejection_notes?: string;
+  }
+): Promise<ReviewSlotResponse> {
+  return apiClient.post<ReviewSlotResponse>(`/review-slots/${slotId}/reject`, data);
 }

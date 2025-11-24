@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ReviewSlot, ReviewSlotStatus } from "@/lib/api/reviews";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Clock,
   CheckCircle2,
@@ -12,6 +14,7 @@ import {
   User,
   Star,
   MessageSquare,
+  ArrowRight,
 } from "lucide-react";
 
 /**
@@ -31,6 +34,7 @@ import {
 interface SlotsListProps {
   slots: ReviewSlot[];
   className?: string;
+  isOwner?: boolean; // Whether the current user is the review request owner
 }
 
 // Helper to get status badge variant
@@ -144,7 +148,9 @@ function formatTimeRelative(dateString?: string): string {
   }
 }
 
-export function SlotsList({ slots, className }: SlotsListProps) {
+export function SlotsList({ slots, className, isOwner = false }: SlotsListProps) {
+  const router = useRouter();
+
   if (slots.length === 0) {
     return (
       <div className={cn("text-center py-8", className)}>
@@ -300,6 +306,20 @@ export function SlotsList({ slots, className }: SlotsListProps) {
                         ? "Automatically accepted"
                         : "Manually accepted"}
                     </span>
+                  </div>
+                )}
+
+                {/* Action Button for Submitted Reviews - Owner Only */}
+                {isOwner && slot.status === "submitted" && (
+                  <div className="mt-4 pt-4 border-t border-gray-200/50">
+                    <Button
+                      onClick={() => router.push(`/dashboard/reviews/${slot.id}/review`)}
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white min-h-[48px] font-semibold touch-manipulation active:scale-[0.98]"
+                      size="lg"
+                    >
+                      Review & Accept/Reject
+                      <ArrowRight className="size-5" />
+                    </Button>
                   </div>
                 )}
               </div>
