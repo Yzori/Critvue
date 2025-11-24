@@ -467,26 +467,33 @@ function transformCreatorDataToKanban(
       label: "Decline",
       onClick: () => console.log("Decline", item.slot_id),
     },
-    onView: () => console.log("View", item.slot_id),
+    onView: () => window.location.href = `/review/${item.review_request_id}`,
   }));
 
-  // In Progress column: Reviews being worked on
+  // In Progress column: Reviews being worked on OR newly created
   const inProgressRequests = allRequests.filter((r) =>
-    r.status === "in_review" && r.progress.claimed > 0 && r.progress.submitted < r.progress.requested
+    // Show requests that are:
+    // 1. Being actively reviewed (in_review with claimed reviewers)
+    // 2. Newly created and awaiting reviewers (draft or pending status)
+    (r.status === "in_review" && r.progress.claimed > 0 && r.progress.submitted < r.progress.requested) ||
+    r.status === "draft" ||
+    r.status === "pending"
   );
 
   const inProgressItems: ReviewActionCardProps[] = inProgressRequests.map((item) => ({
     id: item.id,
     title: item.title,
     contentType: item.content_type as any,
-    status: "in_review",
+    status: item.status === "draft" || item.status === "pending" ? "available" : "in_review",
     timeText: new Date(item.created_at).toLocaleDateString(),
     progress: {
       current: item.progress.submitted,
       total: item.progress.requested,
-      percentage: Math.round((item.progress.submitted / item.progress.requested) * 100),
+      percentage: item.progress.requested > 0
+        ? Math.round((item.progress.submitted / item.progress.requested) * 100)
+        : 0,
     },
-    onView: () => console.log("View", item.id),
+    onView: () => window.location.href = `/review/${item.id}`,
   }));
 
   // Completed column: Finished reviews
@@ -503,7 +510,7 @@ function transformCreatorDataToKanban(
       total: item.progress.requested,
       percentage: 100,
     },
-    onView: () => console.log("View", item.id),
+    onView: () => window.location.href = `/review/${item.id}`,
   }));
 
   return [
@@ -534,9 +541,9 @@ function transformReviewerDataToKanban(
     earnings: item.earnings_potential,
     primaryAction: {
       label: item.draft_progress.has_draft ? "Continue" : "Start",
-      onClick: () => console.log("Continue review", item.slot_id),
+      onClick: () => window.location.href = `/reviewer/review/${item.slot_id}`,
     },
-    onView: () => console.log("View", item.slot_id),
+    onView: () => window.location.href = `/reviewer/review/${item.slot_id}`,
   }));
 
   // Submitted column: Awaiting acceptance
@@ -549,7 +556,7 @@ function transformReviewerDataToKanban(
     timeText: item.countdown_text,
     earnings: item.payment_amount,
     rating: item.rating,
-    onView: () => console.log("View", item.slot_id),
+    onView: () => window.location.href = `/reviewer/review/${item.slot_id}`,
   }));
 
   return [
