@@ -205,163 +205,71 @@ export function CommandCenterDashboard({
 
   return (
     <div className={cn("min-h-screen bg-background", className)}>
-      {/* Top Bar */}
-      <div className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-md">
-        <div className="max-w-[1600px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between gap-6">
-            {/* Left: Logo + Role Toggle */}
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity"
-              >
-                Critvue
-              </Link>
-
-              {/* Role Toggle */}
-              <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border border-border">
-                <button
-                  onClick={() => onRoleChange("creator")}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg",
-                    "text-sm font-medium transition-all duration-200",
-                    role === "creator"
-                      ? "bg-gradient-to-br from-accent-blue to-accent-blue/90 text-white shadow-md"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                  )}
-                  aria-label="Switch to Creator mode"
-                  aria-pressed={role === "creator"}
-                >
-                  <Palette className="size-4" />
-                  <span>Creator</span>
-                </button>
-
-                <button
-                  onClick={() => onRoleChange("reviewer")}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg",
-                    "text-sm font-medium transition-all duration-200",
-                    role === "reviewer"
-                      ? "bg-gradient-to-br from-accent-peach to-accent-peach/90 text-white shadow-md"
-                      : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                  )}
-                  aria-label="Switch to Reviewer mode"
-                  aria-pressed={role === "reviewer"}
-                >
-                  <Briefcase className="size-4" />
-                  <span>Reviewer</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Center: Navigation Links + Command Palette */}
-            <div className="flex items-center gap-4 flex-1 justify-center">
-              {/* Navigation Links */}
-              <nav className="flex items-center gap-1">
-                <Link
-                  href="/browse"
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname?.startsWith("/browse")
-                      ? "text-accent-blue bg-accent-blue/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  Browse
-                </Link>
-                <Link
-                  href="/how-it-works"
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                    pathname?.startsWith("/how-it-works")
-                      ? "text-accent-blue bg-accent-blue/10"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  How It Works
-                </Link>
-              </nav>
-
-              {/* Command Palette Trigger */}
-              <button
-                onClick={() => setIsCommandPaletteOpen(true)}
-                className={cn(
-                  "flex items-center gap-3",
-                  "px-4 py-2",
-                  "rounded-xl",
-                  "border border-border",
-                  "bg-muted/30",
-                  "hover:bg-muted/50",
-                  "transition-colors",
-                  "text-muted-foreground",
-                  "hover:text-foreground",
-                  "min-w-[240px]"
-                )}
-              >
-                <CommandIcon className="size-4" />
-                <span className="text-sm">Search...</span>
-                <kbd className="ml-auto px-2 py-1 rounded bg-background border border-border text-xs font-mono">
-                  ⌘K
-                </kbd>
-              </button>
-            </div>
-
-            {/* Right: User Menu */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="size-9 p-0 relative"
-                aria-label="Notifications"
-              >
-                <Bell className="size-5" />
-                <span className="absolute top-1 right-1 size-2 rounded-full bg-red-500" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="size-9 p-0"
-                aria-label="Settings"
-              >
-                <Settings className="size-5" />
-              </Button>
-
-              <div className="w-px h-6 bg-border mx-2" aria-hidden="true" />
-
-              <button
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
-                aria-label="User menu"
-              >
-                <div className="size-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.full_name?.charAt(0) || "U"}
-                </div>
-                <span className="text-sm font-medium text-foreground hidden lg:inline">
-                  {user?.full_name || "User"}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <main className="max-w-[1600px] mx-auto px-6 py-8">
-        {/* Welcome Section */}
+      <main className="max-w-[1600px] mx-auto px-6 py-8 mt-20">
+        {/* Welcome Section with Role Toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="mb-8"
         >
-          <h2 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back{user?.full_name && `, ${user.full_name}`}!
-          </h2>
-          <p className="text-muted-foreground">
-            {role === "creator"
-              ? "Here's what needs your attention today."
-              : "Here are your active reviews and opportunities."}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-2">
+                Welcome back{user?.full_name && `, ${user.full_name}`}!
+              </h2>
+              <p className="text-muted-foreground">
+                {role === "creator"
+                  ? "Here's what needs your attention today."
+                  : "Here are your active reviews and opportunities."}
+              </p>
+            </div>
+
+            {/* Role Toggle */}
+            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/50 border border-border">
+              <button
+                onClick={() => onRoleChange("creator")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl",
+                  "font-medium text-sm transition-all duration-200",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
+                  role === "creator"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-pressed={role === "creator"}
+              >
+                <Palette className="size-4" />
+                <span>Creator</span>
+              </button>
+              <button
+                onClick={() => onRoleChange("reviewer")}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl",
+                  "font-medium text-sm transition-all duration-200",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
+                  role === "reviewer"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-pressed={role === "reviewer"}
+              >
+                <Briefcase className="size-4" />
+                <span>Reviewer</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Keyboard Hint */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <CommandIcon className="size-3.5" />
+            <span>
+              Press <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">⌘K</kbd> to open command palette
+              {" • "}
+              <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">⌘⇧R</kbd> to toggle role
+            </span>
+          </div>
         </motion.div>
 
         {/* Urgent Actions Card */}

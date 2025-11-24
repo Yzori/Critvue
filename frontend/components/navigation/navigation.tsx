@@ -46,9 +46,6 @@ export function Navigation({ transparent = false }: NavigationProps) {
     return null;
   }
 
-  // Hide TopNav on dashboard (Command Center has its own)
-  const isDashboardPage = pathname.startsWith("/dashboard");
-
   // Determine active bottom nav item based on current path
   const getActiveBottomNavId = () => {
     if (pathname === "/") return "home";
@@ -92,15 +89,13 @@ export function Navigation({ transparent = false }: NavigationProps) {
 
   return (
     <>
-      {/* Top Navigation - Visible on all screen sizes (except dashboard which has Command Center) */}
-      {!isDashboardPage && (
-        <TopNav
-          user={user}
-          variant="responsive"
-          transparent={transparent}
-          onMenuClick={() => setIsDrawerOpen(true)}
-        />
-      )}
+      {/* Top Navigation - Visible on all screen sizes */}
+      <TopNav
+        user={user}
+        variant="responsive"
+        transparent={transparent}
+        onMenuClick={() => setIsDrawerOpen(true)}
+      />
 
       {/* Bottom Navigation - Mobile/Tablet only */}
       <BottomNav
@@ -110,13 +105,11 @@ export function Navigation({ transparent = false }: NavigationProps) {
       />
 
       {/* Mobile Drawer - Triggered by hamburger menu */}
-      {!isDashboardPage && (
-        <MobileDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          user={user}
-        />
-      )}
+      <MobileDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        user={user}
+      />
 
       {/* FAB - Mobile only, authenticated users only */}
       {isAuthenticated && <FAB href="/review/new" label="Request Review" />}
