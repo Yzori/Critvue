@@ -1,7 +1,11 @@
 "use client";
 
 /**
- * Unified Dashboard - Creator & Reviewer Views
+ * Unified Responsive Dashboard - Creator & Reviewer Views
+ *
+ * Responsive dashboard that adapts to screen size:
+ * - Mobile (< 1024px): Shows mobile-optimized UI with bottom nav
+ * - Desktop (>= 1024px): Shows traditional desktop UI
  *
  * Single dashboard with seamless role toggle between:
  * - Creator Mode: View your review requests, track feedback
@@ -9,13 +13,14 @@
  *
  * Brand Compliance:
  * - Uses Critvue brand colors (accent-blue #3B82F6, accent-peach #F97316)
- * - Mobile-first responsive design with 44px+ touch targets
+ * - Mobile-first responsive design with 48px touch targets
  * - Smooth animated transitions with reduced motion support
  * - Glassmorphism and shadow system consistency
  * - Persistent role selection via localStorage
  * - URL parameter support for deep linking
  *
  * Features:
+ * - Responsive layout switching based on viewport
  * - Persistent role selection (localStorage)
  * - URL param support (e.g., /dashboard?role=reviewer)
  * - Smooth transitions between views
@@ -29,10 +34,13 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Palette, Star, ArrowRight, X } from "lucide-react";
+import { useShowMobileUI } from "@/lib/hooks/use-media-query";
 
 // Import dashboard components
 import CreatorDashboard from "@/components/dashboard/creator-dashboard";
 import ReviewerDashboard from "@/components/dashboard/reviewer-dashboard";
+import MobileDashboardPage from "./mobile-page";
+import { DesktopDashboardContainer } from "@/components/dashboard/desktop/desktop-dashboard-container";
 
 type DashboardRole = "creator" | "reviewer";
 
@@ -41,6 +49,7 @@ function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
+  const showMobileUI = useShowMobileUI();
 
   // Initialize with creator to match SSR, then update from localStorage after mount
   const [activeRole, setActiveRole] = useState<DashboardRole>("creator");
@@ -93,6 +102,26 @@ function DashboardContent() {
       window.history.pushState({}, "", url);
     }
   };
+
+  // Responsive UI routing (AFTER all hooks and function definitions)
+  if (mounted && showMobileUI) {
+    return <MobileDashboardPage />;
+  }
+
+  // Desktop UI (>= 1024px) - Use desktop dashboard container
+  if (mounted && !showMobileUI) {
+    return (
+      <DesktopDashboardContainer
+        role={activeRole}
+        onRoleChange={handleRoleChange}
+      />
+    );
+  }
+
+  // Loading state while mounting
+  if (!mounted) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 pb-24 lg:pb-8">

@@ -42,7 +42,7 @@ export default function BrowsePage() {
   // Filter state
   const [contentType, setContentType] = React.useState<ContentType | "all">("all");
   const [reviewType, setReviewType] = React.useState<ReviewType | "all">("all");
-  const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline" | "popular">("recent");
+  const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline">("recent");
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Fetch reviews
@@ -118,34 +118,34 @@ export default function BrowsePage() {
   }, [reviews]);
 
   // Smart card sizing for Featured/Paid section (2-column grid)
-  const getFeaturedCardSize = (
-    review: BrowseReviewItem,
-    index: number
-  ): "medium" | "wide" => {
-    // Keep all cards in the paid section as medium or wide only
-    // No large cards to avoid oversized cards
-    const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
-
-    // Wide cards for urgency or every 3rd card for variety
-    if (almostFull || index % 3 === 0) return "wide";
-
-    // Default to medium
-    return "medium";
-  };
-
+  // const getFeaturedCardSize = (
+//     review: BrowseReviewItem,
+//     index: number
+//   ): "medium" | "wide" => {
+//     // Keep all cards in the paid section as medium or wide only
+//     // No large cards to avoid oversized cards
+//     const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
+// 
+//     // Wide cards for urgency or every 3rd card for variety
+//     if (almostFull || index % 3 === 0) return "wide";
+// 
+//     // Default to medium
+//     return "medium";
+//   };
+// 
   // Smart card sizing for Others section (3-4 column grid)
-  const getOthersCardSize = (
-    review: BrowseReviewItem
-  ): "small" | "medium" => {
-    const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
-
-    // Medium for almost full (show progress bar)
-    if (almostFull) return "medium";
-
-    // Small for standard free reviews
-    return "small";
-  };
-
+//   const getOthersCardSize = (
+//     review: BrowseReviewItem
+//   ): "small" | "medium" => {
+//     const almostFull = (review.available_slots ?? 1) === 1 && (review.reviews_requested ?? 1) > 1;
+// 
+//     // Medium for almost full (show progress bar)
+//     if (almostFull) return "medium";
+// 
+//     // Small for standard free reviews
+//     return "small";
+//   };
+// 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
       {/* Compact Header */}
@@ -190,7 +190,7 @@ export default function BrowsePage() {
         sortBy={sortBy}
         onContentTypeChange={setContentType}
         onReviewTypeChange={setReviewType}
-        onSortByChange={setSortBy}
+        onSortByChange={(val) => setSortBy(val === "popular" ? "recent" : val as any)}
         onShowMobileFilters={() => setShowMobileFilters(true)}
       />
 

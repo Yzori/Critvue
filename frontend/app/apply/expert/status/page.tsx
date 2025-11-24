@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+// import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/contexts/AuthContext'
 import { format } from 'date-fns'
 
@@ -34,7 +34,7 @@ interface Application {
 
 export default function ApplicationStatusPage() {
   const router = useRouter()
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [application, setApplication] = useState<Application | null>(null)
   const [loading, setLoading] = useState(true)
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 from app.services.scheduler import start_background_jobs, stop_background_jobs
@@ -57,6 +57,8 @@ app.include_router(subscriptions.router, prefix="/api/v1")  # Subscription manag
 app.include_router(tier_system.router, prefix="/api/v1")  # Tier/karma system
 app.include_router(leaderboard.router, prefix="/api/v1")  # Leaderboard rankings
 app.include_router(notifications.router, prefix="/api/v1")  # Notifications
+app.include_router(dashboard.router, prefix="/api/v1")  # Mobile-optimized dashboard
+app.include_router(dashboard_desktop.router, prefix="/api/v1")  # Desktop-optimized dashboard
 
 # Configure CORS
 app.add_middleware(

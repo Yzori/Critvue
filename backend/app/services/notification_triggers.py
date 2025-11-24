@@ -65,7 +65,7 @@ async def notify_slot_claimed(db: AsyncSession, slot_id: int, reviewer_id: int) 
             .where(ReviewSlot.review_request_id == slot.review_request_id)
         )
         all_slots = result.scalars().all()
-        available_slots = sum(1 for s in all_slots if s.status.value == "available")
+        available_slots = sum(1 for s in all_slots if s.status == "available")
 
         # Create notification for requester
         service = NotificationService(db)

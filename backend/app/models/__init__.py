@@ -13,6 +13,7 @@ from app.models.review_request import (
 from app.models.expert_application import ExpertApplication, ApplicationStatus
 from app.models.karma_transaction import KarmaTransaction, KarmaAction
 from app.models.tier_milestone import TierMilestone
+from app.models.notification import Notification, NotificationPreferences, NotificationType, NotificationPriority, EntityType
 
 __all__ = [
     "User",
@@ -36,4 +37,9 @@ __all__ = [
     "KarmaTransaction",
     "KarmaAction",
     "TierMilestone",
+    "Notification",
+    "NotificationPreferences",
+    "NotificationType",
+    "NotificationPriority",
+    "EntityType",
 ]

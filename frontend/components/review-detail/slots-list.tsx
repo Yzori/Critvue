@@ -154,8 +154,8 @@ export function SlotsList({ slots, className, isOwner = false }: SlotsListProps)
   if (slots.length === 0) {
     return (
       <div className={cn("text-center py-8", className)}>
-        <User className="size-12 mx-auto text-gray-400 mb-3" />
-        <p className="text-sm text-gray-600">No review slots available</p>
+        <User className="size-12 mx-auto text-muted-foreground mb-3" />
+        <p className="text-sm text-muted-foreground">No review slots available</p>
       </div>
     );
   }

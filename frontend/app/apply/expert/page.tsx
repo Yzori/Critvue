@@ -19,7 +19,7 @@ export default function ExpertApplicationPage() {
   const currentStep = useExpertApplicationStore((state) => state.currentStep)
   const startedAt = useExpertApplicationStore((state) => state.startedAt)
   const reset = useExpertApplicationStore((state) => state.reset)
-  const setCurrentStep = useExpertApplicationStore((state) => state.setCurrentStep)
+  //   const setCurrentStep = useExpertApplicationStore((state) => state.setCurrentStep)
 
   useEffect(() => {
     // Check if user already has an application

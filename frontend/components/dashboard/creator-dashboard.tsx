@@ -557,7 +557,7 @@ function ActionButton({ icon, title, description, gradientClass, onClick }: Acti
 
       {/* Text content */}
       <div>
-        <h3 className="font-semibold text-base mb-1 text-foreground group-hover:text-accent-blue transition-colors">
+        <h3 className="font-semibold text-base mb-1 text-foreground group-hover:text-blue-700 transition-colors">
           {title}
         </h3>
         <p className="text-xs text-muted-foreground">
@@ -665,7 +665,7 @@ function ReviewItem({ review }: ReviewItemProps) {
                 {reviewsClaimed} of {reviewsRequested} reviews claimed
               </span>
               {availableSlots > 0 && (
-                <span className="text-accent-sage font-semibold">
+                <span className="text-green-700 font-semibold">
                   {availableSlots} slot{availableSlots !== 1 ? 's' : ''} available
                 </span>
               )}
