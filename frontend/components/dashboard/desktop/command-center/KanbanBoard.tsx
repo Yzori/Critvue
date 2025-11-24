@@ -27,6 +27,7 @@
  */
 
 import * as React from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
@@ -36,8 +37,10 @@ import {
   FileText,
   Send,
   Inbox,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { ReviewActionCard, ReviewActionCardProps } from "./ReviewActionCard";
 
 export interface KanbanColumn {
@@ -51,6 +54,11 @@ export interface KanbanColumn {
     icon: React.ReactNode;
     title: string;
     description: string;
+    action?: {
+      label: string;
+      href?: string;
+      onClick?: () => void;
+    };
   };
 }
 
@@ -265,7 +273,12 @@ function KanbanColumn({
             )}
           </>
         ) : (
-          <EmptyState {...column.emptyState} />
+          <EmptyState
+            icon={column.emptyState.icon}
+            title={column.emptyState.title}
+            description={column.emptyState.description}
+            action={column.emptyState.action}
+          />
         )}
       </div>
     </motion.div>
@@ -279,10 +292,16 @@ function EmptyState({
   icon,
   title,
   description,
+  action,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
+  action?: {
+    label: string;
+    href?: string;
+    onClick?: () => void;
+  };
 }) {
   return (
     <motion.div
@@ -295,7 +314,23 @@ function EmptyState({
         {icon}
       </div>
       <h4 className="font-semibold text-foreground mb-2">{title}</h4>
-      <p className="text-sm text-muted-foreground max-w-xs">{description}</p>
+      <p className="text-sm text-muted-foreground max-w-xs mb-4">{description}</p>
+
+      {action && (
+        action.href ? (
+          <Link href={action.href}>
+            <Button className="flex items-center gap-2">
+              {action.label}
+              <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+        ) : (
+          <Button onClick={action.onClick} className="flex items-center gap-2">
+            {action.label}
+            <ArrowRight className="size-4" />
+          </Button>
+        )
+      )}
     </motion.div>
   );
 }
@@ -396,7 +431,11 @@ export function getDefaultColumns(role: "creator" | "reviewer"): Omit<
       emptyState: {
         icon: <Briefcase className="size-8" />,
         title: "No available reviews",
-        description: "Check back soon for new review opportunities.",
+        description: "Browse the marketplace to find reviews you can claim.",
+        action: {
+          label: "Browse Reviews",
+          href: "/browse",
+        },
       },
     },
     {
