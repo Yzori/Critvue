@@ -11,6 +11,8 @@ export interface User {
   is_active: boolean;
   is_verified: boolean;
   created_at?: string;
+  user_tier?: string;
+  karma_points?: number;
 }
 
 export interface AuthTokens {

@@ -59,6 +59,8 @@ class UserResponse(UserBase):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     created_at: datetime
+    user_tier: str = "novice"  # Tier level for claim restrictions
+    karma_points: int = 0     # Karma points for tier progression
 
     class Config:
         from_attributes = True

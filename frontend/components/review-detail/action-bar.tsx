@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { claimReviewSlot } from "@/lib/api/browse";
+import { UserTier } from "@/lib/types/tier";
+import { TierLockedButton } from "@/components/tier/tier-locked-review";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * ActionBar Component
@@ -40,6 +43,31 @@ interface ActionBarProps {
   className?: string;
 }
 
+// Tier limits for paid reviews (matches backend)
+const TIER_PAID_LIMITS: Record<UserTier, { canAcceptPaid: boolean; maxPrice: number | null }> = {
+  [UserTier.NOVICE]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.CONTRIBUTOR]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.SKILLED]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.TRUSTED_ADVISOR]: { canAcceptPaid: true, maxPrice: 25 },
+  [UserTier.EXPERT]: { canAcceptPaid: true, maxPrice: 100 },
+  [UserTier.MASTER]: { canAcceptPaid: true, maxPrice: null }, // unlimited
+};
+
+// Get the minimum tier required for a given price
+function getRequiredTierForPrice(price: number): UserTier {
+  if (price <= 25) return UserTier.TRUSTED_ADVISOR;
+  if (price <= 100) return UserTier.EXPERT;
+  return UserTier.MASTER;
+}
+
+// Check if user's tier can claim a paid review
+function canTierClaimPrice(tier: UserTier, price: number): boolean {
+  const limits = TIER_PAID_LIMITS[tier];
+  if (!limits.canAcceptPaid) return false;
+  if (limits.maxPrice === null) return true; // unlimited
+  return price <= limits.maxPrice;
+}
+
 export function ActionBar({
   review,
   isOwner = false,
@@ -47,9 +75,28 @@ export function ActionBar({
   className,
 }: ActionBarProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [isClaiming, setIsClaiming] = React.useState(false);
 
-  // Check if user can claim a slot
+  // Get user's tier (default to NOVICE if not set)
+  const userTier = (user?.user_tier as UserTier) || UserTier.NOVICE;
+
+  // Check if this is a paid/expert review
+  const isPaidReview = review.review_type === "expert" && review.budget && review.budget > 0;
+  const reviewPrice = review.budget || 0;
+
+  // Check tier restrictions for paid reviews
+  const tierRestriction = React.useMemo(() => {
+    if (!isPaidReview) return { isLocked: false, requiredTier: null };
+
+    const canClaim = canTierClaimPrice(userTier, reviewPrice);
+    if (canClaim) return { isLocked: false, requiredTier: null };
+
+    const requiredTier = getRequiredTierForPrice(reviewPrice);
+    return { isLocked: true, requiredTier };
+  }, [isPaidReview, userTier, reviewPrice]);
+
+  // Check if user can claim a slot (base conditions)
   const canClaimSlot = React.useMemo(() => {
     if (!currentUserId || isOwner) return false;
 
@@ -170,8 +217,17 @@ export function ActionBar({
 
           {/* Right: Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Claim Slot Button (Primary CTA for reviewers) */}
-            {canClaimSlot && (
+            {/* Tier Locked Button (when user's tier is too low for paid review) */}
+            {canClaimSlot && tierRestriction.isLocked && tierRestriction.requiredTier && (
+              <TierLockedButton
+                requiredTier={tierRestriction.requiredTier}
+                currentTier={userTier}
+                size="md"
+              />
+            )}
+
+            {/* Claim Slot Button (Primary CTA for reviewers - only when not tier-locked) */}
+            {canClaimSlot && !tierRestriction.isLocked && (
               <Button
                 variant="default"
                 size="default"
