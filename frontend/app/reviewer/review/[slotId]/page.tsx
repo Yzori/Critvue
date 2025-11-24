@@ -263,7 +263,7 @@ export default function ReviewWritingPage() {
         {/* Editor - Takes 2 columns on desktop */}
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]">
           {slot.status === "submitted" ? (
-            /* Submitted Confirmation View */
+            /* Submitted - Waiting for Acceptance View */
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
@@ -296,6 +296,103 @@ export default function ReviewWritingPage() {
                 <p className="text-sm text-green-700">
                   Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
                 </p>
+              </div>
+
+              <Button
+                onClick={() => router.push("/dashboard?role=reviewer")}
+                className="w-full"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          ) : slot.status === "accepted" ? (
+            /* Accepted - Completed Review View */
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-green-600 flex items-center justify-center">
+                  <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-green-900">Review Accepted!</h2>
+                  <p className="text-sm text-green-700">
+                    Your review has been accepted by the requester
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 bg-green-50 rounded-xl border-2 border-green-500/30">
+                <p className="text-sm font-medium text-green-900 mb-2">
+                  ✅ Review Complete
+                </p>
+                <p className="text-sm text-green-700">
+                  This review is now complete and locked. Thank you for your contribution!
+                </p>
+              </div>
+
+              <div className="p-5 bg-green-50 rounded-xl border-2 border-green-500/30">
+                <p className="text-sm font-medium text-green-900 mb-2">
+                  💰 Payment Status
+                </p>
+                <p className="text-sm text-green-700">
+                  Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> has been released.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => router.push("/dashboard?role=reviewer")}
+                className="w-full"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          ) : slot.status === "rejected" ? (
+            /* Rejected Review View */
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-red-500 flex items-center justify-center">
+                  <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-red-900">Review Rejected</h2>
+                  <p className="text-sm text-red-700">
+                    The requester has rejected this review
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-5 bg-red-50 rounded-xl border-2 border-red-500/30">
+                <p className="text-sm font-medium text-red-900 mb-2">
+                  ❌ Rejection Notice
+                </p>
+                <p className="text-sm text-red-700">
+                  You may dispute this decision if you believe it was unfair.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => router.push("/dashboard?role=reviewer")}
+                className="w-full"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          ) : slot.status !== "claimed" ? (
+            /* Other non-editable states (abandoned, disputed, available) */
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="size-12 rounded-full bg-gray-400 flex items-center justify-center">
+                  <AlertCircle className="size-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Review Not Editable</h2>
+                  <p className="text-sm text-gray-700">
+                    This review slot is in &quot;{slot.status}&quot; status and cannot be edited
+                  </p>
+                </div>
               </div>
 
               <Button
