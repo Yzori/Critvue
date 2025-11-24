@@ -227,7 +227,7 @@ export function CommandCenterDashboard({
             </div>
 
             {/* Role Toggle */}
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-muted/50 border border-border">
+            <div className="relative z-10 flex items-center gap-2 p-1.5 rounded-2xl bg-muted/50 border border-border">
               <button
                 onClick={() => onRoleChange("creator")}
                 className={cn(
