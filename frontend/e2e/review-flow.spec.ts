@@ -285,6 +285,182 @@ test.describe('Review Flow', () => {
   });
 });
 
+test.describe('Review Status UI - Locked States', () => {
+  /**
+   * These tests verify that non-editable review states show the correct UI
+   * and don't allow editing (the bug that was causing "Cannot save draft" errors)
+   */
+  const REVIEWER_AUTH_FILE = path.join(__dirname, '../.playwright/.auth/reviewer.json');
+  const API_BASE = process.env.API_BASE_URL || 'http://localhost:8000';
+
+  test('Accepted review shows "Review Accepted" UI, not editor', async ({ browser }) => {
+    // This test verifies that navigating to an accepted review slot shows
+    // the locked "Review Accepted!" view instead of the editor
+
+    const context = await browser.newContext({
+      storageState: REVIEWER_AUTH_FILE,
+    });
+    const page = await context.newPage();
+
+    // First, find an accepted slot for this reviewer via API
+    // Login to get token
+    const loginResp = await page.request.post(`${API_BASE}/api/v1/auth/login`, {
+      data: { email: 'reviewer@test.com', password: 'Test123!' },
+    });
+
+    if (!loginResp.ok()) {
+      test.skip(true, 'Could not login as reviewer');
+      await context.close();
+      return;
+    }
+
+    const { access_token } = await loginResp.json();
+
+    // Get reviewer's completed reviews
+    const completedResp = await page.request.get(
+      `${API_BASE}/api/v1/dashboard/desktop/reviewer/completed`,
+      { headers: { Authorization: `Bearer ${access_token}` } }
+    );
+
+    if (!completedResp.ok()) {
+      test.skip(true, 'Could not fetch completed reviews');
+      await context.close();
+      return;
+    }
+
+    const completedData = await completedResp.json();
+    const acceptedSlots = completedData.items || [];
+
+    if (acceptedSlots.length === 0) {
+      test.skip(true, 'No accepted reviews found for testing');
+      await context.close();
+      return;
+    }
+
+    // Navigate to the accepted slot's review page
+    const slotId = acceptedSlots[0].id;
+    await page.goto(`/reviewer/review/${slotId}`);
+    await page.waitForLoadState('networkidle');
+
+    // Should show "Review Accepted!" heading, NOT the editor
+    await expect(page.getByText(/Review Accepted|Review Complete/i)).toBeVisible({ timeout: 10000 });
+
+    // Should NOT show the editor textarea or "Write Your Review" heading
+    await expect(page.getByText(/Write Your Review/i)).not.toBeVisible();
+    await expect(page.locator('textarea')).not.toBeVisible();
+
+    // Should show "Back to Dashboard" button
+    await expect(page.getByRole('button', { name: /Back to Dashboard/i })).toBeVisible();
+
+    await context.close();
+  });
+
+  test('Submitted review shows "Waiting for acceptance" UI, not editor', async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: REVIEWER_AUTH_FILE,
+    });
+    const page = await context.newPage();
+
+    // Login to get token
+    const loginResp = await page.request.post(`${API_BASE}/api/v1/auth/login`, {
+      data: { email: 'reviewer@test.com', password: 'Test123!' },
+    });
+
+    if (!loginResp.ok()) {
+      test.skip(true, 'Could not login as reviewer');
+      await context.close();
+      return;
+    }
+
+    const { access_token } = await loginResp.json();
+
+    // Get reviewer's submitted reviews
+    const submittedResp = await page.request.get(
+      `${API_BASE}/api/v1/dashboard/desktop/reviewer/submitted`,
+      { headers: { Authorization: `Bearer ${access_token}` } }
+    );
+
+    if (!submittedResp.ok()) {
+      test.skip(true, 'Could not fetch submitted reviews');
+      await context.close();
+      return;
+    }
+
+    const submittedData = await submittedResp.json();
+    const submittedSlots = submittedData.items || [];
+
+    if (submittedSlots.length === 0) {
+      test.skip(true, 'No submitted reviews found for testing');
+      await context.close();
+      return;
+    }
+
+    // Navigate to the submitted slot's review page
+    const slotId = submittedSlots[0].id;
+    await page.goto(`/reviewer/review/${slotId}`);
+    await page.waitForLoadState('networkidle');
+
+    // Should show "Review Submitted" message, NOT the editor
+    await expect(page.getByText(/Review Submitted|Waiting for.*acceptance/i)).toBeVisible({ timeout: 10000 });
+
+    // Should NOT show the editor
+    await expect(page.getByText(/Write Your Review/i)).not.toBeVisible();
+
+    await context.close();
+  });
+
+  test('Claimed review shows editor (editable state)', async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: REVIEWER_AUTH_FILE,
+    });
+    const page = await context.newPage();
+
+    // Login to get token
+    const loginResp = await page.request.post(`${API_BASE}/api/v1/auth/login`, {
+      data: { email: 'reviewer@test.com', password: 'Test123!' },
+    });
+
+    if (!loginResp.ok()) {
+      test.skip(true, 'Could not login as reviewer');
+      await context.close();
+      return;
+    }
+
+    const { access_token } = await loginResp.json();
+
+    // Get reviewer's active (claimed) reviews
+    const activeResp = await page.request.get(
+      `${API_BASE}/api/v1/dashboard/desktop/reviewer/active`,
+      { headers: { Authorization: `Bearer ${access_token}` } }
+    );
+
+    if (!activeResp.ok()) {
+      test.skip(true, 'Could not fetch active reviews');
+      await context.close();
+      return;
+    }
+
+    const activeData = await activeResp.json();
+    const claimedSlots = activeData.items || [];
+
+    if (claimedSlots.length === 0) {
+      test.skip(true, 'No claimed reviews found for testing');
+      await context.close();
+      return;
+    }
+
+    // Navigate to the claimed slot's review page
+    const slotId = claimedSlots[0].id;
+    await page.goto(`/reviewer/review/${slotId}`);
+    await page.waitForLoadState('networkidle');
+
+    // Should show "Write Your Review" heading (editor is visible)
+    await expect(page.getByText(/Write Your Review/i)).toBeVisible({ timeout: 10000 });
+
+    await context.close();
+  });
+});
+
 test.describe('Review Flow - Edge Cases', () => {
   test('Reviewer cannot claim own review', async ({ browser }) => {
     // Create context with creator auth (same user tries to claim own review)
