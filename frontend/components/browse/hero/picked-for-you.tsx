@@ -32,9 +32,13 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
 
   if (displayedRecommendations.length === 0) return null;
 
-  // Calculate match percentage (simulated - in real app, would come from backend)
-  const getMatchPercentage = (index: number): number => {
-    // First card gets highest match, descending
+  // Get match percentage from review (real score from backend) or fallback
+  const getMatchPercentage = (review: BrowseReviewItem, index: number): number => {
+    // Use real match_score if available (from backend skill matching)
+    if (review.match_score !== undefined && review.match_score !== null) {
+      return review.match_score;
+    }
+    // Fallback: if no skills set, show decreasing placeholder scores
     return 95 - (index * 3);
   };
 
@@ -135,7 +139,7 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
                       "px-3 py-1.5 font-bold text-sm"
                     )}
                   >
-                    {getMatchPercentage(index)}% Match
+                    {getMatchPercentage(review, index)}% Match
                   </Badge>
                 </div>
 

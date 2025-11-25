@@ -36,6 +36,9 @@ export interface BrowseReviewItem {
   available_slots?: number; // Computed: reviews_requested - reviews_claimed
   slot_id?: number; // Slot ID for claiming (if available)
 
+  // Skill match score (when user skills provided)
+  match_score?: number; // Match percentage (0-100) based on user's skills vs review's skills_needed
+
   // Expert review tier fields (null for free reviews)
   tier?: ExpertReviewTier; // Expert review tier: quick (5-10min), standard (15-20min), deep (30+ min)
   feedback_priority?: FeedbackPriority; // Primary focus area for the review
@@ -62,6 +65,7 @@ export interface BrowseParams {
   limit?: number;
   offset?: number;
   search?: string;
+  user_skills?: string[]; // User's skills for personalized match scoring
 }
 
 /**
@@ -98,6 +102,10 @@ export async function getBrowseReviews(params?: BrowseParams): Promise<BrowseRes
 
   if (params?.offset) {
     queryParams.append("offset", params.offset.toString());
+  }
+
+  if (params?.user_skills && params.user_skills.length > 0) {
+    queryParams.append("user_skills", params.user_skills.join(","));
   }
 
   const queryString = queryParams.toString();

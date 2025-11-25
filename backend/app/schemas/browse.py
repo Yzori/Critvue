@@ -105,6 +105,14 @@ class BrowseReviewItem(BaseModel):
     reviews_claimed: int = Field(..., ge=0, description="Number of review slots claimed")
     available_slots: int = Field(..., ge=0, description="Number of available review slots")
 
+    # Skill match score (when user skills provided)
+    match_score: Optional[int] = Field(
+        None,
+        ge=0,
+        le=100,
+        description="Skill match percentage (0-100) based on user's skills vs review's skills_needed. Null if no user skills provided."
+    )
+
     # Expert review tier fields (null for free reviews)
     tier: Optional[ReviewTier] = Field(
         None,

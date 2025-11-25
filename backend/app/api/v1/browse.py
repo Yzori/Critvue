@@ -61,6 +61,10 @@ async def browse_reviews(
         ge=0,
         description="Pagination offset"
     ),
+    user_skills: Optional[str] = Query(
+        None,
+        description="Comma-separated list of user skills for personalized match scoring (e.g., 'React,TypeScript,UI Design')"
+    ),
     db: AsyncSession = Depends(get_db)
 ) -> BrowseReviewsResponse:
     """
@@ -117,10 +121,16 @@ async def browse_reviews(
         RateLimitExceeded: If rate limit is exceeded (429)
     """
     try:
+        # Parse user skills from comma-separated string
+        skills_list = None
+        if user_skills:
+            skills_list = [s.strip() for s in user_skills.split(',') if s.strip()]
+
         # Log the browse request (without user identification for public endpoint)
         security_logger.logger.info(
             f"Browse request: content_type={content_type}, review_type={review_type}, "
-            f"sort_by={sort_by}, deadline={deadline}, limit={limit}, offset={offset}"
+            f"sort_by={sort_by}, deadline={deadline}, limit={limit}, offset={offset}, "
+            f"user_skills={len(skills_list) if skills_list else 0} skills"
         )
 
         # Get reviews from CRUD layer
@@ -131,7 +141,8 @@ async def browse_reviews(
             sort_by=sort_by,
             deadline=deadline,
             limit=limit,
-            offset=offset
+            offset=offset,
+            user_skills=skills_list
         )
 
         # Build response

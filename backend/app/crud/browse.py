@@ -70,6 +70,92 @@ class BrowseCRUD:
         return skills[:10]  # Limit to 10 skills for performance
 
     @staticmethod
+    def _calculate_match_score(
+        user_skills: List[str],
+        review_skills: List[str],
+        content_type: Optional[str] = None
+    ) -> int:
+        """
+        Calculate skill match score between user skills and review requirements.
+
+        Algorithm:
+        1. Normalize all skills to lowercase for comparison
+        2. Calculate exact matches (70% weight)
+        3. Calculate partial/fuzzy matches (20% weight)
+        4. Add content type bonus (10% weight)
+        5. Ensure minimum score of 30 if any match found
+
+        Args:
+            user_skills: List of user's specialty tags
+            review_skills: List of skills needed for the review
+            content_type: Review content type (for category matching)
+
+        Returns:
+            Match score from 0-100
+        """
+        if not user_skills or not review_skills:
+            return 0
+
+        # Normalize skills to lowercase
+        user_skills_lower = {s.lower().strip() for s in user_skills}
+        review_skills_lower = {s.lower().strip() for s in review_skills}
+
+        # Calculate exact matches
+        exact_matches = user_skills_lower & review_skills_lower
+        exact_match_count = len(exact_matches)
+
+        # Calculate partial/fuzzy matches (substring matches)
+        partial_matches = 0
+        for user_skill in user_skills_lower:
+            for review_skill in review_skills_lower:
+                if user_skill != review_skill:
+                    # Check for substring match or related terms
+                    if user_skill in review_skill or review_skill in user_skill:
+                        partial_matches += 0.5
+                    # Check for common prefixes (e.g., "react" matches "react native")
+                    elif len(user_skill) > 3 and len(review_skill) > 3:
+                        if user_skill[:4] == review_skill[:4]:
+                            partial_matches += 0.3
+
+        # Calculate base score
+        total_review_skills = len(review_skills_lower)
+
+        # Exact match contribution (70% weight, based on coverage of review skills)
+        exact_score = (exact_match_count / total_review_skills) * 70 if total_review_skills > 0 else 0
+
+        # Partial match contribution (20% weight, capped at 20)
+        partial_score = min(partial_matches * 10, 20)
+
+        # Content type bonus (10% weight)
+        # Map content types to related skill keywords
+        content_skill_map = {
+            "design": ["design", "ui", "ux", "figma", "sketch", "adobe", "visual", "graphic", "prototype"],
+            "code": ["code", "development", "react", "vue", "angular", "typescript", "javascript", "python", "frontend", "backend", "full-stack"],
+            "video": ["video", "editing", "premiere", "after effects", "motion", "animation", "davinci"],
+            "audio": ["audio", "sound", "music", "podcast", "mixing", "mastering", "pro tools", "ableton"],
+            "writing": ["writing", "copy", "content", "technical", "documentation", "editing", "seo"],
+            "art": ["art", "illustration", "painting", "3d", "character", "concept", "digital art"]
+        }
+
+        content_bonus = 0
+        if content_type and content_type.lower() in content_skill_map:
+            related_keywords = content_skill_map[content_type.lower()]
+            for user_skill in user_skills_lower:
+                if any(keyword in user_skill for keyword in related_keywords):
+                    content_bonus = 10
+                    break
+
+        # Calculate total score
+        total_score = exact_score + partial_score + content_bonus
+
+        # Ensure minimum score of 30 if any match found
+        if exact_match_count > 0 or partial_matches > 0:
+            total_score = max(total_score, 30)
+
+        # Cap at 100
+        return min(round(total_score), 100)
+
+    @staticmethod
     async def get_public_reviews(
         db: AsyncSession,
         content_type: Optional[ContentType] = None,
@@ -77,7 +163,8 @@ class BrowseCRUD:
         sort_by: SortOption = SortOption.RECENT,
         deadline: Optional[DeadlineFilter] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
+        user_skills: Optional[List[str]] = None
     ) -> Tuple[List[BrowseReviewItem], int]:
         """
         Get public review requests for marketplace browsing.
@@ -292,6 +379,15 @@ class BrowseCRUD:
                 # Calculate urgency
                 urgency = BrowseCRUD._calculate_urgency(review.deadline)
 
+                # Calculate match score if user skills provided
+                match_score = None
+                if user_skills:
+                    match_score = BrowseCRUD._calculate_match_score(
+                        user_skills=user_skills,
+                        review_skills=skills_needed,
+                        content_type=review.content_type.value if review.content_type else None
+                    )
+
                 # Build browse item
                 browse_item = BrowseReviewItem(
                     id=review.id,
@@ -310,6 +406,7 @@ class BrowseCRUD:
                     reviews_requested=review.reviews_requested,
                     reviews_claimed=review.reviews_claimed,
                     available_slots=review.available_slots,
+                    match_score=match_score,
                     # Expert review tier fields (will be None for free reviews)
                     tier=review.tier,
                     feedback_priority=review.feedback_priority,

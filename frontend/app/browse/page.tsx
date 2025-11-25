@@ -84,6 +84,7 @@ export default function BrowsePage() {
         sort_by: sortBy,
         search: searchQuery || undefined,
         limit: 20,
+        user_skills: userSkills.length > 0 ? userSkills : undefined,
       });
 
       setReviews(response.items);
@@ -93,7 +94,7 @@ export default function BrowsePage() {
     } finally {
       setLoading(false);
     }
-  }, [contentType, reviewType, sortBy, searchQuery]);
+  }, [contentType, reviewType, sortBy, searchQuery, userSkills]);
 
   // Fetch on mount and when filters change
   React.useEffect(() => {
