@@ -13,6 +13,7 @@ export interface User {
   created_at?: string;
   user_tier?: string;
   karma_points?: number;
+  role?: "creator" | "reviewer" | "admin";
 }
 
 export interface AuthTokens {

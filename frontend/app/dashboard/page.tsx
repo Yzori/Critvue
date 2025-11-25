@@ -187,9 +187,9 @@ function DashboardContent() {
         </p>
       </div>
 
-      {/* Become an Expert Reviewer Banner - Dismissible */}
+      {/* Become an Expert Reviewer Banner - Only show for non-reviewers */}
       <AnimatePresence>
-        {showExpertBanner && (
+        {showExpertBanner && user?.role !== "reviewer" && user?.role !== "admin" && (
           <motion.div
             initial={{ opacity: 0, y: -20, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}

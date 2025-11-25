@@ -43,6 +43,8 @@ import {
   AlertTriangle,
   Plus,
   Search,
+  Star,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -113,6 +115,23 @@ export function MomentumDashboard({
   // Celebrations
   // showCelebration reserved for future milestone/achievement triggering
   const { celebration, showCelebration: _showCelebration, hideCelebration, isVisible: isCelebrating } = useCelebration();
+
+  // Expert banner state (with localStorage persistence)
+  const [showExpertBanner, setShowExpertBanner] = React.useState(true);
+
+  // Load expert banner preference from localStorage
+  React.useEffect(() => {
+    const dismissed = localStorage.getItem('expertBannerDismissed');
+    if (dismissed === 'true') {
+      setShowExpertBanner(false);
+    }
+  }, []);
+
+  // Handle expert banner dismissal
+  const handleDismissExpertBanner = () => {
+    setShowExpertBanner(false);
+    localStorage.setItem('expertBannerDismissed', 'true');
+  };
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -278,8 +297,9 @@ export function MomentumDashboard({
             {/* Spacer */}
             <div className="hidden lg:block flex-1" />
 
-            {/* Right: Role Toggle (Segmented Control) */}
+            {/* Right: Role Toggle + Expert CTA */}
             <div className="flex items-center gap-3">
+              {/* Role Toggle */}
               <div className="flex items-center p-1 rounded-lg bg-muted/50 border border-border/50">
                 <button
                   onClick={() => onRoleChange('creator')}
@@ -306,6 +326,36 @@ export function MomentumDashboard({
                   Reviewer
                 </button>
               </div>
+
+              {/* Expert CTA - subtle inline upgrade prompt */}
+              <AnimatePresence>
+                {showExpertBanner && user?.role !== 'reviewer' && user?.role !== 'admin' && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200/60"
+                  >
+                    <Star className="size-3.5 text-orange-500 fill-orange-500" />
+                    <span className="text-xs text-orange-700 font-medium whitespace-nowrap">
+                      Become an Expert
+                    </span>
+                    <Link
+                      href="/apply/expert"
+                      className="px-2 py-0.5 rounded-md bg-orange-500 text-white text-xs font-medium hover:bg-orange-600 transition-colors"
+                    >
+                      Apply
+                    </Link>
+                    <button
+                      onClick={handleDismissExpertBanner}
+                      className="p-0.5 hover:bg-orange-100 rounded transition-colors"
+                      aria-label="Dismiss"
+                    >
+                      <X className="size-3 text-orange-400" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Keyboard shortcuts hint */}
               <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground/60">
