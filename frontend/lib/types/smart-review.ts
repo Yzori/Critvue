@@ -28,11 +28,38 @@ export interface VisualAnnotation {
   comment: string; // Annotation comment (1-500 chars)
 }
 
+export interface VoiceMemo {
+  id: string; // UUID generated on client
+  duration: number; // Duration in seconds
+  url?: string; // Blob URL for playback (client-side only)
+  file_url?: string; // Uploaded file URL (for persistence)
+}
+
+// Structured feedback for actionable improvements
+export type FeedbackPriority = 'critical' | 'important' | 'nice-to-have';
+
+export interface StructuredImprovement {
+  id: string;
+  issue: string; // What's the problem (required, min 10 chars)
+  location?: string; // Where in the work (optional but encouraged)
+  suggestion: string; // Concrete fix (required, min 10 chars)
+  priority: FeedbackPriority; // How urgent
+}
+
+export interface StructuredStrength {
+  id: string;
+  what: string; // What's good (required, min 10 chars)
+  why?: string; // Why it works well (optional but encouraged)
+}
+
 export interface Phase3DetailedFeedback {
-  strengths: string[]; // 1-10 items
-  improvements: string[]; // 1-10 items
+  strengths: string[]; // Legacy: simple strings (1-10 items)
+  improvements: string[]; // Legacy: simple strings (1-10 items)
+  structured_strengths?: StructuredStrength[]; // New: structured format
+  structured_improvements?: StructuredImprovement[]; // New: structured format
   additional_notes?: string; // Optional, up to 5000 chars
   visual_annotations?: VisualAnnotation[]; // Optional visual annotations for design/art (max 20)
+  voice_memo?: VoiceMemo; // Optional voice memo
 }
 
 // ===== Quality Metrics =====

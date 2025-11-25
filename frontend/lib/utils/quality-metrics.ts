@@ -235,7 +235,8 @@ export function getToneLabel(
 }
 
 /**
- * Validate a phase is complete
+ * Validate Phase 1 - Focus Areas Selection
+ * (Rating and summary have moved to Phase 3)
  */
 export function validatePhase1(draft: SmartReviewDraft): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
@@ -246,20 +247,13 @@ export function validatePhase1(draft: SmartReviewDraft): { isValid: boolean; err
 
   const phase1 = draft.phase1_quick_assessment;
 
-  if (!phase1.overall_rating || phase1.overall_rating < 1 || phase1.overall_rating > 5) {
-    errors.push('Overall rating is required (1-5 stars)');
-  }
-
+  // Only validate focus areas - rating and summary are now in Phase 3
   if (!phase1.primary_focus_areas || phase1.primary_focus_areas.length < 1) {
     errors.push('At least one focus area is required');
   }
 
-  if (!phase1.quick_summary || phase1.quick_summary.length < 50) {
-    errors.push('Quick summary must be at least 50 characters');
-  }
-
-  if (phase1.quick_summary && phase1.quick_summary.length > 300) {
-    errors.push('Quick summary must be less than 300 characters');
+  if (phase1.primary_focus_areas && phase1.primary_focus_areas.length > 6) {
+    errors.push('Maximum 6 focus areas allowed');
   }
 
   return { isValid: errors.length === 0, errors };
@@ -290,26 +284,41 @@ export function validatePhase2(draft: SmartReviewDraft): { isValid: boolean; err
   return { isValid: errors.length === 0, errors };
 }
 
+/**
+ * Validate Phase 3 - Detailed Feedback + Final Verdict
+ * (Now includes rating and summary from Phase 1)
+ */
 export function validatePhase3(draft: SmartReviewDraft): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Phase 3 is optional, but if provided, validate it
-  if (!draft.phase3_detailed_feedback) {
-    return { isValid: true, errors: [] }; // Optional phase
-  }
-
   const phase3 = draft.phase3_detailed_feedback;
+  const phase1 = draft.phase1_quick_assessment;
 
-  if (phase3.strengths && phase3.strengths.length === 0) {
-    errors.push('If providing strengths, include at least one item');
+  // Validate strengths (at least 1 required)
+  if (!phase3?.strengths || phase3.strengths.filter(s => s.trim().length > 0).length < 1) {
+    errors.push('At least one strength is required');
   }
 
-  if (phase3.improvements && phase3.improvements.length === 0) {
-    errors.push('If providing improvements, include at least one item');
+  // Validate improvements (at least 1 required)
+  if (!phase3?.improvements || phase3.improvements.filter(i => i.trim().length > 0).length < 1) {
+    errors.push('At least one improvement is required');
   }
 
-  if (phase3.additional_notes && phase3.additional_notes.length > 5000) {
+  if (phase3?.additional_notes && phase3.additional_notes.length > 5000) {
     errors.push('Additional notes must be less than 5000 characters');
+  }
+
+  // Validate Final Verdict (rating and summary stored in phase1 but edited in phase3)
+  if (!phase1?.overall_rating || phase1.overall_rating < 1 || phase1.overall_rating > 5) {
+    errors.push('Overall rating is required (1-5 stars)');
+  }
+
+  if (!phase1?.quick_summary || phase1.quick_summary.length < 50) {
+    errors.push('Summary must be at least 50 characters');
+  }
+
+  if (phase1?.quick_summary && phase1.quick_summary.length > 300) {
+    errors.push('Summary must be less than 300 characters');
   }
 
   return { isValid: errors.length === 0, errors };

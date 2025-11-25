@@ -1,18 +1,18 @@
 /**
- * Phase 3: Detailed Feedback
+ * Phase 3: Detailed Feedback + Final Verdict
  *
  * - Strengths (bullet list, 1-10 items)
  * - Areas for improvement (bullet list, 1-10 items)
  * - Additional notes (optional, rich text)
  * - Visual annotations (for design/art reviews)
+ * - Final Verdict: Overall rating + Summary (moved from Phase 1)
  */
 
 "use client";
 
 import * as React from "react";
-import { Plus, X, HelpCircle, ChevronDown, ChevronUp, Sparkles, Lightbulb, EyeOff, Eye } from "lucide-react";
+import { Plus, HelpCircle, ChevronDown, ChevronUp, Star, Award } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,9 +22,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation } from "@/lib/types/smart-review";
+import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation, VoiceMemo, StructuredImprovement, StructuredStrength } from "@/lib/types/smart-review";
 import { ImageAnnotation } from "./ImageAnnotation";
-import { getTopSuggestions, Suggestion } from "@/lib/constants/review-suggestions";
+import { VoiceMemoRecorder } from "./VoiceMemoRecorder";
+import {
+  StructuredImprovementItem,
+  StructuredStrengthItem,
+  createNewImprovement,
+  createNewStrength,
+} from "./StructuredFeedbackItem";
 
 interface Phase3DetailedFeedbackProps {
   data: Phase3Data | null;
@@ -32,6 +38,10 @@ interface Phase3DetailedFeedbackProps {
   contentType?: string; // Content type to determine if visual annotations should be shown
   imageUrl?: string; // Image URL for design/art reviews
   selectedFocusAreas?: string[]; // Focus areas from Phase 1 for suggestion filtering
+  // Final Verdict props (stored in Phase1 data but edited in Phase3)
+  overallRating?: number;
+  quickSummary?: string;
+  onVerdictChange?: (rating: number, summary: string) => void;
 }
 
 export function Phase3DetailedFeedback({
@@ -40,27 +50,73 @@ export function Phase3DetailedFeedback({
   contentType,
   imageUrl,
   selectedFocusAreas,
+  overallRating = 0,
+  quickSummary = "",
+  onVerdictChange,
 }: Phase3DetailedFeedbackProps) {
-  const [strengths, setStrengths] = React.useState<string[]>(
-    data?.strengths || [""]
-  );
-  const [improvements, setImprovements] = React.useState<string[]>(
-    data?.improvements || [""]
-  );
+  // Initialize structured strengths - convert legacy data if present
+  const initStructuredStrengths = (): StructuredStrength[] => {
+    if (data?.structured_strengths && data.structured_strengths.length > 0) {
+      return data.structured_strengths;
+    }
+    // Convert legacy strengths if present
+    if (data?.strengths && data.strengths.length > 0) {
+      return data.strengths.map((what, i) => ({
+        id: `str-legacy-${i}`,
+        what,
+        why: undefined,
+      }));
+    }
+    return [createNewStrength()];
+  };
+
+  // Initialize structured improvements - convert legacy data if present
+  const initStructuredImprovements = (): StructuredImprovement[] => {
+    if (data?.structured_improvements && data.structured_improvements.length > 0) {
+      return data.structured_improvements;
+    }
+    // Convert legacy improvements if present
+    if (data?.improvements && data.improvements.length > 0) {
+      return data.improvements.map((text, i) => ({
+        id: `imp-legacy-${i}`,
+        issue: text,
+        location: undefined,
+        suggestion: "",
+        priority: "important" as const,
+      }));
+    }
+    return [createNewImprovement()];
+  };
+
+  const [structuredStrengths, setStructuredStrengths] = React.useState<StructuredStrength[]>(initStructuredStrengths);
+  const [structuredImprovements, setStructuredImprovements] = React.useState<StructuredImprovement[]>(initStructuredImprovements);
   const [additionalNotes, setAdditionalNotes] = React.useState(
     data?.additional_notes || ""
   );
   const [visualAnnotations, setVisualAnnotations] = React.useState<VisualAnnotation[]>(
     data?.visual_annotations || []
   );
+  const [voiceMemo, setVoiceMemo] = React.useState<VoiceMemo | undefined>(
+    data?.voice_memo
+  );
   const [notesExpanded, setNotesExpanded] = React.useState(false);
 
-  // Suggestion visibility state
-  const [showStrengthSuggestions, setShowStrengthSuggestions] = React.useState(true);
-  const [showImprovementSuggestions, setShowImprovementSuggestions] = React.useState(true);
+  // Final Verdict state
+  const [rating, setRating] = React.useState(overallRating);
+  const [summary, setSummary] = React.useState(quickSummary);
 
-  // Track recently used suggestions to fade them out
-  const [usedSuggestions, setUsedSuggestions] = React.useState<Set<string>>(new Set());
+  // Sync verdict state with props
+  React.useEffect(() => {
+    setRating(overallRating);
+    setSummary(quickSummary);
+  }, [overallRating, quickSummary]);
+
+  // Notify parent of verdict changes
+  React.useEffect(() => {
+    if (onVerdictChange && (rating !== overallRating || summary !== quickSummary)) {
+      onVerdictChange(rating, summary);
+    }
+  }, [rating, summary, onVerdictChange, overallRating, quickSummary]);
 
   // Section collapse state
   const [strengthsCollapsed, setStrengthsCollapsed] = React.useState(false);
@@ -73,234 +129,114 @@ export function Phase3DetailedFeedback({
   // Determine if we should show image annotations (for design/art content)
   const showImageAnnotations = (contentType === "design" || contentType === "art") && imageUrl;
 
-  // Get context-aware suggestions
-  const strengthSuggestions = React.useMemo(
-    () => getTopSuggestions("strength", contentType, selectedFocusAreas, 5),
-    [contentType, selectedFocusAreas]
-  );
-
-  const improvementSuggestions = React.useMemo(
-    () => getTopSuggestions("improvement", contentType, selectedFocusAreas, 5),
-    [contentType, selectedFocusAreas]
-  );
-
   // Update parent when any field changes
   React.useEffect(() => {
-    const validStrengths = strengths.filter((s) => s.trim().length > 0);
-    const validImprovements = improvements.filter((i) => i.trim().length > 0);
+    // Get valid structured items
+    const validStrengths = structuredStrengths.filter((s) => s.what.length >= 10);
+    const validImprovements = structuredImprovements.filter(
+      (i) => i.issue.length >= 10 && i.suggestion.length >= 10
+    );
+
+    // Convert to legacy format for backward compatibility
+    const legacyStrengths = validStrengths.map((s) => s.what);
+    const legacyImprovements = validImprovements.map((i) => `${i.issue} → ${i.suggestion}`);
 
     if (validStrengths.length > 0 || validImprovements.length > 0) {
       onChange({
-        strengths: validStrengths,
-        improvements: validImprovements,
+        // Legacy format (for backward compatibility)
+        strengths: legacyStrengths,
+        improvements: legacyImprovements,
+        // New structured format
+        structured_strengths: validStrengths,
+        structured_improvements: validImprovements,
         additional_notes: additionalNotes.trim() || undefined,
         visual_annotations: visualAnnotations.length > 0 ? visualAnnotations : undefined,
+        voice_memo: voiceMemo,
       });
     }
-  }, [strengths, improvements, additionalNotes, visualAnnotations, onChange]);
+  }, [structuredStrengths, structuredImprovements, additionalNotes, visualAnnotations, voiceMemo, onChange]);
 
-  // Auto-collapse sections when they reach minimum content (2 items)
+  // Voice memo handlers
+  const handleVoiceRecordingComplete = (audioBlob: Blob, duration: number) => {
+    const url = URL.createObjectURL(audioBlob);
+    setVoiceMemo({
+      id: `memo-${Date.now()}`,
+      duration,
+      url,
+    });
+  };
+
+  const handleVoiceMemoDelete = () => {
+    if (voiceMemo?.url) {
+      URL.revokeObjectURL(voiceMemo.url);
+    }
+    setVoiceMemo(undefined);
+  };
+
+  // Auto-collapse sections when they reach minimum content (1 complete item)
   React.useEffect(() => {
-    const validStrengths = strengths.filter((s) => s.trim().length > 0);
-    const validImprovements = improvements.filter((i) => i.trim().length > 0);
-
-    // Auto-collapse strengths when >= 2 items
-    if (validStrengths.length >= 2 && !strengthsCollapsed) {
-      setStrengthsCollapsed(true);
-    }
-
-    // Auto-collapse improvements when >= 2 items
-    if (validImprovements.length >= 2 && !improvementsCollapsed) {
-      setImprovementsCollapsed(true);
-    }
+    const validStrengths = structuredStrengths.filter((s) => s.what.length >= 10);
+    const validImprovements = structuredImprovements.filter(
+      (i) => i.issue.length >= 10 && i.suggestion.length >= 10
+    );
 
     // Auto-collapse annotations when >= 1 annotation
     if (visualAnnotations.length >= 1 && !annotationsCollapsed) {
       setAnnotationsCollapsed(true);
     }
-  }, [strengths, improvements, visualAnnotations, strengthsCollapsed, improvementsCollapsed, annotationsCollapsed]);
+  }, [structuredStrengths, structuredImprovements, visualAnnotations, annotationsCollapsed]);
 
   // Check if phase is complete (for compact summary view)
   const isPhaseComplete = React.useMemo(() => {
-    const validStrengths = strengths.filter((s) => s.trim().length > 0);
-    const validImprovements = improvements.filter((i) => i.trim().length > 0);
-    return validStrengths.length >= 2 && validImprovements.length >= 2;
-  }, [strengths, improvements]);
-
-  const updateStrength = (index: number, value: string) => {
-    const newStrengths = [...strengths];
-    newStrengths[index] = value;
-    setStrengths(newStrengths);
-  };
-
-  const addStrength = () => {
-    if (strengths.length < 10) {
-      setStrengths([...strengths, ""]);
-    }
-  };
-
-  const removeStrength = (index: number) => {
-    if (strengths.length > 1) {
-      setStrengths(strengths.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateImprovement = (index: number, value: string) => {
-    const newImprovements = [...improvements];
-    newImprovements[index] = value;
-    setImprovements(newImprovements);
-  };
-
-  const addImprovement = () => {
-    if (improvements.length < 10) {
-      setImprovements([...improvements, ""]);
-    }
-  };
-
-  const removeImprovement = (index: number) => {
-    if (improvements.length > 1) {
-      setImprovements(improvements.filter((_, i) => i !== index));
-    }
-  };
-
-  // Suggestion tap handlers
-  const handleSuggestionTap = (suggestion: Suggestion, category: "strength" | "improvement") => {
-    const fields = category === "strength" ? strengths : improvements;
-    const setFields = category === "strength" ? setStrengths : setImprovements;
-    const maxItems = 10;
-
-    // Find first empty field
-    const emptyIndex = fields.findIndex((field) => field.trim().length === 0);
-
-    if (emptyIndex !== -1) {
-      // Insert into first empty field
-      const newFields = [...fields];
-      newFields[emptyIndex] = suggestion.text;
-      setFields(newFields);
-    } else if (fields.length < maxItems) {
-      // All fields filled, create new one
-      setFields([...fields, suggestion.text]);
-    } else {
-      // All fields filled and at max, do nothing (could show toast)
-      return;
-    }
-
-    // Mark suggestion as used (for visual feedback)
-    setUsedSuggestions((prev) => new Set(prev).add(suggestion.id));
-
-    // Optional: Remove from used after 2 seconds for re-use
-    setTimeout(() => {
-      setUsedSuggestions((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(suggestion.id);
-        return newSet;
-      });
-    }, 2000);
-  };
-
-  const validStrengthsCount = strengths.filter((s) => s.trim().length > 0).length;
-  const validImprovementsCount = improvements.filter((i) => i.trim().length > 0).length;
-
-  // Reusable Suggestion Chips Component
-  const SuggestionChips = ({
-    suggestions,
-    category,
-    show,
-    onToggle,
-  }: {
-    suggestions: Suggestion[];
-    category: "strength" | "improvement";
-    show: boolean;
-    onToggle: () => void;
-  }) => {
-    const isStrength = category === "strength";
-    const icon = isStrength ? Sparkles : Lightbulb;
-    const IconComponent = icon;
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <IconComponent className="size-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Quick suggestions
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onToggle}
-            className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors min-h-[32px] px-2 -mr-2"
-            aria-label={show ? "Hide suggestions" : "Show suggestions"}
-          >
-            {show ? (
-              <>
-                <EyeOff className="size-3" />
-                Hide
-              </>
-            ) : (
-              <>
-                <Eye className="size-3" />
-                Show
-              </>
-            )}
-          </button>
-        </div>
-
-        {show && (
-          <div className="relative">
-            {/* Horizontal scroll container with mobile optimizations */}
-            <div
-              className={cn(
-                "flex gap-2 overflow-x-auto pb-2 px-1 -mx-1",
-                "snap-x snap-mandatory scrollbar-hide",
-                "scroll-smooth"
-              )}
-              style={{
-                // Hide scrollbar
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
-            >
-              {suggestions.map((suggestion) => {
-                const isUsed = usedSuggestions.has(suggestion.id);
-                return (
-                  <button
-                    key={suggestion.id}
-                    type="button"
-                    onClick={() => handleSuggestionTap(suggestion, category)}
-                    className={cn(
-                      "flex-shrink-0 snap-start",
-                      "h-8 px-3 py-1.5 rounded-full border-2",
-                      "text-xs font-medium whitespace-nowrap",
-                      "transition-all duration-200",
-                      "active:scale-95 touch-manipulation",
-                      "flex items-center gap-1.5",
-                      isStrength
-                        ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200 hover:border-green-400"
-                        : "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200 hover:border-amber-400",
-                      isUsed && "opacity-50"
-                    )}
-                    aria-label={`Add suggestion: ${suggestion.text}`}
-                  >
-                    {isUsed ? "✓ Added" : suggestion.text}
-                  </button>
-                );
-              })}
-            </div>
-            {/* Fade effect on right edge to indicate scrollability */}
-            <div
-              className="absolute right-0 top-0 bottom-2 w-8 pointer-events-none"
-              style={{
-                background: isStrength
-                  ? "linear-gradient(to left, rgb(240 253 244 / 0.5), transparent)"
-                  : "linear-gradient(to left, rgb(254 252 232 / 0.5), transparent)",
-              }}
-            />
-          </div>
-        )}
-      </div>
+    const validStrengths = structuredStrengths.filter((s) => s.what.length >= 10);
+    const validImprovements = structuredImprovements.filter(
+      (i) => i.issue.length >= 10 && i.suggestion.length >= 10
     );
+    return validStrengths.length >= 1 && validImprovements.length >= 1;
+  }, [structuredStrengths, structuredImprovements]);
+
+  // Structured feedback handlers
+  const updateStructuredStrength = (index: number, updated: StructuredStrength) => {
+    const newStrengths = [...structuredStrengths];
+    newStrengths[index] = updated;
+    setStructuredStrengths(newStrengths);
   };
+
+  const addStructuredStrength = () => {
+    if (structuredStrengths.length < 10) {
+      setStructuredStrengths([...structuredStrengths, createNewStrength()]);
+    }
+  };
+
+  const removeStructuredStrength = (index: number) => {
+    if (structuredStrengths.length > 1) {
+      setStructuredStrengths(structuredStrengths.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateStructuredImprovement = (index: number, updated: StructuredImprovement) => {
+    const newImprovements = [...structuredImprovements];
+    newImprovements[index] = updated;
+    setStructuredImprovements(newImprovements);
+  };
+
+  const addStructuredImprovement = () => {
+    if (structuredImprovements.length < 10) {
+      setStructuredImprovements([...structuredImprovements, createNewImprovement()]);
+    }
+  };
+
+  const removeStructuredImprovement = (index: number) => {
+    if (structuredImprovements.length > 1) {
+      setStructuredImprovements(structuredImprovements.filter((_, i) => i !== index));
+    }
+  };
+
+  // Count valid items
+  const validStrengthsCount = structuredStrengths.filter((s) => s.what.length >= 10).length;
+  const validImprovementsCount = structuredImprovements.filter(
+    (i) => i.issue.length >= 10 && i.suggestion.length >= 10
+  ).length;
 
   // Section refs for scroll navigation
   const strengthsRef = React.useRef<HTMLDivElement>(null);
@@ -492,54 +428,31 @@ export function Phase3DetailedFeedback({
           {/* Full Content */}
           {!strengthsCollapsed && (
             <>
-
-          {/* Suggestion Chips for Strengths */}
-          <SuggestionChips
-            suggestions={strengthSuggestions}
-            category="strength"
-            show={showStrengthSuggestions}
-            onToggle={() => setShowStrengthSuggestions(!showStrengthSuggestions)}
-          />
-
-        <div className="space-y-2">
-          {strengths.map((strength, index) => (
-            <div key={index} className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder={`e.g., "Clear function names and good documentation"`}
-                  value={strength}
-                  onChange={(e) => updateStrength(index, e.target.value)}
-                  className="text-base"
-                />
+              <div className="space-y-3">
+                {structuredStrengths.map((strength, index) => (
+                  <StructuredStrengthItem
+                    key={strength.id}
+                    item={strength}
+                    onChange={(updated) => updateStructuredStrength(index, updated)}
+                    onRemove={() => removeStructuredStrength(index)}
+                    canRemove={structuredStrengths.length > 1}
+                    index={index}
+                  />
+                ))}
               </div>
-              {strengths.length > 1 && (
+
+              {structuredStrengths.length < 10 && (
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeStrength(index)}
-                  className="flex-shrink-0 size-12 md:size-11"
-                  aria-label="Remove strength"
+                  variant="outline"
+                  size="sm"
+                  onClick={addStructuredStrength}
+                  className="w-full min-h-[48px]"
                 >
-                  <X className="size-4" />
+                  <Plus className="size-4 mr-2" />
+                  Add Another Strength
                 </Button>
               )}
-            </div>
-          ))}
-        </div>
-
-        {strengths.length < 10 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addStrength}
-            className="w-full min-h-[48px]"
-          >
-            <Plus className="size-4 mr-2" />
-            Add Strength
-          </Button>
-        )}
             </>
           )}
         </div>
@@ -606,54 +519,31 @@ export function Phase3DetailedFeedback({
           {/* Full Content */}
           {!improvementsCollapsed && (
             <>
-
-          {/* Suggestion Chips for Improvements */}
-          <SuggestionChips
-            suggestions={improvementSuggestions}
-            category="improvement"
-            show={showImprovementSuggestions}
-            onToggle={() => setShowImprovementSuggestions(!showImprovementSuggestions)}
-          />
-
-        <div className="space-y-2">
-          {improvements.map((improvement, index) => (
-            <div key={index} className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  placeholder={`e.g., "Add unit tests for edge cases"`}
-                  value={improvement}
-                  onChange={(e) => updateImprovement(index, e.target.value)}
-                  className="text-base"
-                />
+              <div className="space-y-3">
+                {structuredImprovements.map((improvement, index) => (
+                  <StructuredImprovementItem
+                    key={improvement.id}
+                    item={improvement}
+                    onChange={(updated) => updateStructuredImprovement(index, updated)}
+                    onRemove={() => removeStructuredImprovement(index)}
+                    canRemove={structuredImprovements.length > 1}
+                    index={index}
+                  />
+                ))}
               </div>
-              {improvements.length > 1 && (
+
+              {structuredImprovements.length < 10 && (
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeImprovement(index)}
-                  className="flex-shrink-0 size-12 md:size-11"
-                  aria-label="Remove improvement"
+                  variant="outline"
+                  size="sm"
+                  onClick={addStructuredImprovement}
+                  className="w-full min-h-[48px]"
                 >
-                  <X className="size-4" />
+                  <Plus className="size-4 mr-2" />
+                  Add Another Improvement
                 </Button>
               )}
-            </div>
-          ))}
-        </div>
-
-        {improvements.length < 10 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addImprovement}
-            className="w-full min-h-[48px]"
-          >
-            <Plus className="size-4 mr-2" />
-            Add Improvement
-          </Button>
-        )}
             </>
           )}
         </div>
@@ -798,6 +688,132 @@ export function Phase3DetailedFeedback({
         )}
       </div>
 
+      {/* Voice Memo Section */}
+      <VoiceMemoRecorder
+        onRecordingComplete={handleVoiceRecordingComplete}
+        onDelete={handleVoiceMemoDelete}
+        existingAudioUrl={voiceMemo?.url}
+        existingDuration={voiceMemo?.duration}
+      />
+
+      {/* Final Verdict Section */}
+      <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-amber-50/30 p-4 md:p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-full bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
+            <Award className="size-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-foreground">Final Verdict</h3>
+            <p className="text-sm text-muted-foreground">
+              Wrap up your review with an overall rating and summary
+            </p>
+          </div>
+        </div>
+
+        {/* Overall Rating */}
+        <div className="space-y-3">
+          <Label className="text-base font-semibold">Overall Rating</Label>
+          <div className="flex items-center gap-1.5 md:gap-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                className={cn(
+                  "size-12 md:size-14 rounded-lg transition-all duration-200",
+                  "flex items-center justify-center",
+                  "hover:scale-105 active:scale-95",
+                  "touch-manipulation",
+                  rating >= star
+                    ? "text-amber-400 bg-amber-50 border-2 border-amber-300 shadow-md"
+                    : "text-gray-300 bg-white border-2 border-gray-200 hover:text-amber-300 hover:bg-amber-50/50"
+                )}
+                aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}
+                aria-pressed={rating >= star}
+              >
+                <Star
+                  className={cn(
+                    "size-6 md:size-7",
+                    rating >= star && "fill-current"
+                  )}
+                />
+              </button>
+            ))}
+            {rating > 0 && (
+              <span className="ml-2 text-lg font-bold text-foreground">
+                {rating}/5
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="verdict-summary" className="text-base font-semibold">
+              Summary
+            </Label>
+            <span className={cn(
+              "text-xs font-medium px-2 py-1 rounded-full",
+              summary.length < 50 && "bg-amber-100 text-amber-700",
+              summary.length >= 50 && summary.length <= 300 && "bg-green-100 text-green-700",
+              summary.length > 300 && "bg-red-100 text-red-700"
+            )}>
+              {summary.length}/300
+            </span>
+          </div>
+          <Textarea
+            id="verdict-summary"
+            placeholder="Summarize your overall impression... What should the creator take away from your review?"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            className={cn(
+              "min-h-[100px] text-base resize-y",
+              "rounded-xl border-2",
+              "bg-white",
+              "px-4 py-3 leading-relaxed",
+              "placeholder:text-muted-foreground/60",
+              "focus:ring-2 focus:ring-purple-500/50 focus:border-purple-300",
+              "transition-all duration-200",
+              summary.length >= 50 && summary.length <= 300 && "border-green-300",
+              summary.length > 300 && "border-red-300"
+            )}
+            maxLength={300}
+          />
+          <p className="text-xs text-muted-foreground">
+            {summary.length < 50
+              ? `${50 - summary.length} more characters needed`
+              : summary.length <= 300
+                ? "Looking good!"
+                : "Please shorten your summary"
+            }
+          </p>
+        </div>
+
+        {/* Verdict Progress */}
+        <div className="flex items-center gap-3 pt-2 border-t border-purple-200">
+          <div className={cn(
+            "size-6 rounded-full flex items-center justify-center text-xs font-bold",
+            rating > 0 && summary.length >= 50 && summary.length <= 300
+              ? "bg-green-500 text-white"
+              : "bg-muted text-muted-foreground"
+          )}>
+            {rating > 0 && summary.length >= 50 && summary.length <= 300 ? "✓" : "!"}
+          </div>
+          <span className={cn(
+            "text-sm font-medium",
+            rating > 0 && summary.length >= 50 && summary.length <= 300
+              ? "text-green-600"
+              : "text-muted-foreground"
+          )}>
+            {rating === 0 && "Select a rating"}
+            {rating > 0 && summary.length < 50 && "Add your summary (50+ chars)"}
+            {rating > 0 && summary.length >= 50 && summary.length <= 300 && "Ready to submit!"}
+            {summary.length > 300 && "Summary too long"}
+          </span>
+        </div>
+      </div>
+
       {/* Progress Summary */}
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <h4 className="text-sm font-semibold mb-2">Phase 3 Progress:</h4>
@@ -843,11 +859,29 @@ export function Phase3DetailedFeedback({
           >
             {additionalNotes.length > 0 ? "✓" : "○"} Additional notes (optional)
           </li>
+          <li
+            className={cn(
+              rating > 0
+                ? "text-green-600"
+                : "text-muted-foreground"
+            )}
+          >
+            {rating > 0 ? "✓" : "○"} Overall rating ({rating}/5)
+          </li>
+          <li
+            className={cn(
+              summary.length >= 50 && summary.length <= 300
+                ? "text-green-600"
+                : "text-muted-foreground"
+            )}
+          >
+            {summary.length >= 50 && summary.length <= 300 ? "✓" : "○"} Final summary
+          </li>
         </ul>
-        {validStrengthsCount >= 2 && validImprovementsCount >= 2 && (
+        {validStrengthsCount >= 1 && validImprovementsCount >= 1 && rating > 0 && summary.length >= 50 && summary.length <= 300 && (
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-xs font-medium text-green-600 flex items-center gap-1">
-              <span className="text-base">🎯</span> Excellent! Your feedback is comprehensive and actionable.
+              <span className="text-base">🎯</span> Your review is complete and ready to submit!
             </p>
           </div>
         )}

@@ -1,12 +1,9 @@
 /**
  * Smart Adaptive Review Editor
  *
- * Main orchestrator component that manages:
- * - 3-phase progressive disclosure workflow
- * - Auto-save with debouncing
- * - Real-time quality metrics
- * - Content-aware rubrics
- * - Phase navigation and validation
+ * Streamlined 2-step workflow:
+ * - Step 1: Assessment (Focus Areas + Rubric Ratings)
+ * - Step 2: Feedback & Verdict (Strengths, Improvements, Final Verdict)
  */
 
 "use client";
@@ -26,7 +23,6 @@ import { cn } from "@/lib/utils";
 import {
   SmartReviewDraft,
   RubricConfig,
-  PhaseNumber,
   Phase1QuickAssessment,
   Phase2RubricRatings,
   Phase3DetailedFeedback,
@@ -44,16 +40,17 @@ import {
   validatePhase2,
   validatePhase3,
 } from "@/lib/utils/quality-metrics";
-import { PhaseNavigation } from "./PhaseNavigation";
-import { Phase1QuickAssessment as Phase1Component } from "./Phase1QuickAssessment";
-import { Phase2RubricRatings as Phase2Component } from "./Phase2RubricRatings";
-import { Phase3DetailedFeedback as Phase3Component } from "./Phase3DetailedFeedback";
+import { AssessmentPhase } from "./AssessmentPhase";
+import { Phase3DetailedFeedback as FeedbackComponent } from "./Phase3DetailedFeedback";
+
+// Now using 2 steps instead of 3
+type StepNumber = 1 | 2;
 
 interface SmartReviewEditorProps {
   slotId: number;
   contentType: string;
-  contentSubcategory?: string | null; // Optional subcategory for specialized rubrics
-  imageUrl?: string; // Optional image URL for design/art reviews with visual annotations
+  contentSubcategory?: string | null;
+  imageUrl?: string;
   onSubmitSuccess?: () => void;
   className?: string;
 }
@@ -68,8 +65,8 @@ export function SmartReviewEditor({
   onSubmitSuccess,
   className,
 }: SmartReviewEditorProps) {
-  // Core state
-  const [currentPhase, setCurrentPhase] = React.useState<PhaseNumber>(1);
+  // Core state - now 2 steps
+  const [currentStep, setCurrentStep] = React.useState<StepNumber>(1);
   const [draft, setDraft] = React.useState<SmartReviewDraft>({});
   const [rubric, setRubric] = React.useState<RubricConfig | null>(null);
 
@@ -102,26 +99,20 @@ export function SmartReviewEditor({
       setLoadError(null);
 
       try {
-        // Load rubric (with optional subcategory for specialized rubrics)
         const rubricData = await getRubric(contentType, contentSubcategory);
         setRubric(rubricData);
 
-        // Load existing draft if available
         try {
           const draftData = await getSmartReviewDraft(slotId);
           if (draftData) {
             setDraft(draftData);
-            // Start from the last incomplete phase
-            if (!validatePhase1(draftData).isValid) {
-              setCurrentPhase(1);
-            } else if (!validatePhase2(draftData).isValid) {
-              setCurrentPhase(2);
-            } else if (!validatePhase3(draftData).isValid) {
-              setCurrentPhase(3);
+            // Determine starting step based on completion
+            const step1Complete = validatePhase1(draftData).isValid && validatePhase2(draftData).isValid;
+            if (step1Complete) {
+              setCurrentStep(2);
             }
           }
         } catch (draftError) {
-          // No draft exists yet, that's fine
           console.log("No existing draft found");
         }
       } catch (error) {
@@ -133,23 +124,27 @@ export function SmartReviewEditor({
     };
 
     loadData();
-  }, [slotId, contentType]);
+  }, [slotId, contentType, contentSubcategory]);
 
   // Calculate quality metrics
   const qualityMetrics: QualityMetrics = React.useMemo(() => {
     return calculateQualityMetrics(draft);
   }, [draft]);
 
-  // Calculate phase completion
-  const phaseCompletion: Record<PhaseNumber, boolean> = React.useMemo(() => {
+  // Calculate step completion (now 2 steps)
+  const stepCompletion: Record<StepNumber, boolean> = React.useMemo(() => {
     if (!rubric) {
-      return { 1: false, 2: false, 3: false };
+      return { 1: false, 2: false };
     }
 
+    // Step 1 = Phase 1 + Phase 2 combined
+    const step1Complete = validatePhase1(draft).isValid && validatePhase2(draft).isValid;
+    // Step 2 = Phase 3 (feedback + verdict)
+    const step2Complete = validatePhase3(draft).isValid;
+
     return {
-      1: validatePhase1(draft).isValid,
-      2: validatePhase2(draft).isValid,
-      3: validatePhase3(draft).isValid,
+      1: step1Complete,
+      2: step2Complete,
     };
   }, [draft, rubric]);
 
@@ -163,7 +158,6 @@ export function SmartReviewEditor({
       setSaveStatus("saved");
       setLastSaved(new Date());
 
-      // Reset to idle after 2 seconds
       setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
@@ -176,19 +170,16 @@ export function SmartReviewEditor({
 
   // Debounced auto-save
   React.useEffect(() => {
-    // Clear existing timer
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    // Only auto-save if we have some data
     if (Object.keys(draft).length > 0) {
       autoSaveTimerRef.current = setTimeout(() => {
         saveToBackend();
-      }, 3000); // 3 second debounce
+      }, 3000);
     }
 
-    // Cleanup on unmount
     return () => {
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
@@ -196,39 +187,32 @@ export function SmartReviewEditor({
     };
   }, [draft, saveToBackend]);
 
-  // Scroll behavior for sticky CTA bar (mobile only)
+  // Scroll behavior for sticky CTA bar
   React.useEffect(() => {
     const handleScroll = () => {
-      // Clear existing timeout
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
 
-      // Debounce scroll handler
       scrollTimeout.current = setTimeout(() => {
         const currentScrollY = window.scrollY;
 
-        // Always show at top of page
         if (currentScrollY < 50) {
           setShowStickyCTA(true);
           lastScrollY.current = currentScrollY;
           return;
         }
 
-        // Show on scroll up, hide on scroll down
         if (currentScrollY < lastScrollY.current) {
-          // Scrolling up
           setShowStickyCTA(true);
         } else if (currentScrollY > lastScrollY.current) {
-          // Scrolling down
           setShowStickyCTA(false);
         }
 
         lastScrollY.current = currentScrollY;
-      }, 10); // 10ms debounce for smooth response
+      }, 10);
     };
 
-    // Only add listener on mobile/tablet
     if (typeof window !== "undefined") {
       window.addEventListener("scroll", handleScroll, { passive: true });
     }
@@ -243,20 +227,15 @@ export function SmartReviewEditor({
     };
   }, []);
 
-  // Manual save handler
-  const handleManualSave = async () => {
+  // Save draft handler
+  const handleSaveDraft = async () => {
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
     await saveToBackend();
   };
 
-  // Save draft handler (for sticky CTA bar)
-  const handleSaveDraft = async () => {
-    await handleManualSave();
-  };
-
-  // Phase 1 change handler
+  // Phase 1 change handler (focus areas)
   const handlePhase1Change = React.useCallback((data: Phase1QuickAssessment) => {
     setDraft((prev) => ({
       ...prev,
@@ -264,7 +243,7 @@ export function SmartReviewEditor({
     }));
   }, []);
 
-  // Phase 2 change handler
+  // Phase 2 change handler (rubric ratings)
   const handlePhase2Change = React.useCallback((data: Phase2RubricRatings) => {
     setDraft((prev) => ({
       ...prev,
@@ -272,7 +251,7 @@ export function SmartReviewEditor({
     }));
   }, []);
 
-  // Phase 3 change handler
+  // Phase 3 change handler (feedback)
   const handlePhase3Change = React.useCallback((data: Phase3DetailedFeedback) => {
     setDraft((prev) => ({
       ...prev,
@@ -280,9 +259,21 @@ export function SmartReviewEditor({
     }));
   }, []);
 
-  // Phase navigation handler
-  const handlePhaseChange = (newPhase: PhaseNumber) => {
-    setCurrentPhase(newPhase);
+  // Verdict change handler
+  const handleVerdictChange = React.useCallback((rating: number, summary: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      phase1_quick_assessment: {
+        ...(prev.phase1_quick_assessment || { primary_focus_areas: [] }),
+        overall_rating: rating,
+        quick_summary: summary,
+      },
+    }));
+  }, []);
+
+  // Step navigation handler
+  const handleStepChange = (newStep: StepNumber) => {
+    setCurrentStep(newStep);
   };
 
   // Submit handler
@@ -291,18 +282,15 @@ export function SmartReviewEditor({
     setSubmitError(null);
 
     try {
-      // Clear auto-save timer
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
 
-      // Submit the review (wrap draft in SmartReviewSubmit structure)
       await submitSmartReview(slotId, {
         smart_review: draft,
         attachments: []
       });
 
-      // Close dialog and call success callback
       setShowSubmitDialog(false);
       if (onSubmitSuccess) {
         onSubmitSuccess();
@@ -316,7 +304,7 @@ export function SmartReviewEditor({
   };
 
   // Check if ready to submit
-  const canSubmit = phaseCompletion[1] && phaseCompletion[2];
+  const canSubmit = stepCompletion[1] && stepCompletion[2];
 
   // Loading state
   if (isLoading) {
@@ -368,152 +356,125 @@ export function SmartReviewEditor({
         )}
       </div>
 
-      {/* Step-by-step wizard layout */}
+      {/* 2-Step wizard layout */}
       <div className="space-y-6 max-w-4xl mx-auto pb-20 lg:pb-6">
-        {/* Step Progress Indicator */}
-        <div className="flex items-center justify-center gap-2 md:gap-3">
+        {/* Step Progress Indicator - Now 2 steps */}
+        <div className="flex items-center justify-center gap-3 md:gap-4">
           {/* Step 1 */}
           <button
-            onClick={() => handlePhaseChange(1)}
+            onClick={() => handleStepChange(1)}
             className={cn(
-              "flex items-center gap-2 rounded-lg transition-all",
-              "min-h-[48px] md:min-h-[44px] touch-manipulation",
-              "p-2 md:px-4 md:py-2",
-              currentPhase === 1
-                ? "bg-accent-blue text-white shadow-md"
-                : phaseCompletion[1]
+              "flex items-center gap-2 rounded-xl transition-all",
+              "min-h-[52px] md:min-h-[48px] touch-manipulation",
+              "px-4 py-2.5 md:px-5 md:py-3",
+              currentStep === 1
+                ? "bg-accent-blue text-white shadow-lg"
+                : stepCompletion[1]
                   ? "bg-green-500 text-white hover:bg-green-600"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
             )}
           >
-            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
-              {phaseCompletion[1] ? "✓" : "1"}
+            <div className="size-8 md:size-7 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
+              {stepCompletion[1] ? "✓" : "1"}
             </div>
-            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Quick Assessment</span>
+            <span className="text-sm font-semibold whitespace-nowrap">Assessment</span>
           </button>
 
           {/* Connector */}
           <div className={cn(
-            "h-0.5 w-4 md:w-8 transition-colors shrink-0",
-            phaseCompletion[1] ? "bg-green-500" : "bg-border"
+            "h-1 w-8 md:w-16 rounded-full transition-colors shrink-0",
+            stepCompletion[1] ? "bg-green-500" : "bg-border"
           )} />
 
           {/* Step 2 */}
           <button
-            onClick={() => handlePhaseChange(2)}
-            disabled={!phaseCompletion[1]}
+            onClick={() => handleStepChange(2)}
+            disabled={!stepCompletion[1]}
             className={cn(
-              "flex items-center gap-2 rounded-lg transition-all",
-              "min-h-[48px] md:min-h-[44px] touch-manipulation",
-              "p-2 md:px-4 md:py-2",
-              currentPhase === 2
-                ? "bg-accent-blue text-white shadow-md"
-                : phaseCompletion[2]
+              "flex items-center gap-2 rounded-xl transition-all",
+              "min-h-[52px] md:min-h-[48px] touch-manipulation",
+              "px-4 py-2.5 md:px-5 md:py-3",
+              currentStep === 2
+                ? "bg-accent-blue text-white shadow-lg"
+                : stepCompletion[2]
                   ? "bg-green-500 text-white hover:bg-green-600"
                   : "bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
-              {phaseCompletion[2] ? "✓" : "2"}
+            <div className="size-8 md:size-7 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
+              {stepCompletion[2] ? "✓" : "2"}
             </div>
-            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Rubric Ratings</span>
-          </button>
-
-          {/* Connector */}
-          <div className={cn(
-            "h-0.5 w-4 md:w-8 transition-colors shrink-0",
-            phaseCompletion[2] ? "bg-green-500" : "bg-border"
-          )} />
-
-          {/* Step 3 */}
-          <button
-            onClick={() => handlePhaseChange(3)}
-            disabled={!phaseCompletion[2]}
-            className={cn(
-              "flex items-center gap-2 rounded-lg transition-all",
-              "min-h-[48px] md:min-h-[44px] touch-manipulation",
-              "p-2 md:px-4 md:py-2",
-              currentPhase === 3
-                ? "bg-accent-blue text-white shadow-md"
-                : "bg-muted text-muted-foreground hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
-          >
-            <div className="size-7 md:size-6 rounded-full flex items-center justify-center font-bold text-sm bg-white/20 shrink-0">
-              3
-            </div>
-            <span className="hidden md:inline text-sm font-medium whitespace-nowrap">Detailed Feedback</span>
+            <span className="text-sm font-semibold whitespace-nowrap">Feedback & Verdict</span>
           </button>
         </div>
 
-        {/* Current Phase Content */}
+        {/* Current Step Content */}
         <div className="rounded-2xl border-2 border-accent-blue/20 bg-card p-4 sm:p-6 md:p-8 shadow-lg">
-          {/* Phase Header */}
+          {/* Step Header */}
           <div className="mb-6 pb-6 border-b border-border">
             <div className="flex items-center gap-3 mb-2">
               <div className="size-10 rounded-full bg-accent-blue text-white flex items-center justify-center font-bold text-lg">
-                {currentPhase}
+                {currentStep}
               </div>
               <div>
                 <h3 className="text-2xl font-bold">
-                  {currentPhase === 1 && "Quick Assessment"}
-                  {currentPhase === 2 && "Rubric Ratings"}
-                  {currentPhase === 3 && "Detailed Feedback"}
+                  {currentStep === 1 && "Assessment"}
+                  {currentStep === 2 && "Feedback & Verdict"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {currentPhase === 1 && "Provide your overall rating and first impressions"}
-                  {currentPhase === 2 && "Rate specific dimensions of the work"}
-                  {currentPhase === 3 && "Share detailed strengths, improvements, and annotations"}
+                  {currentStep === 1 && "Select focus areas and rate key dimensions"}
+                  {currentStep === 2 && "Share detailed feedback and give your final verdict"}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Phase Content */}
-          {currentPhase === 1 && (
-            <Phase1Component
-              data={draft.phase1_quick_assessment || null}
+          {/* Step Content */}
+          {currentStep === 1 && (
+            <AssessmentPhase
+              phase1Data={draft.phase1_quick_assessment || null}
+              phase2Data={draft.phase2_rubric || null}
               focusAreas={rubric.focus_areas}
-              contentType={contentType}
-              onChange={handlePhase1Change}
-            />
-          )}
-          {currentPhase === 2 && (
-            <Phase2Component
-              data={draft.phase2_rubric || null}
               dimensions={rubric.rating_dimensions}
               contentType={contentType}
-              onChange={handlePhase2Change}
+              onPhase1Change={handlePhase1Change}
+              onPhase2Change={handlePhase2Change}
             />
           )}
-          {currentPhase === 3 && (
-            <Phase3Component
+          {currentStep === 2 && (
+            <FeedbackComponent
               data={draft.phase3_detailed_feedback || null}
               onChange={handlePhase3Change}
               contentType={contentType}
               imageUrl={imageUrl}
               selectedFocusAreas={draft.phase1_quick_assessment?.primary_focus_areas}
+              overallRating={draft.phase1_quick_assessment?.overall_rating || 0}
+              quickSummary={draft.phase1_quick_assessment?.quick_summary || ""}
+              onVerdictChange={handleVerdictChange}
             />
           )}
 
-          {/* Phase Navigation - Desktop Only */}
+          {/* Step Navigation - Desktop Only */}
           <div className="hidden lg:flex items-center justify-between pt-8 mt-8 border-t border-border">
             <Button
               variant="outline"
-              onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
-              disabled={currentPhase === 1}
+              onClick={() => handleStepChange(1)}
+              disabled={currentStep === 1}
               size="lg"
               className="h-12"
             >
-              ← Previous
+              <ArrowLeft className="size-4 mr-2" />
+              Previous
             </Button>
-            {currentPhase < 3 ? (
+            {currentStep === 1 ? (
               <Button
-                onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
-                disabled={!phaseCompletion[currentPhase]}
+                onClick={() => handleStepChange(2)}
+                disabled={!stepCompletion[1]}
                 size="lg"
                 className="h-12"
               >
-                Next →
+                Next
+                <ArrowRight className="size-4 ml-2" />
               </Button>
             ) : (
               <Button
@@ -528,7 +489,6 @@ export function SmartReviewEditor({
             )}
           </div>
         </div>
-
       </div>
 
       {/* Sticky Bottom CTA Bar - Mobile Only */}
@@ -544,10 +504,10 @@ export function SmartReviewEditor({
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => handlePhaseChange(Math.max(1, currentPhase - 1) as PhaseNumber)}
-            disabled={currentPhase === 1}
+            onClick={() => handleStepChange(1)}
+            disabled={currentStep === 1}
             className="h-12 min-w-[48px] touch-manipulation"
-            aria-label="Go to previous phase"
+            aria-label="Go to previous step"
           >
             <ArrowLeft className="size-5 mr-1" />
             <span className="hidden xs:inline">Back</span>
@@ -572,12 +532,12 @@ export function SmartReviewEditor({
           </Button>
 
           {/* Next/Submit Button */}
-          {currentPhase < 3 ? (
+          {currentStep === 1 ? (
             <Button
-              onClick={() => handlePhaseChange(Math.min(3, currentPhase + 1) as PhaseNumber)}
-              disabled={!phaseCompletion[currentPhase]}
+              onClick={() => handleStepChange(2)}
+              disabled={!stepCompletion[1]}
               className="h-12 min-w-[48px] touch-manipulation"
-              aria-label="Go to next phase"
+              aria-label="Go to next step"
             >
               <span className="hidden xs:inline">Next</span>
               <ArrowRight className="size-5 ml-1" />
@@ -595,7 +555,6 @@ export function SmartReviewEditor({
           )}
         </div>
       </div>
-
 
       {/* Submit confirmation dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
