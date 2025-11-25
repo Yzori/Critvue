@@ -237,15 +237,15 @@ export function ReviewActionCard({
         "group",
         "relative",
         "rounded-xl",
-        "border-l-4",
+        "border-l-[3px]",
         urgencyBorderColors[urgency],
         "border-t border-r border-b border-border",
         "bg-card",
-        "p-4",
+        "p-3",
         "cursor-pointer",
         "transition-shadow duration-200",
         isHovered || isFocused
-          ? "shadow-lg"
+          ? "shadow-md"
           : "shadow-sm hover:shadow-md",
         "focus-within:ring-2 focus-within:ring-accent-blue focus-within:ring-offset-2",
         className
@@ -258,32 +258,32 @@ export function ReviewActionCard({
       aria-label={`Review: ${title}`}
     >
       {/* Header */}
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start gap-2.5 mb-2.5">
         {/* Content Type Icon */}
         <div
           className={cn(
-            "size-10 rounded-lg flex items-center justify-center flex-shrink-0",
+            "size-8 rounded-lg flex items-center justify-center flex-shrink-0",
             "transition-transform duration-200",
             contentConfig.bg,
-            isHovered && "scale-110"
+            isHovered && "scale-105"
           )}
         >
-          <ContentIcon className={cn("size-5", contentConfig.color)} />
+          <ContentIcon className={cn("size-4", contentConfig.color)} />
         </div>
 
         {/* Title & Status */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h4 className="font-semibold text-sm text-foreground line-clamp-1">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-medium text-sm text-foreground line-clamp-1">
               {title}
             </h4>
-            <Badge variant={statusInfo.variant} size="sm" className="flex-shrink-0">
+            <Badge variant={statusInfo.variant} size="sm" className="flex-shrink-0 text-[10px] h-5">
               {statusInfo.label}
             </Badge>
           </div>
 
           {description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
+            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">
               {description}
             </p>
           )}
@@ -291,24 +291,24 @@ export function ReviewActionCard({
       </div>
 
       {/* Metadata */}
-      <div className="flex items-center gap-3 mb-3 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2.5 mb-2 text-[11px] text-muted-foreground">
         {timeText && (
           <div className="flex items-center gap-1">
-            <Clock className="size-3.5" />
+            <Clock className="size-3" />
             <span>{timeText}</span>
           </div>
         )}
 
         {earnings !== undefined && (
           <div className="flex items-center gap-1 text-green-600">
-            <DollarSign className="size-3.5" />
+            <DollarSign className="size-3" />
             <span className="font-medium">${earnings}</span>
           </div>
         )}
 
         {rating !== undefined && (
           <div className="flex items-center gap-1 text-amber-600">
-            <TrendingUp className="size-3.5" />
+            <TrendingUp className="size-3" />
             <span className="font-medium">{rating.toFixed(1)}★</span>
           </div>
         )}
@@ -316,17 +316,17 @@ export function ReviewActionCard({
 
       {/* Progress Bar (for multi-review requests) */}
       {progress && (
-        <div className="mb-3 space-y-1">
-          <div className="flex items-center justify-between text-xs">
+        <div className="mb-2 space-y-0.5">
+          <div className="flex items-center justify-between text-[11px]">
             <span className="text-muted-foreground font-medium flex items-center gap-1">
               <Users className="size-3" />
-              {progress.current} of {progress.total} reviews
+              {progress.current} of {progress.total}
             </span>
             <span className="text-accent-blue font-semibold">
               {progress.percentage}%
             </span>
           </div>
-          <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="relative h-1 bg-muted rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress.percentage}%` }}
@@ -345,7 +345,7 @@ export function ReviewActionCard({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-2 pt-3 border-t border-border"
+            className="flex items-center gap-1.5 pt-2 border-t border-border/60"
             onClick={(e) => e.stopPropagation()}
           >
             {primaryAction && (

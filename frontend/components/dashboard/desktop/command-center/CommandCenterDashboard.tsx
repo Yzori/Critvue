@@ -460,9 +460,9 @@ function transformCreatorDataToKanban(
   }));
 
   return [
-    { ...baseColumns[0], items: pendingItems },
-    { ...baseColumns[1], items: inProgressItems },
-    { ...baseColumns[2], items: completedItems },
+    { ...baseColumns[0], items: pendingItems } as KanbanColumn,
+    { ...baseColumns[1], items: inProgressItems } as KanbanColumn,
+    { ...baseColumns[2], items: completedItems } as KanbanColumn,
   ];
 }
 
@@ -519,9 +519,9 @@ function transformReviewerDataToKanban(
   }));
 
   return [
-    { ...baseColumns[0], items: availableItems },
-    { ...baseColumns[1], items: workingOnItems },
-    { ...baseColumns[2], items: submittedItems },
-    { ...baseColumns[3], items: completedItems },
+    { ...baseColumns[0], items: availableItems } as KanbanColumn,
+    { ...baseColumns[1], items: workingOnItems } as KanbanColumn,
+    { ...baseColumns[2], items: submittedItems } as KanbanColumn,
+    { ...baseColumns[3], items: completedItems } as KanbanColumn,
   ];
 }

@@ -3,16 +3,12 @@
 /**
  * SmartActionCard Component
  *
- * Contextual action cards that change based on:
- * - Time of day
- * - User's current state (near goal, on streak, etc.)
- * - Pending tasks urgency
- *
- * Creates a personalized, engaging experience.
+ * Clean, compact action cards with clear CTAs.
  */
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +20,8 @@ import {
   Sparkles,
   Clock,
   AlertCircle,
+  Search,
+  X,
 } from 'lucide-react';
 
 export type ActionType =
@@ -33,19 +31,21 @@ export type ActionType =
   | 'celebration'
   | 'urgent_review'
   | 'keep_going'
-  | 'welcome_back';
+  | 'welcome_back'
+  | 'find_reviews'
+  | 'submit_work';
 
 export interface SmartAction {
   type: ActionType;
   title: string;
   description: string;
   ctaLabel: string;
-  ctaAction: () => void;
+  ctaHref?: string;
+  ctaAction?: () => void;
   secondaryLabel?: string;
+  secondaryHref?: string;
   secondaryAction?: () => void;
   priority: 'low' | 'medium' | 'high';
-  icon?: React.ReactNode;
-  gradient?: string;
 }
 
 export interface SmartActionCardProps {
@@ -54,41 +54,55 @@ export interface SmartActionCardProps {
   className?: string;
 }
 
-const actionStyles: Record<ActionType, { icon: React.ReactNode; gradient: string; accent: string }> = {
+const actionStyles: Record<ActionType, {
+  icon: React.ReactNode;
+  accentColor: string;
+  bgColor: string;
+}> = {
   morning_start: {
-    icon: <Sunrise className="h-6 w-6" />,
-    gradient: 'from-amber-50 to-orange-50',
-    accent: 'text-amber-600',
+    icon: <Sunrise className="h-4 w-4" />,
+    accentColor: 'text-amber-600',
+    bgColor: 'bg-amber-500/10',
   },
   near_goal: {
-    icon: <Target className="h-6 w-6" />,
-    gradient: 'from-blue-50 to-cyan-50',
-    accent: 'text-blue-600',
+    icon: <Target className="h-4 w-4" />,
+    accentColor: 'text-blue-600',
+    bgColor: 'bg-blue-500/10',
   },
   streak_risk: {
-    icon: <AlertCircle className="h-6 w-6" />,
-    gradient: 'from-red-50 to-orange-50',
-    accent: 'text-red-600',
+    icon: <AlertCircle className="h-4 w-4" />,
+    accentColor: 'text-red-600',
+    bgColor: 'bg-red-500/10',
   },
   celebration: {
-    icon: <Trophy className="h-6 w-6" />,
-    gradient: 'from-yellow-50 to-amber-50',
-    accent: 'text-yellow-600',
+    icon: <Trophy className="h-4 w-4" />,
+    accentColor: 'text-yellow-600',
+    bgColor: 'bg-yellow-500/10',
   },
   urgent_review: {
-    icon: <Clock className="h-6 w-6" />,
-    gradient: 'from-purple-50 to-pink-50',
-    accent: 'text-purple-600',
+    icon: <Clock className="h-4 w-4" />,
+    accentColor: 'text-purple-600',
+    bgColor: 'bg-purple-500/10',
   },
   keep_going: {
-    icon: <Flame className="h-6 w-6" />,
-    gradient: 'from-orange-50 to-red-50',
-    accent: 'text-orange-600',
+    icon: <Flame className="h-4 w-4" />,
+    accentColor: 'text-orange-600',
+    bgColor: 'bg-orange-500/10',
   },
   welcome_back: {
-    icon: <Sparkles className="h-6 w-6" />,
-    gradient: 'from-indigo-50 to-purple-50',
-    accent: 'text-indigo-600',
+    icon: <Sparkles className="h-4 w-4" />,
+    accentColor: 'text-indigo-600',
+    bgColor: 'bg-indigo-500/10',
+  },
+  find_reviews: {
+    icon: <Search className="h-4 w-4" />,
+    accentColor: 'text-emerald-600',
+    bgColor: 'bg-emerald-500/10',
+  },
+  submit_work: {
+    icon: <Target className="h-4 w-4" />,
+    accentColor: 'text-blue-600',
+    bgColor: 'bg-blue-500/10',
   },
 };
 
@@ -99,95 +113,90 @@ export const SmartActionCard: React.FC<SmartActionCardProps> = ({
 }) => {
   const style = actionStyles[action.type];
 
+  const CtaButton = action.ctaHref ? (
+    <Button size="sm" asChild className="gap-1.5 h-8">
+      <Link href={action.ctaHref}>
+        {action.ctaLabel}
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </Button>
+  ) : (
+    <Button size="sm" onClick={action.ctaAction} className="gap-1.5 h-8">
+      {action.ctaLabel}
+      <ArrowRight className="h-3.5 w-3.5" />
+    </Button>
+  );
+
+  const SecondaryButton = action.secondaryLabel && (
+    action.secondaryHref ? (
+      <Button size="sm" variant="ghost" asChild className="h-8">
+        <Link href={action.secondaryHref}>{action.secondaryLabel}</Link>
+      </Button>
+    ) : action.secondaryAction ? (
+      <Button size="sm" variant="ghost" onClick={action.secondaryAction} className="h-8">
+        {action.secondaryLabel}
+      </Button>
+    ) : null
+  );
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
       className={cn(
-        'relative overflow-hidden rounded-2xl border shadow-sm',
-        `bg-gradient-to-br ${style.gradient}`,
+        'relative flex items-start gap-3 p-4 rounded-xl',
+        'bg-card border border-border/60',
+        'hover:border-border hover:shadow-sm transition-all',
         className
       )}
     >
-      {/* Priority indicator */}
-      {action.priority === 'high' && (
-        <motion.div
-          className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-orange-500"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      )}
+      {/* Icon */}
+      <div className={cn(
+        'flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg',
+        style.bgColor,
+        style.accentColor
+      )}>
+        {style.icon}
+      </div>
 
-      <div className="p-5">
-        <div className="flex items-start gap-4">
-          {/* Icon */}
-          <motion.div
-            className={cn(
-              'flex-shrink-0 p-3 rounded-xl bg-white/80 shadow-sm',
-              style.accent
-            )}
-            whileHover={{ scale: 1.05, rotate: 5 }}
-          >
-            {action.icon || style.icon}
-          </motion.div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-foreground mb-1">
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <h3 className="font-medium text-sm text-foreground leading-tight">
               {action.title}
             </h3>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
               {action.description}
             </p>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              <Button
-                size="sm"
-                onClick={action.ctaAction}
-                className="gap-2"
-              >
-                {action.ctaLabel}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-
-              {action.secondaryLabel && action.secondaryAction && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={action.secondaryAction}
-                >
-                  {action.secondaryLabel}
-                </Button>
-              )}
-            </div>
           </div>
 
-          {/* Dismiss button */}
-          {onDismiss && (
-            <button
-              onClick={onDismiss}
-              className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors p-1"
-              aria-label="Dismiss"
-            >
-              <span className="sr-only">Dismiss</span>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          {/* Priority badge */}
+          {action.priority === 'high' && (
+            <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/10 text-red-600">
+              Urgent
+            </span>
           )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-3">
+          {CtaButton}
+          {SecondaryButton}
         </div>
       </div>
 
-      {/* Decorative element */}
-      <div
-        className="absolute -right-8 -bottom-8 w-32 h-32 rounded-full opacity-10"
-        style={{
-          background: `radial-gradient(circle, currentColor 0%, transparent 70%)`,
-        }}
-      />
+      {/* Dismiss */}
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="flex-shrink-0 p-1 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors"
+          aria-label="Dismiss"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
     </motion.div>
   );
 };
@@ -203,109 +212,84 @@ export function generateSmartActions(params: {
   lastActiveDate: Date | null;
   role: 'creator' | 'reviewer';
 }): SmartAction[] {
-  const { streak, weeklyProgress, weeklyGoal, pendingReviews, lastActiveDate, role } = params;
+  const { streak, weeklyProgress, weeklyGoal, pendingReviews, role } = params;
   const actions: SmartAction[] = [];
-  const hour = new Date().getHours();
-  const today = new Date();
-  const isWeekend = today.getDay() === 0 || today.getDay() === 6;
+  const remaining = weeklyGoal - weeklyProgress;
 
-  // Check if returning after absence
-  if (lastActiveDate) {
-    const daysSinceActive = Math.floor(
-      (today.getTime() - new Date(lastActiveDate).getTime()) / (1000 * 60 * 60 * 24)
-    );
-    if (daysSinceActive > 2) {
+  // Role-specific primary action (always show one)
+  if (role === 'reviewer') {
+    // Reviewer: encourage finding reviews
+    if (remaining > 0) {
       actions.push({
-        type: 'welcome_back',
-        title: 'Welcome back!',
-        description: `We missed you! Your streak is safe thanks to weekend grace. Ready to dive back in?`,
-        ctaLabel: role === 'reviewer' ? 'Find Reviews' : 'View Dashboard',
-        ctaAction: () => {},
+        type: 'find_reviews',
+        title: 'Find reviews to complete',
+        description: `${remaining} more review${remaining > 1 ? 's' : ''} to reach your weekly goal.`,
+        ctaLabel: 'Browse Reviews',
+        ctaHref: '/browse',
+        priority: 'medium',
+      });
+    } else {
+      actions.push({
+        type: 'keep_going',
+        title: 'Keep the momentum going',
+        description: 'You hit your goal! Extra reviews earn bonus karma.',
+        ctaLabel: 'Find More',
+        ctaHref: '/browse',
+        priority: 'low',
+      });
+    }
+  } else {
+    // Creator: show pending reviews or encourage submissions
+    if (pendingReviews > 0) {
+      actions.push({
+        type: 'urgent_review',
+        title: `${pendingReviews} review${pendingReviews > 1 ? 's' : ''} ready`,
+        description: 'Accept reviews to get your feedback.',
+        ctaLabel: 'View Reviews',
+        ctaHref: '/dashboard',
+        priority: pendingReviews > 2 ? 'high' : 'medium',
+      });
+    } else {
+      actions.push({
+        type: 'submit_work',
+        title: 'Get expert feedback',
+        description: 'Submit your work for professional review.',
+        ctaLabel: 'Submit Work',
+        ctaHref: '/submit',
         priority: 'medium',
       });
     }
   }
 
-  // Morning motivation (6am - 10am)
-  if (hour >= 6 && hour < 10 && weeklyProgress < weeklyGoal) {
+  // Near weekly goal - high priority nudge
+  if (remaining > 0 && remaining <= 2 && role === 'reviewer') {
+    actions.unshift({
+      type: 'near_goal',
+      title: `Just ${remaining} more to go!`,
+      description: 'Finish strong and earn bonus XP.',
+      ctaLabel: 'Complete Goal',
+      ctaHref: '/browse',
+      priority: 'high',
+    });
+  }
+
+  // Streak celebration or risk
+  if (streak >= 5) {
     actions.push({
-      type: 'morning_start',
-      title: 'Start your day strong',
-      description: isWeekend
-        ? 'Weekend reviews count double toward next week\'s goal!'
-        : `Complete ${weeklyGoal - weeklyProgress} more review${weeklyGoal - weeklyProgress > 1 ? 's' : ''} to hit your weekly goal.`,
-      ctaLabel: role === 'reviewer' ? 'Start a Review' : 'Check Pending',
-      ctaAction: () => {},
+      type: 'celebration',
+      title: `${streak} day streak!`,
+      description: 'You\'re on fire. Keep it going!',
+      ctaLabel: 'View Stats',
+      ctaHref: '/dashboard/karma',
       priority: 'low',
     });
   }
 
-  // Near weekly goal (within 1-2 of goal)
-  const remaining = weeklyGoal - weeklyProgress;
-  if (remaining > 0 && remaining <= 2) {
-    actions.push({
-      type: 'near_goal',
-      title: `Just ${remaining} more to go!`,
-      description: `You're so close to your weekly goal. Finish strong and earn bonus XP!`,
-      ctaLabel: 'Complete Goal',
-      ctaAction: () => {},
-      priority: 'high',
-    });
-  }
-
-  // Weekly goal completed - celebration
-  if (weeklyProgress >= weeklyGoal) {
-    actions.push({
-      type: 'celebration',
-      title: 'Weekly goal achieved!',
-      description: `Amazing work! You've completed ${weeklyProgress} reviews this week. Keep going for bonus rewards!`,
-      ctaLabel: 'View Achievements',
-      ctaAction: () => {},
-      secondaryLabel: 'Keep Going',
-      secondaryAction: () => {},
-      priority: 'medium',
-    });
-  }
-
-  // Streak at risk (no activity today and it's past noon)
-  if (streak > 0 && hour >= 12 && !isWeekend) {
-    actions.push({
-      type: 'streak_risk',
-      title: 'Keep your streak alive!',
-      description: `Your ${streak}-day streak is at risk. Complete a review before midnight to maintain it.`,
-      ctaLabel: 'Quick Review',
-      ctaAction: () => {},
-      priority: 'high',
-    });
-  }
-
-  // Keep going (on a roll - completed multiple today)
-  if (streak >= 3 && weeklyProgress > 0) {
-    actions.push({
-      type: 'keep_going',
-      title: 'You\'re on fire!',
-      description: `${streak} day streak! You're in the top 10% of active reviewers this week.`,
-      ctaLabel: 'Continue',
-      ctaAction: () => {},
-      priority: 'medium',
-    });
-  }
-
-  // Urgent reviews pending (for creators)
-  if (role === 'creator' && pendingReviews > 0) {
-    actions.push({
-      type: 'urgent_review',
-      title: `${pendingReviews} review${pendingReviews > 1 ? 's' : ''} awaiting action`,
-      description: 'Reviews expire in 48 hours. Accept them to receive feedback!',
-      ctaLabel: 'Review Now',
-      ctaAction: () => {},
-      priority: pendingReviews > 2 ? 'high' : 'medium',
-    });
-  }
-
-  // Sort by priority
+  // Limit to 2 most relevant actions
   const priorityOrder = { high: 0, medium: 1, low: 2 };
-  return actions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  return actions
+    .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+    .slice(0, 2);
 }
 
 export default SmartActionCard;

@@ -39,7 +39,6 @@ import { Button } from '@/components/ui/button';
 import {
   Palette,
   Briefcase,
-  Command as CommandIcon,
   RefreshCw,
   AlertTriangle,
   Plus,
@@ -48,9 +47,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 
 // Momentum Components
-import { MomentumRing } from './MomentumRing';
-import { QuickStatsBar } from './QuickStatsBar';
-import { SmartActionCard, generateSmartActions, type SmartAction } from './SmartActionCard';
+import { TierProgressRing } from './TierProgressRing';
+import { generateSmartActions, type SmartAction } from './SmartActionCard';
 import { Celebration, useCelebration } from './Celebration';
 
 // Command Center Components (reused)
@@ -100,12 +98,13 @@ export function MomentumDashboard({
 
   // Karma/gamification state
   const [karmaSummary, setKarmaSummary] = React.useState<KarmaSummary | null>(null);
-  const [featuredBadges, setFeaturedBadges] = React.useState<BadgeType[]>([]);
-  const [leaderboardRank, setLeaderboardRank] = React.useState<UserRanking | null>(null);
+  // Reserved for future QuickStatsBar integration
+  const [_featuredBadges, setFeaturedBadges] = React.useState<BadgeType[]>([]);
+  const [_leaderboardRank, setLeaderboardRank] = React.useState<UserRanking | null>(null);
 
   // Smart actions state
   const [smartActions, setSmartActions] = React.useState<SmartAction[]>([]);
-  const [dismissedActions, setDismissedActions] = React.useState<Set<string>>(new Set());
+  const [dismissedActions, _setDismissedActions] = React.useState<Set<string>>(new Set());
 
   // Kanban state
   const [kanbanColumns, setKanbanColumns] = React.useState<KanbanColumn[]>([]);
@@ -223,11 +222,13 @@ export function MomentumDashboard({
     setKanbanColumns(columns);
   }
 
-  const handleDismissAction = (actionType: string) => {
-    setDismissedActions(prev => new Set([...prev, actionType]));
-  };
+  // Reserved for future action dismiss functionality
+  // const handleDismissAction = (actionType: string) => {
+  //   _setDismissedActions(prev => new Set([...prev, actionType]));
+  // };
 
   const visibleActions = smartActions.filter(a => !dismissedActions.has(a.type)).slice(0, 2);
+  const primaryAction = visibleActions[0] ?? null;
 
   // Get greeting based on time of day
   const getGreeting = () => {
@@ -238,151 +239,156 @@ export function MomentumDashboard({
   };
 
   return (
-    <div className={cn('min-h-screen bg-background', className)}>
-      <div className="max-w-[1600px] mx-auto px-6 py-6">
-        {/* Quick Stats Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="mb-6"
-        >
-          <QuickStatsBar
-            karma={karmaSummary?.total_karma || 0}
-            karmaChange={0} // TODO: Calculate from history
-            xp={karmaSummary?.total_xp || 0}
-            leaderboardRank={leaderboardRank?.rank}
-            leaderboardTotal={leaderboardRank?.total_participants}
-            featuredBadges={featuredBadges}
-          />
-        </motion.div>
+    <div className={cn('min-h-screen bg-[#FAFAFC]', className)}>
+      <div className="max-w-[1400px] mx-auto px-6 py-4">
 
-        {/* Hero Section: Momentum Ring + Smart Actions */}
+        {/* Hero Section - Compact horizontal layout */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="mb-8"
+          className="mb-4 p-4 rounded-2xl bg-white border border-border/60 shadow-sm"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left: Momentum Ring + Welcome */}
-            <div className="lg:col-span-4 flex flex-col items-center lg:items-start">
-              <div className="flex flex-col lg:flex-row items-center gap-6">
-                {/* Momentum Ring */}
-                {karmaSummary ? (
-                  <MomentumRing
-                    streak={karmaSummary.current_streak}
-                    weeklyProgress={karmaSummary.weekly_reviews}
-                    weeklyGoal={karmaSummary.weekly_goal}
-                    xp={karmaSummary.total_xp}
-                    reputation={karmaSummary.reputation_score}
-                    size="md"
-                  />
-                ) : (
-                  <div className="h-[180px] w-[180px] rounded-full bg-muted/30 animate-pulse" />
-                )}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            {/* Left: Ring + Greeting */}
+            <div className="flex items-center gap-4">
+              {/* Tier Progress Ring - links to karma page */}
+              {karmaSummary ? (
+                <TierProgressRing
+                  karma={karmaSummary.total_karma}
+                  size="sm"
+                />
+              ) : (
+                <div className="h-[88px] w-[88px] rounded-full bg-muted/30 animate-pulse" />
+              )}
 
-                {/* Welcome text */}
-                <div className="text-center lg:text-left">
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {getGreeting()},
-                  </p>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    {user?.full_name || user?.email?.split('@')[0] || 'there'}!
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    {role === 'creator'
-                      ? "Let's check on your feedback"
-                      : 'Ready to review some work?'}
-                  </p>
-                </div>
+              {/* Greeting - tighter spacing */}
+              <div>
+                <p className="text-[11px] text-muted-foreground/70 leading-none">{getGreeting()}</p>
+                <h2 className="text-lg font-semibold text-foreground mt-0.5 leading-tight">
+                  {user?.full_name || user?.email?.split('@')[0] || 'there'}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5 leading-tight">
+                  {role === 'creator'
+                    ? "Let's check on your feedback"
+                    : 'Ready to review some work?'}
+                </p>
               </div>
+            </div>
 
-              {/* Role Toggle (below ring on mobile) */}
-              <div className="mt-6 flex items-center gap-2 p-1.5 rounded-2xl bg-muted/50 border border-border">
+            {/* Spacer */}
+            <div className="hidden lg:block flex-1" />
+
+            {/* Right: Role Toggle (Segmented Control) */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center p-1 rounded-lg bg-muted/50 border border-border/50">
                 <button
                   onClick={() => onRoleChange('creator')}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2.5 rounded-xl',
-                    'font-medium text-sm transition-all duration-200',
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
                     role === 'creator'
-                      ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/25'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
                   )}
                 >
-                  <Palette className="size-4" />
+                  <Palette className="size-3.5" />
                   Creator
                 </button>
                 <button
                   onClick={() => onRoleChange('reviewer')}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-2.5 rounded-xl',
-                    'font-medium text-sm transition-all duration-200',
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
                     role === 'reviewer'
-                      ? 'bg-accent-blue text-white shadow-lg shadow-accent-blue/25'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
                   )}
                 >
-                  <Briefcase className="size-4" />
+                  <Briefcase className="size-3.5" />
                   Reviewer
                 </button>
               </div>
-            </div>
 
-            {/* Right: Smart Action Cards */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Suggested Actions
-                </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CommandIcon className="size-3.5" />
-                  <span>
-                    <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">⌘K</kbd> search
-                    {' • '}
-                    <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">⌘⇧R</kbd> switch role
-                  </span>
-                </div>
+              {/* Keyboard shortcuts hint */}
+              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground/60">
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono">⌘K</kbd>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono">⌘⇧R</kbd>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Suggested Actions - Elevated card with gradient accent */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-4"
+        >
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 via-indigo-50/60 to-violet-50/40 border border-blue-100/80 shadow-sm">
+            <div className="flex items-center gap-4">
+              {/* Larger Icon - 44px */}
+              <div className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-white shadow-md border border-blue-100/50">
+                {role === 'reviewer' ? (
+                  <Search className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <Palette className="h-5 w-5 text-blue-600" />
+                )}
               </div>
 
-              <AnimatePresence mode="popLayout">
-                {visibleActions.length > 0 ? (
-                  visibleActions.map((action) => (
-                    <SmartActionCard
-                      key={action.type}
-                      action={action}
-                      onDismiss={() => handleDismissAction(action.type)}
-                    />
-                  ))
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="rounded-2xl border-2 border-dashed border-muted p-8 text-center"
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <AnimatePresence mode="wait">
+                  {primaryAction ? (
+                    <motion.div
+                      key="actions"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <p className="font-semibold text-foreground text-sm">
+                        {primaryAction.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {primaryAction.description}
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <p className="font-semibold text-foreground text-sm">You're all caught up!</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {role === 'creator'
+                          ? 'Submit work to get expert feedback.'
+                          : 'Browse available reviews to keep going.'}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* CTA Button - Gradient blue for primary action */}
+              <div className="flex-shrink-0">
+                {role === 'creator' ? (
+                  <Link
+                    href={primaryAction?.ctaHref ?? '/submit'}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white text-sm font-medium shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:scale-[1.02]"
                   >
-                    <p className="text-muted-foreground mb-4">
-                      You're all caught up!
-                    </p>
-                    <div className="flex items-center justify-center gap-3">
-                      {role === 'creator' ? (
-                        <Button asChild>
-                          <Link href="/submit">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Request a Review
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Button asChild>
-                          <Link href="/browse">
-                            <Search className="h-4 w-4 mr-2" />
-                            Find Reviews
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </motion.div>
+                    <Plus className="h-4 w-4" />
+                    {primaryAction?.ctaLabel ?? 'Submit Work'}
+                  </Link>
+                ) : (
+                  <Link
+                    href={primaryAction?.ctaHref ?? '/browse'}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white text-sm font-medium shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/30 transition-all hover:scale-[1.02]"
+                  >
+                    <Search className="h-4 w-4" />
+                    {primaryAction?.ctaLabel ?? 'Browse Reviews'}
+                  </Link>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -392,23 +398,20 @@ export function MomentumDashboard({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 rounded-xl border border-red-200 bg-red-50"
+            className="mb-5 p-3 rounded-xl border border-red-200 bg-red-50"
           >
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="size-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-800">Failed to load data</p>
-                <p className="mt-1 text-sm text-red-700">{error.message}</p>
-              </div>
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="size-4 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-700 flex-1">{error.message}</p>
               {error.isRetryable && (
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => loadAllData()}
                   disabled={isLoading}
-                  className="flex-shrink-0 border-red-300 text-red-700 hover:bg-red-100"
+                  className="text-red-700 hover:bg-red-100 h-7"
                 >
-                  <RefreshCw className={cn('size-4 mr-2', isLoading && 'animate-spin')} />
+                  <RefreshCw className={cn('size-3.5 mr-1.5', isLoading && 'animate-spin')} />
                   Retry
                 </Button>
               )}
@@ -416,11 +419,24 @@ export function MomentumDashboard({
           </motion.div>
         )}
 
+        {/* Activity Section Title */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="mb-3"
+        >
+          <h3 className="text-sm font-semibold text-foreground">Your Activity</h3>
+          <p className="text-xs text-muted-foreground/80">
+            Track your work in progress
+          </p>
+        </motion.div>
+
         {/* Kanban Board */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
+          transition={{ delay: 0.2 }}
         >
           <KanbanBoard
             role={role}

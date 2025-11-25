@@ -90,7 +90,6 @@ export interface KanbanBoardProps {
  * Displays reviews in a three-column workflow layout.
  */
 export function KanbanBoard({
-  role,
   columns,
   isLoading = false,
   className,
@@ -110,7 +109,7 @@ export function KanbanBoard({
         className={cn(
           "grid gap-4",
           "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-          "auto-rows-[minmax(400px,1fr)]"
+          "auto-rows-[minmax(320px,1fr)]"
         )}
       >
         {columns.map((column, index) => (
@@ -124,6 +123,16 @@ export function KanbanBoard({
     </div>
   );
 }
+
+// Header color mapping for distinct column identity - thicker bars with tinted bg
+const columnHeaderColors: Record<string, { bar: string; badge: string; iconBg: string }> = {
+  pending: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-100" },
+  in_progress: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-100" },
+  completed: { bar: "bg-green-500", badge: "bg-green-500/10 text-green-600", iconBg: "bg-green-100" },
+  available: { bar: "bg-purple-500", badge: "bg-purple-500/10 text-purple-600", iconBg: "bg-purple-100" },
+  working_on: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-100" },
+  submitted: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-100" },
+};
 
 /**
  * Individual Kanban Column
@@ -142,6 +151,9 @@ function KanbanColumn({
   const displayItems = isExpanded ? column.items : column.items.slice(0, MAX_PREVIEW_ITEMS);
   const hiddenCount = column.items.length - MAX_PREVIEW_ITEMS;
 
+  // Get header colors for this column
+  const headerColors = columnHeaderColors[column.id] || { bar: "bg-muted", badge: "bg-muted text-muted-foreground", iconBg: "bg-muted" };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -153,34 +165,36 @@ function KanbanColumn({
       className={cn(
         "flex flex-col",
         "rounded-2xl",
-        "border border-border",
-        "bg-muted/30",
+        "border border-border/80",
+        "bg-white",
         "overflow-hidden",
-        "min-h-[400px]"
+        "min-h-[300px]"
       )}
     >
+      {/* Colored Header Bar - thicker for stronger visual presence */}
+      <div className={cn("h-2", headerColors.bar)} />
+
       {/* Column Header */}
       <div className={cn(
         "flex items-center justify-between",
-        "px-4 py-4",
-        "border-b border-border",
-        "bg-background/50 backdrop-blur-sm"
+        "px-4 py-3",
+        "border-b border-border/60"
       )}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div
             className={cn(
-              "size-9 rounded-lg flex items-center justify-center",
+              "size-8 rounded-lg flex items-center justify-center",
               column.color
             )}
           >
             {column.icon}
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">
+            <h3 className="font-semibold text-sm text-foreground">
               {column.title}
             </h3>
             {column.subtitle && (
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-[11px] text-muted-foreground">
                 {column.subtitle}
               </p>
             )}
@@ -188,9 +202,9 @@ function KanbanColumn({
         </div>
         <div
           className={cn(
-            "size-7 rounded-full flex items-center justify-center",
-            "bg-accent-blue/10 text-accent-blue",
-            "text-sm font-semibold"
+            "size-6 rounded-full flex items-center justify-center",
+            "text-xs font-semibold",
+            headerColors.badge
           )}
         >
           {column.items.length}
@@ -199,13 +213,13 @@ function KanbanColumn({
 
       {/* Column Content */}
       <div className={cn(
-        "flex-1 p-4",
-        isExpanded && "overflow-y-auto max-h-[600px]"
+        "flex-1 p-2.5",
+        isExpanded && "overflow-y-auto max-h-[450px]"
       )}>
         {hasItems ? (
           <>
             <motion.div
-              className="space-y-3"
+              className="space-y-2"
               variants={{
                 hidden: { opacity: 0 },
                 visible: {
@@ -286,7 +300,7 @@ function KanbanColumn({
 }
 
 /**
- * Empty State Component
+ * Empty State Component - Premium design with larger icons and tinted backgrounds
  */
 function EmptyState({
   icon,
@@ -308,28 +322,34 @@ function EmptyState({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
-      className="flex flex-col items-center justify-center text-center py-12 px-4"
+      className="flex flex-col items-center justify-center text-center py-6 px-4"
     >
-      <div className="size-16 rounded-2xl bg-muted flex items-center justify-center mb-4 text-muted-foreground">
-        {icon}
+      {/* Larger icon with soft tinted circle behind */}
+      <div className="relative mb-3">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-muted/40 to-muted/20 blur-xl scale-150" />
+        <div className="relative size-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center text-muted-foreground/50">
+          {icon}
+        </div>
       </div>
-      <h4 className="font-semibold text-foreground mb-2">{title}</h4>
-      <p className="text-sm text-muted-foreground max-w-xs mb-4">{description}</p>
+      <h4 className="font-medium text-sm text-foreground mb-0.5">{title}</h4>
+      <p className="text-[11px] text-muted-foreground/80 max-w-[180px] leading-relaxed">{description}</p>
 
       {action && (
-        action.href ? (
-          <Link href={action.href}>
-            <Button className="flex items-center gap-2">
+        <div className="mt-3">
+          {action.href ? (
+            <Link href={action.href}>
+              <Button size="sm" variant="ghost" className="flex items-center gap-1 h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                {action.label}
+                <ArrowRight className="size-3" />
+              </Button>
+            </Link>
+          ) : (
+            <Button size="sm" variant="ghost" onClick={action.onClick} className="flex items-center gap-1 h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
               {action.label}
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-3" />
             </Button>
-          </Link>
-        ) : (
-          <Button onClick={action.onClick} className="flex items-center gap-2">
-            {action.label}
-            <ArrowRight className="size-4" />
-          </Button>
-        )
+          )}
+        </div>
       )}
     </motion.div>
   );
@@ -344,25 +364,28 @@ function KanbanSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="rounded-2xl border border-border bg-muted/30 overflow-hidden min-h-[400px]"
+          className="rounded-2xl border border-border bg-white overflow-hidden min-h-[320px]"
         >
+          {/* Colored bar skeleton */}
+          <div className="h-1.5 bg-muted animate-pulse" />
+
           {/* Header Skeleton */}
-          <div className="px-4 py-4 border-b border-border bg-background/50">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-lg bg-muted animate-pulse" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded animate-pulse w-24" />
-                <div className="h-3 bg-muted rounded animate-pulse w-32" />
+          <div className="px-4 py-3 border-b border-border/60">
+            <div className="flex items-center gap-2.5">
+              <div className="size-8 rounded-lg bg-muted animate-pulse" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3.5 bg-muted rounded animate-pulse w-24" />
+                <div className="h-2.5 bg-muted rounded animate-pulse w-32" />
               </div>
             </div>
           </div>
 
           {/* Content Skeleton */}
-          <div className="p-4 space-y-3">
+          <div className="p-3 space-y-2.5">
             {[1, 2, 3].map((j) => (
               <div
                 key={j}
-                className="h-32 rounded-xl bg-muted animate-pulse"
+                className="h-24 rounded-xl bg-muted/50 animate-pulse"
               />
             ))}
           </div>
