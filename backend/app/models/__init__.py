@@ -14,6 +14,10 @@ from app.models.expert_application import ExpertApplication, ApplicationStatus
 from app.models.karma_transaction import KarmaTransaction, KarmaAction
 from app.models.tier_milestone import TierMilestone
 from app.models.notification import Notification, NotificationPreferences, NotificationType, NotificationPriority, EntityType
+# New karma system models
+from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
+from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, LeaderboardCategory
+from app.models.requester_rating import RequesterRating, RequesterStats
 
 __all__ = [
     "User",
@@ -42,4 +46,15 @@ __all__ = [
     "NotificationType",
     "NotificationPriority",
     "EntityType",
+    # New karma system
+    "Badge",
+    "UserBadge",
+    "BadgeCategory",
+    "BadgeRarity",
+    "Season",
+    "LeaderboardEntry",
+    "SeasonType",
+    "LeaderboardCategory",
+    "RequesterRating",
+    "RequesterStats",
 ]

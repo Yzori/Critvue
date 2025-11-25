@@ -3,28 +3,30 @@
 /**
  * Desktop Dashboard Container
  *
- * REVOLUTIONARY Command Center Dashboard (2024-2025)
+ * INNOVATIVE Momentum Dashboard (2025)
  *
- * Replaces generic three-panel layout with action-first, keyboard-driven interface.
+ * A distinctive, game-like dashboard experience that goes beyond standard SaaS patterns.
  *
  * Architecture:
- * - Slim top bar (role toggle, Cmd+K, profile)
- * - Urgent actions floating card (when critical items exist)
- * - Kanban board (3 columns for visual workflow)
- * - Quick action bar (persistent keyboard shortcuts)
+ * - Quick Stats Bar (karma, XP, badges, leaderboard at a glance)
+ * - Momentum Ring (animated flow state indicator)
+ * - Smart Action Cards (contextual suggestions based on time/activity)
+ * - Kanban board (visual workflow)
  * - Command palette (Cmd+K universal search)
+ * - Micro-celebrations (achievement animations)
  *
  * Features:
- * - NO boring three-panel left/center/right layout
- * - Keyboard-first navigation (Cmd+K, shortcuts everywhere)
- * - Inline actions (no click-through required)
- * - Smooth Framer Motion animations
- * - Role-specific workflows (Creator vs Reviewer)
+ * - Gamification integrated into main dashboard (not hidden in sub-pages)
+ * - Contextual intelligence (suggestions change based on time/state)
+ * - Momentum scoring system (combines streak, goals, activity)
+ * - Keyboard-first navigation (Cmd+K, shortcuts)
+ * - Role-fluid design (Creator vs Reviewer)
+ * - Micro-celebration animations for achievements
  *
  * Brand Compliance:
  * - Critvue brand colors (#3B82F6, #F97316)
  * - WCAG AA accessible
- * - Smooth, purposeful animations
+ * - Smooth, purposeful Framer Motion animations
  * - Responsive (1280px+ for optimal experience)
  *
  * @module DesktopDashboardContainer
@@ -33,8 +35,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// Import revolutionary Command Center
-import { CommandCenterDashboard } from "./command-center";
+// Import innovative Momentum Dashboard
+import { MomentumDashboard } from "../momentum";
 
 export type DashboardRole = "creator" | "reviewer";
 
@@ -58,8 +60,8 @@ export interface DesktopDashboardContainerProps {
 /**
  * Desktop Dashboard Container Component
  *
- * Main container for revolutionary Command Center dashboard.
- * Completely reimagined from the ground up - NO three-panel layout.
+ * Main container for the innovative Momentum Dashboard.
+ * A distinctive, engaging experience that differentiates Critvue.
  */
 export function DesktopDashboardContainer({
   role,
@@ -68,7 +70,7 @@ export function DesktopDashboardContainer({
 }: DesktopDashboardContainerProps) {
   return (
     <div className={cn("min-h-screen", className)}>
-      <CommandCenterDashboard
+      <MomentumDashboard
         role={role}
         onRoleChange={onRoleChange}
       />

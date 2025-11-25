@@ -94,6 +94,28 @@ class User(Base):
     longest_streak = Column(Integer, default=0, nullable=False, server_default='0')  # Best streak ever
     last_review_date = Column(DateTime, nullable=True)  # For streak tracking
 
+    # Modern XP + Reputation System (XP never decreases, reputation can decay)
+    xp_points = Column(Integer, default=0, nullable=False, server_default='0', index=True)  # Permanent XP (never decreases)
+    reputation_score = Column(Integer, default=100, nullable=False, server_default='100')  # Variable reputation (can decay)
+    last_active_date = Column(DateTime, nullable=True)  # For decay calculation
+    reputation_percentile = Column(Integer, nullable=True)  # Cached percentile ranking (0-100)
+
+    # Streak Protection System
+    streak_shield_count = Column(Integer, default=1, nullable=False, server_default='1')  # Shields available (starts with 1)
+    streak_shield_used_at = Column(DateTime, nullable=True)  # Last time a shield was used
+    streak_protected_until = Column(DateTime, nullable=True)  # Weekend grace extension
+
+    # Graduated Penalty System
+    warning_count = Column(Integer, default=0, nullable=False, server_default='0')  # Warnings before penalties
+    last_warning_at = Column(DateTime, nullable=True)  # When last warned (warnings expire after 30 days)
+    penalty_multiplier = Column(Numeric(3, 2), default=1.0, nullable=False)  # 1.0 normal, >1 means increased penalties
+
+    # Weekly Goals System (replaces daily streaks as primary engagement)
+    weekly_reviews_count = Column(Integer, default=0, nullable=False, server_default='0')  # Reviews this week
+    weekly_goal_target = Column(Integer, default=3, nullable=False, server_default='3')  # User's weekly goal (default 3)
+    weekly_goal_streak = Column(Integer, default=0, nullable=False, server_default='0')  # Consecutive weeks meeting goal
+    week_start_date = Column(DateTime, nullable=True)  # Start of current tracking week
+
     # Subscription fields
     subscription_tier = Column(
         Enum(SubscriptionTier, values_callable=lambda x: [e.value for e in x]),
@@ -124,6 +146,9 @@ class User(Base):
     tier_milestones = relationship("TierMilestone", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    # Note: earned_badges and leaderboard_entries relationships are defined via backref
+    # in badge.py and leaderboard.py respectively to avoid circular import issues
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
