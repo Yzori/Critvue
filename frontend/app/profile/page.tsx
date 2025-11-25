@@ -307,20 +307,44 @@ export default function ProfilePage() {
                   {profileData.bio}
                 </p>
 
-                {/* Specialty Tags */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {profileData.specialty_tags.map((tag, index) => (
-                    <motion.div
-                      key={tag}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: prefersReducedMotion ? 0 : 0.3 + index * 0.05 }}
+                {/* Skills & Expertise */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Code className="size-4 text-gray-500" />
+                    <span className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                      Skills & Expertise
+                    </span>
+                  </div>
+                  {profileData.specialty_tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {profileData.specialty_tags.map((tag, index) => (
+                        <motion.div
+                          key={tag}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: prefersReducedMotion ? 0 : 0.3 + index * 0.05 }}
+                        >
+                          <Badge
+                            variant="secondary"
+                            size="sm"
+                            className="bg-accent-blue/10 text-accent-blue border-accent-blue/20 hover:bg-accent-blue/20 transition-colors"
+                          >
+                            {tag}
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : isOwnProfile ? (
+                    <a
+                      href="/browse"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 border border-dashed border-gray-300 text-sm text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition-colors"
                     >
-                      <Badge variant="neutral" size="sm">
-                        {tag}
-                      </Badge>
-                    </motion.div>
-                  ))}
+                      <Zap className="size-4" />
+                      Add your skills to get personalized recommendations
+                    </a>
+                  ) : (
+                    <span className="text-sm text-gray-500">No skills listed</span>
+                  )}
                 </div>
 
                 {/* Role Toggle */}
