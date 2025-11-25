@@ -6,11 +6,13 @@ import { BrowseReviewItem } from "@/lib/api/browse";
 import { ReviewCard } from "@/components/browse/review-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, RefreshCw, Settings2 } from "lucide-react";
 
 export interface PickedForYouProps {
   recommendations: BrowseReviewItem[];
   userSkills?: string[];
+  isLoggedIn?: boolean;
+  onCustomizeSkills?: () => void;
 }
 
 /**
@@ -23,7 +25,7 @@ export interface PickedForYouProps {
  * - High prominence (above categories)
  * - Clean, focused presentation
  */
-export function PickedForYou({ recommendations, userSkills }: PickedForYouProps) {
+export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustomizeSkills }: PickedForYouProps) {
   // Limit to 3 cards max for focused curation
   const displayedRecommendations = recommendations.slice(0, 3);
   const [refreshKey, setRefreshKey] = React.useState(0);
@@ -87,22 +89,37 @@ export function PickedForYou({ recommendations, userSkills }: PickedForYouProps)
                 <p className="text-gray-600 text-sm md:text-base mt-0.5">
                   {userSkills && userSkills.length > 0
                     ? `Perfect matches for ${userSkills.slice(0, 2).join(" & ")} experts`
-                    : "Personalized recommendations based on your profile"
+                    : isLoggedIn
+                      ? "Set your skills to get personalized recommendations"
+                      : "Sign in to get personalized recommendations"
                   }
                 </p>
               </div>
             </div>
 
-            {/* Refresh button - desktop only */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="hidden md:flex items-center gap-2 border-accent-blue/20 hover:border-accent-blue/40 hover:bg-accent-blue/5"
-            >
-              <RefreshCw className="size-4" />
-              Refresh
-            </Button>
+            {/* Action buttons - desktop only */}
+            <div className="hidden md:flex items-center gap-2">
+              {isLoggedIn && onCustomizeSkills && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onCustomizeSkills}
+                  className="items-center gap-2 border-accent-blue/20 hover:border-accent-blue/40 hover:bg-accent-blue/5"
+                >
+                  <Settings2 className="size-4" />
+                  {userSkills && userSkills.length > 0 ? "Edit Skills" : "Set Skills"}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="items-center gap-2 border-accent-blue/20 hover:border-accent-blue/40 hover:bg-accent-blue/5"
+              >
+                <RefreshCw className="size-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
 
           {/* Cards Grid - 3 cards max, responsive */}
@@ -140,8 +157,19 @@ export function PickedForYou({ recommendations, userSkills }: PickedForYouProps)
             ))}
           </div>
 
-          {/* Refresh button - mobile */}
-          <div className="flex md:hidden justify-center pt-2">
+          {/* Action buttons - mobile */}
+          <div className="flex md:hidden justify-center gap-2 pt-2">
+            {isLoggedIn && onCustomizeSkills && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCustomizeSkills}
+                className="items-center gap-2 border-accent-blue/20 hover:border-accent-blue/40 hover:bg-accent-blue/5"
+              >
+                <Settings2 className="size-4" />
+                {userSkills && userSkills.length > 0 ? "Edit" : "Set Skills"}
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -149,7 +177,7 @@ export function PickedForYou({ recommendations, userSkills }: PickedForYouProps)
               className="items-center gap-2 border-accent-blue/20 hover:border-accent-blue/40 hover:bg-accent-blue/5"
             >
               <RefreshCw className="size-4" />
-              Refresh Picks
+              Refresh
             </Button>
           </div>
         </div>

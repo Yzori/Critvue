@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { getBrowseReviews, BrowseReviewItem } from "@/lib/api/browse";
+import { getMyProfile } from "@/lib/api/profile";
 import { ContentType, ReviewType } from "@/lib/api/reviews";
 import { ReviewCard } from "@/components/browse/review-card";
 import { CompactFilterBar } from "@/components/browse/compact-filter-bar";
@@ -12,10 +13,12 @@ import { ReviewCardSkeletonGrid } from "@/components/browse/review-card-skeleton
 import { FeaturedHero } from "@/components/browse/hero/featured-hero";
 import { CategoryCards } from "@/components/browse/hero/category-cards";
 import { PickedForYou } from "@/components/browse/hero/picked-for-you";
+import { SkillsModal } from "@/components/browse/skills-modal";
 import { PremiumHeroCard } from "@/components/browse/premium-hero-card";
 import { CommunityGalleryCard } from "@/components/browse/community-gallery-card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Browse Page - Smart Two-Tier Marketplace Layout
@@ -33,17 +36,41 @@ import { Search } from "lucide-react";
  * - Pagination ready for infinite scroll
  */
 export default function BrowsePage() {
+  // Auth state
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
   // State
   const [reviews, setReviews] = React.useState<BrowseReviewItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
+  // User skills state
+  const [userSkills, setUserSkills] = React.useState<string[]>([]);
+  const [showSkillsModal, setShowSkillsModal] = React.useState(false);
+
   // Filter state
   const [contentType, setContentType] = React.useState<ContentType | "all">("all");
   const [reviewType, setReviewType] = React.useState<ReviewType | "all">("all");
   const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline">("recent");
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Fetch user profile to get skills (only if authenticated)
+  React.useEffect(() => {
+    const fetchUserSkills = async () => {
+      if (!isAuthenticated || authLoading) return;
+
+      try {
+        const profile = await getMyProfile();
+        setUserSkills(profile.specialty_tags || []);
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+        // Non-critical error - just don't show personalized skills
+      }
+    };
+
+    fetchUserSkills();
+  }, [isAuthenticated, authLoading]);
 
   // Fetch reviews
   const fetchReviews = React.useCallback(async () => {
@@ -232,7 +259,9 @@ export default function BrowsePage() {
             {splitReviews.recommended.length > 0 && (
               <PickedForYou
                 recommendations={splitReviews.recommended.slice(0, 3)}
-                userSkills={["React", "TypeScript", "UI/UX"]} // TODO: Get from user profile
+                userSkills={userSkills}
+                isLoggedIn={isAuthenticated}
+                onCustomizeSkills={() => setShowSkillsModal(true)}
               />
             )}
 
@@ -408,6 +437,14 @@ export default function BrowsePage() {
           // Filters are applied immediately, this just closes the sheet
           setShowMobileFilters(false);
         }}
+      />
+
+      {/* Skills selection modal */}
+      <SkillsModal
+        open={showSkillsModal}
+        onOpenChange={setShowSkillsModal}
+        currentSkills={userSkills}
+        onSkillsUpdated={setUserSkills}
       />
 
       {/* Accessibility and Performance Notes */}
