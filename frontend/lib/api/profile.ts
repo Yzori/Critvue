@@ -179,3 +179,66 @@ export async function refreshMyStats(): Promise<ProfileStats> {
 export async function getProfileBadges(userId: number): Promise<BadgesResponse> {
   return await apiClient.get<BadgesResponse>(`/profile/${userId}/badges`);
 }
+
+/**
+ * Reviewer DNA Response
+ * Represents a reviewer's unique style fingerprint
+ */
+export interface ReviewerDNAResponse {
+  user_id: number;
+  overall_score: number;
+  dimensions: {
+    name: string;
+    key: string;
+    value: number;
+  }[];
+  strengths: string[];
+  growth_areas: string[];
+  reviews_analyzed: number;
+  version: number;
+  calculated_at: string | null;
+  has_sufficient_data: boolean;
+}
+
+/**
+ * DNA Comparison Response
+ * Compares user's DNA to platform average
+ */
+export interface DNAComparisonResponse {
+  comparison_available: boolean;
+  speed?: { user: number; average: number; diff: number };
+  depth?: { user: number; average: number; diff: number };
+  specificity?: { user: number; average: number; diff: number };
+  constructiveness?: { user: number; average: number; diff: number };
+  technical?: { user: number; average: number; diff: number };
+  encouragement?: { user: number; average: number; diff: number };
+  overall?: { user: number; average: number; diff: number };
+}
+
+/**
+ * Get authenticated user's Reviewer DNA profile
+ */
+export async function getMyDNA(): Promise<ReviewerDNAResponse> {
+  return await apiClient.get<ReviewerDNAResponse>("/profile/me/dna");
+}
+
+/**
+ * Get any user's Reviewer DNA profile by user ID
+ */
+export async function getUserDNA(userId: number): Promise<ReviewerDNAResponse> {
+  return await apiClient.get<ReviewerDNAResponse>(`/profile/${userId}/dna`);
+}
+
+/**
+ * Recalculate authenticated user's Reviewer DNA
+ */
+export async function recalculateMyDNA(): Promise<ReviewerDNAResponse> {
+  return await apiClient.post<ReviewerDNAResponse>("/profile/me/dna/recalculate");
+}
+
+/**
+ * Compare authenticated user's DNA to platform average
+ */
+export async function compareDNA(): Promise<DNAComparisonResponse> {
+  return await apiClient.get<DNAComparisonResponse>("/profile/me/dna/compare");
+}

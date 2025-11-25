@@ -146,6 +146,7 @@ class User(Base):
     tier_milestones = relationship("TierMilestone", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    reviewer_dna = relationship("ReviewerDNA", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # Note: earned_badges and leaderboard_entries relationships are defined via backref
     # in badge.py and leaderboard.py respectively to avoid circular import issues

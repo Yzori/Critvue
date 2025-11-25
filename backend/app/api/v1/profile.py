@@ -24,6 +24,7 @@ from app.core.logging_config import logging
 from app.services.image_service import ImageService, ImageValidationError, ImageProcessingError
 from app.services.storage_service import StorageService, StorageError
 from app.services.service_factory import get_image_service, get_storage_service
+from app.services.reviewer_dna_service import ReviewerDNAService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/profile", tags=["Profile"])
@@ -594,3 +595,127 @@ async def get_user_badges(
     badges = profile_crud.parse_user_badges(user)
 
     return {"badges": badges, "total": len(badges)}
+
+
+@router.get("/me/dna")
+async def get_my_dna(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Get authenticated user's Reviewer DNA profile
+
+    Returns DNA fingerprint across 6 dimensions:
+    - Speed: How quickly they complete reviews
+    - Depth: Thoroughness of feedback
+    - Specificity: Actionable suggestions per review
+    - Constructiveness: Balance of positive/constructive feedback
+    - Technical: Domain expertise accuracy
+    - Encouragement: Supportive language score
+
+    Returns:
+        DNA profile with all dimensions, overall score, and insights
+    """
+    dna_service = ReviewerDNAService(db)
+    dna_summary = await dna_service.get_dna_summary(current_user.id)
+
+    if not dna_summary:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="DNA profile not found"
+        )
+
+    return dna_summary
+
+
+@router.get("/{user_id}/dna")
+async def get_user_dna(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Get any user's public Reviewer DNA profile
+
+    Args:
+        user_id: User ID to fetch DNA for
+
+    Returns:
+        DNA profile with all dimensions and insights
+
+    Raises:
+        HTTPException: If user not found
+    """
+    user = await profile_crud.get_user_profile(db, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    dna_service = ReviewerDNAService(db)
+    dna_summary = await dna_service.get_dna_summary(user_id)
+
+    if not dna_summary:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="DNA profile not found"
+        )
+
+    return dna_summary
+
+
+@router.post("/me/dna/recalculate")
+@limiter.limit("3/minute")
+async def recalculate_my_dna(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Recalculate authenticated user's Reviewer DNA
+
+    Triggers a full recalculation of DNA dimensions based on
+    all review history. Use this after significant review activity.
+
+    Returns:
+        Updated DNA profile
+
+    Rate limited to 3 requests per minute
+    """
+    dna_service = ReviewerDNAService(db)
+    dna = await dna_service.calculate_dna(current_user.id)
+
+    if not dna:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Failed to calculate DNA"
+        )
+
+    logger.info(f"DNA recalculated for user {current_user.id}")
+
+    # Return full summary
+    return await dna_service.get_dna_summary(current_user.id)
+
+
+@router.get("/me/dna/compare")
+async def compare_my_dna(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """
+    Compare authenticated user's DNA to platform average
+
+    Returns:
+        Comparison data showing user vs. average for each dimension
+    """
+    dna_service = ReviewerDNAService(db)
+    comparison = await dna_service.compare_to_average(current_user.id)
+
+    if not comparison:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="DNA profile not found"
+        )
+
+    return comparison

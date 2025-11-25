@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 
 // API imports
-import { getMyProfile } from "@/lib/api/profile";
+import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
 import { ApiClientError } from "@/lib/api/client";
 
@@ -81,15 +81,31 @@ interface ProfileData {
   tier_achieved_at?: string;
 }
 
-// Mock data for new components (replace with real API data)
-const mockReviewerDNA: ReviewerDNAData = {
-  speed: 85,
-  depth: 72,
-  specificity: 90,
-  constructiveness: 88,
-  technical: 76,
-  encouragement: 94,
+// Default DNA values for users without enough data
+const defaultReviewerDNA: ReviewerDNAData = {
+  speed: 50,
+  depth: 50,
+  specificity: 50,
+  constructiveness: 50,
+  technical: 50,
+  encouragement: 50,
 };
+
+/**
+ * Transform API DNA response to component format
+ */
+function transformDNAResponse(response: ReviewerDNAResponse): ReviewerDNAData {
+  const dnaData: ReviewerDNAData = { ...defaultReviewerDNA };
+
+  // Map dimensions from API response
+  for (const dim of response.dimensions) {
+    if (dim.key in dnaData) {
+      (dnaData as Record<string, number>)[dim.key] = dim.value;
+    }
+  }
+
+  return dnaData;
+}
 
 const mockBadges: BadgeType[] = [
   { id: '1', name: 'First Review', description: 'Completed your first review', icon: 'trophy', category: 'milestone', status: 'earned', earnedAt: '2024-01-15', rarity: 'common' },
@@ -138,6 +154,8 @@ export default function ProfilePage() {
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
+  const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     type: "not_found" | "auth_required" | "network" | "server" | "unknown";
@@ -157,8 +175,22 @@ export default function ProfilePage() {
       const profile = await getMyProfile();
       setProfileData(profile);
 
-      const portfolioResponse = await getUserPortfolio(Number(profile.id), { page_size: 20 });
+      // Fetch DNA and portfolio in parallel
+      const [portfolioResponse, dnaResponse] = await Promise.all([
+        getUserPortfolio(Number(profile.id), { page_size: 20 }),
+        getMyDNA().catch(() => null), // DNA is optional - don't fail if unavailable
+      ]);
+
       setPortfolioItems(portfolioResponse.items);
+
+      // Transform and set DNA data
+      if (dnaResponse) {
+        setReviewerDNA(transformDNAResponse(dnaResponse));
+        setDNAMetadata({
+          hasSufficientData: dnaResponse.has_sufficient_data,
+          reviewsAnalyzed: dnaResponse.reviews_analyzed,
+        });
+      }
     } catch (err) {
       console.error("Profile load error:", err);
 
@@ -347,8 +379,13 @@ export default function ProfilePage() {
               </Button>
             </div>
             <div className="flex justify-center">
-              <ReviewerDNA data={mockReviewerDNA} size="md" />
+              <ReviewerDNA data={reviewerDNA} size="md" />
             </div>
+            {!dnaMetadata.hasSufficientData && (
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Complete {3 - dnaMetadata.reviewsAnalyzed} more review{3 - dnaMetadata.reviewsAnalyzed !== 1 ? 's' : ''} to unlock your full DNA profile
+              </p>
+            )}
           </motion.div>
 
           {/* Stats Grid */}
