@@ -6,6 +6,23 @@
 // Base API URL - configurable via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+// Base backend URL for static files (without /api/v1)
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+/**
+ * Get full URL for file served by backend
+ * Handles both absolute URLs and relative paths
+ */
+export function getFileUrl(path: string | null | undefined): string {
+  if (!path) return "";
+  // If already absolute URL, return as-is
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  // Prepend backend URL for relative paths
+  return `${BACKEND_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
 export type ApiError = {
   detail?: string | Array<{ msg: string; type: string }>;
   message?: string;

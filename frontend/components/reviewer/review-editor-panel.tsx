@@ -5,6 +5,7 @@
  * - Shows review request details
  * - Deadline countdown
  * - Embedded review editor
+ * - Work Preview Panel for reference while reviewing
  * - Optimized for hub split-screen layout
  *
  * Brand Compliance:
@@ -19,10 +20,14 @@ import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SmartReviewEditor } from "@/components/reviewer/smart-review";
+import { WorkPreviewPanel, type WorkFile } from "@/components/reviewer/smart-review/WorkPreviewPanel";
 import {
-  AlertCircle,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
 import { cn } from "@/lib/utils";
@@ -33,6 +38,7 @@ import {
   type ReviewSlot,
 } from "@/lib/api/reviewer";
 import { getReviewFiles, type FileResponse } from "@/lib/api/files";
+import { getFileUrl } from "@/lib/api/client";
 
 interface ReviewEditorPanelProps {
   slot: ReviewSlot;
@@ -46,6 +52,8 @@ export function ReviewEditorPanel({
   const [hoursRemaining, setHoursRemaining] = React.useState(0);
   const [files, setFiles] = React.useState<FileResponse[]>([]);
   const [isBriefCollapsed, setIsBriefCollapsed] = React.useState(false);
+  const [showPreview, setShowPreview] = React.useState(true);
+  const [previewCollapsed, setPreviewCollapsed] = React.useState(false);
 
   // Fetch files for the review request
   React.useEffect(() => {
@@ -123,151 +131,313 @@ export function ReviewEditorPanel({
     return undefined;
   }, [slot.review_request?.content_type, files]);
 
-  return (
-    <div className="p-4 sm:p-5 md:p-6 space-y-5 max-w-5xl mx-auto">
-      {/* Prominent Header Card */}
-      <div className="rounded-2xl bg-gradient-to-br from-accent-blue/10 to-accent-peach/10 border-2 border-accent-blue/20 p-4 sm:p-5 md:p-6">
-        <div className="flex items-start gap-4 mb-3">
-          <div className={cn("size-14 rounded-xl flex items-center justify-center flex-shrink-0", config.bg)}>
-            <Icon className={cn("size-8", config.color)} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-tight mb-2">
-              {slot.review_request?.title}
-            </h1>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="primary" size="lg">
-                {config.label}
-              </Badge>
-              <Badge variant="secondary" size="lg">
-                {formatPayment(slot.payment_amount)}
-              </Badge>
-              {slot.status === "submitted" && (
-                <Badge variant="success" size="lg">
-                  ✓ Submitted
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
+  // Convert FileResponse[] to WorkFile[] for WorkPreviewPanel
+  const workFiles: WorkFile[] = React.useMemo(() => {
+    return files
+      .filter((f) => f.file_url) // Only include files with URLs
+      .map((f) => ({
+        id: f.id,
+        file_url: f.file_url!,
+        file_type: f.file_type,
+        file_name: f.original_filename,
+      }));
+  }, [files]);
 
-        {/* Collapsible Request Context */}
-        <div className="mt-3">
-          <button
-            onClick={() => setIsBriefCollapsed(!isBriefCollapsed)}
-            className="w-full flex items-center justify-between p-3 rounded-lg bg-white/50 border border-border/50 hover:bg-white/70 transition-colors"
-          >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                💬 Creator's Brief
-                {isBriefCollapsed && (
-                  <span className="text-xs font-normal text-muted-foreground">
-                    (Click to view)
-                  </span>
+  // Determine if we should show the preview panel (only if there are files)
+  const hasFilesToPreview = workFiles.length > 0;
+
+  // Mobile PiP state
+  const [showMobilePip, setShowMobilePip] = React.useState(true);
+  const [pipExpanded, setPipExpanded] = React.useState(false);
+
+  return (
+    <div className="min-h-full">
+      {/* Compact Header Bar - Full Width */}
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-accent-blue/5 via-white to-accent-peach/5 border-b border-border/50 backdrop-blur-sm">
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className={cn("size-10 rounded-xl flex items-center justify-center flex-shrink-0", config.bg)}>
+              <Icon className={cn("size-5", config.color)} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-foreground truncate">
+                {slot.review_request?.title}
+              </h1>
+              <div className="flex items-center gap-2">
+                <Badge variant="primary" size="sm">
+                  {config.label}
+                </Badge>
+                <Badge variant="secondary" size="sm">
+                  {formatPayment(slot.payment_amount)}
+                </Badge>
+                {slot.status === "submitted" && (
+                  <Badge variant="success" size="sm">
+                    ✓ Submitted
+                  </Badge>
                 )}
-              </p>
-              {/* Deadline badge when collapsed */}
-              {isBriefCollapsed && slot.status !== "submitted" && slot.claim_deadline && (
-                <span className={cn(
-                  "text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1",
-                  urgency === "danger" ? "bg-red-100 text-red-700" :
-                  urgency === "warning" ? "bg-amber-100 text-amber-700" :
-                  "bg-green-100 text-green-700"
-                )}>
-                  ⏱ {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`} left
-                </span>
-              )}
+                {slot.status !== "submitted" && slot.claim_deadline && (
+                  <Badge
+                    variant={urgency === "danger" ? "error" : urgency === "warning" ? "warning" : "success"}
+                    size="sm"
+                  >
+                    {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`} left
+                  </Badge>
+                )}
+              </div>
             </div>
-            {isBriefCollapsed ? (
-              <ChevronDown className="size-4 text-muted-foreground shrink-0" />
-            ) : (
-              <ChevronUp className="size-4 text-muted-foreground shrink-0" />
+            {/* Desktop Preview Toggle */}
+            {hasFilesToPreview && slot.status !== "submitted" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="hidden lg:flex gap-1.5 text-xs"
+              >
+                {showPreview ? (
+                  <>
+                    <EyeOff className="size-3.5" />
+                    Hide Preview
+                  </>
+                ) : (
+                  <>
+                    <Eye className="size-3.5" />
+                    Show Preview
+                  </>
+                )}
+              </Button>
             )}
-          </button>
-          {!isBriefCollapsed && (
-            <div className="mt-2 p-4 rounded-lg bg-white/50 border border-border/50 relative">
-              {/* Deadline badge when expanded - top right corner */}
-              {slot.status !== "submitted" && slot.claim_deadline && (
-                <div className={cn(
-                  "absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5",
-                  urgency === "danger" ? "bg-red-100 text-red-700 ring-1 ring-red-300" :
-                  urgency === "warning" ? "bg-amber-100 text-amber-700 ring-1 ring-amber-300" :
-                  "bg-green-100 text-green-700 ring-1 ring-green-300"
-                )}>
-                  <span className={cn(
-                    "size-1.5 rounded-full",
-                    urgency === "danger" ? "bg-red-600 animate-pulse" :
-                    urgency === "warning" ? "bg-amber-600 animate-pulse" :
-                    "bg-green-600"
-                  )} />
-                  {hoursRemaining < 24 ? `${hoursRemaining}h` : `${Math.floor(hoursRemaining / 24)}d`} left
-                </div>
-              )}
-              <p className="text-sm text-foreground leading-relaxed pr-20">
-                {slot.review_request?.description || "No specific guidance provided"}
-              </p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Conditional rendering based on status */}
       {slot.status === "submitted" ? (
         /* Submitted Confirmation View */
-        <div className="rounded-xl border-2 border-green-500/30 bg-green-50 p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
-              <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+        <div className="p-4 sm:p-6">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-green-500/30 bg-green-50 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
+                <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-green-900">Review Submitted Successfully!</h3>
+                <p className="text-sm text-green-700">
+                  Waiting for requester acceptance
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-green-900">Review Submitted Successfully!</h3>
-              <p className="text-sm text-green-700">
-                Waiting for requester acceptance
-              </p>
-            </div>
-          </div>
 
-          {slot.auto_accept_at && (
+            {slot.auto_accept_at && (
+              <div className="p-4 bg-white/50 rounded-lg">
+                <p className="text-sm font-medium text-green-900 mb-1">
+                  ⏰ Auto-accept Countdown
+                </p>
+                <p className="text-xs text-green-700">
+                  If the requester doesn't respond, your review will be automatically accepted on{" "}
+                  <strong>{new Date(slot.auto_accept_at).toLocaleDateString()}</strong>
+                </p>
+              </div>
+            )}
+
             <div className="p-4 bg-white/50 rounded-lg">
-              <p className="text-sm font-medium text-green-900 mb-1">
-                ⏰ Auto-accept Countdown
+              <p className="text-sm font-medium text-green-900 mb-2">
+                💰 Payment Status
               </p>
               <p className="text-xs text-green-700">
-                If the requester doesn't respond, your review will be automatically accepted on{" "}
-                <strong>{new Date(slot.auto_accept_at).toLocaleDateString()}</strong>
+                Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
               </p>
             </div>
-          )}
 
-          <div className="p-4 bg-white/50 rounded-lg">
-            <p className="text-sm font-medium text-green-900 mb-2">
-              💰 Payment Status
-            </p>
-            <p className="text-xs text-green-700">
-              Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => window.location.href = "/dashboard?role=reviewer"}
-              className="flex-1"
-            >
-              Back to Dashboard
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = "/dashboard?role=reviewer"}
+                className="flex-1"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
-        /* Smart Review Editor for claimed reviews */
-        <SmartReviewEditor
-          slotId={slot.id}
-          contentType={slot.review_request?.content_type || "code"}
-          imageUrl={imageUrl}
-          onSubmitSuccess={onSubmitSuccess}
-        />
+        /* True Side-by-Side Split Layout */
+        <div className="flex">
+          {/* LEFT: Sticky Preview Panel - Desktop Only */}
+          {showPreview && hasFilesToPreview && (
+            <div className={cn(
+              "hidden lg:block border-r border-border/50 bg-muted/30 transition-all duration-300",
+              previewCollapsed ? "w-14" : "w-[420px] min-w-[380px]"
+            )}>
+              <div className="sticky top-[57px] h-[calc(100vh-57px)] overflow-hidden">
+                {previewCollapsed ? (
+                  /* Collapsed state - thin bar with expand button */
+                  <div className="h-full flex flex-col items-center pt-4">
+                    <button
+                      onClick={() => setPreviewCollapsed(false)}
+                      className="p-2 rounded-lg bg-accent-blue/10 hover:bg-accent-blue/20 transition-colors"
+                      aria-label="Expand preview panel"
+                    >
+                      <PanelLeft className="size-5 text-accent-blue" />
+                    </button>
+                    <div className="mt-4 -rotate-90 whitespace-nowrap text-xs font-medium text-muted-foreground">
+                      Work Preview
+                    </div>
+                  </div>
+                ) : (
+                  /* Expanded preview */
+                  <div className="h-full flex flex-col">
+                    {/* Preview Header */}
+                    <div className="flex items-center justify-between p-3 border-b border-border/50 bg-white/50">
+                      <span className="text-sm font-semibold text-foreground">Work Preview</span>
+                      <button
+                        onClick={() => setPreviewCollapsed(true)}
+                        className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                        aria-label="Collapse preview panel"
+                      >
+                        <PanelLeftClose className="size-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                    {/* Preview Content - Scrollable */}
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <WorkPreviewPanel
+                        files={workFiles}
+                        title={slot.review_request?.title || "Work Preview"}
+                        description={slot.review_request?.description}
+                        contentType={slot.review_request?.content_type || "code"}
+                        externalUrl={slot.review_request?.external_url}
+                      />
+
+                      {/* Creator's Brief in Preview Panel */}
+                      <div className="mt-4 p-4 rounded-xl bg-white border border-border/50">
+                        <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                          💬 Creator's Brief
+                        </h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {slot.review_request?.description || "No specific guidance provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* RIGHT: Review Form - Scrollable */}
+          <div className="flex-1 min-w-0">
+            {/* Brief Card - Only shown on mobile or when preview is hidden */}
+            {(!showPreview || !hasFilesToPreview) && (
+              <div className="p-4 border-b border-border/50 bg-muted/20 lg:hidden">
+                <button
+                  onClick={() => setIsBriefCollapsed(!isBriefCollapsed)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg bg-white border border-border/50"
+                >
+                  <span className="text-sm font-semibold text-foreground">💬 Creator's Brief</span>
+                  {isBriefCollapsed ? (
+                    <ChevronDown className="size-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronUp className="size-4 text-muted-foreground" />
+                  )}
+                </button>
+                {!isBriefCollapsed && (
+                  <p className="mt-2 p-3 text-sm text-muted-foreground bg-white rounded-lg border border-border/50">
+                    {slot.review_request?.description || "No specific guidance provided"}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Smart Review Editor */}
+            <div className="p-4 sm:p-6">
+              <div className="max-w-3xl mx-auto">
+                <SmartReviewEditor
+                  slotId={slot.id}
+                  contentType={slot.review_request?.content_type || "code"}
+                  imageUrl={imageUrl}
+                  onSubmitSuccess={onSubmitSuccess}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile PiP Preview - Bottom Right Corner */}
+      {hasFilesToPreview && slot.status !== "submitted" && showMobilePip && (
+        <div className="lg:hidden fixed bottom-4 right-4 z-30">
+          {pipExpanded ? (
+            /* Expanded PiP */
+            <div className="w-72 rounded-2xl shadow-2xl border-2 border-accent-blue/30 bg-white overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
+              <div className="flex items-center justify-between p-2 bg-accent-blue/10 border-b border-accent-blue/20">
+                <span className="text-xs font-semibold text-foreground px-2">Work Preview</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPipExpanded(false)}
+                    className="p-1.5 rounded-md hover:bg-accent-blue/20 transition-colors"
+                  >
+                    <ChevronDown className="size-4 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => setShowMobilePip(false)}
+                    className="p-1.5 rounded-md hover:bg-red-100 transition-colors"
+                  >
+                    <EyeOff className="size-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                <WorkPreviewPanel
+                  files={workFiles}
+                  title={slot.review_request?.title || "Work Preview"}
+                  contentType={slot.review_request?.content_type || "code"}
+                  className="border-0 rounded-none"
+                />
+              </div>
+            </div>
+          ) : (
+            /* Collapsed PiP - Thumbnail */
+            <button
+              onClick={() => setPipExpanded(true)}
+              className="group relative size-16 rounded-2xl shadow-lg border-2 border-accent-blue/30 bg-white overflow-hidden hover:scale-105 transition-transform"
+            >
+              {workFiles[0]?.file_type.startsWith("image/") ? (
+                <img
+                  src={getFileUrl(workFiles[0].file_url)}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-accent-blue/10">
+                  <Eye className="size-6 text-accent-blue" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ChevronUp className="size-5 text-white drop-shadow-lg" />
+                </div>
+              </div>
+              {/* File count badge */}
+              {workFiles.length > 1 && (
+                <div className="absolute -top-1 -right-1 size-5 rounded-full bg-accent-blue text-white text-xs font-bold flex items-center justify-center">
+                  {workFiles.length}
+                </div>
+              )}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Mobile PiP restore button - shown when PiP is hidden */}
+      {hasFilesToPreview && slot.status !== "submitted" && !showMobilePip && (
+        <button
+          onClick={() => setShowMobilePip(true)}
+          className="lg:hidden fixed bottom-4 right-4 z-30 px-3 py-2 rounded-full shadow-lg bg-accent-blue text-white text-xs font-medium flex items-center gap-1.5"
+        >
+          <Eye className="size-3.5" />
+          Show Preview
+        </button>
       )}
     </div>
   );

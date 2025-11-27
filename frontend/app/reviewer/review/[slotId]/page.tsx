@@ -101,24 +101,9 @@ export default function ReviewWritingPage() {
     fetchData();
   }, [slotId]);
 
-  // Auto-redirect to hub mode if reviewer has 2+ active reviews
+  // Always redirect to hub mode for consistent experience with WorkPreviewPanel
   React.useEffect(() => {
-    const checkForHubMode = async () => {
-      try {
-        // Use multi-status query (single API call)
-        const allActive = await getMyReviews("claimed,submitted");
-
-        // If 2+ reviews, redirect to hub mode
-        if (allActive.length >= 2) {
-          router.push(`/reviewer/hub?slot=${slotId}`);
-        }
-      } catch (err) {
-        // Silently fail - stay on single review page
-        console.error("Error checking for hub mode:", err);
-      }
-    };
-
-    checkForHubMode();
+    router.push(`/reviewer/hub?slot=${slotId}`);
   }, [slotId, router]);
 
   // Update countdown every minute
@@ -417,7 +402,7 @@ export default function ReviewWritingPage() {
               <SmartReviewEditor
                 slotId={slotId}
                 contentType={slot?.review_request?.content_type || "design"}
-                contentSubcategory={slot?.review_request?.content_subcategory}
+                contentSubcategory={(slot?.review_request as { content_subcategory?: string })?.content_subcategory}
                 imageUrl={
                   // For design/art reviews, pass the first image file URL
                   (slot?.review_request?.content_type === "design" ||

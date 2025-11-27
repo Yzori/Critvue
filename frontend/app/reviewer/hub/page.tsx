@@ -61,11 +61,7 @@ export default function ReviewerHubPage() {
           setCurrentSlot(combinedSlots[0] ?? null);
         }
 
-        // If less than 2 reviews, redirect to single-review page
-        if (combinedSlots.length < 2 && combinedSlots.length > 0 && combinedSlots[0]) {
-          router.push(`/reviewer/review/${combinedSlots[0].id}`);
-        }
-        // Don't redirect when there are no reviews - show empty state instead
+        // Always show hub regardless of review count (no redirect)
       } catch (err) {
         console.error("Error fetching reviews:", err);
         setError("Failed to load reviews. Please try again.");
@@ -89,15 +85,15 @@ export default function ReviewerHubPage() {
 
   // Handle review submission success
   const handleSubmitSuccess = React.useCallback(() => {
-    // Refresh the list
-    getMyReviews("claimed").then(claimed => {
-      setAllSlots(claimed);
-      if (claimed.length < 2 && claimed.length > 0 && claimed[0]) {
-        router.push(`/reviewer/review/${claimed[0].id}`);
-      } else if (claimed.length === 0) {
+    // Refresh the list and stay in hub
+    getMyReviews("claimed,submitted").then(slots => {
+      setAllSlots(slots);
+      if (slots.length === 0) {
+        // No reviews left, go to dashboard
         router.push("/dashboard?role=reviewer");
-      } else if (claimed[0]) {
-        setCurrentSlot(claimed[0]);
+      } else if (slots[0]) {
+        // Stay in hub, switch to first available review
+        setCurrentSlot(slots[0]);
       }
     });
   }, [router]);
