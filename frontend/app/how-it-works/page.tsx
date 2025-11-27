@@ -1,29 +1,24 @@
 "use client";
 
 /**
- * How It Works Page - Critvue
+ * How It Works Page - Interactive Journey Redesign
  *
- * Research-backed conversion-optimized landing page that addresses both creators and reviewers.
- * Key principles:
- * - Dual-audience toggle (creators/reviewers) with dynamic content
- * - Mobile-first responsive design with proper touch targets
- * - Scroll-triggered animations with reduced motion support
- * - Brand-consistent colors, typography, and spacing
- * - Comprehensive FAQ accordion with smooth animations
- * - Social proof through testimonials
- * - Strategic CTAs throughout the journey
+ * An immersive, scroll-driven interactive journey with:
+ * - Sticky progress bar that fills as user scrolls
+ * - Animated matching visualization (priority feature)
+ * - Perspective-aware content (creator/reviewer toggle)
+ * - Chapter-based navigation with smooth animations
  *
  * Brand Compliance:
  * - Colors: accent-blue (#3B82F6), accent-peach (#F97316)
  * - Spacing: 8px grid system
  * - Typography: Inter font family with proper hierarchy
  * - Glass morphism effects for cards
- * - Gradient backgrounds for visual interest
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
+import { motion, useReducedMotion, AnimatePresence, useInView } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,7 +27,6 @@ import {
   Sparkles,
   Users,
   MessageSquare,
-  CheckCircle,
   Target,
   Award,
   PenTool,
@@ -42,25 +36,65 @@ import {
   Shield,
   Zap,
   Clock,
+  CheckCircle,
+  FileCode,
+  Palette,
+  Video,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Custom components
+import {
+  JourneyProgressBar,
+  PerspectiveToggle,
+  JourneyChapter,
+  ChapterHeader,
+  MatchingVisualization,
+  AnimatedCounter,
+  AnimatedStatCard,
+  ReviewerCardStack,
+  ComparisonFlipCard,
+} from "@/components/how-it-works";
+import { useScrollProgress } from "@/hooks/useScrollProgress";
+
+// Chapter configuration
+const chapters = [
+  { id: "hero", label: "Start Here", shortLabel: "Start" },
+  { id: "upload", label: "Upload Work", shortLabel: "Upload" },
+  { id: "find", label: "Find Reviewer", shortLabel: "Find" },
+  { id: "matching", label: "Smart Matching", shortLabel: "Match" },
+  { id: "results", label: "Get Feedback", shortLabel: "Results" },
+  { id: "social-proof", label: "Success Stories", shortLabel: "Proof" },
+  { id: "comparison", label: "Compare Options", shortLabel: "Compare" },
+  { id: "faq", label: "FAQ", shortLabel: "FAQ" },
+  { id: "cta", label: "Get Started", shortLabel: "Start" },
+];
+
+const chapterIds = chapters.map((c) => c.id);
 
 export default function HowItWorksPage() {
   const router = useRouter();
   const [perspective, setPerspective] = useState<"creator" | "reviewer">("creator");
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [showProgressBar, setShowProgressBar] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
-  // Mobile-optimized animation config
-  const getFadeInAnimation = (delay = 0) => ({
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-50px" },
-    transition: {
-      duration: prefersReducedMotion ? 0 : 0.5,
-      delay: prefersReducedMotion ? 0 : delay,
-    },
+  // Scroll progress tracking
+  const { progress, activeChapter, scrollToChapter } = useScrollProgress({
+    chapterIds,
+    offset: 120,
   });
+
+  // Show progress bar after scrolling past hero
+  const heroRef = useRef<HTMLElement>(null);
+  const heroInView = useInView(heroRef, { amount: 0.5 });
+
+  // Matching visualization ref
+  const matchingRef = useRef<HTMLDivElement>(null);
+  const matchingInView = useInView(matchingRef, { once: false, amount: 0.5 });
+
+  const isCreator = perspective === "creator";
 
   // Content for dynamic sections
   const creatorSteps = [
@@ -71,18 +105,18 @@ export default function HowItWorksPage() {
     },
     {
       icon: Sparkles,
-      headline: "Pick your perfect reviewer",
+      headline: "Pick your review type",
       description: "Community reviewers for peer perspective, or Expert reviewers for professional validation.",
     },
     {
       icon: Target,
-      headline: "We find the right eyes for your work",
-      description: "Our system matches you with reviewers based on expertise and your specific needs. Track progress in real-time.",
+      headline: "We find the right match",
+      description: "Our system matches you with reviewers based on expertise and your specific needs.",
     },
     {
       icon: MessageSquare,
-      headline: "Feedback you can actually use",
-      description: "Detailed critique, specific suggestions, and next steps. Not satisfied? Our satisfaction guarantee has you covered.",
+      headline: "Feedback you can use",
+      description: "Detailed critique, specific suggestions, and actionable next steps.",
     },
   ];
 
@@ -90,26 +124,34 @@ export default function HowItWorksPage() {
     {
       icon: Award,
       headline: "Share your expertise",
-      description: "Community reviewers start immediately. Expert reviewers undergo vetting with portfolio review.",
+      description: "Community reviewers start immediately. Experts undergo vetting with portfolio review.",
     },
     {
       icon: Target,
-      headline: "Review work you're passionate about",
-      description: "Choose projects matching your expertise. Set your availability and review preferences.",
+      headline: "Choose your projects",
+      description: "Select work matching your expertise. Set your availability and preferences.",
     },
     {
       icon: PenTool,
-      headline: "Use our intuitive review tools",
-      description: "Annotate, comment, and provide structured feedback. Templates help you give comprehensive reviews faster.",
+      headline: "Review with powerful tools",
+      description: "Annotate, comment, and provide structured feedback with templates.",
     },
     {
       icon: TrendingUp,
-      headline: "Grow as you help others grow",
-      description: "Earn reputation points, unlock expert reviewer status, and get paid for your insights.",
+      headline: "Earn and grow",
+      description: "Build reputation, unlock expert status, and get paid for your insights.",
     },
   ];
 
-  const currentSteps = perspective === "creator" ? creatorSteps : reviewerSteps;
+  const currentSteps = isCreator ? creatorSteps : reviewerSteps;
+
+  // Content types for upload section
+  const contentTypes = [
+    { icon: FileCode, label: "Code", color: "blue" },
+    { icon: Palette, label: "Design", color: "purple" },
+    { icon: Video, label: "Video", color: "red" },
+    { icon: FileText, label: "Writing", color: "green" },
+  ];
 
   // FAQ content
   const creatorFAQs = [
@@ -142,16 +184,38 @@ export default function HowItWorksPage() {
     },
   ];
 
-  const allFAQs = [...creatorFAQs, ...reviewerFAQs];
+  const allFAQs = isCreator
+    ? [...creatorFAQs, ...reviewerFAQs.slice(0, 1)]
+    : [...reviewerFAQs, ...creatorFAQs.slice(0, 1)];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      {/* Sticky Progress Bar - appears after scrolling past hero */}
+      <AnimatePresence>
+        {!heroInView && (
+          <JourneyProgressBar
+            chapters={chapters}
+            activeChapter={activeChapter}
+            progress={progress}
+            onChapterClick={scrollToChapter}
+            perspective={perspective}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
-      <section className="relative pt-20 pb-12 px-6 md:pt-32 md:pb-20 overflow-hidden">
+      <section
+        id="hero"
+        ref={heroRef}
+        className="relative pt-20 pb-12 px-6 md:pt-32 md:pb-20 overflow-hidden"
+      >
         {/* Background gradient orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-1/4 -left-1/4 w-64 h-64 md:w-96 md:h-96 bg-accent-blue/10 rounded-full blur-3xl"
+            className={cn(
+              "absolute top-1/4 -left-1/4 w-64 h-64 md:w-96 md:h-96 rounded-full blur-3xl",
+              isCreator ? "bg-accent-blue/10" : "bg-accent-peach/10"
+            )}
             animate={{
               scale: [1, 1.2, 1],
               opacity: [0.3, 0.5, 0.3],
@@ -159,7 +223,10 @@ export default function HowItWorksPage() {
             transition={{ duration: 8, repeat: Infinity }}
           />
           <motion.div
-            className="absolute bottom-1/4 -right-1/4 w-64 h-64 md:w-96 md:h-96 bg-accent-peach/10 rounded-full blur-3xl"
+            className={cn(
+              "absolute bottom-1/4 -right-1/4 w-64 h-64 md:w-96 md:h-96 rounded-full blur-3xl",
+              isCreator ? "bg-accent-peach/10" : "bg-accent-blue/10"
+            )}
             animate={{
               scale: [1.2, 1, 1.2],
               opacity: [0.5, 0.3, 0.5],
@@ -175,81 +242,57 @@ export default function HowItWorksPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <Badge variant="info" size="lg" className="mb-6">
+                Interactive Guide
+              </Badge>
+            </motion.div>
+
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
-              Get expert eyes on your work{" "}
+              Your journey to{" "}
               <motion.span
-                className="inline-block bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent"
-                animate={{
-                  scale: [1, 1.05, 1],
-                }}
+                className={cn(
+                  "inline-block bg-clip-text text-transparent",
+                  isCreator
+                    ? "bg-gradient-to-r from-accent-blue to-blue-600"
+                    : "bg-gradient-to-r from-accent-peach to-orange-500"
+                )}
+                animate={
+                  prefersReducedMotion
+                    ? {}
+                    : {
+                        scale: [1, 1.02, 1],
+                      }
+                }
                 transition={{
                   duration: 3,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
               >
-                in 24 hours
+                better feedback
               </motion.span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
-              Submit code, design, or video. Choose community or expert review. Grow faster with feedback that actually helps.
+              {isCreator
+                ? "See exactly how to get expert eyes on your work in under 5 minutes"
+                : "Discover how to earn while helping creators grow their skills"}
             </p>
 
-            {/* Segmented Control Toggle */}
-            <motion.div
-              className="inline-flex items-center gap-1 p-1 sm:p-1.5 rounded-2xl bg-gradient-to-r from-white via-gray-50 to-white border-2 border-gray-200/50 shadow-xl backdrop-blur-sm mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <motion.button
-                onClick={() => setPerspective("creator")}
-                className={cn(
-                  "relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
-                  perspective === "creator"
-                    ? "text-white shadow-xl"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                )}
-                whileHover={perspective !== "creator" ? { scale: 1.02 } : {}}
-                whileTap={{ scale: 0.98 }}
-                aria-pressed={perspective === "creator"}
-                aria-label="View information for creators"
-              >
-                {perspective === "creator" && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-500 via-accent-blue to-blue-600"
-                    layoutId="activeTab"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 whitespace-nowrap">I'm a Creator</span>
-              </motion.button>
-              <motion.button
-                onClick={() => setPerspective("reviewer")}
-                className={cn(
-                  "relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl font-semibold sm:font-bold text-sm sm:text-base transition-all duration-500 min-h-[48px] touch-manipulation overflow-hidden",
-                  perspective === "reviewer"
-                    ? "text-white shadow-xl"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                )}
-                whileHover={perspective !== "reviewer" ? { scale: 1.02 } : {}}
-                whileTap={{ scale: 0.98 }}
-                aria-pressed={perspective === "reviewer"}
-                aria-label="View information for reviewers"
-              >
-                {perspective === "reviewer" && (
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-orange-500 via-accent-peach to-amber-500"
-                    layoutId="activeTab"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-10 whitespace-nowrap">I'm a Reviewer</span>
-              </motion.button>
-            </motion.div>
+            {/* Perspective Toggle */}
+            <PerspectiveToggle
+              perspective={perspective}
+              onPerspectiveChange={setPerspective}
+              className="mb-8"
+            />
 
             {/* Primary CTA */}
             <motion.div
@@ -260,62 +303,106 @@ export default function HowItWorksPage() {
               <Button
                 size="lg"
                 onClick={() =>
-                  router.push(perspective === "creator" ? "/auth/register" : "/apply/expert")
+                  router.push(isCreator ? "/auth/register" : "/apply/expert")
                 }
                 className={cn(
                   "w-full sm:w-auto font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-xl hover:shadow-2xl transition-all duration-300 touch-manipulation",
-                  perspective === "creator"
+                  isCreator
                     ? "bg-gradient-to-r from-accent-blue to-blue-600 hover:from-accent-blue/90 hover:to-blue-600/90 text-white"
                     : "bg-gradient-to-r from-accent-peach to-orange-500 hover:from-accent-peach/90 hover:to-orange-500/90 text-white"
                 )}
               >
                 <span className="flex items-center justify-center gap-2">
-                  {perspective === "creator" ? "Start Your First Review Free" : "Become a Reviewer"}
+                  {isCreator ? "Start Your First Review Free" : "Become a Reviewer"}
                   <ArrowRight className="size-5" />
                 </span>
               </Button>
+            </motion.div>
+
+            {/* Scroll indicator */}
+            <motion.div
+              className="mt-12 flex flex-col items-center gap-2 text-gray-400"
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <span className="text-sm">Scroll to explore</span>
+              <ChevronDown className="size-5" />
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* 4-Step Process Section */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* Chapter 1: Upload/Share */}
+      <JourneyChapter id="upload" variant="default" perspective={perspective}>
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div className="text-center mb-12 md:mb-16" {...getFadeInAnimation()}>
-            <Badge variant="info" size="lg" className="mb-4">
-              {perspective === "creator" ? "For Creators" : "For Reviewers"}
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              How it works
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              {perspective === "creator"
-                ? "Four simple steps to better feedback"
-                : "Start earning with your expertise"}
-            </p>
-          </motion.div>
+          <ChapterHeader
+            badge={`Step 1 of 4`}
+            title={isCreator ? "Upload in seconds" : "Share your expertise"}
+            subtitle={
+              isCreator
+                ? "Any creative work, any format. We've got you covered."
+                : "Set up your profile and start receiving projects"
+            }
+            perspective={perspective}
+          />
 
-          {/* Desktop: 2x2 Bento Grid | Mobile: Vertical Stack */}
+          {/* Content Types Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-12">
+            {contentTypes.map((type, index) => (
+              <motion.div
+                key={type.label}
+                className={cn(
+                  "group relative p-6 rounded-2xl border-2 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300",
+                  isCreator
+                    ? "border-accent-blue/10 hover:border-accent-blue/30"
+                    : "border-accent-peach/10 hover:border-accent-peach/30"
+                )}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -4 }}
+              >
+                <motion.div
+                  className={cn(
+                    "size-14 rounded-xl flex items-center justify-center mb-4 ring-2 ring-offset-2",
+                    isCreator
+                      ? "bg-accent-blue/10 text-accent-blue ring-accent-blue/20"
+                      : "bg-accent-peach/10 text-accent-peach ring-accent-peach/20"
+                  )}
+                  whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <type.icon className="size-7" />
+                </motion.div>
+                <h3 className="font-semibold text-gray-900">{type.label}</h3>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Step Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-            {currentSteps.map((step, index) => (
+            {currentSteps.slice(0, 2).map((step, index) => (
               <motion.div
                 key={index}
                 className={cn(
                   "group relative p-6 sm:p-8 rounded-3xl border-2 transition-all duration-500 overflow-hidden",
                   "bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl",
-                  perspective === "creator"
+                  isCreator
                     ? "border-accent-blue/20 hover:border-accent-blue/50"
                     : "border-accent-peach/20 hover:border-accent-peach/50"
                 )}
-                {...getFadeInAnimation(index * 0.1)}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
                 whileHover={{ y: -4 }}
               >
                 {/* Gradient overlay */}
                 <div
                   className={cn(
                     "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-                    perspective === "creator"
+                    isCreator
                       ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50"
                       : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50"
                   )}
@@ -324,8 +411,8 @@ export default function HowItWorksPage() {
                 {/* Step number */}
                 <div
                   className={cn(
-                    "inline-flex items-center justify-center size-12 rounded-full font-bold text-xl mb-4 relative z-10",
-                    perspective === "creator"
+                    "inline-flex items-center justify-center size-10 rounded-full font-bold text-lg mb-4 relative z-10",
+                    isCreator
                       ? "bg-accent-blue/10 text-accent-blue"
                       : "bg-accent-peach/10 text-accent-peach"
                   )}
@@ -336,15 +423,15 @@ export default function HowItWorksPage() {
                 {/* Icon */}
                 <motion.div
                   className={cn(
-                    "inline-flex items-center justify-center size-16 rounded-2xl mb-5 ring-2 ring-offset-2 transition-all duration-300 relative z-10",
-                    perspective === "creator"
-                      ? "bg-gradient-to-br from-blue-500 to-accent-blue text-white ring-accent-blue/20 group-hover:ring-accent-blue/40"
-                      : "bg-gradient-to-br from-orange-500 to-accent-peach text-white ring-accent-peach/20 group-hover:ring-accent-peach/40"
+                    "inline-flex items-center justify-center size-14 rounded-2xl mb-5 ring-2 ring-offset-2 transition-all duration-300 relative z-10",
+                    isCreator
+                      ? "bg-gradient-to-br from-blue-500 to-accent-blue text-white ring-accent-blue/20"
+                      : "bg-gradient-to-br from-orange-500 to-accent-peach text-white ring-accent-peach/20"
                   )}
                   whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <step.icon className="size-8" />
+                  <step.icon className="size-7" />
                 </motion.div>
 
                 {/* Content */}
@@ -354,267 +441,255 @@ export default function HowItWorksPage() {
                   </h3>
                   <p className="text-gray-600 leading-relaxed">{step.description}</p>
                 </div>
-
-                {/* Visual placeholder - decorative element */}
-                <div
-                  className={cn(
-                    "absolute bottom-0 right-0 w-32 h-32 opacity-5 blur-2xl rounded-full transition-all duration-500 group-hover:opacity-10",
-                    perspective === "creator" ? "bg-accent-blue" : "bg-accent-peach"
-                  )}
-                />
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </JourneyChapter>
 
-      {/* Comparison Table Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
+      {/* Chapter 2: Find Reviewer / Choose Projects */}
+      <JourneyChapter id="find" variant="alt" perspective={perspective}>
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div className="text-center mb-12 md:mb-16" {...getFadeInAnimation()}>
-            <Badge variant="success" size="lg" className="mb-4">
-              Compare Options
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Choose your review type
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-              From community peer feedback to expert critique
-            </p>
-          </motion.div>
+          <ChapterHeader
+            badge={`Step 2 of 4`}
+            title={isCreator ? "Find your perfect reviewer" : "Choose your projects"}
+            subtitle={
+              isCreator
+                ? "Browse experts or let us match you automatically"
+                : "Pick work that matches your skills and interests"
+            }
+            perspective={perspective}
+          />
 
-          {/* Desktop: Table | Mobile: Swipe Cards */}
-          <div className="hidden md:block">
-            <motion.div
-              className="overflow-x-auto rounded-3xl border-2 border-gray-200 shadow-xl bg-white"
-              {...getFadeInAnimation(0.2)}
-            >
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 sticky top-0">
-                  <tr>
-                    <th className="px-6 py-5 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Feature
-                    </th>
-                    <th className="px-6 py-5 text-center text-sm font-bold text-green-700 uppercase tracking-wider border-l-2 border-green-200">
-                      Community Review
-                    </th>
-                    <th className="px-6 py-5 text-center text-sm font-bold text-accent-peach uppercase tracking-wider border-l-2 border-accent-peach/20">
-                      Expert Review
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-semibold text-gray-900">Cost</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-green-100">
-                      <span className="font-bold text-green-700">Free (3/month)</span>
-                      <br />
-                      <span className="text-sm text-gray-600">or Pro ($9/month)</span>
-                    </td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-peach/10">
-                      <span className="font-bold text-accent-peach">$50-150</span>
-                      <br />
-                      <span className="text-sm text-gray-600">per review</span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-semibold text-gray-900">Turnaround</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-green-100 font-medium text-gray-700">
-                      24-48 hours
-                    </td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-peach/10 font-medium text-gray-700">
-                      24 hours guaranteed
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-semibold text-gray-900">Best For</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
-                      Peer perspective, general feedback
-                    </td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-peach/10 text-sm text-gray-700">
-                      Professional validation, career-critical work
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-semibold text-gray-900">Depth</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
-                      Thoughtful critique
-                    </td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-peach/10 text-sm text-gray-700">
-                      Industry-specific expertise
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-5 font-semibold text-gray-900">Reviewers</td>
-                    <td className="px-6 py-5 text-center border-l-2 border-green-100 text-sm text-gray-700">
-                      Verified creators
-                    </td>
-                    <td className="px-6 py-5 text-center border-l-2 border-accent-peach/10 text-sm text-gray-700">
-                      Vetted professionals
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </motion.div>
+          <ReviewerCardStack perspective={perspective} />
+        </div>
+      </JourneyChapter>
 
-            {/* CTAs below table */}
-            <div className="grid grid-cols-2 gap-6 mt-8">
-              <Button
-                onClick={() => router.push("/review/new")}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-6 text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
-              >
-                Get Community Feedback
-              </Button>
-              <Button
-                onClick={() => router.push("/browse")}
-                className="bg-gradient-to-r from-accent-peach to-orange-500 hover:from-accent-peach/90 hover:to-orange-500/90 text-white font-semibold py-6 text-base rounded-2xl shadow-lg hover:shadow-xl transition-all"
-              >
-                Browse Experts
-              </Button>
-            </div>
+      {/* Chapter 3: Smart Matching (PRIORITY) */}
+      <JourneyChapter id="matching" variant="gradient" perspective={perspective}>
+        <div className="max-w-7xl mx-auto px-6">
+          <ChapterHeader
+            badge={`Step 3 of 4`}
+            title="Smart matching magic"
+            subtitle={
+              isCreator
+                ? "Our algorithm finds the perfect reviewer for your work"
+                : "Get matched with projects that fit your expertise"
+            }
+            perspective={perspective}
+          />
+
+          <div ref={matchingRef}>
+            <MatchingVisualization
+              perspective={perspective}
+              isInView={matchingInView}
+            />
           </div>
 
-          {/* Mobile: Horizontal Swipe Cards */}
-          <div className="md:hidden">
-            <div className="relative">
-              <div className="flex overflow-x-auto gap-4 pb-6 snap-x snap-mandatory scrollbar-hide -mx-6 px-6">
-                {/* Community Review Card */}
-                <motion.div
-                  className="min-w-[85vw] snap-center rounded-3xl border-2 border-green-300 bg-gradient-to-br from-white to-green-50/30 shadow-xl overflow-hidden"
-                  {...getFadeInAnimation(0.1)}
+          {/* Additional matching info */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {[
+              {
+                icon: Zap,
+                title: "Instant matching",
+                desc: "Most matches happen within minutes",
+              },
+              {
+                icon: Target,
+                title: "Skill-based",
+                desc: "Matched by expertise and experience",
+              },
+              {
+                icon: Clock,
+                title: "Real-time updates",
+                desc: "Track progress every step of the way",
+              },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                className="text-center p-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 + 0.3 }}
+              >
+                <div
+                  className={cn(
+                    "size-12 rounded-xl flex items-center justify-center mx-auto mb-4",
+                    isCreator ? "bg-accent-blue/10" : "bg-accent-peach/10"
+                  )}
                 >
-                  <div className="p-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-                    <h3 className="text-2xl font-bold mb-1">Community Review</h3>
-                    <p className="text-green-100 text-sm">Peer feedback</p>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Cost</div>
-                      <div className="text-xl font-bold text-green-700">
-                        Free (3/month)
-                        <br />
-                        <span className="text-base font-medium text-gray-600">or Pro ($9/month)</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Turnaround</div>
-                      <div className="text-lg font-medium text-gray-900">24-48 hours</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Best For</div>
-                      <div className="text-sm text-gray-600">Peer perspective, general feedback</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Depth</div>
-                      <div className="text-sm text-gray-600">Thoughtful critique</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Reviewers</div>
-                      <div className="text-sm text-gray-600">Verified creators</div>
-                    </div>
-                    <Button
-                      onClick={() => router.push("/review/new")}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-4 rounded-2xl min-h-[48px] shadow-lg"
-                    >
-                      Get Community Feedback
-                    </Button>
-                  </div>
-                </motion.div>
-
-                {/* Expert Review Card */}
-                <motion.div
-                  className="min-w-[85vw] snap-center rounded-3xl border-2 border-accent-peach/30 bg-gradient-to-br from-white to-orange-50/30 shadow-xl overflow-hidden"
-                  {...getFadeInAnimation(0.2)}
-                >
-                  <div className="p-6 bg-gradient-to-r from-accent-peach to-orange-500 text-white">
-                    <h3 className="text-2xl font-bold mb-1">Expert Review</h3>
-                    <p className="text-orange-100 text-sm">Professional critique</p>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Cost</div>
-                      <div className="text-xl font-bold text-accent-peach">
-                        $50-150
-                        <br />
-                        <span className="text-base font-medium text-gray-600">per review</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Turnaround</div>
-                      <div className="text-lg font-medium text-gray-900">24 hours guaranteed</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Best For</div>
-                      <div className="text-sm text-gray-600">Professional validation, career-critical work</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Depth</div>
-                      <div className="text-sm text-gray-600">Industry-specific expertise</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-1">Reviewers</div>
-                      <div className="text-sm text-gray-600">Vetted professionals</div>
-                    </div>
-                    <Button
-                      onClick={() => router.push("/browse")}
-                      className="w-full bg-accent-peach hover:bg-accent-peach/90 text-white font-semibold py-4 rounded-2xl min-h-[48px] shadow-lg"
-                    >
-                      Browse Experts
-                    </Button>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Indicator dots */}
-              <div className="flex justify-center gap-2 mt-4">
-                <div className="size-2 rounded-full bg-green-600" />
-                <div className="size-2 rounded-full bg-gray-300" />
-              </div>
-            </div>
+                  <item.icon
+                    className={cn(
+                      "size-6",
+                      isCreator ? "text-accent-blue" : "text-accent-peach"
+                    )}
+                  />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
+                <p className="text-sm text-gray-600">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </section>
+      </JourneyChapter>
 
-      {/* Social Proof - Testimonials */}
-      <section className="py-16 md:py-24 bg-white">
+      {/* Chapter 4: Results */}
+      <JourneyChapter id="results" variant="default" perspective={perspective}>
         <div className="max-w-7xl mx-auto px-6">
-          <motion.div className="text-center mb-12 md:mb-16" {...getFadeInAnimation()}>
-            <Badge variant="success" size="lg" className="mb-4">
-              Testimonials
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Loved by creators worldwide
-            </h2>
-            <div className="flex items-center justify-center gap-2 text-lg text-gray-600">
-              <motion.span
-                className="text-3xl font-bold text-accent-blue"
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                2,500+
-              </motion.span>
-              <span>reviews delivered</span>
-            </div>
-          </motion.div>
+          <ChapterHeader
+            badge={`Step 4 of 4`}
+            title={isCreator ? "Feedback that actually helps" : "Earn and grow"}
+            subtitle={
+              isCreator
+                ? "Detailed critique with actionable next steps"
+                : "Build reputation and income doing what you love"
+            }
+            perspective={perspective}
+          />
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            {currentSteps.slice(2, 4).map((step, index) => (
+              <motion.div
+                key={index}
+                className={cn(
+                  "group relative p-6 sm:p-8 rounded-3xl border-2 transition-all duration-500 overflow-hidden",
+                  "bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl",
+                  isCreator
+                    ? "border-accent-blue/20 hover:border-accent-blue/50"
+                    : "border-accent-peach/20 hover:border-accent-peach/50"
+                )}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                whileHover={{ y: -4 }}
+              >
+                <div
+                  className={cn(
+                    "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+                    isCreator
+                      ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50"
+                      : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50"
+                  )}
+                />
+
+                <div
+                  className={cn(
+                    "inline-flex items-center justify-center size-10 rounded-full font-bold text-lg mb-4 relative z-10",
+                    isCreator
+                      ? "bg-accent-blue/10 text-accent-blue"
+                      : "bg-accent-peach/10 text-accent-peach"
+                  )}
+                >
+                  {index + 3}
+                </div>
+
+                <motion.div
+                  className={cn(
+                    "inline-flex items-center justify-center size-14 rounded-2xl mb-5 ring-2 ring-offset-2 transition-all duration-300 relative z-10",
+                    isCreator
+                      ? "bg-gradient-to-br from-blue-500 to-accent-blue text-white ring-accent-blue/20"
+                      : "bg-gradient-to-br from-orange-500 to-accent-peach text-white ring-accent-peach/20"
+                  )}
+                  whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <step.icon className="size-7" />
+                </motion.div>
+
+                <div className="relative z-10">
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                    {step.headline}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Satisfaction guarantee */}
+          {isCreator && (
+            <motion.div
+              className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+            >
+              <Shield className="size-8 text-green-600 mx-auto mb-3" />
+              <h4 className="font-bold text-gray-900 mb-2">
+                100% Satisfaction Guarantee
+              </h4>
+              <p className="text-sm text-gray-600">
+                Not happy with your expert review? Full refund, no questions asked.
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </JourneyChapter>
+
+      {/* Social Proof Section */}
+      <JourneyChapter id="social-proof" variant="alt" perspective={perspective}>
+        <div className="max-w-7xl mx-auto px-6">
+          <ChapterHeader
+            badge="Trusted by Creators"
+            title="Join thousands of happy users"
+            subtitle="Real results from real creators and reviewers"
+            perspective={perspective}
+          />
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-16">
+            <AnimatedStatCard
+              value={2500}
+              suffix="+"
+              label="Reviews delivered"
+              icon={<MessageSquare className="size-5" />}
+              perspective={perspective}
+            />
+            <AnimatedStatCard
+              value={24}
+              suffix="h"
+              label="Average turnaround"
+              icon={<Clock className="size-5" />}
+              perspective={perspective}
+            />
+            <AnimatedStatCard
+              value={97}
+              suffix="%"
+              label="Satisfaction rate"
+              icon={<Star className="size-5" />}
+              perspective={perspective}
+            />
+            <AnimatedStatCard
+              value={500}
+              suffix="+"
+              label="Expert reviewers"
+              icon={<Users className="size-5" />}
+              perspective={perspective}
+            />
+          </div>
+
+          {/* Testimonials */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {[
               {
-                quote: "The structured feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
+                quote:
+                  "The structured feedback helped me catch accessibility issues I never would have noticed. It's like having a QA team on demand.",
                 author: "Sarah Chen",
                 role: "Frontend Developer",
                 rating: 5,
               },
               {
-                quote: "Getting my portfolio reviewed by an expert designer completely transformed my work. The feedback was detailed and actionable.",
+                quote:
+                  "Getting my portfolio reviewed by an expert designer completely transformed my work. The feedback was detailed and actionable.",
                 author: "Marcus Johnson",
                 role: "UX Designer",
                 rating: 5,
               },
               {
-                quote: "I've tried other platforms, but Critvue's reviewers actually understand my niche. The turnaround time is incredible too.",
+                quote:
+                  "I've tried other platforms, but Critvue's reviewers actually understand my niche. The turnaround time is incredible too.",
                 author: "Priya Patel",
                 role: "Content Creator",
                 rating: 5,
@@ -623,34 +698,47 @@ export default function HowItWorksPage() {
               <motion.div
                 key={index}
                 className="group relative p-6 sm:p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
-                {...getFadeInAnimation(index * 0.1)}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -4 }}
               >
-                {/* Decorative gradient */}
-                <div className="absolute top-0 right-0 w-24 h-24 opacity-0 group-hover:opacity-10 blur-2xl rounded-full bg-accent-blue transition-opacity duration-500" />
+                <div
+                  className={cn(
+                    "absolute top-0 right-0 w-24 h-24 opacity-0 group-hover:opacity-10 blur-2xl rounded-full transition-opacity duration-500",
+                    isCreator ? "bg-accent-blue" : "bg-accent-peach"
+                  )}
+                />
 
-                {/* Stars */}
                 <div className="flex items-center gap-1 mb-4 relative z-10">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
 
-                {/* Quote */}
                 <p className="text-gray-700 leading-relaxed mb-6 text-sm sm:text-base relative z-10">
                   "{testimonial.quote}"
                 </p>
 
-                {/* Author */}
                 <div className="flex items-center gap-3 relative z-10">
-                  <div className="size-12 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center text-white font-bold text-sm">
+                  <div
+                    className={cn(
+                      "size-12 rounded-full flex items-center justify-center text-white font-bold text-sm",
+                      isCreator
+                        ? "bg-gradient-to-br from-accent-blue to-blue-600"
+                        : "bg-gradient-to-br from-accent-peach to-orange-500"
+                    )}
+                  >
                     {testimonial.author
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                    <div className="font-semibold text-gray-900">
+                      {testimonial.author}
+                    </div>
                     <div className="text-sm text-gray-600">{testimonial.role}</div>
                   </div>
                 </div>
@@ -658,29 +746,44 @@ export default function HowItWorksPage() {
             ))}
           </div>
         </div>
-      </section>
+      </JourneyChapter>
+
+      {/* Comparison Section */}
+      <JourneyChapter id="comparison" variant="default" perspective={perspective}>
+        <div className="max-w-7xl mx-auto px-6">
+          <ChapterHeader
+            badge="Compare Options"
+            title="Choose your review type"
+            subtitle="From community peer feedback to expert critique"
+            perspective={perspective}
+          />
+
+          <ComparisonFlipCard
+            onCommunityClick={() => router.push("/review/new")}
+            onExpertClick={() => router.push("/browse")}
+          />
+        </div>
+      </JourneyChapter>
 
       {/* FAQ Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 to-white">
+      <JourneyChapter id="faq" variant="alt" perspective={perspective}>
         <div className="max-w-4xl mx-auto px-6">
-          <motion.div className="text-center mb-12 md:mb-16" {...getFadeInAnimation()}>
-            <Badge variant="info" size="lg" className="mb-4">
-              FAQ
-            </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Frequently asked questions
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600">
-              Everything you need to know about Critvue
-            </p>
-          </motion.div>
+          <ChapterHeader
+            badge="FAQ"
+            title="Frequently asked questions"
+            subtitle="Everything you need to know about Critvue"
+            perspective={perspective}
+          />
 
           <div className="space-y-4">
             {allFAQs.map((faq, index) => (
               <motion.div
                 key={index}
                 className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
-                {...getFadeInAnimation(index * 0.05)}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
@@ -719,15 +822,15 @@ export default function HowItWorksPage() {
             ))}
           </div>
         </div>
-      </section>
+      </JourneyChapter>
 
       {/* Final CTA Section */}
-      <section className="py-16 md:py-24 relative overflow-hidden">
+      <section id="cta" className="py-16 md:py-24 relative overflow-hidden">
         {/* Gradient background */}
         <div
           className={cn(
             "absolute inset-0",
-            perspective === "creator"
+            isCreator
               ? "bg-gradient-to-br from-accent-blue via-accent-blue/90 to-blue-600"
               : "bg-gradient-to-br from-accent-peach via-accent-peach/90 to-orange-500"
           )}
@@ -754,12 +857,21 @@ export default function HowItWorksPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <motion.div {...getFadeInAnimation()} className="space-y-6 md:space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="space-y-6 md:space-y-8"
+          >
+            <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+              Ready to start?
+            </Badge>
+
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white">
-              {perspective === "creator" ? "Ready to level up?" : "Start earning with your expertise"}
+              {isCreator ? "Ready to level up?" : "Start earning with your expertise"}
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-              {perspective === "creator"
+              {isCreator
                 ? "Join 2,500+ creators getting better feedback every day"
                 : "Help creators grow while building your reputation and income"}
             </p>
@@ -770,17 +882,15 @@ export default function HowItWorksPage() {
                 <Button
                   size="lg"
                   onClick={() =>
-                    router.push(perspective === "creator" ? "/auth/register" : "/apply/expert")
+                    router.push(isCreator ? "/auth/register" : "/apply/expert")
                   }
                   className="w-full sm:w-auto bg-white hover:bg-gray-50 font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-xl hover:shadow-2xl transition-all duration-300 touch-manipulation"
                   style={{
-                    color: perspective === "creator" ? "#3B82F6" : "#F97316",
+                    color: isCreator ? "#3B82F6" : "#F97316",
                   }}
                 >
                   <span className="flex items-center justify-center gap-2">
-                    {perspective === "creator"
-                      ? "Start Your First Review Free"
-                      : "Become a Reviewer"}
+                    {isCreator ? "Start Your First Review Free" : "Become a Reviewer"}
                     <ArrowRight className="size-5" />
                   </span>
                 </Button>
@@ -788,10 +898,10 @@ export default function HowItWorksPage() {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   size="lg"
-                  onClick={() => router.push(perspective === "creator" ? "/browse" : "/pricing")}
+                  onClick={() => router.push(isCreator ? "/browse" : "/pricing")}
                   className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white/10 font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[48px] transition-all duration-300 touch-manipulation"
                 >
-                  {perspective === "creator" ? "Browse Expert Reviewers" : "Learn More About Expert Program"}
+                  {isCreator ? "Browse Expert Reviewers" : "Learn More"}
                 </Button>
               </motion.div>
             </div>
