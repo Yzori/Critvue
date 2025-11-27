@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BrowseReviewItem } from "@/lib/api/browse";
+import { getFileUrl } from "@/lib/api/client";
 import {
   Calendar,
   Heart,
@@ -72,9 +73,9 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
       <Link href={`/review/${review.id}`} className="flex flex-col h-full">
         {/* Preview Image Section - Fixed aspect ratio */}
         <div className="relative aspect-[4/3] flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-          {review.preview_image_url ? (
+          {review.preview_image ? (
             <img
-              src={review.preview_image_url}
+              src={getFileUrl(review.preview_image)}
               alt={review.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />

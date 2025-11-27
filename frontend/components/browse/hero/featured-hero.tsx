@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { BrowseReviewItem } from "@/lib/api/browse";
+import { getFileUrl } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -95,10 +96,10 @@ export function FeaturedHero({ featuredReviews }: FeaturedHeroProps) {
             )}
           >
             {/* Background Image */}
-            {review.preview_image_url ? (
+            {review.preview_image ? (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300">
                 <img
-                  src={review.preview_image_url}
+                  src={getFileUrl(review.preview_image)}
                   alt={review.title}
                   className="w-full h-full object-cover"
                 />

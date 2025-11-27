@@ -36,13 +36,22 @@ interface FileGalleryProps {
   className?: string;
 }
 
-// API base URL for file access
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+// Backend URL for file access (without /api/v1)
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 // Helper to get file URL
 function getFileUrl(file: ReviewFile): string {
-  if (file.file_url) return file.file_url;
-  if (file.filename) return `${API_BASE_URL}/files/${file.filename}`;
+  // Full URL already provided (e.g., S3/cloud storage)
+  if (file.file_url) {
+    // If it's already an absolute URL, return as-is
+    if (file.file_url.startsWith("http://") || file.file_url.startsWith("https://")) {
+      return file.file_url;
+    }
+    // Otherwise prepend backend URL to relative path
+    return `${BACKEND_URL}${file.file_url}`;
+  }
+  // Construct URL from filename - files are served at /files/{path}
+  if (file.filename) return `${BACKEND_URL}/files/${file.filename}`;
   return "";
 }
 

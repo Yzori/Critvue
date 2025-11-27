@@ -26,7 +26,7 @@ export interface BrowseReviewItem {
   price?: number;
   currency?: string;
   skills?: string[];
-  preview_image_url?: string;
+  preview_image?: string;  // URL to preview image (from backend)
   creator_username?: string;
   creator_rating?: number;
   is_featured?: boolean;

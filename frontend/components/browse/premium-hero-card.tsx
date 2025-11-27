@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BrowseReviewItem } from "@/lib/api/browse";
+import { getFileUrl } from "@/lib/api/client";
 import {
   ArrowRight,
   Calendar,
@@ -110,10 +111,10 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
         <div className="flex-1 flex flex-col">
           {/* Preview Image Section with Gradient Overlay - Mobile/Tablet Only */}
           <div className="relative h-40 overflow-hidden lg:hidden">
-            {review.preview_image_url ? (
+            {review.preview_image ? (
               <>
                 <img
-                  src={review.preview_image_url}
+                  src={getFileUrl(review.preview_image)}
                   alt={review.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -243,9 +244,9 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
 
         {/* RIGHT SIDE: File Preview - Large Screens Only */}
         <div className="hidden lg:block lg:w-[40%] relative bg-gray-100 border-l border-gray-200">
-          {review.preview_image_url ? (
+          {review.preview_image ? (
             <img
-              src={review.preview_image_url}
+              src={getFileUrl(review.preview_image)}
               alt={`Preview of ${review.title}`}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
@@ -262,7 +263,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
           )}
 
           {/* Preview Label Overlay */}
-          {review.preview_image_url && (
+          {review.preview_image && (
             <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm">
               <p className="text-xs text-white font-medium">Preview</p>
             </div>

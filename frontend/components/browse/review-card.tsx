@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BrowseReviewItem } from "@/lib/api/browse";
+import { getFileUrl } from "@/lib/api/client";
 import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle, Clock, Zap, Target } from "lucide-react";
 
 export interface ReviewCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -330,7 +331,7 @@ export function ReviewCard({
         )}
       >
         {/* IMPROVED: Preview image with enhanced presentation */}
-        {review.preview_image_url && size !== "small" && (
+        {review.preview_image && size !== "small" && (
           <div
             className={cn(
               "relative w-full overflow-hidden mb-2",
@@ -346,7 +347,7 @@ export function ReviewCard({
           >
             <div className="relative w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
               <img
-                src={review.preview_image_url}
+                src={getFileUrl(review.preview_image)}
                 alt={review.title}
                 className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
                 loading="lazy"
@@ -371,7 +372,7 @@ export function ReviewCard({
           {getClaimStatusBadge()}
           {getUrgencyBadge()}
           {/* Featured badge only shown if no image (fallback) */}
-          {review.is_featured && !review.preview_image_url && (
+          {review.is_featured && !review.preview_image && (
             <Badge variant="warning" size="sm">
               Featured
             </Badge>

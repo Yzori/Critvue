@@ -142,10 +142,16 @@ export function ActionBar({
       return;
     }
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
     review.files.forEach((file) => {
-      const url = file.file_url || `${API_BASE_URL}/files/${file.filename}`;
+      let url = "";
+      if (file.file_url) {
+        // If it's already an absolute URL, use as-is
+        url = file.file_url.startsWith("http") ? file.file_url : `${BACKEND_URL}${file.file_url}`;
+      } else {
+        url = `${BACKEND_URL}/files/${file.filename}`;
+      }
       const link = document.createElement("a");
       link.href = url;
       link.download = file.original_filename;
