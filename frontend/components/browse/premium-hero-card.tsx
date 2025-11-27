@@ -17,6 +17,7 @@ import {
   Target,
   TrendingUp,
   Award,
+  Shield,
 } from "lucide-react";
 
 export interface PremiumHeroCardProps {
@@ -109,9 +110,9 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
 
         {/* LEFT SIDE: Content Section */}
         <div className="flex-1 flex flex-col">
-          {/* Preview Image Section with Gradient Overlay - Mobile/Tablet Only */}
+          {/* Preview Image Section with Gradient Overlay - Mobile/Tablet Only - Hidden for NDA */}
           <div className="relative h-40 overflow-hidden lg:hidden">
-            {review.preview_image ? (
+            {review.preview_image && !review.requires_nda ? (
               <>
                 <img
                   src={getFileUrl(review.preview_image)}
@@ -181,6 +182,14 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
 
               {getTierBadge()}
 
+              {/* NDA Badge */}
+              {review.requires_nda && (
+                <Badge className="flex items-center gap-1 bg-purple-50 border-purple-200 text-purple-700 font-semibold border">
+                  <Shield className="size-3" />
+                  <span>NDA</span>
+                </Badge>
+              )}
+
               {review.is_featured && (
                 <Badge variant="warning">Featured</Badge>
               )}
@@ -192,9 +201,16 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
             </h3>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-              {review.description}
-            </p>
+            {review.requires_nda ? (
+              <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                <Shield className="size-4 flex-shrink-0" />
+                <span className="italic">Sign NDA to view project details</span>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                {review.description}
+              </p>
+            )}
 
             {/* Earnings Highlight - Subtle and Refined */}
             {isPaidReview && review.price && (
@@ -242,28 +258,50 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
           </div>
         </div>
 
-        {/* RIGHT SIDE: File Preview - Large Screens Only */}
+        {/* RIGHT SIDE: File Preview - Large Screens Only - Hidden for NDA */}
         <div className="hidden lg:block lg:w-[40%] relative bg-gray-100 border-l border-gray-200">
-          {review.preview_image ? (
+          {review.preview_image && !review.requires_nda ? (
             <img
               src={getFileUrl(review.preview_image)}
               alt={`Preview of ${review.title}`}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <div className={cn(
+              "w-full h-full flex items-center justify-center",
+              review.requires_nda
+                ? "bg-gradient-to-br from-purple-50 to-purple-100"
+                : "bg-gradient-to-br from-gray-100 to-gray-200"
+            )}>
               <div className="text-center p-6">
-                <div className="size-16 mx-auto mb-3 rounded-full bg-gray-200 flex items-center justify-center">
-                  <DollarSign className="size-8 text-gray-400" />
+                <div className={cn(
+                  "size-16 mx-auto mb-3 rounded-full flex items-center justify-center",
+                  review.requires_nda ? "bg-purple-200" : "bg-gray-200"
+                )}>
+                  {review.requires_nda ? (
+                    <Shield className="size-8 text-purple-500" />
+                  ) : (
+                    <DollarSign className="size-8 text-gray-400" />
+                  )}
                 </div>
-                <p className="text-sm text-gray-500 font-medium">File Preview</p>
-                <p className="text-xs text-gray-400 mt-1">Upload available after claiming</p>
+                <p className={cn(
+                  "text-sm font-medium",
+                  review.requires_nda ? "text-purple-600" : "text-gray-500"
+                )}>
+                  {review.requires_nda ? "NDA Protected" : "File Preview"}
+                </p>
+                <p className={cn(
+                  "text-xs mt-1",
+                  review.requires_nda ? "text-purple-500" : "text-gray-400"
+                )}>
+                  {review.requires_nda ? "Sign NDA to view files" : "Upload available after claiming"}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Preview Label Overlay */}
-          {review.preview_image && (
+          {/* Preview Label Overlay - Hidden for NDA */}
+          {review.preview_image && !review.requires_nda && (
             <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-sm">
               <p className="text-xs text-white font-medium">Preview</p>
             </div>

@@ -345,8 +345,8 @@ export function ReviewCard({
           "p-4"
         )}
       >
-        {/* IMPROVED: Preview image with enhanced presentation */}
-        {review.preview_image && size !== "small" && (
+        {/* IMPROVED: Preview image with enhanced presentation - hidden for NDA requests */}
+        {review.preview_image && size !== "small" && !review.requires_nda && (
           <div
             className={cn(
               "relative w-full overflow-hidden mb-2",
@@ -414,21 +414,28 @@ export function ReviewCard({
           {review.title}
         </h3>
 
-        {/* Description - adaptive based on size */}
+        {/* Description - adaptive based on size, confidential for NDA requests */}
         {size !== "small" && (
-          <p
-            className={cn(
-              "text-gray-600 text-sm leading-snug",
-              // Tight line-clamping for compact vertical rhythm
-              "line-clamp-2"
-            )}
-          >
-            {review.description}
-          </p>
+          review.requires_nda ? (
+            <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800">
+              <Shield className="size-4 flex-shrink-0" />
+              <span className="italic">Sign NDA to view project details</span>
+            </div>
+          ) : (
+            <p
+              className={cn(
+                "text-gray-600 text-sm leading-snug",
+                // Tight line-clamping for compact vertical rhythm
+                "line-clamp-2"
+              )}
+            >
+              {review.description}
+            </p>
+          )
         )}
 
-        {/* Skills - only show on large cards to save space */}
-        {review.skills && review.skills.length > 0 && size === "large" && (
+        {/* Skills - only show on large cards to save space, hidden for NDA */}
+        {review.skills && review.skills.length > 0 && size === "large" && !review.requires_nda && (
           <div className="flex flex-wrap gap-1.5 text-xs text-gray-500">
             <span className="font-medium">Skills:</span>
             <span className="line-clamp-1">
