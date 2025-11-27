@@ -109,6 +109,43 @@ export default function BrowsePage() {
     setSearchQuery("");
   };
 
+  // Calculate importance score for sorting (higher = more prominent)
+  const calculateImportanceScore = (review: BrowseReviewItem): number => {
+    let score = 0;
+
+    // Price factor (0-40 points) - higher paying = more prominent
+    const price = review.price ?? 0;
+    score += Math.min(price / 2.5, 40); // $100 = 40 points max
+
+    // Creator rating factor (0-20 points)
+    const rating = review.creator_rating ?? 0;
+    score += rating * 4; // 5.0 rating = 20 points
+
+    // Urgency factor (0-20 points) - closer deadline = more urgent
+    if (review.deadline) {
+      const daysUntil = Math.ceil(
+        (new Date(review.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
+      if (daysUntil <= 1) score += 20;
+      else if (daysUntil <= 3) score += 15;
+      else if (daysUntil <= 7) score += 10;
+      else score += 5;
+    }
+
+    // Scarcity factor (0-15 points) - fewer slots = more urgent
+    const totalSlots = review.reviews_requested ?? 1;
+    const availableSlots = review.available_slots ?? totalSlots;
+    if (totalSlots > 1) {
+      const fillRate = (totalSlots - availableSlots) / totalSlots;
+      score += fillRate * 15; // Almost full = 15 points
+    }
+
+    // Featured bonus (5 points)
+    if (review.is_featured) score += 5;
+
+    return score;
+  };
+
   // Split reviews into tiers: Hero Featured, Paid/Expert, Recommended, and Others
   const splitReviews = React.useMemo(() => {
     const heroFeatured: BrowseReviewItem[] = [];
@@ -141,6 +178,10 @@ export default function BrowsePage() {
         others.push(review);
       }
     });
+
+    // Sort featuredPaid by importance score (highest first)
+    // Hero card will be the highest scoring opportunity
+    featuredPaid.sort((a, b) => calculateImportanceScore(b) - calculateImportanceScore(a));
 
     return { heroFeatured, recommended, featuredPaid, others };
   }, [reviews]);
@@ -310,14 +351,14 @@ export default function BrowsePage() {
                       <PremiumHeroCard review={splitReviews.featuredPaid[0]} />
                     )}
 
-                    {/* BOTTOM: Supporting Cards Row */}
+                    {/* BOTTOM: Supporting Cards Row - 3 columns for better spacing */}
                     {splitReviews.featuredPaid.length > 1 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {splitReviews.featuredPaid.slice(1, 5).map((review, index) => (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {splitReviews.featuredPaid.slice(1, 4).map((review, index) => (
                           <ReviewCard
                             key={review.id}
                             review={review}
-                            size="small"
+                            size="medium"
                             importance={70 - (index * 5)}
                             className="animate-in fade-in slide-in-from-bottom-4 duration-500"
                             style={{
@@ -330,26 +371,22 @@ export default function BrowsePage() {
                     )}
                   </div>
 
-                  {/* Show remaining paid reviews in standard grid if more than 5 */}
-                  {splitReviews.featuredPaid.length > 5 && (
+                  {/* Show remaining paid reviews in standard grid if more than 4 */}
+                  {splitReviews.featuredPaid.length > 4 && (
                     <div className="mt-6 pt-6 border-t border-gray-200/50">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {splitReviews.featuredPaid.slice(5).map((review, index) => (
-                          <div
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {splitReviews.featuredPaid.slice(4).map((review, index) => (
+                          <ReviewCard
                             key={review.id}
-                            className="h-full min-h-[180px]"
-                          >
-                            <ReviewCard
-                              review={review}
-                              size="small"
-                              importance={70}
-                              className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full"
-                              style={{
-                                animationDelay: `${(index + 5) * 50}ms`,
-                                animationFillMode: "backwards",
-                              }}
-                            />
-                          </div>
+                            review={review}
+                            size="medium"
+                            importance={65}
+                            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                            style={{
+                              animationDelay: `${(index + 4) * 50}ms`,
+                              animationFillMode: "backwards",
+                            }}
+                          />
                         ))}
                       </div>
                     </div>
