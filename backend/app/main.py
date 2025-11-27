@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 from app.services.scheduler import start_background_jobs, stop_background_jobs
@@ -60,6 +60,7 @@ app.include_router(notifications.router, prefix="/api/v1")  # Notifications
 app.include_router(dashboard.router, prefix="/api/v1")  # Mobile-optimized dashboard
 app.include_router(dashboard_desktop.router, prefix="/api/v1")  # Desktop-optimized dashboard
 app.include_router(karma.router, prefix="/api/v1")  # Modern karma system with badges, leaderboards, requester ratings
+app.include_router(platform.router, prefix="/api/v1")  # Platform-wide activity and stats for elevated dashboard
 
 # Configure CORS
 app.add_middleware(

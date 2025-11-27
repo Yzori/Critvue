@@ -3,31 +3,28 @@
 /**
  * Desktop Dashboard Container
  *
- * INNOVATIVE Momentum Dashboard (2025)
+ * ELEVATED Dashboard Experience (2025)
  *
- * A distinctive, game-like dashboard experience that goes beyond standard SaaS patterns.
+ * A next-level dashboard that goes beyond standard SaaS patterns with:
  *
- * Architecture:
- * - Quick Stats Bar (karma, XP, badges, leaderboard at a glance)
- * - Momentum Ring (animated flow state indicator)
- * - Smart Action Cards (contextual suggestions based on time/activity)
- * - Kanban board (visual workflow)
- * - Command palette (Cmd+K universal search)
- * - Micro-celebrations (achievement animations)
+ * - User Pulse (emotional intelligence - adapts to user state)
+ * - Hero Action Block (single "what to do next" focus)
+ * - Story Mode Stats (narrative-driven data)
+ * - Celebration System (meaningful achievements)
+ * - Anticipation Engine (what's coming next)
+ * - Ambient Presence (community activity)
+ * - Reviewer Cockpit (earnings focus for reviewers)
+ * - Role Transformation (smooth animated transitions)
+ * - Ambient Modes (dark/focus/zen modes)
  *
- * Features:
- * - Gamification integrated into main dashboard (not hidden in sub-pages)
- * - Contextual intelligence (suggestions change based on time/state)
- * - Momentum scoring system (combines streak, goals, activity)
- * - Keyboard-first navigation (Cmd+K, shortcuts)
- * - Role-fluid design (Creator vs Reviewer)
- * - Micro-celebration animations for achievements
+ * Philosophy:
+ * "How do we make users feel like they're making progress every time they open this?"
  *
  * Brand Compliance:
  * - Critvue brand colors (#3B82F6, #F97316)
  * - WCAG AA accessible
- * - Smooth, purposeful Framer Motion animations
- * - Responsive (1280px+ for optimal experience)
+ * - Smooth Framer Motion animations with reduced-motion support
+ * - Responsive (1024px+ for optimal desktop experience)
  *
  * @module DesktopDashboardContainer
  */
@@ -35,8 +32,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// Import innovative Momentum Dashboard
-import { MomentumDashboard } from "../momentum";
+// Import the new Elevated Dashboard
+import { ElevatedDashboard } from "../elevated";
+import { AmbientModeProvider } from "../elevated/AmbientModeSystem";
+import { UserPulseProvider } from "@/contexts/UserPulseContext";
 
 export type DashboardRole = "creator" | "reviewer";
 
@@ -60,8 +59,8 @@ export interface DesktopDashboardContainerProps {
 /**
  * Desktop Dashboard Container Component
  *
- * Main container for the innovative Momentum Dashboard.
- * A distinctive, engaging experience that differentiates Critvue.
+ * Main container for the Elevated Dashboard experience.
+ * Wraps with necessary providers for pulse and ambient mode.
  */
 export function DesktopDashboardContainer({
   role,
@@ -69,11 +68,15 @@ export function DesktopDashboardContainer({
   className,
 }: DesktopDashboardContainerProps) {
   return (
-    <div className={cn("min-h-screen", className)}>
-      <MomentumDashboard
-        role={role}
-        onRoleChange={onRoleChange}
-      />
-    </div>
+    <AmbientModeProvider>
+      <UserPulseProvider>
+        <div className={cn("min-h-screen", className)}>
+          <ElevatedDashboard
+            initialRole={role}
+            onRoleChange={onRoleChange}
+          />
+        </div>
+      </UserPulseProvider>
+    </AmbientModeProvider>
   );
 }

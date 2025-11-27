@@ -1,9 +1,12 @@
 """API v1 endpoints"""
 
 from fastapi import APIRouter
-from app.api.v1 import dashboard
+from app.api.v1 import dashboard, platform
 
 api_router = APIRouter()
 
 # Include dashboard router
 api_router.include_router(dashboard.router)
+
+# Include platform router (elevated dashboard data)
+api_router.include_router(platform.router)
