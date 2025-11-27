@@ -94,7 +94,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
         }}
       >
         {/* LEFT: Image Thumbnail */}
-        <div className="relative w-[28%] min-w-[120px] max-w-[200px] flex-shrink-0 bg-gray-100">
+        <div className="relative w-[50%] min-w-[200px] max-w-[450px] flex-shrink-0 bg-gray-100">
           {review.preview_image && !review.requires_nda ? (
             <img
               src={getFileUrl(review.preview_image)}
