@@ -436,7 +436,7 @@ async def load_review_draft(
     "/rubrics/{content_type}",
     status_code=status.HTTP_200_OK
 )
-@limiter.limit("20/minute")
+@limiter.limit("120/minute")  # Higher limit - rubrics are static config data
 async def get_rubric(
     request: Request,
     content_type: str,
@@ -458,7 +458,7 @@ async def get_rubric(
     Returns focus areas, rating dimensions, and section prompts.
     If subcategory is provided, returns specialized rubric with additional rating dimensions.
 
-    **Rate Limit:** 20 requests per minute
+    **Rate Limit:** 120 requests per minute
     """
     from app.constants.review_rubrics import get_rubric as get_rubric_config
 
