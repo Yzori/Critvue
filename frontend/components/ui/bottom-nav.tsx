@@ -65,12 +65,14 @@ const BottomNav = React.forwardRef<HTMLElement, BottomNavProps>(
       <nav
         ref={ref}
         className={cn(
-          // Layout
-          "fixed bottom-0 left-0 right-0 z-50",
+          // Layout - Floating pill style
+          "fixed bottom-4 left-4 right-4 z-50",
           "lg:hidden", // Hide on desktop
-          // Styling
-          "bg-background/80 backdrop-blur-lg border-t border-border",
-          "shadow-[0_-4px_12px_rgba(0,0,0,0.08)]",
+          // Floating pill styling
+          "bg-background/90 backdrop-blur-xl",
+          "border border-border/50",
+          "rounded-2xl",
+          "shadow-[0_4px_24px_rgba(0,0,0,0.12),0_0_0_1px_rgba(255,255,255,0.05)]",
           // Safe area padding for notched devices
           "pb-safe",
           className
@@ -90,24 +92,38 @@ const BottomNav = React.forwardRef<HTMLElement, BottomNavProps>(
                 onClick={item.onClick}
                 className={cn(
                   // Layout - Ensure 44px minimum touch target
-                  "flex flex-col items-center justify-center gap-1",
-                  "min-w-[56px] min-h-[48px] px-3 py-1 rounded-xl",
-                  // Transitions
-                  "transition-all duration-200 ease-in-out",
+                  "relative flex flex-col items-center justify-center gap-1",
+                  "min-w-[56px] min-h-[48px] px-3 py-1.5 rounded-xl",
+                  // Transitions with spring easing
+                  "transition-all duration-300",
+                  "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
                   // States
                   isActive
-                    ? "text-accent-blue bg-accent-blue/10"
-                    : "text-foreground-muted hover:text-foreground hover:bg-accent-blue/5",
+                    ? "text-accent-blue"
+                    : "text-foreground-muted hover:text-foreground",
                   "active:scale-95"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
+                {/* Background pill for active state */}
+                {isActive && (
+                  <span
+                    className={cn(
+                      "absolute inset-1 -z-10",
+                      "bg-accent-blue/10 rounded-lg",
+                      "animate-in fade-in zoom-in-95 duration-200"
+                    )}
+                    aria-hidden="true"
+                  />
+                )}
+
                 <div className="relative">
                   <span
                     className={cn(
-                      "inline-flex transition-transform duration-200",
-                      isActive && "scale-110"
+                      "inline-flex transition-all duration-300",
+                      "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
+                      isActive && "scale-110 -translate-y-0.5"
                     )}
                   >
                     {displayIcon}
@@ -120,7 +136,7 @@ const BottomNav = React.forwardRef<HTMLElement, BottomNavProps>(
                         "min-w-[16px] h-4 px-1",
                         "flex items-center justify-center",
                         "text-[10px] font-bold text-white",
-                        "bg-red-500 rounded-full",
+                        "bg-gradient-to-r from-accent-blue to-accent-peach rounded-full",
                         "shadow-sm"
                       )}
                       aria-label={`${item.badge} notifications`}
@@ -133,16 +149,21 @@ const BottomNav = React.forwardRef<HTMLElement, BottomNavProps>(
                 <span
                   className={cn(
                     "text-[11px] font-medium leading-none",
-                    isActive && "font-semibold"
+                    "transition-all duration-200",
+                    isActive ? "font-semibold text-accent-blue" : "opacity-80"
                   )}
                 >
                   {item.label}
                 </span>
 
-                {/* Active indicator line */}
+                {/* Active indicator dot */}
                 {isActive && (
                   <span
-                    className="absolute -bottom-px left-1/2 -translate-x-1/2 w-8 h-0.5 bg-accent-blue rounded-full"
+                    className={cn(
+                      "absolute -bottom-0.5 left-1/2 -translate-x-1/2",
+                      "w-1 h-1 bg-accent-blue rounded-full",
+                      "animate-in fade-in zoom-in-50 duration-300"
+                    )}
                     aria-hidden="true"
                   />
                 )}

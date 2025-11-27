@@ -89,19 +89,22 @@ const FAB = React.forwardRef<HTMLAnchorElement, FABProps>(
 
     const fabClasses = cn(
       // Layout - 56x56px (exceeds 44px minimum)
-      "fixed bottom-24 right-4 z-40",
+      // Positioned above floating bottom nav (bottom-4 + nav height ~72px + gap)
+      "fixed bottom-[88px] right-4 z-40",
       "size-14",
       "lg:hidden", // Hide on desktop
       // Display
       "flex items-center justify-center",
       "rounded-full",
-      // Gradient background
+      // Gradient background with enhanced glow
       "bg-gradient-to-r from-accent-blue to-accent-peach",
       "text-white",
-      // Shadow
-      "shadow-lg hover:shadow-xl",
-      // Transitions
+      // Enhanced shadow with glow effect
+      "shadow-[0_4px_16px_rgba(59,130,246,0.3),0_8px_32px_rgba(249,115,22,0.2)]",
+      "hover:shadow-[0_6px_24px_rgba(59,130,246,0.4),0_12px_40px_rgba(249,115,22,0.3)]",
+      // Transitions with spring easing
       "transition-all duration-300",
+      "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
       // States
       "hover:scale-110 active:scale-95",
       "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-blue/50",
