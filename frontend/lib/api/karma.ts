@@ -16,6 +16,7 @@ export interface KarmaSummary {
   total_karma: number;
   total_xp: number;
   reputation_score: number;
+  user_tier: string;  // Actual tier from database (not calculated from karma)
   acceptance_rate: number | null;
   accepted_reviews_count: number;
   current_streak: number;

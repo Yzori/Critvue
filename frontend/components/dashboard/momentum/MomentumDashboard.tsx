@@ -274,6 +274,7 @@ export function MomentumDashboard({
               {karmaSummary ? (
                 <TierProgressRing
                   karma={karmaSummary.total_karma}
+                  userTier={karmaSummary.user_tier}
                   size="sm"
                 />
               ) : (

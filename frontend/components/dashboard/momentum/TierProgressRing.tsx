@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
+  UserTier,
   getTierByKarma,
   getTierInfo,
   getNextTier,
@@ -22,6 +23,8 @@ import {
 export interface TierProgressRingProps {
   /** Current karma points */
   karma: number;
+  /** Actual user tier from database (takes precedence over karma calculation) */
+  userTier?: UserTier | string;
   /** Size of the ring */
   size?: 'sm' | 'md' | 'lg';
   /** Optional className */
@@ -37,6 +40,7 @@ const sizeMap = {
 
 export const TierProgressRing: React.FC<TierProgressRingProps> = ({
   karma,
+  userTier,
   size = 'sm',
   className,
 }) => {
@@ -44,8 +48,12 @@ export const TierProgressRing: React.FC<TierProgressRingProps> = ({
   const radius = (dimensions.outer - dimensions.stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  // Calculate tier and progress
-  const currentTier = getTierByKarma(karma);
+  // Use actual tier from database if provided, otherwise calculate from karma
+  // This is important for users who were promoted via expert application
+  // (they may have low karma but high tier)
+  const currentTier = userTier
+    ? (userTier as UserTier)
+    : getTierByKarma(karma);
   const tierInfo = getTierInfo(currentTier);
   const nextTier = getNextTier(currentTier);
 

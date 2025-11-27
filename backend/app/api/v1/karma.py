@@ -24,6 +24,7 @@ class KarmaSummaryResponse(BaseModel):
     total_karma: int
     total_xp: int
     reputation_score: int
+    user_tier: str  # Actual tier from database (not calculated from karma)
     acceptance_rate: Optional[float]
     accepted_reviews_count: int
     current_streak: int
@@ -133,6 +134,8 @@ async def get_karma_summary(
     """Get user's karma summary."""
     karma_service = KarmaService(db)
     summary = await karma_service.get_karma_summary(current_user.id)
+    # Add actual user tier from database (not calculated from karma)
+    summary["user_tier"] = current_user.user_tier.value
     return summary
 
 

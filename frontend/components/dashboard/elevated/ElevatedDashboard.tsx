@@ -457,7 +457,11 @@ export function ElevatedDashboard({
             {/* Left: Greeting + Tier Ring */}
             <div className="flex items-center gap-4">
               {karmaSummary && (
-                <TierProgressRing karma={karmaSummary.total_karma} size="sm" />
+                <TierProgressRing
+                  karma={karmaSummary.total_karma}
+                  userTier={karmaSummary.user_tier}
+                  size="sm"
+                />
               )}
               <div>
                 <p className="text-xs text-muted-foreground/70">{getGreeting()}</p>
