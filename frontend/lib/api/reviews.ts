@@ -35,6 +35,9 @@ export interface CreateReviewRequest {
   specific_questions?: string[]; // List of specific questions (max 10)
   context?: string; // Additional context about the project (max 5000 chars)
   estimated_duration?: number; // Estimated review duration in minutes
+
+  // NDA/Confidentiality (expert reviews only)
+  requires_nda?: boolean; // Whether reviewers must sign NDA before viewing
 }
 
 // Response from creating a review
@@ -60,6 +63,11 @@ export interface CreateReviewResponse {
   specific_questions?: string[];
   context?: string;
   estimated_duration?: number;
+
+  // NDA fields
+  requires_nda?: boolean;
+  nda_version?: string;
+  nda_signed_by_current_user?: boolean;
 }
 
 /**
@@ -170,6 +178,9 @@ export interface UpdateReviewRequest {
   specific_questions?: string[];
   context?: string;
   estimated_duration?: number;
+
+  // NDA field
+  requires_nda?: boolean;
 }
 
 /**

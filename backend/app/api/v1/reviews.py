@@ -48,15 +48,9 @@ async def create_review_request(
         HTTPException: If creation fails
     """
     try:
-        # Check review limits for community/free reviews (not for expert reviews)
-        from app.models.review_request import ReviewType
-        if review_data.review_type == ReviewType.FREE:
-            can_create, error_message = await SubscriptionService.check_review_limit(current_user, db)
-            if not can_create:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=error_message
-                )
+        # NOTE: Quota check moved to update_review_request when status changes to PENDING
+        # This allows users to create drafts regardless of quota, and only enforces
+        # the limit when actually submitting. This also allows expert review creation.
 
         review = await review_crud.create_review_request(
             db=db,
@@ -339,6 +333,18 @@ async def update_review_request(
             update_data.status == ReviewStatus.PENDING and
             original_status != ReviewStatus.PENDING
         )
+
+        # Determine final review type (from update_data if provided, else current)
+        final_review_type = update_data.review_type if update_data.review_type else current_review.review_type
+
+        # Check quota BEFORE submitting a FREE review (DRAFT → PENDING)
+        if is_status_changing_to_pending and final_review_type == ReviewType.FREE:
+            can_create, error_message = await SubscriptionService.check_review_limit(current_user, db)
+            if not can_create:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=error_message
+                )
 
         # Update the review
         review = await review_crud.update_review_request(

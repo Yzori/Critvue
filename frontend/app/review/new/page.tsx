@@ -56,6 +56,9 @@ interface FormState {
   specific_questions: string[];
   context: string;
   estimated_duration: number | null;
+
+  // NDA protection (expert reviews only)
+  requiresNda: boolean;
 }
 
 // Validation errors interface
@@ -110,6 +113,9 @@ export default function NewReviewPage() {
     specific_questions: [],
     context: "",
     estimated_duration: null,
+
+    // NDA protection
+    requiresNda: false,
   });
 
   // Check subscription quota on page load
@@ -315,6 +321,8 @@ export default function NewReviewPage() {
           ? formState.context.trim()
           : undefined,
         estimated_duration: formState.reviewType === "expert" ? (estimatedDuration ?? undefined) : undefined,
+        // NDA protection (expert reviews only)
+        requires_nda: formState.reviewType === "expert" ? formState.requiresNda : undefined,
       });
 
       // Show success state
@@ -436,6 +444,13 @@ export default function NewReviewPage() {
                   feedbackPriority={formState.feedback_priority}
                   specificQuestions={formState.specific_questions}
                   context={formState.context}
+                  requiresNda={formState.requiresNda}
+                  freeQuotaExceeded={quotaExceeded}
+                  freeQuotaInfo={subscriptionStatus ? {
+                    used: subscriptionStatus.monthly_reviews_used,
+                    limit: subscriptionStatus.monthly_reviews_limit,
+                    resetAt: subscriptionStatus.reviews_reset_at
+                  } : undefined}
                   onSelect={(type) =>
                     setFormState((prev) => ({ ...prev, reviewType: type }))
                   }
@@ -453,6 +468,9 @@ export default function NewReviewPage() {
                   }
                   onContextChange={(context) =>
                     setFormState((prev) => ({ ...prev, context }))
+                  }
+                  onRequiresNdaChange={(requiresNda) =>
+                    setFormState((prev) => ({ ...prev, requiresNda }))
                   }
                 />
               );
@@ -482,6 +500,7 @@ export default function NewReviewPage() {
                   feedbackAreas={formState.feedbackGoals} // Use feedback goals
                   customFeedbackArea={formState.customFeedbackArea}
                   budget={formState.reviewType === "expert" ? formState.budget : undefined}
+                  requiresNda={formState.reviewType === "expert" ? formState.requiresNda : undefined}
                 />
               );
 
@@ -536,79 +555,8 @@ export default function NewReviewPage() {
           </div>
         )}
 
-        {/* Quota exceeded screen */}
-        {!isCheckingQuota && quotaExceeded && (
-          <div className="max-w-2xl mx-auto space-y-6 py-12">
-            {/* Warning Icon */}
-            <div className="mx-auto size-16 rounded-full bg-amber-500/10 flex items-center justify-center">
-              <svg
-                className="size-8 text-amber-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-
-            {/* Message */}
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">
-                You've reached your monthly limit
-              </h2>
-              <p className="text-muted-foreground">
-                You've used {subscriptionStatus?.monthly_reviews_used} of {subscriptionStatus?.monthly_reviews_limit} free community reviews this month.
-              </p>
-            </div>
-
-            {/* Upgrade CTA */}
-            <div className="bg-gradient-to-br from-accent-blue/5 to-accent-peach/5 rounded-2xl border border-border p-6 space-y-4">
-              <h3 className="font-semibold text-foreground">Upgrade to Pro for unlimited reviews</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <Check className="size-5 text-accent-blue flex-shrink-0 mt-0.5" />
-                  <span>Unlimited community reviews every month</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="size-5 text-accent-blue flex-shrink-0 mt-0.5" />
-                  <span>15% discount on expert reviews</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="size-5 text-accent-blue flex-shrink-0 mt-0.5" />
-                  <span>Priority queue placement</span>
-                </li>
-              </ul>
-              <Button
-                size="lg"
-                className="w-full"
-                onClick={() => router.push("/pricing")}
-              >
-                Upgrade to Pro
-              </Button>
-            </div>
-
-            {/* Alternative options */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Your free reviews reset on {subscriptionStatus?.reviews_reset_at ? new Date(subscriptionStatus.reviews_reset_at).toLocaleDateString() : "the 1st of next month"}
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => router.push("/dashboard")}
-              >
-                Back to Dashboard
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Normal form content */}
-        {!isCheckingQuota && !quotaExceeded && (
+        {!isCheckingQuota && (
           <>
             {/* Enhanced Progress Indicator */}
             {!submitSuccess && (

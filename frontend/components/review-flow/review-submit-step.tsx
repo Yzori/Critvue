@@ -5,7 +5,7 @@
  */
 
 import { ContentType, ReviewType } from "@/lib/api/reviews";
-import { Palette, Code, Video, Mic, FileText, Image, Sparkles, Award, CheckCircle, DollarSign, MessageSquare } from "lucide-react";
+import { Palette, Code, Video, Mic, FileText, Image, Sparkles, Award, CheckCircle, DollarSign, MessageSquare, Shield } from "lucide-react";
 
 interface ReviewSubmitStepProps {
   contentType: ContentType;
@@ -15,6 +15,7 @@ interface ReviewSubmitStepProps {
   feedbackAreas: string[];
   customFeedbackArea?: string;
   budget?: number;
+  requiresNda?: boolean;
 }
 
 // Helper to get content type display info
@@ -95,6 +96,7 @@ export function ReviewSubmitStep({
   feedbackAreas,
   customFeedbackArea,
   budget,
+  requiresNda,
 }: ReviewSubmitStepProps) {
   const contentInfo = getContentTypeInfo(contentType);
   const reviewInfo = getReviewTypeInfo(reviewType);
@@ -232,6 +234,25 @@ export function ReviewSubmitStep({
                 </p>
                 <p className="text-sm font-semibold text-foreground">
                   {budget < 50 ? "Junior" : budget < 100 ? "Mid-Level" : "Senior"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NDA Protection Indicator */}
+        {requiresNda && (
+          <div className="rounded-2xl border border-purple-200 dark:border-purple-900 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20 p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+            <div className="flex items-center gap-4">
+              <div className="size-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                <Shield className="size-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-purple-900 dark:text-purple-100">
+                  NDA Protection Enabled
+                </p>
+                <p className="text-sm text-purple-700 dark:text-purple-300">
+                  Reviewers must sign a Non-Disclosure Agreement before viewing your work
                 </p>
               </div>
             </div>

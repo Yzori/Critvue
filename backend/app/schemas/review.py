@@ -94,6 +94,12 @@ class ReviewRequestBase(BaseModel):
         description="Estimated review duration in minutes"
     )
 
+    # NDA/Confidentiality (expert reviews only)
+    requires_nda: bool = Field(
+        default=False,
+        description="Whether reviewers must sign an NDA before viewing this request (expert reviews only)"
+    )
+
     @field_validator('title')
     @classmethod
     def validate_title(cls, v: str) -> str:
@@ -202,6 +208,9 @@ class ReviewRequestBase(BaseModel):
                 raise ValueError('context is only for expert reviews')
             if self.estimated_duration is not None:
                 raise ValueError('estimated_duration is only for expert reviews')
+            # NDA is only for expert reviews
+            if self.requires_nda:
+                raise ValueError('NDA requirement is only available for expert (paid) reviews')
 
         return self
 
@@ -234,6 +243,9 @@ class ReviewRequestUpdate(BaseModel):
     specific_questions: Optional[List[str]] = Field(None, max_length=10)
     context: Optional[str] = Field(None, max_length=5000)
     estimated_duration: Optional[int] = Field(None, ge=1, le=180)
+
+    # NDA field
+    requires_nda: Optional[bool] = None
 
     @field_validator('title')
     @classmethod
@@ -269,6 +281,13 @@ class ReviewRequestResponse(ReviewRequestBase):
     deleted_at: Optional[datetime] = None
     files: List[ReviewFileResponse] = []
     slots: List[ReviewSlotResponse] = []
+
+    # NDA fields
+    nda_version: Optional[str] = None
+    nda_signed_by_current_user: bool = Field(
+        default=False,
+        description="Whether the current user has signed the NDA for this request"
+    )
 
     # Requester information (loaded from user relationship)
     requester_username: Optional[str] = None

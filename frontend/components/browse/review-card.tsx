@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BrowseReviewItem } from "@/lib/api/browse";
 import { getFileUrl } from "@/lib/api/client";
-import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle, Clock, Zap, Target } from "lucide-react";
+import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle, Clock, Zap, Target, Shield } from "lucide-react";
 
 export interface ReviewCardProps extends React.HTMLAttributes<HTMLDivElement> {
   review: BrowseReviewItem;
@@ -183,6 +183,21 @@ export function ReviewCard({
         <span className="opacity-60">•</span>
         <Clock className="size-3 opacity-60" />
         <span>{duration} min</span>
+      </Badge>
+    );
+  };
+
+  // Get NDA required badge
+  const getNdaBadge = () => {
+    if (!review.requires_nda) return null;
+
+    return (
+      <Badge
+        size="sm"
+        className="flex items-center gap-1 bg-purple-50 border-purple-200/60 text-purple-700 font-semibold border"
+      >
+        <Shield className="size-3" />
+        <span>NDA</span>
       </Badge>
     );
   };
@@ -369,6 +384,7 @@ export function ReviewCard({
           {getContentTypeBadge()}
           {getReviewTypeBadge()}
           {getTierBadge()}
+          {getNdaBadge()}
           {getClaimStatusBadge()}
           {getUrgencyBadge()}
           {/* Featured badge only shown if no image (fallback) */}

@@ -45,6 +45,10 @@ export interface BrowseReviewItem {
   specific_questions?: string[]; // Specific questions the requester wants answered
   context?: string; // Additional context about the project
   estimated_duration?: number; // Estimated review duration in minutes
+
+  // NDA fields
+  requires_nda?: boolean; // Whether reviewers must sign NDA before viewing
+  nda_version?: string; // Version of the NDA
 }
 
 // Browse response with pagination

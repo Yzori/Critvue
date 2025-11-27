@@ -135,6 +135,12 @@ class BrowseReviewItem(BaseModel):
         description="Estimated review duration in minutes"
     )
 
+    # NDA/Confidentiality
+    requires_nda: bool = Field(
+        default=False,
+        description="Whether reviewers must sign an NDA before viewing this request"
+    )
+
     class Config:
         from_attributes = True
 

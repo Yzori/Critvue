@@ -4,6 +4,7 @@ import enum
 from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Enum,
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.review_file import ReviewFile
     from app.models.review_slot import ReviewSlot
+    from app.models.nda_signature import NDASignature
 
 
 class ContentType(str, enum.Enum):
@@ -144,6 +146,20 @@ class ReviewRequest(Base):
         doc="Estimated review duration in minutes based on tier"
     )
 
+    # NDA/Confidentiality support (paid reviews only)
+    requires_nda = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        index=True,
+        doc="Whether reviewers must sign an NDA before viewing this request"
+    )
+    nda_version = Column(
+        String(50),
+        nullable=True,
+        doc="Version of the NDA template used for this request"
+    )
+
     # Multi-review support
     reviews_requested = Column(
         Integer,
@@ -210,6 +226,12 @@ class ReviewRequest(Base):
         back_populates="review_request",
         cascade="all, delete-orphan",
         lazy="selectin"  # Eager load slots for status calculations
+    )
+    nda_signatures = relationship(
+        "NDASignature",
+        back_populates="review_request",
+        cascade="all, delete-orphan",
+        lazy="selectin"
     )
 
     def __repr__(self) -> str:

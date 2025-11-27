@@ -23,6 +23,8 @@ from app.models.reviewer_dna import ReviewerDNA
 from app.models.committee_member import CommitteeMember, CommitteeRole
 from app.models.rejection_reason import RejectionReason
 from app.models.application_review import ApplicationReview, ReviewStatus as AppReviewStatus, Vote
+# NDA system
+from app.models.nda_signature import NDASignature, NDARole, CURRENT_NDA_VERSION
 
 __all__ = [
     "User",
@@ -70,4 +72,8 @@ __all__ = [
     "ApplicationReview",
     "AppReviewStatus",
     "Vote",
+    # NDA system
+    "NDASignature",
+    "NDARole",
+    "CURRENT_NDA_VERSION",
 ]

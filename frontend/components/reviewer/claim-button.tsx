@@ -26,15 +26,19 @@ import {
   AlertCircle,
   Clock,
   DollarSign,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { claimReviewByRequestId, formatPayment } from "@/lib/api/reviewer";
+import { getNDAStatus } from "@/lib/api/nda";
+import { NDAModal } from "@/components/nda/nda-modal";
 
 export interface ClaimButtonProps {
   reviewRequestId: number;
   paymentAmount: number | null;
   reviewType: string;
   title: string;
+  requiresNda?: boolean;
   onClaimSuccess?: () => void;
   className?: string;
 }
@@ -44,17 +48,52 @@ export function ClaimButton({
   paymentAmount,
   reviewType,
   title,
+  requiresNda = false,
   onClaimSuccess,
   className,
 }: ClaimButtonProps) {
   const router = useRouter();
   const [claiming, setClaiming] = React.useState(false);
   const [showModal, setShowModal] = React.useState(false);
+  const [showNDAModal, setShowNDAModal] = React.useState(false);
+  const [hasSignedNDA, setHasSignedNDA] = React.useState(false);
+  const [checkingNDA, setCheckingNDA] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  const handleClaimClick = () => {
-    setShowModal(true);
+  const handleClaimClick = async () => {
     setError(null);
+
+    // If NDA required and not yet signed, check status and show NDA modal
+    if (requiresNda && !hasSignedNDA) {
+      setCheckingNDA(true);
+      try {
+        const status = await getNDAStatus(reviewRequestId);
+        if (status.current_user_signed) {
+          // Already signed, proceed to claim modal
+          setHasSignedNDA(true);
+          setShowModal(true);
+        } else {
+          // Need to sign NDA first
+          setShowNDAModal(true);
+        }
+      } catch (err) {
+        // If we can't check, show NDA modal to be safe
+        setShowNDAModal(true);
+      } finally {
+        setCheckingNDA(false);
+      }
+      return;
+    }
+
+    // No NDA required or already signed, show claim modal
+    setShowModal(true);
+  };
+
+  const handleNDASigned = () => {
+    setHasSignedNDA(true);
+    setShowNDAModal(false);
+    // After signing NDA, show the claim confirmation modal
+    setShowModal(true);
   };
 
   const handleConfirmClaim = async () => {
@@ -98,9 +137,11 @@ export function ClaimButton({
       {/* Claim Button */}
       <Button
         onClick={handleClaimClick}
-        disabled={claiming}
+        disabled={claiming || checkingNDA}
         className={cn(
-          "bg-accent-blue hover:bg-accent-blue/90",
+          requiresNda && !hasSignedNDA
+            ? "bg-purple-600 hover:bg-purple-700"
+            : "bg-accent-blue hover:bg-accent-blue/90",
           "min-h-[44px] font-semibold",
           className
         )}
@@ -110,6 +151,16 @@ export function ClaimButton({
             <Loader2 className="size-4 animate-spin" />
             Claiming...
           </>
+        ) : checkingNDA ? (
+          <>
+            <Loader2 className="size-4 animate-spin" />
+            Checking...
+          </>
+        ) : requiresNda && !hasSignedNDA ? (
+          <>
+            <Shield className="size-4" />
+            Sign NDA & Claim
+          </>
         ) : (
           <>
             <CheckCircle2 className="size-4" />
@@ -117,6 +168,14 @@ export function ClaimButton({
           </>
         )}
       </Button>
+
+      {/* NDA Modal */}
+      <NDAModal
+        reviewId={reviewRequestId}
+        isOpen={showNDAModal}
+        onClose={() => setShowNDAModal(false)}
+        onSigned={handleNDASigned}
+      />
 
       {/* Confirmation Modal */}
       {showModal && (

@@ -139,6 +139,9 @@ class ReviewSlot(Base):
     # Quality metrics
     requester_helpful_rating = Column(Integer, nullable=True)  # 1-5: How helpful was this?
 
+    # NDA tracking (for requests that require NDA)
+    nda_signed_at = Column(DateTime, nullable=True)  # When reviewer signed NDA for this slot
+
     # Audit trail
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

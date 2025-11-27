@@ -412,7 +412,9 @@ class BrowseCRUD:
                     feedback_priority=review.feedback_priority,
                     specific_questions=review.specific_questions,
                     context=review.context,
-                    estimated_duration=review.estimated_duration
+                    estimated_duration=review.estimated_duration,
+                    # NDA field
+                    requires_nda=review.requires_nda
                 )
                 browse_items.append(browse_item)
 
