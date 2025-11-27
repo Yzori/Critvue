@@ -15,7 +15,7 @@ export function MainWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <main className="pt-16 md:pt-20 pb-24 lg:pb-0">
+    <main className="pt-16 md:pt-20 pb-24 lg:pb-0 relative z-0">
       {children}
     </main>
   );
