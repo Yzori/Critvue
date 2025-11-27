@@ -26,15 +26,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Search,
   CheckCircle2,
-  Layers,
-  Zap,
   List,
   Grid,
   AlignJustify,
@@ -42,9 +39,6 @@ import {
   MessageSquare,
   Clock,
   Eye,
-  Edit,
-  ChevronUp,
-  ChevronDown,
   Users,
 } from "lucide-react";
 import type { DashboardRole, DashboardTab } from "../desktop-dashboard-container";
@@ -53,10 +47,6 @@ import {
   getMyRequests,
   getActiveReviews,
   getSubmittedReviews,
-  type PendingReviewItem,
-  type MyRequestItem,
-  type ActiveReviewItem,
-  type SubmittedReviewItem,
 } from "@/lib/api/dashboard";
 import useSWR from "swr";
 

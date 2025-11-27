@@ -24,7 +24,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, useScroll } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,

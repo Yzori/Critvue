@@ -30,7 +30,6 @@ import {
   Video,
   Mic,
   Image as ImageIcon,
-  AlertCircle,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";

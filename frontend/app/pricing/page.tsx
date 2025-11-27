@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Star, Zap, Shield, Crown } from "lucide-react";
+import { CheckCircle, ArrowRight, Star, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PricingPage() {
@@ -127,7 +127,7 @@ export default function PricingPage() {
                 key={tier.name}
                 tier={tier}
                 index={index}
-                prefersReducedMotion={prefersReducedMotion}
+                prefersReducedMotion={prefersReducedMotion ?? false}
               />
             ))}
           </div>

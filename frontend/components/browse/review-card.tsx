@@ -5,7 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BrowseReviewItem, ExpertReviewTier } from "@/lib/api/browse";
+import { BrowseReviewItem } from "@/lib/api/browse";
 import { ArrowRight, Calendar, DollarSign, Star, Heart, Users, AlertCircle, Clock, Zap, Target } from "lucide-react";
 
 export interface ReviewCardProps extends React.HTMLAttributes<HTMLDivElement> {

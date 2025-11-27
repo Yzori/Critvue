@@ -29,7 +29,6 @@ import { Button } from "@/components/ui/button";
 import {
   ReviewSlotCard,
   ReviewSlotStatus,
-  ReviewSlotCardProps,
 } from "./review-slot-card";
 
 export interface ReviewSlot {

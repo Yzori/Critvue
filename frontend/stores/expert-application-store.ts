@@ -7,17 +7,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type {
   ApplicationState,
-  PersonalInfo,
-  ProfessionalBackground,
-  Skill,
-  PortfolioItem,
-  Education,
-  Certification,
-  Employment,
-  Reference,
-  SampleReview,
-  Credentials,
-  CredentialsMode
+  Credentials
 } from '@/lib/expert-application/types'
 
 const initialCredentials: Credentials = {

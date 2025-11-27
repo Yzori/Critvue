@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { AutoAcceptTimer } from "@/components/dashboard/auto-accept-timer";
+import { AutoAcceptTimer } from "@/components/dashboard";
 import { AcceptReviewModal, AcceptReviewData } from "@/components/dashboard/accept-review-modal";
 import { RejectReviewModal, RejectReviewData } from "@/components/dashboard/reject-review-modal";
 import {

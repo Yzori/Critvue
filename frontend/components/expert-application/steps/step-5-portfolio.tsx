@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, Camera, Link as LinkIcon, X, FileText, Image as ImageIcon } from 'lucide-react'
+import { Upload, Camera, Link as LinkIcon, X, FileText } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

@@ -30,7 +30,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Palette, Star, ArrowRight, X } from "lucide-react";
@@ -48,7 +48,6 @@ function DashboardContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const prefersReducedMotion = useReducedMotion();
   const showMobileUI = useShowMobileUI();
 
   // Initialize with creator to match SSR, then update from localStorage after mount

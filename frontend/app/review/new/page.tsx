@@ -314,7 +314,7 @@ export default function NewReviewPage() {
         context: formState.reviewType === "expert" && formState.context.trim()
           ? formState.context.trim()
           : undefined,
-        estimated_duration: formState.reviewType === "expert" ? estimatedDuration : undefined,
+        estimated_duration: formState.reviewType === "expert" ? (estimatedDuration ?? undefined) : undefined,
       });
 
       // Show success state

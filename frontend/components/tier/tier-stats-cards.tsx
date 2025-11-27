@@ -10,7 +10,6 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { TierBadge } from './tier-badge';
 import {
-  UserTier,
   type UserTierStatus,
   calculateTierProgress,
   getTierInfo,

@@ -11,7 +11,6 @@
 
 import * as React from "react";
 import { CheckCircle2, Circle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PhaseNumber, PHASE_CONFIGS } from "@/lib/types/smart-review";
 

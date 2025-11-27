@@ -18,7 +18,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Loader2, X, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { batchAcceptReviews } from "@/lib/api/dashboard";
 import { toast } from "sonner";

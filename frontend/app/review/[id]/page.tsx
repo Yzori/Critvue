@@ -11,7 +11,6 @@ import { SlotsList } from "@/components/review-detail/slots-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Calendar,
   DollarSign,
   User,
   FileText,

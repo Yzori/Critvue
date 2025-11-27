@@ -25,24 +25,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   SwipeableReviewCard,
-  type SwipeDirection,
 } from "./swipeable-review-card";
 import { PullToRefresh } from "./pull-to-refresh";
-import { UrgencyCountdown } from "./urgency-countdown";
 import {
   getActionsNeeded,
   getMyRequests,
   type PendingReviewItem,
   type MyRequestItem,
-  getUrgencyVariant,
 } from "@/lib/api/dashboard";
 import {
   acceptReview,
   rejectReview,
 } from "@/lib/api/review-slots";
-import { useReviews } from "@/hooks/useReviews";
 import {
-  AlertCircle,
   CheckCircle2,
   Clock,
   Inbox,

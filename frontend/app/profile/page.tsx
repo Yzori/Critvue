@@ -100,7 +100,7 @@ function transformDNAResponse(response: ReviewerDNAResponse): ReviewerDNAData {
   // Map dimensions from API response
   for (const dim of response.dimensions) {
     if (dim.key in dnaData) {
-      (dnaData as Record<string, number>)[dim.key] = dim.value;
+      (dnaData as unknown as Record<string, number>)[dim.key] = dim.value;
     }
   }
 

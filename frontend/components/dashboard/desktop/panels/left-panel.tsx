@@ -46,7 +46,6 @@ import {
   Star,
   MessageSquare,
   Crown,
-  Users,
   TrendingDown,
 } from "lucide-react";
 import type { DashboardRole, DashboardTab } from "../desktop-dashboard-container";

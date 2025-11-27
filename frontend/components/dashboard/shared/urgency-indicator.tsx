@@ -10,7 +10,6 @@
  */
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Clock, AlertTriangle, Zap, CheckCircle2 } from "lucide-react";
 

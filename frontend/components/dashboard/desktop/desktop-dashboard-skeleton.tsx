@@ -13,7 +13,6 @@
  * @module DesktopDashboardSkeleton
  */
 
-import { cn } from "@/lib/utils";
 
 export function DesktopDashboardSkeleton() {
   return (

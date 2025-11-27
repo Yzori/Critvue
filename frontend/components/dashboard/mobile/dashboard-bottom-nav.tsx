@@ -24,7 +24,6 @@ import {
   BarChart3,
   User,
   Search,
-  Briefcase,
   FileText,
 } from "lucide-react";
 

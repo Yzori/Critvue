@@ -10,7 +10,6 @@ import * as React from "react";
 import {
   Star,
   Info,
-  HelpCircle,
   Target,
   CheckCircle2,
   ChevronDown,

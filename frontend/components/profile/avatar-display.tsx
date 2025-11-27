@@ -8,7 +8,7 @@
 "use client";
 
 import { useState } from "react";
-import { Camera, Trash2, User, Loader2, Check } from "lucide-react";
+import { Camera, Trash2, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AvatarUpload } from "./avatar-upload";

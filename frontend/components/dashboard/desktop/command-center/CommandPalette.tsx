@@ -27,7 +27,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   CheckCircle2,
-  XCircle,
   Plus,
   Briefcase,
   Clock,

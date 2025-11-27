@@ -27,7 +27,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
   XCircle,
-  Eye,
   Clock,
   Star,
   User,

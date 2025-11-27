@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
   Clock,
-  User,
   Mail,
   Star,
   AlertCircle,

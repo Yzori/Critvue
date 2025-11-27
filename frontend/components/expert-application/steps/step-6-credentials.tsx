@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { GraduationCap, Award, Briefcase, Plus, X, Edit2, Check } from 'lucide-react'
+import { GraduationCap, Award, Briefcase, Plus, X, Check } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

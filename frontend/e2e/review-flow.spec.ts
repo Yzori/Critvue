@@ -1,4 +1,4 @@
-import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import path from 'path';
 
 /**
@@ -32,7 +32,7 @@ const TEST_FEEDBACK = {
 };
 
 test.describe('Review Flow', () => {
-  let reviewRequestId: string | null = null;
+  const reviewRequestId: string | null = null;
   let slotId: string | null = null;
 
   test.describe.serial('Complete Review Lifecycle', () => {

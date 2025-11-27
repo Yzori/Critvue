@@ -25,9 +25,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
@@ -42,7 +40,6 @@ import {
   ThumbsUp,
   XCircle,
   Send,
-  Bell,
 } from "lucide-react";
 import type { DashboardRole } from "../desktop-dashboard-container";
 import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard";

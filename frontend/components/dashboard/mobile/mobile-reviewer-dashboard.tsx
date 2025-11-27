@@ -32,22 +32,18 @@ import {
   type SubmittedReviewItem,
   type ReviewerStats,
 } from "@/lib/api/dashboard";
-import {
-  abandonReviewSlot,
-} from "@/lib/api/review-slots";
+
+
 import {
   Clock,
   CheckCircle2,
   FileText,
-  Inbox,
   TrendingUp,
   DollarSign,
   Search,
   Star,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/api/client";
 
 type ReviewerTab = "active" | "submitted" | "completed";
 

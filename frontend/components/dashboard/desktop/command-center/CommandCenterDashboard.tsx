@@ -31,22 +31,16 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Palette,
   Briefcase,
   Command as CommandIcon,
-  User,
-  Bell,
-  Settings,
-  LogOut,
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Command Center Components
@@ -63,7 +57,6 @@ import {
   getActiveReviews,
   getSubmittedReviews,
   getCompletedReviews,
-  getDashboardStats,
   type PendingReviewItem,
   type MyRequestItem,
   type ActiveReviewItem,
