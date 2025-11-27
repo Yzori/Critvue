@@ -236,22 +236,6 @@ async def sign_nda(
             detail="You have already signed the NDA for this review request"
         )
 
-    # For reviewers, ensure the creator has already signed
-    if not is_owner:
-        creator_sig_result = await db.execute(
-            select(NDASignature).where(
-                NDASignature.review_request_id == review_id,
-                NDASignature.role == NDARole.CREATOR.value
-            )
-        )
-        creator_sig = creator_sig_result.scalar_one_or_none()
-
-        if not creator_sig:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The creator must sign the NDA before reviewers can sign"
-            )
-
     # Get client IP and user agent for audit trail
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent", "")[:500]  # Limit length

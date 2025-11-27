@@ -18,6 +18,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,11 @@ export function ClaimButton({
   const [hasSignedNDA, setHasSignedNDA] = React.useState(false);
   const [checkingNDA, setCheckingNDA] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleClaimClick = async () => {
     setError(null);
@@ -178,23 +184,25 @@ export function ClaimButton({
       />
 
       {/* Confirmation Modal */}
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !claiming) {
-              setShowModal(false);
-            }
-          }}
-        >
+      {showModal && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999]">
+          {/* Backdrop */}
           <div
-            className={cn(
-              "w-full max-w-lg rounded-2xl border border-border bg-card p-6 sm:p-8",
-              "shadow-2xl",
-              "animate-in fade-in slide-in-from-bottom-4 duration-300"
-            )}
-            onClick={(e) => e.stopPropagation()}
-          >
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => !claiming && setShowModal(false)}
+          />
+
+          {/* Centering wrapper */}
+          <div className="absolute inset-0 overflow-y-auto">
+            <div className="min-h-full flex items-center justify-center p-4">
+              {/* Modal */}
+              <div
+                className={cn(
+                  "relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white dark:bg-gray-900 p-6 sm:p-8",
+                  "shadow-2xl"
+                )}
+                onClick={(e) => e.stopPropagation()}
+              >
             {/* Header */}
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -208,35 +216,35 @@ export function ClaimButton({
             {/* Review Details */}
             <div className="space-y-4 mb-6">
               {/* Title */}
-              <div className="p-4 rounded-xl bg-accent-blue/5 border border-accent-blue/20">
-                <p className="font-semibold text-foreground">{title}</p>
+              <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+                <p className="font-semibold text-gray-900 dark:text-white">{title}</p>
               </div>
 
               {/* Details Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-1">
                     <Clock className="size-4" />
                     <span className="text-xs font-medium">Deadline</span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
                     72 hours
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-1">
                     <DollarSign className="size-4" />
                     <span className="text-xs font-medium">Payment</span>
                   </div>
-                  <p className="text-sm font-semibold text-foreground">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
                     {formatPayment(paymentAmount)}
                   </p>
                 </div>
               </div>
 
               {/* Commitment Notice */}
-              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200/50">
+              <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="size-5 text-amber-700 flex-shrink-0 mt-0.5" />
                   <div>
@@ -291,8 +299,11 @@ export function ClaimButton({
                 )}
               </Button>
             </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
