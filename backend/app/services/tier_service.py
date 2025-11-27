@@ -57,7 +57,7 @@ class TierService:
             "avg_helpful_rating_min": 4.0,
             "can_accept_paid": True,
             "weekly_paid_limit": 3,
-            "paid_tier_min": 5,    # Can accept $5-$25 reviews
+            "paid_tier_min": None,  # Can accept any budget up to $25
             "paid_tier_max": 25,
         },
         UserTier.EXPERT: {
@@ -67,7 +67,7 @@ class TierService:
             "avg_helpful_rating_min": 4.3,
             "can_accept_paid": True,
             "weekly_paid_limit": 10,
-            "paid_tier_min": 5,    # Can accept $5-$100 reviews
+            "paid_tier_min": None,  # Can accept any budget up to $100
             "paid_tier_max": 100,
         },
         UserTier.MASTER: {
@@ -77,8 +77,8 @@ class TierService:
             "avg_helpful_rating_min": 4.5,
             "can_accept_paid": True,
             "weekly_paid_limit": None,  # Unlimited
-            "paid_tier_min": 5,    # Can accept all paid reviews
-            "paid_tier_max": None, # No upper limit
+            "paid_tier_min": None,  # Can accept all paid reviews
+            "paid_tier_max": None,  # No upper limit
         },
     }
 
