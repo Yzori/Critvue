@@ -303,34 +303,28 @@ export default function BrowsePage() {
                     "shadow-sm"
                   )}
                 >
-                  {/* Marketplace Showcase Layout */}
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                    {/* LEFT: Hero Featured Card (60% width = 3/5 columns) */}
+                  {/* Marketplace Showcase Layout - Stacked Banner Style */}
+                  <div className="flex flex-col gap-4">
+                    {/* TOP: Hero Featured Banner (full width) */}
                     {splitReviews.featuredPaid[0] && (
-                      <div className="lg:col-span-3">
-                        <PremiumHeroCard review={splitReviews.featuredPaid[0]} />
-                      </div>
+                      <PremiumHeroCard review={splitReviews.featuredPaid[0]} />
                     )}
 
-                    {/* RIGHT: Supporting Grid (40% width = 2/5 columns) */}
+                    {/* BOTTOM: Supporting Cards Row */}
                     {splitReviews.featuredPaid.length > 1 && (
-                      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {splitReviews.featuredPaid.slice(1, 5).map((review, index) => (
-                          <div
+                          <ReviewCard
                             key={review.id}
-                            className="h-full min-h-[220px]"
-                          >
-                            <ReviewCard
-                              review={review}
-                              size="medium"
-                              importance={70 - (index * 5)}
-                              className="animate-in fade-in slide-in-from-right-4 duration-500 h-full opacity-95"
-                              style={{
-                                animationDelay: `${(index + 1) * 100}ms`,
-                                animationFillMode: "backwards",
-                              }}
-                            />
-                          </div>
+                            review={review}
+                            size="small"
+                            importance={70 - (index * 5)}
+                            className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                            style={{
+                              animationDelay: `${(index + 1) * 100}ms`,
+                              animationFillMode: "backwards",
+                            }}
+                          />
                         ))}
                       </div>
                     )}

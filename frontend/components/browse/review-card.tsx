@@ -255,12 +255,12 @@ export function ReviewCard({
         // Border radius: consistent rounded corners
         "rounded-2xl",
 
-        // Max height constraints to prevent oversized cards
-        size === "small" && "max-h-[280px]",
-        size === "medium" && "max-h-[320px]",
-        size === "wide" && "max-h-[320px]",
-        size === "large" && "max-h-[360px]",
-        size === "tall" && "max-h-[400px]",
+        // Max height constraints to prevent oversized cards (increased for button visibility)
+        size === "small" && "max-h-[320px]",
+        size === "medium" && "max-h-[380px]",
+        size === "wide" && "max-h-[380px]",
+        size === "large" && "max-h-[420px]",
+        size === "tall" && "max-h-[460px]",
 
         // IMPROVED: Professional glassmorphism following 2025 trends
         // Premium featured cards: Maximum glass effect
@@ -349,13 +349,13 @@ export function ReviewCard({
         {review.preview_image && size !== "small" && !review.requires_nda && (
           <div
             className={cn(
-              "relative w-full overflow-hidden mb-2",
+              "relative w-full overflow-hidden mb-2 flex-shrink-0",
               // Premium rounded corners for professional look
               size === "large" ? "rounded-2xl" : "rounded-xl",
               // Subtle gradient overlay for depth
               "before:absolute before:inset-0 before:bg-gradient-to-t before:from-black/10 before:to-transparent before:z-10 before:pointer-events-none",
-              // IMPROVED: More compact aspect ratios to reduce height
-              size === "large" ? "aspect-video" : "aspect-[21/9]",
+              // Fixed max heights to ensure text and button have space
+              size === "large" ? "max-h-[120px]" : "max-h-[80px]",
               // Premium shadow for featured images
               isPremiumFeatured && "shadow-lg"
             )}
@@ -380,7 +380,7 @@ export function ReviewCard({
         )}
 
         {/* Compact badge row with reduced spacing */}
-        <div className="flex flex-wrap gap-1.5 items-center pointer-events-none">
+        <div className="flex flex-wrap gap-1.5 items-center pointer-events-none flex-shrink-0">
           {getContentTypeBadge()}
           {getReviewTypeBadge()}
           {getTierBadge()}
@@ -400,7 +400,9 @@ export function ReviewCard({
           className={cn(
             "transition-colors duration-200",
             "group-hover:text-accent-blue",
-            "font-semibold",
+            "font-semibold flex-shrink-0",
+            // Ensure title is always at least 1 line visible
+            "min-h-[1.5em]",
             // Tight line-clamping for compact cards
             size === "small" && "text-sm line-clamp-2 leading-tight",
             size === "medium" && "text-base line-clamp-2 leading-tight",
@@ -417,14 +419,14 @@ export function ReviewCard({
         {/* Description - adaptive based on size, confidential for NDA requests */}
         {size !== "small" && (
           review.requires_nda ? (
-            <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800">
+            <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800 flex-shrink">
               <Shield className="size-4 flex-shrink-0" />
               <span className="italic">Sign NDA to view project details</span>
             </div>
           ) : (
             <p
               className={cn(
-                "text-gray-600 text-sm leading-snug",
+                "text-gray-600 text-sm leading-snug flex-shrink min-h-0 overflow-hidden",
                 // Tight line-clamping for compact vertical rhythm
                 "line-clamp-2"
               )}
@@ -445,8 +447,8 @@ export function ReviewCard({
           </div>
         )}
 
-        {/* Metadata and actions grouped at bottom with mt-auto */}
-        <div className="mt-auto flex flex-col gap-3">
+        {/* Metadata and actions grouped at bottom with mt-auto - protected from being cut off */}
+        <div className="mt-auto flex flex-col gap-3 flex-shrink-0">
           {/* Claim Progress Bar - Only for multi-review requests */}
           {(review.reviews_requested ?? 1) > 1 && (
             <div className="space-y-1.5">
