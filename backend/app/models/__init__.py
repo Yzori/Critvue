@@ -1,7 +1,7 @@
 """Database models for Critvue"""
 from app.models.user import User, UserRole, UserTier
 from app.models.review_file import ReviewFile
-from app.models.review_slot import ReviewSlot, ReviewSlotStatus, AcceptanceType, RejectionReason, PaymentStatus, DisputeResolution
+from app.models.review_slot import ReviewSlot, ReviewSlotStatus, AcceptanceType, RejectionReason as SlotRejectionReason, PaymentStatus, DisputeResolution
 from app.models.review_request import (
     ReviewRequest,
     ContentType,
@@ -19,6 +19,10 @@ from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
 from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, LeaderboardCategory
 from app.models.requester_rating import RequesterRating, RequesterStats
 from app.models.reviewer_dna import ReviewerDNA
+# Committee system models
+from app.models.committee_member import CommitteeMember, CommitteeRole
+from app.models.rejection_reason import RejectionReason
+from app.models.application_review import ApplicationReview, ReviewStatus as AppReviewStatus, Vote
 
 __all__ = [
     "User",
@@ -34,7 +38,7 @@ __all__ = [
     "FeedbackPriority",
     "ReviewSlotStatus",
     "AcceptanceType",
-    "RejectionReason",
+    "SlotRejectionReason",
     "PaymentStatus",
     "DisputeResolution",
     "ExpertApplication",
@@ -59,4 +63,11 @@ __all__ = [
     "RequesterRating",
     "RequesterStats",
     "ReviewerDNA",
+    # Committee system
+    "CommitteeMember",
+    "CommitteeRole",
+    "RejectionReason",
+    "ApplicationReview",
+    "AppReviewStatus",
+    "Vote",
 ]

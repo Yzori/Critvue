@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import async_session_maker
 from app.crud.review_slot import process_expired_claims, process_auto_accepts
 from app.core.scheduler_config import scheduler_settings
+from app.services.committee_service import CommitteeService
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,18 @@ def start_background_jobs():
         f"(every {scheduler_settings.SCHEDULER_INTERVAL_MINUTES} minutes, "
         f"timeout={scheduler_settings.AUTO_ACCEPT_DAYS}d)"
     )
+
+    # Job 3: Auto-release stale application review claims (daily at 2:00 AM)
+    scheduler.add_job(
+        process_stale_application_claims_job,
+        CronTrigger(hour=2, minute=0),  # Run at 2:00 AM daily
+        id='process_stale_application_claims',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600  # 1 hour grace period
+    )
+    logger.info("Scheduled job: process_stale_application_claims (daily at 2:00 AM, timeout=7d)")
 
     # Start the scheduler
     scheduler.start()
@@ -167,6 +180,40 @@ async def process_auto_accepts_job():
         )
 
 
+async def process_stale_application_claims_job():
+    """
+    Background job: Auto-release stale expert application review claims
+
+    This job runs daily and:
+    - Finds all application reviews where status=CLAIMED and claimed_at < 7 days ago
+    - Marks them as RELEASED with a note about auto-release
+    - Reverts the application status back to SUBMITTED if no other reviews exist
+    - Logs all released claims for monitoring
+
+    This ensures applications don't get stuck when committee members claim
+    but don't complete their reviews within 7 days.
+    """
+    try:
+        async with async_session_maker() as db:
+            service = CommitteeService(db)
+            count = await service.auto_release_stale_claims()
+
+            if count > 0:
+                logger.info(f"Auto-released {count} stale application review claim(s)")
+            else:
+                logger.debug("No stale application review claims to process")
+
+    except Exception as e:
+        logger.error(
+            f"Error in process_stale_application_claims job: {e}",
+            exc_info=True,
+            extra={
+                "job": "process_stale_application_claims",
+                "error_type": type(e).__name__
+            }
+        )
+
+
 # ===== Manual Trigger Functions (for testing/admin use) =====
 
 async def trigger_expired_claims_now():
@@ -193,6 +240,19 @@ async def trigger_auto_accepts_now():
     """
     logger.info("Manually triggering auto-accept processing...")
     await process_auto_accepts_job()
+
+
+async def trigger_stale_application_claims_now():
+    """
+    Manually trigger stale application claims processing
+
+    Useful for:
+    - Testing the scheduler functionality
+    - Admin manual intervention
+    - Emergency cleanup of stuck applications
+    """
+    logger.info("Manually triggering stale application claims processing...")
+    await process_stale_application_claims_job()
 
 
 def get_scheduler_status() -> dict:

@@ -14,6 +14,7 @@ import {
   HelpCircle,
   LogOut,
   FileEdit,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,8 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
     { label: "Profile", href: "/profile", icon: User },
     // Show "My Reviews" for all users - everyone can give reviews
     { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
+    // Admin Panel - only shown for admin users
+    ...(user?.role === "admin" ? [{ label: "Admin Panel", href: "/admin/applications", icon: Shield }] : []),
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Help & Support", href: "/help", icon: HelpCircle },
   ];

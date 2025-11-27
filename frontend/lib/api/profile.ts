@@ -53,6 +53,7 @@ export interface ProfileData {
   user_tier: string;
   karma_points: number;
   tier_achieved_at?: string;
+  role?: "creator" | "reviewer" | "admin";
 }
 
 /**
@@ -114,6 +115,7 @@ export function transformProfileResponse(response: ProfileResponse): ProfileData
     user_tier: response.user_tier,
     karma_points: response.karma_points,
     tier_achieved_at: response.tier_achieved_at || undefined,
+    role: response.role as "creator" | "reviewer" | "admin",
   };
 }
 

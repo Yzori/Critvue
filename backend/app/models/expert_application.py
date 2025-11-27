@@ -2,11 +2,14 @@
 
 import enum
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, JSON, String, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from app.models.user import Base
+
+if TYPE_CHECKING:
+    from app.models.application_review import ApplicationReview
 
 
 class ApplicationStatus(str, enum.Enum):
@@ -17,6 +20,8 @@ class ApplicationStatus(str, enum.Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     WITHDRAWN = "withdrawn"
+    REQUEST_CHANGES = "request_changes"  # Committee requested changes
+    RESUBMITTED = "resubmitted"  # Applicant resubmitted after changes
 
 
 class ExpertApplication(AsyncAttrs, Base):
@@ -39,13 +44,18 @@ class ExpertApplication(AsyncAttrs, Base):
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # Application status
-    status: Mapped[ApplicationStatus] = mapped_column(
-        Enum(ApplicationStatus),
-        default=ApplicationStatus.DRAFT,
+    # Application status - use String for SQLite compatibility
+    status: Mapped[str] = mapped_column(
+        String(30),
+        default=ApplicationStatus.DRAFT.value,
         nullable=False,
         index=True
     )
+
+    @property
+    def status_enum(self) -> ApplicationStatus:
+        """Get status as enum"""
+        return ApplicationStatus(self.status)
 
     # Application data (stores the full form submission)
     application_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
@@ -62,9 +72,27 @@ class ExpertApplication(AsyncAttrs, Base):
         onupdate=datetime.utcnow,
         nullable=False
     )
+    decided_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)  # When final decision was made
+
+    # Re-application tracking (3-month cooldown after rejection)
+    last_rejection_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    rejection_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Assigned reviewer tier (set on approval)
+    assigned_tier: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # expert, master, elite
+
+    # Final rejection reason summary (for applicant notification)
+    rejection_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Relationship to user
     user: Mapped["User"] = relationship("User", back_populates="expert_applications")
+
+    # Relationship to reviews
+    reviews: Mapped[list["ApplicationReview"]] = relationship(
+        "ApplicationReview",
+        back_populates="application",
+        cascade="all, delete-orphan"
+    )
 
     # Indexes for efficient querying
     __table_args__ = (

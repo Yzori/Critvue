@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
@@ -53,10 +53,12 @@ export function UserMenu({ user }: UserMenuProps) {
   const menuItems: MenuItem[] = [
     { label: "Profile", href: "/profile", icon: User },
     { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
+    // Admin link - only shown for admin users
+    ...(user.role === "admin" ? [{ label: "Admin Panel", href: "/admin/applications", icon: Shield, separator: true }] : []),
     { label: "Settings", href: "/settings", icon: Settings },
     { label: "Billing", href: "/billing", icon: CreditCard },
     { label: "Help & Support", href: "/help", icon: HelpCircle, separator: true },
-    { label: "Sign Out", onClick: handleLogout, icon: LogOut, variant: "destructive" },
+    { label: "Sign Out", onClick: handleLogout, icon: LogOut, variant: "destructive" as const },
   ];
 
   return (

@@ -33,6 +33,8 @@ import {
   Mail,
   ArrowRight,
   Sparkles,
+  Award,
+  Shield,
 } from "lucide-react";
 
 // API imports
@@ -79,6 +81,7 @@ interface ProfileData {
   user_tier: string;
   karma_points: number;
   tier_achieved_at?: string;
+  role?: "creator" | "reviewer" | "admin";
 }
 
 // Default DNA values for users without enough data
@@ -295,6 +298,36 @@ export default function ProfilePage() {
                     size="sm"
                     showName={true}
                   />
+                  {/* Verified Reviewer Badge */}
+                  {profileData.role === "reviewer" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", bounce: 0.4 }}
+                    >
+                      <Badge
+                        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 shadow-sm px-2.5 py-0.5 font-medium"
+                      >
+                        <Award className="size-3.5 mr-1" />
+                        Reviewer
+                      </Badge>
+                    </motion.div>
+                  )}
+                  {/* Admin Badge */}
+                  {profileData.role === "admin" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", bounce: 0.4 }}
+                    >
+                      <Badge
+                        className="bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-sm px-2.5 py-0.5 font-medium"
+                      >
+                        <Shield className="size-3.5 mr-1" />
+                        Admin
+                      </Badge>
+                    </motion.div>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{profileData.title}</p>
 

@@ -40,7 +40,7 @@ async def get_active_application(user_id: int, db: AsyncSession) -> Optional[Exp
         .where(
             and_(
                 ExpertApplication.user_id == user_id,
-                ExpertApplication.status != ApplicationStatus.WITHDRAWN
+                ExpertApplication.status != ApplicationStatus.WITHDRAWN.value
             )
         )
         .order_by(ExpertApplication.created_at.desc())
@@ -62,7 +62,7 @@ async def generate_application_number(db: AsyncSession) -> str:
         select(ExpertApplication)
         .where(
             and_(
-                ExpertApplication.status != ApplicationStatus.DRAFT,
+                ExpertApplication.status != ApplicationStatus.DRAFT.value,
                 ExpertApplication.application_number.like(f"CR-{current_year}-%")
             )
         )
@@ -128,7 +128,7 @@ async def create_application(
         user_id=current_user.id,
         email=application_data.email,
         full_name=application_data.full_name,
-        status=ApplicationStatus.DRAFT,
+        status=ApplicationStatus.DRAFT.value,
         application_data=application_data.application_data,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
@@ -178,7 +178,7 @@ async def submit_application(
         )
 
     # Verify application is in draft status
-    if application.status != ApplicationStatus.DRAFT:
+    if application.status != ApplicationStatus.DRAFT.value:
         logger.warning(f"User {current_user.id} attempted to submit application {application_id} with status {application.status}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -189,7 +189,7 @@ async def submit_application(
     application_number = await generate_application_number(db)
 
     # Update application
-    application.status = ApplicationStatus.SUBMITTED
+    application.status = ApplicationStatus.SUBMITTED.value
     application.application_data = submission_data.application_data
     application.submitted_at = datetime.utcnow()
     application.application_number = application_number
@@ -266,14 +266,14 @@ async def withdraw_application(
         )
 
     # Verify application can be withdrawn
-    if application.status in [ApplicationStatus.APPROVED, ApplicationStatus.REJECTED, ApplicationStatus.WITHDRAWN]:
+    if application.status in [ApplicationStatus.APPROVED.value, ApplicationStatus.REJECTED.value, ApplicationStatus.WITHDRAWN.value]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Application cannot be withdrawn. Current status: {application.status}"
         )
 
     # Update status to withdrawn
-    application.status = ApplicationStatus.WITHDRAWN
+    application.status = ApplicationStatus.WITHDRAWN.value
     application.updated_at = datetime.utcnow()
 
     await db.flush()
