@@ -11,14 +11,12 @@ import {
   Share2,
   Flag,
   ArrowLeft,
-  CheckCircle,
-  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import { claimReviewSlot } from "@/lib/api/browse";
 import { UserTier } from "@/lib/types/tier";
 import { TierLockedButton } from "@/components/tier/tier-locked-review";
 import { useAuth } from "@/contexts/AuthContext";
+import { ClaimButton } from "@/components/reviewer/claim-button";
 
 /**
  * ActionBar Component
@@ -76,7 +74,6 @@ export function ActionBar({
 }: ActionBarProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const [isClaiming, setIsClaiming] = React.useState(false);
 
   // Get user's tier (default to NOVICE if not set)
   const userTier = (user?.user_tier as UserTier) || UserTier.NOVICE;
@@ -111,29 +108,6 @@ export function ActionBar({
     const userSlots = review.slots?.filter((s) => s.reviewer_id === currentUserId) || [];
     return userSlots.length === 0;
   }, [currentUserId, isOwner, review]);
-
-  // Handle claim slot
-  const handleClaimSlot = async () => {
-    try {
-      setIsClaiming(true);
-      const result = await claimReviewSlot(review.id);
-
-      toast.success("Slot claimed successfully!", {
-        description: "Redirecting to review writing page...",
-      });
-
-      // Redirect to the claimed slot's review page using the returned slot_id
-      setTimeout(() => {
-        router.push(`/reviewer/review/${result.slot_id}`);
-      }, 500);
-    } catch (error) {
-      console.error("Error claiming slot:", error);
-      toast.error("Failed to claim slot", {
-        description: error instanceof Error ? error.message : "Please try again later.",
-      });
-      setIsClaiming(false);
-    }
-  };
 
   // Handle download all files
   const handleDownloadAll = () => {
@@ -234,28 +208,13 @@ export function ActionBar({
 
             {/* Claim Slot Button (Primary CTA for reviewers - only when not tier-locked) */}
             {canClaimSlot && !tierRestriction.isLocked && (
-              <Button
-                variant="default"
-                size="default"
-                onClick={handleClaimSlot}
-                disabled={isClaiming}
-                className={cn(
-                  "min-h-[44px] bg-accent-blue hover:bg-accent-blue/90",
-                  "shadow-lg shadow-accent-blue/20"
-                )}
-              >
-                {isClaiming ? (
-                  <>
-                    <Clock className="size-4 animate-spin" />
-                    Claiming...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="size-4" />
-                    Claim Slot
-                  </>
-                )}
-              </Button>
+              <ClaimButton
+                reviewRequestId={review.id}
+                paymentAmount={review.budget || null}
+                reviewType={review.review_type}
+                title={review.title}
+                requiresNda={review.requires_nda}
+              />
             )}
 
             {/* Edit Button (for owners) */}

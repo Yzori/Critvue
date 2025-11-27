@@ -18,6 +18,7 @@ import {
   Clock,
   AlertCircle,
   Loader2,
+  Shield,
 } from "lucide-react";
 
 /**
@@ -183,9 +184,22 @@ export default function ReviewDetailPage() {
           >
             {/* Status Badge */}
             <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
-              <Badge variant={getStatusVariant(review.status)} size="lg" showDot pulse>
-                {review.status.toUpperCase()}
-              </Badge>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge variant={getStatusVariant(review.status)} size="lg" showDot pulse>
+                  {review.status.toUpperCase()}
+                </Badge>
+                {/* NDA Badge */}
+                {review.requires_nda && (
+                  <Badge
+                    variant="info"
+                    size="md"
+                    icon={<Shield className="size-4" />}
+                    className="bg-purple-100 text-purple-700 border-purple-200"
+                  >
+                    NDA Required
+                  </Badge>
+                )}
+              </div>
               {deadlineInfo && (
                 <Badge
                   variant={deadlineInfo.variant}
