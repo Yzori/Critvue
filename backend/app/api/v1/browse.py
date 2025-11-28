@@ -36,7 +36,7 @@ async def browse_reviews(
     request: Request,
     content_type: Optional[ContentType] = Query(
         None,
-        description="Filter by content type (design, code, video, audio, writing, art)"
+        description="Filter by content type (design, code, video, stream, audio, writing, art)"
     ),
     review_type: Optional[ReviewType] = Query(
         None,

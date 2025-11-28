@@ -159,6 +159,7 @@ function getContentTypeLabel(type: ContentType): string {
     design: "Design",
     code: "Code",
     video: "Video",
+    stream: "Stream",
     audio: "Audio",
     writing: "Writing",
     art: "Art",

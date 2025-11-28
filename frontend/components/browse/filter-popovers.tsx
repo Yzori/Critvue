@@ -36,6 +36,7 @@ export function ContentTypePopover({
     { value: "design", label: "Design", count: 12 },
     { value: "code", label: "Code", count: 8 },
     { value: "video", label: "Video", count: 15 },
+    { value: "stream", label: "Stream", count: 11 },
     { value: "audio", label: "Audio", count: 5 },
     { value: "writing", label: "Writing", count: 10 },
     { value: "art", label: "Art", count: 6 },

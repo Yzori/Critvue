@@ -5,7 +5,7 @@
  */
 
 import { ContentType, ReviewType } from "@/lib/api/reviews";
-import { Palette, Code, Video, Mic, FileText, Image, Sparkles, Award, CheckCircle, DollarSign, MessageSquare, Shield } from "lucide-react";
+import { Palette, Code, Video, Mic, FileText, Image, Sparkles, Award, CheckCircle, DollarSign, MessageSquare, Shield, Cast } from "lucide-react";
 
 interface ReviewSubmitStepProps {
   contentType: ContentType;
@@ -56,6 +56,12 @@ function getContentTypeInfo(type: ContentType) {
       label: "Art",
       color: "text-amber-600",
       bgColor: "bg-amber-500/10",
+    },
+    stream: {
+      icon: <Cast className="size-5" />,
+      label: "Stream",
+      color: "text-red-600",
+      bgColor: "bg-red-500/10",
     },
   };
   return types[type];

@@ -41,7 +41,7 @@ class Portfolio(Base):
     description = Column(Text, nullable=True)
 
     # Content type (matches ReviewRequest ContentType)
-    # Values: "design", "code", "video", "audio", "writing", "art"
+    # Values: "design", "code", "video", "stream", "audio", "writing", "art"
     content_type = Column(String(50), nullable=False, index=True)
 
     # Media

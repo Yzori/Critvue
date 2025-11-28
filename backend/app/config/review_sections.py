@@ -453,6 +453,68 @@ ART_VALIDATION_QUICK = DESIGN_VALIDATION_QUICK  # Reuse design templates
 ART_SPECIFIC_FIXES_STANDARD = DESIGN_SPECIFIC_FIXES_STANDARD
 ART_COMPREHENSIVE_DEEP = DESIGN_COMPREHENSIVE_DEEP
 
+# ===== STREAM REVIEW TEMPLATES =====
+
+STREAM_VALIDATION_QUICK = [
+    SectionTemplate(
+        id="first_impression",
+        label="First Impression",
+        prompt="What's your immediate reaction to this content?",
+        placeholder="Share your first thoughts - does it grab you?",
+        required=True,
+        min_words=75,
+        order=1
+    ),
+    SectionTemplate(
+        id="quick_feedback",
+        label="Quick Feedback",
+        prompt="What works and what needs improvement?",
+        placeholder="Note key strengths and areas to improve...",
+        required=True,
+        min_words=100,
+        order=2
+    )
+]
+
+STREAM_SPECIFIC_FIXES_STANDARD = [
+    SectionTemplate(
+        id="hook_engagement",
+        label="Hook & Engagement",
+        prompt="How effective is the opening and viewer retention?",
+        placeholder="Evaluate the hook, pacing, and ability to keep viewers watching...",
+        required=True,
+        min_words=150,
+        order=1
+    ),
+    SectionTemplate(
+        id="personality_presence",
+        label="Personality & Presence",
+        prompt="How does the creator come across on screen?",
+        placeholder="Assess energy, authenticity, and connection with audience...",
+        required=True,
+        min_words=100,
+        order=2
+    ),
+    SectionTemplate(
+        id="technical_production",
+        label="Technical & Production",
+        prompt="Evaluate audio, video quality, and any overlays/graphics",
+        placeholder="Assess technical aspects - audio clarity, lighting, graphics...",
+        required=True,
+        min_words=100,
+        order=3
+    ),
+    SectionTemplate(
+        id="platform_optimization",
+        label="Platform Optimization",
+        prompt="Is this content optimized for its target platform?",
+        placeholder="Consider format, length, trends, and platform-specific best practices...",
+        required=True,
+        min_words=100,
+        order=4
+    )
+]
+
 # ===== SECTION TEMPLATE REGISTRY =====
 
 SECTION_TEMPLATES: Dict[Tuple[str, str, str], List[SectionTemplate]] = {
@@ -479,6 +541,10 @@ SECTION_TEMPLATES: Dict[Tuple[str, str, str], List[SectionTemplate]] = {
     (ContentType.ART.value, FeedbackPriority.VALIDATION.value, ReviewTier.QUICK.value): ART_VALIDATION_QUICK,
     (ContentType.ART.value, FeedbackPriority.SPECIFIC_FIXES.value, ReviewTier.STANDARD.value): ART_SPECIFIC_FIXES_STANDARD,
     (ContentType.ART.value, FeedbackPriority.COMPREHENSIVE.value, ReviewTier.DEEP.value): ART_COMPREHENSIVE_DEEP,
+
+    # STREAM reviews
+    (ContentType.STREAM.value, FeedbackPriority.VALIDATION.value, ReviewTier.QUICK.value): STREAM_VALIDATION_QUICK,
+    (ContentType.STREAM.value, FeedbackPriority.SPECIFIC_FIXES.value, ReviewTier.STANDARD.value): STREAM_SPECIFIC_FIXES_STANDARD,
 }
 
 

@@ -30,6 +30,9 @@ import {
   Wand2,
   Heart,
   Lightbulb,
+  Cast,
+  TrendingUp,
+  Mic,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -314,6 +317,50 @@ const feedbackAreasByType: Record<ContentType, FeedbackAreaOption[]> = {
       description: "Uniqueness and creativity",
       icon: <Lightbulb className="size-5" />,
       color: "text-amber-600",
+    },
+  ],
+  stream: [
+    {
+      id: "hook",
+      label: "Hook",
+      description: "Opening impact and retention",
+      icon: <Zap className="size-5" />,
+      color: "text-yellow-600",
+    },
+    {
+      id: "engagement",
+      label: "Engagement",
+      description: "Viewer interaction and interest",
+      icon: <Eye className="size-5" />,
+      color: "text-blue-600",
+    },
+    {
+      id: "personality",
+      label: "Personality",
+      description: "Presence and authenticity",
+      icon: <Users className="size-5" />,
+      color: "text-purple-600",
+    },
+    {
+      id: "pacing",
+      label: "Pacing",
+      description: "Energy and rhythm",
+      icon: <Clock className="size-5" />,
+      color: "text-pink-600",
+    },
+    {
+      id: "audio",
+      label: "Audio",
+      description: "Sound quality and clarity",
+      icon: <Mic className="size-5" />,
+      color: "text-green-600",
+    },
+    {
+      id: "trends",
+      label: "Trends",
+      description: "Platform optimization",
+      icon: <TrendingUp className="size-5" />,
+      color: "text-red-600",
     },
   ],
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Code, Palette, Video, Mic, PenTool, Image as ImageIcon } from "lucide-react";
+import { Code, Palette, Video, Mic, PenTool, Image as ImageIcon, Cast } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -12,13 +12,14 @@ import { cn } from "@/lib/utils";
 export default function ContentTypesSection() {
   const prefersReducedMotion = useReducedMotion();
 
-  const contentTypes = [
+  const contentTypes: Array<{ icon: typeof Palette; label: string; color: "blue" | "peach"; description: string }> = [
     { icon: Palette, label: "Design", color: "blue", description: "UI, branding, illustration" },
     { icon: Code, label: "Code", color: "peach", description: "Frontend, backend, architecture" },
     { icon: Video, label: "Video", color: "blue", description: "Editing, motion, storytelling" },
-    { icon: Mic, label: "Audio", color: "peach", description: "Music, podcasts, sound design" },
-    { icon: PenTool, label: "Writing", color: "blue", description: "Copy, content, storytelling" },
-    { icon: ImageIcon, label: "Art", color: "peach", description: "Digital, traditional, mixed media" },
+    { icon: Cast, label: "Stream", color: "peach", description: "Live streams, shorts, TikTok" },
+    { icon: Mic, label: "Audio", color: "blue", description: "Music, podcasts, sound design" },
+    { icon: PenTool, label: "Writing", color: "peach", description: "Copy, content, storytelling" },
+    { icon: ImageIcon, label: "Art", color: "blue", description: "Digital, traditional, mixed media" },
   ];
 
   return (

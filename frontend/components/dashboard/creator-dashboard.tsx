@@ -30,6 +30,7 @@ import {
   Video,
   Mic,
   Image as ImageIcon,
+  Cast,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -595,6 +596,7 @@ function ReviewItem({ review }: ReviewItemProps) {
     design: { icon: <Palette className="size-4" />, color: "text-blue-600", bg: "bg-blue-500/10" },
     code: { icon: <Code className="size-4" />, color: "text-blue-600", bg: "bg-blue-500/10" },
     video: { icon: <Video className="size-4" />, color: "text-purple-600", bg: "bg-purple-500/10" },
+    stream: { icon: <Cast className="size-4" />, color: "text-red-600", bg: "bg-red-500/10" },
     audio: { icon: <Mic className="size-4" />, color: "text-pink-600", bg: "bg-pink-500/10" },
     writing: { icon: <FileText className="size-4" />, color: "text-green-600", bg: "bg-green-500/10" },
     art: { icon: <ImageIcon className="size-4" />, color: "text-amber-600", bg: "bg-amber-500/10" },

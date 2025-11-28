@@ -10,6 +10,7 @@ import {
   Headphones,
   PenTool,
   Sparkles,
+  Cast,
 } from "lucide-react";
 
 export interface CategoryCardsProps {
@@ -67,6 +68,15 @@ export function CategoryCards({ onCategorySelect, selectedCategory }: CategoryCa
       description: "Editing, Animation, Motion",
     },
     {
+      value: "stream",
+      label: "Stream",
+      icon: Cast,
+      gradient: "from-red-500 to-pink-500",
+      hoverGradient: "from-red-600 to-pink-600",
+      count: 11,
+      description: "Live, Shorts, TikTok",
+    },
+    {
       value: "audio",
       label: "Audio",
       icon: Headphones,
@@ -108,7 +118,7 @@ export function CategoryCards({ onCategorySelect, selectedCategory }: CategoryCa
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         {categories.map((category) => {
           const Icon = category.icon;
           const isSelected = selectedCategory === category.value;

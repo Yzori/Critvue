@@ -32,6 +32,7 @@ class ContentType(str, enum.Enum):
     DESIGN = "design"
     CODE = "code"
     VIDEO = "video"
+    STREAM = "stream"
     AUDIO = "audio"
     WRITING = "writing"
     ART = "art"

@@ -8,7 +8,7 @@ import apiClient from "./client";
 /**
  * Content type options for portfolio items
  */
-export type PortfolioContentType = "design" | "code" | "video" | "audio" | "writing" | "art";
+export type PortfolioContentType = "design" | "code" | "video" | "stream" | "audio" | "writing" | "art";
 
 /**
  * Portfolio Item from Backend
