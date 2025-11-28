@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit, Shield } from "lucide-react";
+import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit, Shield, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
@@ -38,7 +38,7 @@ interface MenuItem {
   onClick?: () => void;
   icon: React.ComponentType<{ className?: string }>;
   separator?: boolean;
-  variant?: "default" | "destructive";
+  variant?: "default" | "destructive" | "primary";
 }
 
 export function UserMenu({ user }: UserMenuProps) {
@@ -51,7 +51,10 @@ export function UserMenu({ user }: UserMenuProps) {
   };
 
   const menuItems: MenuItem[] = [
-    { label: "Profile", href: "/profile", icon: User },
+    // Primary CTA at top
+    { label: "Request Review", href: "/review/new", icon: PlusCircle, variant: "primary" },
+    // User navigation
+    { label: "Profile", href: "/profile", icon: User, separator: true },
     { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
     // Admin link - only shown for admin users
     ...(user.role === "admin" ? [{ label: "Admin Panel", href: "/admin/applications", icon: Shield, separator: true }] : []),
@@ -100,8 +103,13 @@ export function UserMenu({ user }: UserMenuProps) {
         align="end"
         className={cn(
           "w-56",
-          "bg-background/95 backdrop-blur-xl",
-          "border border-border shadow-2xl"
+          // Explicit solid white background - no transparency
+          "!bg-white dark:!bg-zinc-900",
+          "border border-border/50",
+          // Elevated shadow for depth
+          "shadow-[0_4px_24px_rgba(0,0,0,0.12),0_8px_48px_rgba(0,0,0,0.08)]",
+          // Subtle ring for definition
+          "ring-1 ring-black/[0.03]"
         )}
         sideOffset={8}
       >
@@ -122,6 +130,34 @@ export function UserMenu({ user }: UserMenuProps) {
         {/* Menu items */}
         {menuItems.map((item) => {
           const Icon = item.icon;
+          const isPrimary = item.variant === "primary";
+          const isDestructive = item.variant === "destructive";
+
+          // Style classes based on variant
+          const itemClasses = cn(
+            "flex items-center gap-3 cursor-pointer rounded-md transition-colors",
+            isPrimary && [
+              "bg-gradient-to-r from-accent-blue to-accent-peach",
+              "text-white font-medium",
+              "hover:opacity-90",
+              "focus:opacity-90",
+            ],
+            isDestructive && [
+              "text-destructive",
+              "hover:text-destructive hover:bg-destructive/10",
+              "focus:text-destructive focus:bg-destructive/10",
+            ],
+            !isPrimary && !isDestructive && [
+              "text-foreground",
+              "hover:text-accent-blue hover:bg-accent-blue/5",
+              "focus:text-accent-blue focus:bg-accent-blue/5",
+            ]
+          );
+
+          const iconClasses = cn(
+            "size-4 shrink-0",
+            isPrimary && "text-white"
+          );
 
           return (
             <React.Fragment key={item.label}>
@@ -129,29 +165,14 @@ export function UserMenu({ user }: UserMenuProps) {
 
               {item.href ? (
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 cursor-pointer",
-                      "text-foreground hover:text-accent-blue",
-                      "focus:text-accent-blue"
-                    )}
-                  >
-                    <Icon className="size-4 shrink-0" />
+                  <Link href={item.href} className={itemClasses}>
+                    <Icon className={iconClasses} />
                     <span>{item.label}</span>
                   </Link>
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem
-                  onClick={item.onClick}
-                  className={cn(
-                    "flex items-center gap-3 cursor-pointer",
-                    item.variant === "destructive"
-                      ? "text-destructive hover:text-destructive focus:text-destructive hover:bg-destructive/10 focus:bg-destructive/10"
-                      : "text-foreground hover:text-accent-blue focus:text-accent-blue"
-                  )}
-                >
-                  <Icon className="size-4 shrink-0" />
+                <DropdownMenuItem onClick={item.onClick} className={itemClasses}>
+                  <Icon className={iconClasses} />
                   <span>{item.label}</span>
                 </DropdownMenuItem>
               )}

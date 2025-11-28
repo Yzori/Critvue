@@ -15,6 +15,7 @@ import {
   LogOut,
   FileEdit,
   Shield,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,8 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
 
   // Secondary navigation items (authenticated users only)
   const secondaryNavItems: DrawerNavItem[] = [
+    // Primary CTA at top
+    { label: "Request Review", href: "/review/new", icon: PlusCircle, primary: true },
     { label: "Profile", href: "/profile", icon: User },
     // Show "My Reviews" for all users - everyone can give reviews
     { label: "My Reviews", href: "/reviewer/hub", icon: FileEdit },
