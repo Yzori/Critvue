@@ -18,6 +18,11 @@ import { PremiumHeroCard } from "@/components/browse/premium-hero-card";
 import { CommunityGalleryCard } from "@/components/browse/community-gallery-card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+// Mobile-optimized components
+import { MobileBrowseHeader } from "@/components/browse/mobile-browse-header";
+import { MobileDiscoveryCarousel } from "@/components/browse/mobile-discovery-carousel";
+import { CompactReviewCard } from "@/components/browse/compact-review-card";
+import { QuickFilterChips } from "@/components/browse/quick-filter-chips";
 import { useAuth } from "@/contexts/AuthContext";
 
 /**
@@ -215,10 +220,24 @@ export default function BrowsePage() {
 //     return "small";
 //   };
 // 
+  // Calculate active filter count for mobile header
+  const activeFilterCount =
+    (contentType !== "all" ? 1 : 0) +
+    (reviewType !== "all" ? 1 : 0) +
+    (sortBy !== "recent" ? 1 : 0);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      {/* Compact Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200/50">
+      {/* Mobile Header - Compact single row */}
+      <MobileBrowseHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onShowFilters={() => setShowMobileFilters(true)}
+        activeFilterCount={activeFilterCount}
+      />
+
+      {/* Desktop Header - Hidden on mobile */}
+      <header className="hidden md:block sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200/50">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col gap-3">
             {/* Title */}
@@ -252,8 +271,9 @@ export default function BrowsePage() {
         </div>
       </header>
 
-      {/* Compact Filter Bar (NEW!) */}
+      {/* Desktop Compact Filter Bar - Hidden on mobile */}
       <CompactFilterBar
+        className="hidden md:block"
         contentType={contentType}
         reviewType={reviewType}
         sortBy={sortBy}
@@ -264,7 +284,11 @@ export default function BrowsePage() {
       />
 
       {/* Main content */}
-      <main className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={cn(
+        "max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8",
+        "pt-[72px] md:pt-8", // Account for fixed mobile header
+        "pb-32 md:pb-8" // Extra bottom padding on mobile for quick filters
+      )}>
         {/* Error state */}
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
@@ -289,9 +313,18 @@ export default function BrowsePage() {
           <EmptyState onClearFilters={handleResetFilters} />
         )}
 
-        {/* Discovery Experience: Hero + Personalized + Categories */}
+        {/* Mobile Discovery - Horizontal Carousel */}
         {!loading && reviews.length > 0 && (
-          <div className="space-y-12">
+          <MobileDiscoveryCarousel
+            featuredReviews={splitReviews.heroFeatured}
+            recommendations={splitReviews.recommended}
+            className="mb-6"
+          />
+        )}
+
+        {/* Desktop Discovery Experience: Hero + Personalized + Categories */}
+        {!loading && reviews.length > 0 && (
+          <div className="hidden md:block space-y-12">
             {/* Hero Section - Featured Carousel */}
             {splitReviews.heroFeatured.length > 0 && (
               <FeaturedHero featuredReviews={splitReviews.heroFeatured} />
@@ -317,27 +350,44 @@ export default function BrowsePage() {
 
         {/* Two-Tier Layout: Featured/Paid + All Others */}
         {!loading && reviews.length > 0 && (
-          <div className="space-y-12 mt-12">
+          <div className="space-y-8 md:space-y-12 mt-6 md:mt-12">
             {/* SECTION 1: Marketplace Showcase - Premium Paid Opportunities */}
             {splitReviews.featuredPaid.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
+              <section id="premium-marketplace">
+                <div className="flex items-center justify-between mb-3 md:mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      Premium Marketplace
+                    <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                      Premium
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Exclusive paid opportunities with top compensation
+                    <p className="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
+                      Paid opportunities
                     </p>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {splitReviews.featuredPaid.length} {splitReviews.featuredPaid.length === 1 ? "opportunity" : "opportunities"}
+                  <div className="text-xs md:text-sm text-gray-500">
+                    {splitReviews.featuredPaid.length} {splitReviews.featuredPaid.length === 1 ? "review" : "reviews"}
                   </div>
                 </div>
 
-                {/* Clean Premium Container - Subtle Refinement */}
+                {/* Mobile: 2-column compact grid for Premium */}
+                <div className="grid md:hidden grid-cols-2 gap-3">
+                  {splitReviews.featuredPaid.map((review, index) => (
+                    <div
+                      key={review.id}
+                      className="animate-in fade-in duration-300"
+                      style={{
+                        animationDelay: `${Math.min(index * 30, 500)}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <CompactReviewCard review={review} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: Clean Premium Container - Subtle Refinement */}
                 <div
                   className={cn(
+                    "hidden md:block",
                     "relative overflow-hidden rounded-2xl p-4",
                     "bg-gray-50/50",
                     "border border-gray-200",
@@ -353,7 +403,7 @@ export default function BrowsePage() {
 
                     {/* BOTTOM: Supporting Cards Row - 3 columns for better spacing */}
                     {splitReviews.featuredPaid.length > 1 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
                         {splitReviews.featuredPaid.slice(1, 4).map((review, index) => (
                           <ReviewCard
                             key={review.id}
@@ -374,7 +424,7 @@ export default function BrowsePage() {
                   {/* Show remaining paid reviews in standard grid if more than 4 */}
                   {splitReviews.featuredPaid.length > 4 && (
                     <div className="mt-6 pt-6 border-t border-gray-200/50">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
                         {splitReviews.featuredPaid.slice(4).map((review, index) => (
                           <ReviewCard
                             key={review.id}
@@ -398,24 +448,49 @@ export default function BrowsePage() {
             {/* SECTION 2: Community Gallery - Free Reviews */}
             {splitReviews.others.length > 0 && (
               <section>
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center justify-between mb-4 md:mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-lg md:text-2xl font-bold text-gray-900">
                       Community Gallery
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Help out fellow creators and earn good karma ✨
+                    <p className="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
+                      Help out fellow creators and earn good karma
                     </p>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    {splitReviews.others.length} {splitReviews.others.length === 1 ? "opportunity" : "opportunities"}
+                  <div className="text-xs md:text-sm text-gray-500">
+                    {splitReviews.others.length} {splitReviews.others.length === 1 ? "review" : "reviews"}
                   </div>
                 </div>
 
-                {/* Uniform Grid Layout for Community Gallery */}
+                {/* Mobile: 2-column compact grid */}
                 <div
                   className={cn(
-                    "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+                    "grid md:hidden",
+                    "grid-cols-2 gap-3"
+                  )}
+                  role="list"
+                  aria-label="Community gallery - free review opportunities"
+                >
+                  {splitReviews.others.map((review, index) => (
+                    <div
+                      key={review.id}
+                      role="listitem"
+                      className="animate-in fade-in duration-300"
+                      style={{
+                        animationDelay: `${Math.min(index * 30, 500)}ms`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <CompactReviewCard review={review} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: Full-size card grid */}
+                <div
+                  className={cn(
+                    "hidden md:grid",
+                    "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
                     "gap-4"
                   )}
                   role="list"
@@ -477,6 +552,14 @@ export default function BrowsePage() {
         onOpenChange={setShowSkillsModal}
         currentSkills={userSkills}
         onSkillsUpdated={setUserSkills}
+      />
+
+      {/* Mobile Quick Filter Chips - Floating at bottom */}
+      <QuickFilterChips
+        reviewType={reviewType}
+        sortBy={sortBy}
+        onReviewTypeChange={setReviewType}
+        onSortByChange={setSortBy}
       />
 
       {/* Accessibility and Performance Notes */}
