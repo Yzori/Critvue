@@ -2,16 +2,14 @@
 
 /**
  * New Review Request Flow - Redesigned for Human Connection
- * Modern 7-step process emphasizing collaboration and clarity
+ * Streamlined 5-step process emphasizing collaboration and clarity
  *
  * Steps:
  * 1. Content Type Selection - What are you working on?
- * 2. Feedback Goals - What kind of feedback do you want? (NEW - moved earlier)
+ * 2. About Your Work - Name your project + what feedback do you need?
  * 3. File Upload - Upload or paste your work
- * 4. Basic Info - Help the reviewer help you (context and description)
- * 5. Review Type - Choose review format (Quick/Standard/Deep)
- * 6. Number of Reviews - How many perspectives?
- * 7. Preview & Confirm - Final review before submitting
+ * 4. Review Type - Choose tier + number of reviews
+ * 5. Preview & Confirm - Final review before submitting
  *
  * Based on UX research showing 86% conversion increase
  * Redesigned to feel like a creative invitation, not a ticketing system
@@ -23,11 +21,9 @@ import { ContentType, ReviewType, ReviewTier, FeedbackPriority, createReview, up
 import { getSubscriptionStatus, SubscriptionStatus } from "@/lib/api/subscriptions";
 import { Button } from "@/components/ui/button";
 import { ContentTypeStep } from "@/components/review-flow/content-type-step";
-import { FeedbackGoalsStep, FeedbackGoal } from "@/components/review-flow/feedback-goals-step";
+import { AboutYourWorkStep, FeedbackGoal } from "@/components/review-flow/about-your-work-step";
 import { FileUploadStep } from "@/components/review-flow/file-upload-step";
-import { BasicInfoStep } from "@/components/review-flow/basic-info-step";
 import { ReviewTypeStep } from "@/components/review-flow/review-type-step";
-import { NumberOfReviewsStep } from "@/components/review-flow/number-of-reviews-step";
 import { ReviewSubmitStep } from "@/components/review-flow/review-submit-step";
 import { ProgressIndicator } from "@/components/review-flow/progress-indicator";
 import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
@@ -69,12 +65,10 @@ interface ValidationErrors {
 
 // Encouraging messages for step transitions - More collaborative tone
 const encouragingMessages: Record<number, string> = {
-  1: "Great choice! What kind of feedback are you looking for?",
+  1: "Great choice! Tell us about your work...",
   2: "Perfect! Now share your work with us...",
-  3: "Looking good! Help the reviewer understand your context...",
-  4: "Excellent! Let's find the right reviewers for you...",
-  5: "Wonderful! How many perspectives would you like?",
-  6: "Almost ready! Let's review your invitation...",
+  3: "Looking good! Let's find the right reviewers for you...",
+  4: "Almost ready! Let's review your invitation...",
 };
 
 export default function NewReviewPage() {
@@ -140,7 +134,7 @@ export default function NewReviewPage() {
     checkQuota();
   }, []);
 
-  // Validate current step - Updated for 7-step flow
+  // Validate current step - Updated for 5-step flow
   const validateStep = (step: number): boolean => {
     const newErrors: ValidationErrors = {};
 
@@ -150,17 +144,7 @@ export default function NewReviewPage() {
     }
 
     if (step === 2) {
-      // Step 2: Feedback goals - at least one goal selected
-      return formState.feedbackGoals.length > 0;
-    }
-
-    if (step === 3) {
-      // Step 3: File upload - at least one file or link
-      return formState.uploadedFiles.length > 0 || formState.externalLinks.length > 0;
-    }
-
-    if (step === 4) {
-      // Step 4: Basic info - validate title and description
+      // Step 2: About Your Work - title, description, and feedback goals
       if (!formState.title.trim()) {
         newErrors.title = "Title is required";
       } else if (formState.title.trim().length < 3) {
@@ -174,22 +158,26 @@ export default function NewReviewPage() {
       }
 
       setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
+
+      // Also require at least one feedback goal
+      return Object.keys(newErrors).length === 0 && formState.feedbackGoals.length > 0;
+    }
+
+    if (step === 3) {
+      // Step 3: File upload - at least one file or link
+      return formState.uploadedFiles.length > 0 || formState.externalLinks.length > 0;
+    }
+
+    if (step === 4) {
+      // Step 4: Review type and number of reviews
+      const maxReviews = formState.reviewType === "expert" ? 10 : 3;
+      return formState.reviewType !== null &&
+             formState.numberOfReviews >= 1 &&
+             formState.numberOfReviews <= maxReviews;
     }
 
     if (step === 5) {
-      // Step 5: Review type must be selected
-      return formState.reviewType !== null;
-    }
-
-    if (step === 6) {
-      // Step 6: Number of reviews
-      const maxReviews = formState.reviewType === "expert" ? 10 : 3;
-      return formState.numberOfReviews >= 1 && formState.numberOfReviews <= maxReviews;
-    }
-
-    if (step === 7) {
-      // Step 7: Preview & confirm - all validation already done
+      // Step 5: Preview & confirm - all validation already done
       return true;
     }
 
@@ -206,30 +194,30 @@ export default function NewReviewPage() {
     }
   };
 
-  // Handle next step - Updated for 7-step flow
+  // Handle next step - Updated for 5-step flow
   const handleNext = async () => {
     if (!validateStep(currentStep)) {
       return;
     }
 
-    // Special handling for step 2: create draft review after feedback goals
+    // Special handling for step 2: create draft review with title and description
     // We need the review ID before step 3 (file upload)
     if (currentStep === 2 && !formState.reviewId) {
       setIsSubmitting(true);
       try {
         const response = await createReview({
-          title: "Draft", // Placeholder, will be updated in step 4
-          description: "Work in progress", // Placeholder, will be updated in step 4
+          title: formState.title.trim(),
+          description: formState.description.trim(),
           content_type: formState.contentType!,
           content_subcategory: formState.contentSubcategory || undefined,
-          review_type: "free", // Temporary, will be updated later
+          review_type: "free", // Temporary, will be updated later in step 4
         });
 
         // Store review ID for file uploads
         setFormState((prev) => ({ ...prev, reviewId: response.id as any }));
 
         // Show encouraging message and move to next step
-        const nextStep = Math.min(currentStep + 1, 7);
+        const nextStep = Math.min(currentStep + 1, 5);
         setCurrentStep(nextStep);
         showEncouragingMessage(currentStep);
       } catch (error) {
@@ -241,30 +229,8 @@ export default function NewReviewPage() {
       return;
     }
 
-    // Special handling for step 4: update review with title and description
-    if (currentStep === 4 && formState.reviewId) {
-      setIsSubmitting(true);
-      try {
-        await updateReview(formState.reviewId, {
-          title: formState.title.trim(),
-          description: formState.description.trim(),
-        });
-
-        // Show encouraging message and move to next step
-        const nextStep = Math.min(currentStep + 1, 7);
-        setCurrentStep(nextStep);
-        showEncouragingMessage(currentStep);
-      } catch (error) {
-        console.error("Failed to update review:", error);
-        alert(`Failed to update review: ${getErrorMessage(error)}`);
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
     // Move to next step with encouraging message
-    const nextStep = Math.min(currentStep + 1, 7);
+    const nextStep = Math.min(currentStep + 1, 5);
     setCurrentStep(nextStep);
     showEncouragingMessage(currentStep);
   };
@@ -339,7 +305,7 @@ export default function NewReviewPage() {
     }
   };
 
-  // Render current step content with animations - Updated for 6-step flow
+  // Render current step content with animations - Updated for 5-step flow
   const renderStepContent = () => {
     if (submitSuccess) {
       return (
@@ -391,13 +357,22 @@ export default function NewReviewPage() {
               );
 
             case 2:
-              // Step 2: Feedback Goals (NEW)
+              // Step 2: About Your Work (combines name/description + feedback goals)
               return (
-                <FeedbackGoalsStep
+                <AboutYourWorkStep
+                  title={formState.title}
+                  description={formState.description}
+                  onTitleChange={(value) =>
+                    setFormState((prev) => ({ ...prev, title: value }))
+                  }
+                  onDescriptionChange={(value) =>
+                    setFormState((prev) => ({ ...prev, description: value }))
+                  }
                   selectedGoals={formState.feedbackGoals}
                   onGoalsChange={(goals) =>
                     setFormState((prev) => ({ ...prev, feedbackGoals: goals }))
                   }
+                  errors={errors}
                 />
               );
 
@@ -419,23 +394,7 @@ export default function NewReviewPage() {
               );
 
             case 4:
-              // Step 4: Basic Info - "Help the Reviewer Help You"
-              return (
-                <BasicInfoStep
-                  title={formState.title}
-                  description={formState.description}
-                  onTitleChange={(value) =>
-                    setFormState((prev) => ({ ...prev, title: value }))
-                  }
-                  onDescriptionChange={(value) =>
-                    setFormState((prev) => ({ ...prev, description: value }))
-                  }
-                  errors={errors}
-                />
-              );
-
-            case 5:
-              // Step 5: Review Type/Format Selection
+              // Step 4: Review Type + Number of Reviews (combined)
               return (
                 <ReviewTypeStep
                   selectedType={formState.reviewType}
@@ -451,6 +410,10 @@ export default function NewReviewPage() {
                     limit: subscriptionStatus.monthly_reviews_limit,
                     resetAt: subscriptionStatus.reviews_reset_at
                   } : undefined}
+                  numberOfReviews={formState.numberOfReviews}
+                  onNumberOfReviewsChange={(num) =>
+                    setFormState((prev) => ({ ...prev, numberOfReviews: num }))
+                  }
                   onSelect={(type) =>
                     setFormState((prev) => ({ ...prev, reviewType: type }))
                   }
@@ -475,22 +438,8 @@ export default function NewReviewPage() {
                 />
               );
 
-            case 6:
-              // Step 6: Number of Reviews
-              return (
-                <NumberOfReviewsStep
-                  numberOfReviews={formState.numberOfReviews}
-                  pricePerReview={formState.budget}
-                  onNumberChange={(num) =>
-                    setFormState((prev) => ({ ...prev, numberOfReviews: num }))
-                  }
-                  isPaidReview={formState.reviewType === "expert"}
-                  reviewType={formState.reviewType || "free"}
-                />
-              );
-
-            case 7:
-              // Step 7: Preview & Confirm
+            case 5:
+              // Step 5: Preview & Confirm
               return (
                 <ReviewSubmitStep
                   contentType={formState.contentType!}
@@ -512,30 +461,28 @@ export default function NewReviewPage() {
     );
   };
 
-  // Check if current step can proceed - Updated for 7-step flow
+  // Check if current step can proceed - Updated for 5-step flow
   const canProceed = () => {
     switch (currentStep) {
       case 1:
         // Step 1: Content type must be selected
         return formState.contentType !== null;
       case 2:
-        // Step 2: At least one feedback goal must be selected
-        return formState.feedbackGoals.length > 0;
+        // Step 2: About Your Work - title, description, and at least one feedback goal
+        return formState.title.trim().length >= 3 &&
+               formState.description.trim().length >= 10 &&
+               formState.feedbackGoals.length > 0;
       case 3:
         // Step 3: At least one file or link must be uploaded
         return formState.uploadedFiles.length > 0 || formState.externalLinks.length > 0;
       case 4:
-        // Step 4: Title and description must be valid
-        return formState.title.trim().length >= 3 && formState.description.trim().length >= 10;
-      case 5:
-        // Step 5: Review type must be selected
-        return formState.reviewType !== null;
-      case 6:
-        // Step 6: Number of reviews must be valid
+        // Step 4: Review type and number of reviews must be valid
         const maxReviews = formState.reviewType === "expert" ? 10 : 3;
-        return formState.numberOfReviews >= 1 && formState.numberOfReviews <= maxReviews;
-      case 7:
-        // Step 7: Preview & confirm - all validation done
+        return formState.reviewType !== null &&
+               formState.numberOfReviews >= 1 &&
+               formState.numberOfReviews <= maxReviews;
+      case 5:
+        // Step 5: Preview & confirm - all validation done
         return true;
       default:
         return false;
@@ -563,7 +510,7 @@ export default function NewReviewPage() {
           <div className="mb-8">
             <ProgressIndicator
               currentStep={currentStep}
-              totalSteps={7}
+              totalSteps={5}
               onStepClick={(step) => {
                 // Only allow going back to completed steps
                 if (step < currentStep) {
@@ -611,10 +558,10 @@ export default function NewReviewPage() {
               {/* Next/Submit Button - Enhanced touch target */}
               <Button
                 size="lg"
-                onClick={currentStep === 7 ? handleSubmit : handleNext}
+                onClick={currentStep === 5 ? handleSubmit : handleNext}
                 disabled={!canProceed() || isSubmitting}
                 className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white group relative overflow-hidden min-h-[48px] touch-manipulation active:scale-[0.98]"
-                aria-label={currentStep === 7 ? "Request feedback" : "Continue to next step"}
+                aria-label={currentStep === 5 ? "Request feedback" : "Continue to next step"}
               >
                 {/* Button shimmer effect on hover */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -625,12 +572,10 @@ export default function NewReviewPage() {
                     <span>
                       {currentStep === 2
                         ? "Creating..."
-                        : currentStep === 4
-                        ? "Updating..."
                         : "Submitting..."}
                     </span>
                   </>
-                ) : currentStep === 7 ? (
+                ) : currentStep === 5 ? (
                   <>
                     <span>Request Feedback</span>
                     <Check className="size-5" />

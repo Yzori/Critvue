@@ -21,7 +21,7 @@ interface StepInfo {
   shortLabel: string;
 }
 
-// Step configuration - Updated for 7-step flow
+// Step configuration - Updated for 5-step flow
 const stepConfig: StepInfo[] = [
   {
     number: 1,
@@ -31,36 +31,24 @@ const stepConfig: StepInfo[] = [
   },
   {
     number: 2,
-    label: "Feedback Goals",
-    shortLabel: "Goals",
+    label: "About Your Work",
+    shortLabel: "Details",
     icon: <MessageSquare className="size-4" />,
   },
   {
     number: 3,
-    label: "File Upload",
+    label: "Upload Files",
     shortLabel: "Files",
     icon: <Upload className="size-4" />,
   },
   {
     number: 4,
-    label: "Basic Info",
-    shortLabel: "Info",
-    icon: <FileText className="size-4" />,
-  },
-  {
-    number: 5,
-    label: "Review Type",
-    shortLabel: "Type",
+    label: "Review Options",
+    shortLabel: "Options",
     icon: <Award className="size-4" />,
   },
   {
-    number: 6,
-    label: "Number of Reviews",
-    shortLabel: "Number",
-    icon: <MessageSquare className="size-4" />,
-  },
-  {
-    number: 7,
+    number: 5,
     label: "Preview & Confirm",
     shortLabel: "Submit",
     icon: <CheckCircle className="size-4" />,

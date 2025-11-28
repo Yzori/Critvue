@@ -6,7 +6,7 @@
  */
 
 import { ReviewType, ReviewTier, FeedbackPriority } from "@/lib/api/reviews";
-import { Sparkles, Award, Check, Clock, Star, Plus, X, Zap, Target, Compass, Shield, Lock } from "lucide-react";
+import { Sparkles, Award, Check, Clock, Star, Plus, X, Zap, Target, Compass, Shield, Lock, Users, Minus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,10 @@ interface ReviewTypeStepProps {
   requiresNda?: boolean;
   freeQuotaExceeded?: boolean;
   freeQuotaInfo?: FreeQuotaInfo;
+  // Number of reviews (combined step)
+  numberOfReviews: number;
+  onNumberOfReviewsChange: (num: number) => void;
+  // Callbacks
   onSelect: (type: ReviewType) => void;
   onBudgetChange: (budget: number) => void;
   onTierChange: (tier: ReviewTier) => void;
@@ -154,6 +158,8 @@ export function ReviewTypeStep({
   requiresNda = false,
   freeQuotaExceeded = false,
   freeQuotaInfo,
+  numberOfReviews,
+  onNumberOfReviewsChange,
   onSelect,
   onBudgetChange,
   onTierChange,
@@ -553,6 +559,91 @@ export function ReviewTypeStep({
                 </div>
               </div>
             )}
+
+            {/* Number of Reviews Section */}
+            <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-lg bg-accent-sage/10 flex items-center justify-center">
+                    <Users className="size-5 text-accent-sage" />
+                  </div>
+                  <div>
+                    <Label className="text-base font-semibold text-foreground">
+                      How many reviews?
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Multiple reviewers = diverse perspectives
+                    </p>
+                  </div>
+                </div>
+
+                {/* Number controls */}
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => onNumberOfReviewsChange(Math.max(1, numberOfReviews - 1))}
+                    disabled={numberOfReviews <= 1}
+                    className="size-12 rounded-xl border-2 border-border hover:border-accent-blue/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                    aria-label="Decrease reviews"
+                  >
+                    <Minus className="size-5" />
+                  </button>
+
+                  <div className="min-w-[100px] text-center">
+                    <div className="text-4xl font-bold text-foreground">{numberOfReviews}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {numberOfReviews === 1 ? "review" : "reviews"}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onNumberOfReviewsChange(Math.min(10, numberOfReviews + 1))}
+                    disabled={numberOfReviews >= 10}
+                    className="size-12 rounded-xl border-2 border-border hover:border-accent-blue/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95"
+                    aria-label="Increase reviews"
+                  >
+                    <Plus className="size-5" />
+                  </button>
+                </div>
+
+                {/* Quick select */}
+                <div className="flex justify-center gap-2">
+                  {[1, 3, 5].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => onNumberOfReviewsChange(num)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all active:scale-95 ${
+                        numberOfReviews === num
+                          ? "border-accent-blue bg-accent-blue/5 text-accent-blue"
+                          : "border-border text-muted-foreground hover:border-accent-blue/30"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Price summary */}
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {numberOfReviews} × ${budget}
+                    </span>
+                    <span className="text-2xl font-bold text-accent-peach">
+                      ${numberOfReviews * budget}
+                    </span>
+                  </div>
+                  {numberOfReviews >= 3 && (
+                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                      <Sparkles className="size-3" />
+                      Volume discount applied!
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>
@@ -735,6 +826,40 @@ export function ReviewTypeStep({
         })}
       </div>
 
+      {/* Number of Reviews for Free type */}
+      {selectedType === "free" && (
+        <div className="max-w-2xl mx-auto rounded-2xl border border-border bg-card p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Users className="size-5 text-accent-sage" />
+              <Label className="text-base font-semibold text-foreground">
+                Number of reviews (max 3 for free)
+              </Label>
+            </div>
+
+            <div className="flex items-center justify-center gap-3">
+              {[1, 2, 3].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => onNumberOfReviewsChange(num)}
+                  className={`size-14 rounded-xl border-2 text-lg font-bold transition-all active:scale-95 ${
+                    numberOfReviews === num
+                      ? "border-accent-blue bg-accent-blue/5 text-accent-blue"
+                      : "border-border text-muted-foreground hover:border-accent-blue/30"
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+
+            <p className="text-center text-sm text-green-600 font-medium">
+              Free community reviews
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
