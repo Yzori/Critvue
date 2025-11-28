@@ -2,20 +2,20 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * FAB (Floating Action Button) Component - Mobile CTA
+ * Modern FAB (Floating Action Button) Component
  *
- * Brand-Consistent Features:
- * - Primary CTA for "Request Review" on mobile
- * - Gradient background: from-accent-blue to-accent-peach
- * - Positioned above bottom nav: bottom-24 right-4
- * - 56x56px size (exceeds 44px minimum)
- * - Smooth shadow and scale animations
- * - Hidden on desktop (lg:hidden)
- * - Pulse animation to draw attention (optional)
+ * 2024 Design Patterns:
+ * - Extended FAB: Icon + text label for clarity
+ * - Scroll-aware: Shrinks to icon-only when scrolling down
+ * - Squircle shape: Rounded rectangle (more modern than circle)
+ * - Glassmorphism: Subtle backdrop blur with gradient
+ * - Entry animation: Bounces in on mount
+ * - Micro-interactions: Ripple effect, scale on press
+ * - Accessible: ARIA labels, keyboard focus states
  */
 
 export interface FABProps extends React.HTMLAttributes<HTMLAnchorElement> {
@@ -23,7 +23,7 @@ export interface FABProps extends React.HTMLAttributes<HTMLAnchorElement> {
   onClick?: () => void;
   icon?: React.ReactNode;
   label?: string;
-  pulse?: boolean; // Add pulse animation for attention
+  shortLabel?: string; // Shown when collapsed
 }
 
 const FAB = React.forwardRef<HTMLAnchorElement, FABProps>(
@@ -33,92 +33,181 @@ const FAB = React.forwardRef<HTMLAnchorElement, FABProps>(
       onClick,
       icon,
       label = "Request Review",
-      pulse = false,
+      shortLabel = "Request",
       className,
       ...props
     },
     ref
   ) => {
+    const [isExpanded, setIsExpanded] = React.useState(true);
     const [isVisible, setIsVisible] = React.useState(true);
     const [lastScrollY, setLastScrollY] = React.useState(0);
+    const [hasAnimated, setHasAnimated] = React.useState(false);
 
-    // Optional: Hide FAB on scroll down, show on scroll up
-    // Commented out by default - uncomment if desired
-    /*
+    // Entry animation delay
     React.useEffect(() => {
+      const timer = setTimeout(() => setHasAnimated(true), 100);
+      return () => clearTimeout(timer);
+    }, []);
+
+    // Scroll-aware behavior: collapse when scrolling down, expand when stopped
+    React.useEffect(() => {
+      let scrollTimeout: NodeJS.Timeout;
+
       const handleScroll = () => {
         const currentScrollY = window.scrollY;
 
-        if (currentScrollY < 100) {
-          // Always show near top
-          setIsVisible(true);
-        } else if (currentScrollY > lastScrollY) {
-          // Scrolling down - hide
+        // Hide completely near bottom of page
+        const isNearBottom =
+          window.innerHeight + currentScrollY >=
+          document.documentElement.scrollHeight - 100;
+
+        if (isNearBottom) {
           setIsVisible(false);
-        } else {
-          // Scrolling up - show
+        } else if (currentScrollY < 50) {
+          // Always expanded near top
+          setIsVisible(true);
+          setIsExpanded(true);
+        } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+          // Scrolling down - collapse to icon only
+          setIsVisible(true);
+          setIsExpanded(false);
+        } else if (currentScrollY < lastScrollY) {
+          // Scrolling up - show but keep collapsed
           setIsVisible(true);
         }
 
         setLastScrollY(currentScrollY);
+
+        // Expand after scroll stops
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          if (window.scrollY < 200) {
+            setIsExpanded(true);
+          }
+        }, 1500);
       };
 
       window.addEventListener("scroll", handleScroll, { passive: true });
-      return () => window.removeEventListener("scroll", handleScroll);
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+        clearTimeout(scrollTimeout);
+      };
     }, [lastScrollY]);
-    */
 
     const fabContent = (
       <>
-        {icon || <Plus className="size-6" />}
-        <span className="sr-only">{label}</span>
+        {/* Icon */}
+        <span
+          className={cn(
+            "flex items-center justify-center",
+            "transition-transform duration-300",
+            !isExpanded && "scale-110"
+          )}
+        >
+          {icon || <PenLine className="size-5" strokeWidth={2.5} />}
+        </span>
 
-        {/* Pulse ring animation (optional) */}
-        {pulse && (
-          <span
-            className={cn(
-              "absolute inset-0 rounded-full",
-              "bg-gradient-to-r from-accent-blue to-accent-peach",
-              "animate-ping opacity-75"
-            )}
-            aria-hidden="true"
-          />
-        )}
+        {/* Label - slides in/out */}
+        <span
+          className={cn(
+            "font-semibold text-sm whitespace-nowrap overflow-hidden",
+            "transition-all duration-300 ease-out",
+            isExpanded
+              ? "max-w-[120px] opacity-100 ml-2"
+              : "max-w-0 opacity-0 ml-0"
+          )}
+        >
+          {shortLabel}
+        </span>
       </>
     );
 
     const fabClasses = cn(
-      // Layout - 56x56px (exceeds 44px minimum)
-      // Positioned above floating bottom nav (bottom-4 + nav height ~72px + gap)
+      // Positioning - above bottom nav
       "fixed bottom-[88px] right-4 z-40",
-      "size-14",
       "lg:hidden", // Hide on desktop
-      // Display
+
+      // Layout
       "flex items-center justify-center",
-      "rounded-full",
-      // Gradient background with enhanced glow
-      "bg-gradient-to-r from-accent-blue to-accent-peach",
+      "h-14 px-5",
+      isExpanded ? "min-w-[140px]" : "w-14 px-0",
+
+      // Squircle shape (modern rounded rectangle)
+      "rounded-2xl",
+
+      // Background with glassmorphism
+      "bg-gradient-to-r from-accent-blue via-accent-blue to-accent-peach",
+      "backdrop-blur-sm",
       "text-white",
-      // Enhanced shadow with glow effect
-      "shadow-[0_4px_16px_rgba(59,130,246,0.3),0_8px_32px_rgba(249,115,22,0.2)]",
-      "hover:shadow-[0_6px_24px_rgba(59,130,246,0.4),0_12px_40px_rgba(249,115,22,0.3)]",
-      // Transitions with spring easing
+
+      // Shadow with brand glow
+      "shadow-[0_8px_30px_rgba(59,130,246,0.35),0_4px_12px_rgba(0,0,0,0.15)]",
+
+      // Transitions
       "transition-all duration-300",
       "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
-      // States
-      "hover:scale-110 active:scale-95",
-      "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-blue/50",
-      // Visibility
-      isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
+
+      // Hover states
+      "hover:shadow-[0_12px_40px_rgba(59,130,246,0.45),0_6px_16px_rgba(0,0,0,0.2)]",
+      "hover:scale-[1.02]",
+
+      // Active/pressed state
+      "active:scale-95 active:shadow-[0_4px_16px_rgba(59,130,246,0.3)]",
+
+      // Focus state
+      "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/30",
+
+      // Entry animation
+      hasAnimated
+        ? "translate-y-0 opacity-100"
+        : "translate-y-8 opacity-0",
+
+      // Visibility based on scroll
+      !isVisible && "translate-y-24 opacity-0 pointer-events-none",
+
       // Touch optimization
-      "touch-manipulation",
+      "touch-manipulation select-none",
+
+      // Ripple container
+      "overflow-hidden relative",
+
       className
     );
+
+    // Ripple effect on click
+    const handleClick = (e: React.MouseEvent) => {
+      const button = e.currentTarget;
+      const ripple = document.createElement("span");
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+
+      ripple.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        left: ${x}px;
+        top: ${y}px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s ease-out;
+        pointer-events: none;
+      `;
+
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    };
 
     if (onClick) {
       return (
         <button
-          onClick={onClick}
+          onClick={(e) => {
+            handleClick(e);
+            onClick();
+          }}
           className={fabClasses}
           aria-label={label}
           {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
@@ -129,15 +218,28 @@ const FAB = React.forwardRef<HTMLAnchorElement, FABProps>(
     }
 
     return (
-      <Link
-        ref={ref}
-        href={href}
-        className={fabClasses}
-        aria-label={label}
-        {...props}
-      >
-        {fabContent}
-      </Link>
+      <>
+        <Link
+          ref={ref}
+          href={href}
+          className={fabClasses}
+          aria-label={label}
+          onClick={handleClick}
+          {...props}
+        >
+          {fabContent}
+        </Link>
+
+        {/* Ripple animation keyframes */}
+        <style jsx global>{`
+          @keyframes ripple {
+            to {
+              transform: scale(4);
+              opacity: 0;
+            }
+          }
+        `}</style>
+      </>
     );
   }
 );
