@@ -111,8 +111,10 @@ export function Navigation({ transparent = false }: NavigationProps) {
         user={user}
       />
 
-      {/* FAB - Mobile only, authenticated users only */}
-      {isAuthenticated && <FAB href="/review/new" label="Request Review" />}
+      {/* FAB - Mobile only, authenticated users only, hidden on browse page (has its own quick filters) */}
+      {isAuthenticated && !pathname.startsWith("/browse") && (
+        <FAB href="/review/new" label="Request Review" />
+      )}
     </>
   );
 }
