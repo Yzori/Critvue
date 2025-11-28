@@ -202,6 +202,7 @@ export function getFileSizeLimit(contentType: string): number {
     design: 10 * 1024 * 1024,  // 10MB
     code: 50 * 1024 * 1024,    // 50MB
     video: 100 * 1024 * 1024,  // 100MB
+    stream: 100 * 1024 * 1024, // 100MB - but links preferred
     audio: 50 * 1024 * 1024,   // 50MB
     writing: 10 * 1024 * 1024, // 10MB
     art: 10 * 1024 * 1024,     // 10MB
@@ -218,6 +219,7 @@ export function getAcceptedFileTypes(contentType: string): string {
     design: "image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/gif,application/pdf",
     code: "application/zip,application/x-zip-compressed,application/x-tar,application/gzip,text/plain",
     video: "video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska",
+    stream: "video/mp4,video/quicktime,video/webm", // Short clips only - links preferred
     audio: "audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/ogg,audio/aac,audio/webm",
     writing: "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,application/rtf",
     art: "image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,image/gif,application/pdf"

@@ -56,6 +56,9 @@ export function FileUploadStep({
   const maxFileSize = getFileSizeLimit(contentType);
   const maxFiles = 10;
 
+  // Check if this content type prefers links over uploads
+  const isLinksFirst = contentType === "stream";
+
   // Get content-specific helper text
   const getHelperText = () => {
     switch (contentType) {
@@ -65,6 +68,8 @@ export function FileUploadStep({
         return "Upload ZIP files, GitHub repository links, or single code files";
       case "video":
         return "Upload video files (MP4, MOV, WebM) or YouTube/Vimeo links";
+      case "stream":
+        return "Paste a link to your stream, clip, or short-form content";
       case "audio":
         return "Upload audio files (MP3, WAV, OGG) or SoundCloud links";
       case "writing":
@@ -85,6 +90,8 @@ export function FileUploadStep({
         return ["GitHub", "GitLab", "Bitbucket", "CodeSandbox"];
       case "video":
         return ["YouTube", "Vimeo", "TikTok", "Instagram"];
+      case "stream":
+        return ["Twitch", "TikTok", "YouTube Shorts", "Instagram Reels", "Kick"];
       case "audio":
         return ["SoundCloud", "Spotify", "Apple Music"];
       case "writing":
@@ -255,7 +262,7 @@ export function FileUploadStep({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-          Upload your {contentType}
+          {isLinksFirst ? "Share your content" : `Upload your ${contentType}`}
         </h2>
         <p className="text-sm sm:text-base text-muted-foreground">
           {getHelperText()}
@@ -264,6 +271,113 @@ export function FileUploadStep({
 
       {/* Content */}
       <div className="space-y-6 max-w-2xl mx-auto">
+        {/* Links section - shown FIRST for stream content */}
+        {isLinksFirst && showLinkInput && (
+          <div className="space-y-4">
+            {/* Recommendation banner for stream */}
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-accent-blue/10 border border-accent-blue/20">
+              <LinkIcon className="size-5 text-accent-blue flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  Links are recommended for stream content
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Reviewers can see your content in its native platform with comments, engagement, and context
+                </p>
+              </div>
+            </div>
+
+            {/* Link input */}
+            <div className="space-y-2">
+              <Label htmlFor="link-input" className="text-foreground">
+                Paste your link
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="link-input"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://twitch.tv/clip/... or tiktok.com/..."
+                  value={linkInput}
+                  onChange={(e) => {
+                    setLinkInput(e.target.value);
+                    setLinkError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddLink();
+                    }
+                  }}
+                  autoComplete="url"
+                  className="flex-1 text-base sm:text-sm"
+                  disabled={!reviewId}
+                />
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleAddLink}
+                  disabled={!reviewId}
+                  className="min-h-[48px] px-6"
+                >
+                  <LinkIcon className="size-5" />
+                  Add
+                </Button>
+              </div>
+              {linkError && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="size-3" />
+                  {linkError}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Supported: {supportedPlatforms.join(", ")}
+              </p>
+            </div>
+
+            {/* Added links */}
+            {externalLinks.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">
+                  Added Links ({externalLinks.length})
+                </p>
+                <div className="space-y-2">
+                  {externalLinks.map((link, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/50"
+                    >
+                      <LinkIcon className="size-4 text-accent-blue flex-shrink-0" />
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 text-sm text-foreground hover:text-accent-blue truncate min-h-[44px] flex items-center"
+                      >
+                        {link}
+                      </a>
+                      <button
+                        onClick={() => handleRemoveLink(index)}
+                        className="flex-shrink-0 size-11 rounded-full hover:bg-background flex items-center justify-center transition-colors touch-manipulation active:scale-95"
+                        aria-label="Remove link"
+                      >
+                        <AlertCircle className="size-5 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Divider before file upload for stream */}
+            <div className="flex items-center gap-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-sm text-muted-foreground">Or upload a short clip</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </div>
+        )}
+
         {/* File upload */}
         <FileUpload
           accept={acceptedTypes}
@@ -275,6 +389,13 @@ export function FileUploadStep({
           contentType={contentType}
           disabled={!reviewId}
         />
+
+        {/* Upload note for stream */}
+        {isLinksFirst && (
+          <p className="text-xs text-muted-foreground text-center">
+            For unlisted or private content only. Max 100MB per file.
+          </p>
+        )}
 
         {/* Camera button for mobile - Enhanced touch target */}
         {isMobile && contentType === "design" && (
@@ -291,8 +412,8 @@ export function FileUploadStep({
           </Button>
         )}
 
-        {/* External links section */}
-        {showLinkInput && (
+        {/* External links section - shown AFTER file upload for non-stream content */}
+        {!isLinksFirst && showLinkInput && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <div className="h-px flex-1 bg-border" />
