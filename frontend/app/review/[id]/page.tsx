@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ClaimButton } from "@/components/reviewer/claim-button";
 import { TierLockedButton } from "@/components/tier/tier-locked-review";
 import { UserTier } from "@/lib/types/tier";
+import { WatermarkOverlay, LightboxWatermark } from "@/components/ui/watermark-overlay";
 import {
   DollarSign,
   FileText,
@@ -457,14 +458,17 @@ export default function ReviewDetailPage() {
 
             {/* Top Controls */}
             <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={getFileUrl(currentLightboxFile)}
-                download={currentLightboxFile.original_filename}
-                className="p-2 sm:p-3 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                title="Download"
-              >
-                <Download className="size-5" />
-              </a>
+              {/* Download only for owner */}
+              {isOwner && (
+                <a
+                  href={getFileUrl(currentLightboxFile)}
+                  download={currentLightboxFile.original_filename}
+                  className="p-2 sm:p-3 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                  title="Download"
+                >
+                  <Download className="size-5" />
+                </a>
+              )}
               <button
                 onClick={closeLightbox}
                 className="p-2 sm:p-3 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
@@ -515,16 +519,30 @@ export default function ReviewDetailPage() {
               </>
             )}
 
-            {/* Image */}
-            <img
-              src={getFileUrl(currentLightboxFile)}
-              alt={currentLightboxFile.original_filename}
-              className="max-w-full max-h-full object-contain select-none transition-transform duration-200"
-              style={{
-                transform: `translate(${dragPosition.x}px, ${dragPosition.y}px) scale(${lightboxZoom}) rotate(${lightboxRotation}deg)`,
-              }}
-              draggable={false}
-            />
+            {/* Image Container with Watermark */}
+            <div className="relative max-w-full max-h-full">
+              <img
+                src={getFileUrl(currentLightboxFile)}
+                alt={currentLightboxFile.original_filename}
+                className="max-w-full max-h-full object-contain select-none transition-transform duration-200"
+                style={{
+                  transform: `translate(${dragPosition.x}px, ${dragPosition.y}px) scale(${lightboxZoom}) rotate(${lightboxRotation}deg)`,
+                }}
+                draggable={false}
+                onContextMenu={(e) => !isOwner && e.preventDefault()}
+              />
+              {/* Watermark for non-owners */}
+              {!isOwner && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    transform: `translate(${dragPosition.x}px, ${dragPosition.y}px) scale(${lightboxZoom}) rotate(${lightboxRotation}deg)`,
+                  }}
+                >
+                  <LightboxWatermark opacity={12} />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Bottom Controls */}
@@ -791,15 +809,23 @@ export default function ReviewDetailPage() {
                     </div>
                     Files ({review.files.length})
                   </h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadAll}
-                    className="gap-2 hover:bg-accent-blue/5 hover:border-accent-blue/30 hover:text-accent-blue"
-                  >
-                    <Download className="size-4" />
-                    Download All
-                  </Button>
+                  {/* Download All only for owner */}
+                  {isOwner ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadAll}
+                      className="gap-2 hover:bg-accent-blue/5 hover:border-accent-blue/30 hover:text-accent-blue"
+                    >
+                      <Download className="size-4" />
+                      Download All
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                      <Shield className="size-4" />
+                      <span>Protected</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Enhanced Gallery Grid */}
@@ -827,14 +853,18 @@ export default function ReviewDetailPage() {
                                 index === 0 && review.files.length > 1 ? "aspect-video" : "aspect-[4/3]"
                               )}
                               onClick={() => openLightbox(imageIndex)}
+                              onContextMenu={(e) => !isOwner && e.preventDefault()}
                             >
                               <img
                                 src={fileUrl}
                                 alt={file.original_filename}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                draggable={isOwner}
                               />
+                              {/* Watermark for non-owners */}
+                              {!isOwner && <WatermarkOverlay opacity={15} fontSize="sm" />}
                               {/* Hover Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4 z-20">
                                 <div className="text-white">
                                   <p className="font-medium truncate max-w-[200px]">{file.original_filename}</p>
                                   <p className="text-sm text-white/70">{formatFileSize(file.file_size)}</p>
@@ -849,14 +879,17 @@ export default function ReviewDetailPage() {
                                   >
                                     <Eye className="size-4" />
                                   </button>
-                                  <a
-                                    href={fileUrl}
-                                    download={file.original_filename}
-                                    className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Download className="size-4" />
-                                  </a>
+                                  {/* Download only for owner */}
+                                  {isOwner && (
+                                    <a
+                                      href={fileUrl}
+                                      download={file.original_filename}
+                                      className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Download className="size-4" />
+                                    </a>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -870,13 +903,20 @@ export default function ReviewDetailPage() {
                               <p className="font-medium text-foreground truncate">{file.original_filename}</p>
                               <p className="text-sm text-foreground-muted">{formatFileSize(file.file_size)}</p>
                             </div>
-                            <a
-                              href={fileUrl}
-                              download={file.original_filename}
-                              className="p-2 rounded-lg hover:bg-accent-blue/10 text-foreground-muted hover:text-accent-blue transition-colors"
-                            >
-                              <Download className="size-5" />
-                            </a>
+                            {/* Download only for owner */}
+                            {isOwner ? (
+                              <a
+                                href={fileUrl}
+                                download={file.original_filename}
+                                className="p-2 rounded-lg hover:bg-accent-blue/10 text-foreground-muted hover:text-accent-blue transition-colors"
+                              >
+                                <Download className="size-5" />
+                              </a>
+                            ) : (
+                              <div className="p-2 text-foreground-muted/50" title="Downloads disabled for reviewers">
+                                <Shield className="size-5" />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
