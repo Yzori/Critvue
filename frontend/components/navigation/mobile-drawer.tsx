@@ -16,6 +16,7 @@ import {
   FileEdit,
   Shield,
   PlusCircle,
+  Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
   const primaryNavItems: DrawerNavItem[] = [
     { label: "Home", href: "/", icon: Home, primary: true },
     { label: "Browse", href: "/browse", icon: Search, primary: true },
+    { label: "Leaderboard", href: "/leaderboard", icon: Trophy, primary: true },
     { label: "Reviews", href: "/dashboard", icon: LayoutDashboard, primary: true },
     { label: "How It Works", href: "/how-it-works", icon: BookOpen, primary: true },
   ];

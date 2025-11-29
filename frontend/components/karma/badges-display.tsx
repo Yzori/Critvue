@@ -20,13 +20,14 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Share2,
 } from 'lucide-react';
 import {
   type Badge,
   type BadgeRarity,
   getBadgeRarityColor,
-  getBadgeCategoryIcon,
 } from '@/lib/api/karma';
+import { BadgeIcon } from './badge-icon';
 
 /**
  * BadgesDisplay Component
@@ -163,17 +164,33 @@ const BadgeCard: React.FC<BadgeCardProps> = ({
 }) => {
   const [isToggling, setIsToggling] = React.useState(false);
   const rarityColor = getBadgeRarityColor(badge.rarity);
-  const categoryIcon = getBadgeCategoryIcon(badge.category);
 
   const handleToggleFeatured = async () => {
-    if (!onToggleFeatured) return;
+    if (!onToggleFeatured || !badge.id) return;
     setIsToggling(true);
     try {
-      // Need to extract badge ID from badge_code or have it passed
-      // For now, we'll assume the API can handle it
-      await onToggleFeatured(parseInt(badge.badge_code.split('_').pop() || '0'));
+      await onToggleFeatured(badge.id);
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareText = `I just earned the "${badge.badge_name}" badge on Critvue!`;
+    const shareUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${badge.badge_name} Badge`,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      await navigator.clipboard.writeText(`${shareText} ${shareUrl}`);
     }
   };
 
@@ -181,61 +198,54 @@ const BadgeCard: React.FC<BadgeCardProps> = ({
     <TooltipProvider>
       <div
         className={cn(
-          'relative rounded-lg border p-4 transition-all hover:shadow-md',
+          'relative rounded-xl border p-4 transition-all duration-300',
+          'hover:shadow-lg hover:-translate-y-0.5',
           earned
-            ? 'bg-white'
-            : 'bg-muted/30 opacity-75'
+            ? 'bg-white border-gray-200'
+            : 'bg-muted/30 border-gray-200/50'
         )}
       >
-        {/* Rarity indicator */}
+        {/* Rarity indicator stripe */}
         <div
-          className="absolute top-0 left-0 right-0 h-1 rounded-t-lg"
+          className="absolute top-0 left-0 right-0 h-1 rounded-t-xl"
           style={{ backgroundColor: rarityColor }}
         />
 
         {/* Featured indicator */}
         {earned && badge.is_featured && (
           <div className="absolute top-2 right-2">
-            <BadgeUI variant="secondary" className="text-xs">
+            <BadgeUI variant="secondary" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
               Featured
             </BadgeUI>
           </div>
         )}
 
         {/* Badge content */}
-        <div className="text-center">
-          {/* Icon/Image */}
-          <div
-            className={cn(
-              'mx-auto mb-3 h-14 w-14 rounded-full flex items-center justify-center text-2xl',
-              earned ? 'bg-gradient-to-br from-white to-gray-100 shadow-sm' : 'bg-muted'
-            )}
-            style={{
-              borderWidth: 2,
-              borderStyle: 'solid',
-              borderColor: earned ? rarityColor : 'transparent',
-            }}
-          >
-            {badge.icon_url ? (
-              <img src={badge.icon_url} alt={badge.badge_name} className="h-8 w-8" />
-            ) : (
-              <span>{categoryIcon}</span>
-            )}
+        <div className="text-center pt-1">
+          {/* New BadgeIcon component */}
+          <div className="mx-auto mb-3">
+            <BadgeIcon
+              badgeCode={badge.badge_code}
+              rarity={badge.rarity}
+              earned={earned}
+              size="md"
+              showGlow={earned}
+            />
           </div>
 
           {/* Name */}
-          <h4 className="font-semibold text-sm">{badge.badge_name}</h4>
+          <h4 className="font-semibold text-sm text-gray-900">{badge.badge_name}</h4>
 
           {/* Category & Rarity */}
-          <div className="flex items-center justify-center gap-2 mt-1">
+          <div className="flex items-center justify-center gap-2 mt-1.5">
             <span className="text-xs text-muted-foreground capitalize">
               {badge.category}
             </span>
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <BadgeUI
                   variant="secondary"
-                  className="text-xs capitalize"
+                  className="text-[10px] capitalize cursor-help px-1.5 py-0 border"
                   style={{ borderColor: rarityColor, color: rarityColor }}
                 >
                   {badge.rarity}
@@ -252,7 +262,7 @@ const BadgeCard: React.FC<BadgeCardProps> = ({
             {badge.badge_description}
           </p>
 
-          {/* Earned date or progress */}
+          {/* Earned state */}
           {earned ? (
             <div className="mt-3 space-y-2">
               {badge.earned_at && (
@@ -265,46 +275,64 @@ const BadgeCard: React.FC<BadgeCardProps> = ({
                   Level {badge.level}
                 </BadgeUI>
               )}
-              {/* Rewards */}
-              {(badge.karma_reward || badge.xp_reward) && (
-                <p className="text-xs text-green-600">
+              {/* Rewards earned */}
+              {(badge.karma_reward || badge.xp_reward) ? (
+                <p className="text-xs text-green-600 font-medium">
                   +{badge.karma_reward || 0} karma, +{badge.xp_reward || 0} XP
                 </p>
-              )}
-              {/* Toggle featured */}
-              {onToggleFeatured && (
+              ) : null}
+
+              {/* Action buttons */}
+              <div className="flex gap-1.5 pt-1">
+                {onToggleFeatured && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 h-8 text-xs"
+                    onClick={handleToggleFeatured}
+                    disabled={isToggling}
+                  >
+                    {badge.is_featured ? (
+                      <>
+                        <EyeOff className="h-3 w-3 mr-1" />
+                        Unfeature
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-3 w-3 mr-1" />
+                        Feature
+                      </>
+                    )}
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full mt-2"
-                  onClick={handleToggleFeatured}
-                  disabled={isToggling}
+                  className="h-8 w-8 p-0"
+                  onClick={handleShare}
+                  title="Share badge"
                 >
-                  {badge.is_featured ? (
-                    <>
-                      <EyeOff className="h-3 w-3 mr-1" />
-                      Unfeature
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-3 w-3 mr-1" />
-                      Feature on Profile
-                    </>
-                  )}
+                  <Share2 className="h-3 w-3" />
                 </Button>
-              )}
+              </div>
             </div>
           ) : (
+            /* Progress for unearned badges */
             badge.progress && (
               <div className="mt-3 space-y-2">
                 <Progress
                   value={badge.progress.percentage}
-                  size="sm"
                   className="h-1.5"
                 />
                 <p className="text-xs text-muted-foreground">
                   {badge.progress.current} / {badge.progress.required}
                 </p>
+                {/* Potential rewards */}
+                {(badge.karma_reward || badge.xp_reward) ? (
+                  <p className="text-xs text-muted-foreground">
+                    Reward: +{badge.karma_reward || 0} karma, +{badge.xp_reward || 0} XP
+                  </p>
+                ) : null}
               </div>
             )
           )}

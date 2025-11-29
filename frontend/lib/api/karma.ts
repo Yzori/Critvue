@@ -72,6 +72,7 @@ export type BadgeCategory = 'skill' | 'milestone' | 'streak' | 'quality' | 'spec
 export type BadgeRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 export interface Badge {
+  id?: number; // UserBadge ID (only for earned badges)
   badge_code: string;
   badge_name: string;
   badge_description: string;
@@ -82,12 +83,15 @@ export interface Badge {
   earned_at?: string | null;
   level?: number | null;
   is_featured?: boolean | null;
+  is_hidden?: boolean | null;
   karma_reward?: number | null;
   xp_reward?: number | null;
   progress?: {
+    type: string;
     current: number;
     required: number;
     percentage: number;
+    description?: string;
   } | null;
 }
 
