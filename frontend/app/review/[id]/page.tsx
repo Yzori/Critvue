@@ -458,6 +458,14 @@ export default function ReviewDetailPage() {
 
             {/* Top Controls */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Share button */}
+              <button
+                onClick={handleShare}
+                className="p-2 sm:p-3 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                title="Share"
+              >
+                <Share2 className="size-5" />
+              </button>
               {/* Download only for owner */}
               {isOwner && (
                 <a
