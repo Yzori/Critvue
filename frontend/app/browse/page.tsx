@@ -342,7 +342,7 @@ export default function BrowsePage() {
 
             {/* Category Cards - Interactive Browse */}
             <CategoryCards
-              onCategorySelect={(category) => setContentType(category)}
+              onCategorySelect={(category) => setContentType(category ?? "all")}
               selectedCategory={contentType}
             />
           </div>

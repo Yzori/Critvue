@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 
 export interface CategoryCardsProps {
-  onCategorySelect: (category: ContentType) => void;
-  selectedCategory?: ContentType | "all";
+  onCategorySelect: (category: ContentType | null) => void;
+  selectedCategory?: ContentType | "all" | null;
 }
 
 interface CategoryCardData {
@@ -126,7 +126,14 @@ export function CategoryCards({ onCategorySelect, selectedCategory }: CategoryCa
           return (
             <button
               key={category.value}
-              onClick={() => onCategorySelect(category.value)}
+              onClick={() => {
+                // Toggle: if already selected, deselect (pass null), otherwise select
+                if (isSelected) {
+                  onCategorySelect(null);
+                } else {
+                  onCategorySelect(category.value);
+                }
+              }}
               className={cn(
                 "group relative overflow-hidden rounded-2xl p-6 transition-all duration-300",
                 "hover:scale-105 hover:shadow-2xl",
