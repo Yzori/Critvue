@@ -5,6 +5,7 @@
  */
 
 import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
 
 export default function AuthLayout({
   children,
@@ -18,12 +19,9 @@ export default function AuthLayout({
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-foreground hover:text-accent-blue transition-colors"
+            className="inline-flex items-center hover:opacity-80 transition-opacity"
           >
-            <div className="size-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <span className="text-xl font-semibold">Critvue</span>
+            <Logo size="sm" className="h-8 w-auto" />
           </Link>
         </div>
       </header>

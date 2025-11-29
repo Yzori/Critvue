@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types/auth";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { Logo } from "@/components/brand/Logo";
 
 /**
  * TopNav Component - Main Navigation Header
@@ -110,15 +111,13 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
             <Link
               href="/"
               className={cn(
-                "flex items-center gap-2",
-                "text-xl md:text-2xl font-bold",
-                "bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent",
+                "flex items-center",
                 "transition-opacity hover:opacity-80",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 rounded-lg px-2 py-1 -ml-2"
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 rounded-lg"
               )}
               aria-label="Critvue home"
             >
-              Critvue
+              <Logo size="xl" className="h-14 md:h-16 lg:h-20 w-auto" />
             </Link>
 
             {/* Desktop Navigation Items */}

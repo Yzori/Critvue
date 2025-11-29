@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
+import { Logo } from "@/components/brand/Logo";
 
 /**
  * MobileDrawer Component - Slide-in Navigation Drawer
@@ -152,9 +153,9 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <span className="text-lg font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent">
-            Critvue
-          </span>
+          <Link href="/" onClick={onClose}>
+            <Logo size="sm" className="h-7 w-auto" />
+          </Link>
           <Button
             variant="ghost"
             size="icon-sm"
