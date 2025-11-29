@@ -269,7 +269,7 @@ class ReviewRequestUpdate(BaseModel):
 
 
 class ReviewRequestResponse(ReviewRequestBase):
-    """Schema for review request response"""
+    """Schema for review request response - skips strict validation for existing data"""
     id: int
     user_id: int
     status: ReviewStatus
@@ -288,6 +288,12 @@ class ReviewRequestResponse(ReviewRequestBase):
         default=False,
         description="Whether the current user has signed the NDA for this request"
     )
+
+    @model_validator(mode='after')
+    def validate_expert_review_tier(self):
+        """Skip validation for response - existing data may not meet strict rules"""
+        # Override parent validator to skip validation when reading existing data
+        return self
 
     # Requester information (loaded from user relationship)
     requester_username: Optional[str] = None
