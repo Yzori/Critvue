@@ -10,7 +10,7 @@
  * - Chapter-based navigation with smooth animations
  *
  * Brand Compliance:
- * - Colors: accent-blue (#3B82F6), accent-peach (#F97316)
+ * - Colors: accent-blue (#4CC9F0), accent-peach (#F97316)
  * - Spacing: 8px grid system
  * - Typography: Inter font family with proper hierarchy
  * - Glass morphism effects for cards
@@ -884,7 +884,7 @@ export default function HowItWorksPage() {
                   }
                   className="w-full sm:w-auto bg-white hover:bg-gray-50 font-semibold px-8 py-6 text-base sm:text-lg rounded-2xl min-h-[56px] shadow-xl hover:shadow-2xl transition-all duration-300 touch-manipulation"
                   style={{
-                    color: isCreator ? "#3B82F6" : "#F97316",
+                    color: isCreator ? "#4CC9F0" : "#F97316",
                   }}
                 >
                   <span className="flex items-center justify-center gap-2">

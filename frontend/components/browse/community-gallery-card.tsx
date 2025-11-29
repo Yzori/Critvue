@@ -117,7 +117,7 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
           {/* Creator Avatar - Bottom Left Corner */}
           <div className="absolute bottom-3 left-3 z-10">
             <div className="size-10 rounded-full bg-white/90 backdrop-blur-sm border-2 border-white shadow-md flex items-center justify-center">
-              <div className="size-8 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach" />
+              <div className="size-8 rounded-full bg-accent-blue" />
             </div>
           </div>
         </div>

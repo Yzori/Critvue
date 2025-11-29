@@ -173,7 +173,7 @@ export function FilterBottomSheet({
               onApply();
               onOpenChange(false);
             }}
-            className="flex-1 bg-gradient-to-r from-accent-blue to-accent-peach"
+            className="flex-1 bg-accent-blue"
           >
             Apply Filters
           </Button>

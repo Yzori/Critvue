@@ -518,7 +518,7 @@ export function ReviewCard({
               asChild
               size="sm"
               className={cn(
-                "flex-1 bg-gradient-to-r from-accent-blue to-accent-peach transition-all duration-200 min-h-[44px]",
+                "flex-1 bg-accent-blue transition-all duration-200 min-h-[44px]",
                 isPremiumFeatured && "shadow-lg hover:shadow-xl hover:scale-105",
                 isHighImportance && !isPremiumFeatured && "shadow-md hover:shadow-lg",
                 !isHighImportance && "hover:opacity-90"

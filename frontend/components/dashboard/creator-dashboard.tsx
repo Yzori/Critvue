@@ -180,7 +180,7 @@ export default function CreatorDashboard() {
             trendData: projectTrendData,
             comparison: "All time",
             bgColor: "bg-accent-blue/10",
-            sparklineColor: "hsl(217 91% 60%)", // #3B82F6 in HSL
+            sparklineColor: "hsl(217 91% 60%)", // #4CC9F0 in HSL
           },
           {
             icon: <MessageSquare className="text-accent-peach" />,
@@ -377,7 +377,7 @@ export default function CreatorDashboard() {
             onClick={() => setAccountExpanded(!accountExpanded)}
             className="lg:pointer-events-none w-full flex items-center gap-3 mb-4 sm:mb-6"
           >
-            <div className="size-10 sm:size-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center shadow-sm ring-2 ring-accent-blue/20 flex-shrink-0">
+            <div className="size-10 sm:size-12 rounded-lg sm:rounded-xl bg-accent-blue flex items-center justify-center shadow-sm ring-2 ring-accent-blue/20 flex-shrink-0">
               <span className="text-white font-bold text-lg sm:text-xl">
                 {user?.full_name?.charAt(0) || "U"}
               </span>

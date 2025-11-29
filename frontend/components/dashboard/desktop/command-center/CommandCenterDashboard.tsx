@@ -21,7 +21,7 @@
  * - Role-specific workflows (Creator vs Reviewer)
  *
  * Brand Compliance:
- * - Critvue brand colors (#3B82F6, #F97316)
+ * - Critvue brand colors (#4CC9F0, #F97316)
  * - WCAG AA accessible
  * - Smooth, purposeful animations
  * - Responsive (1280px+ for full experience)

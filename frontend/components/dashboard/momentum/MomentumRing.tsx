@@ -55,7 +55,7 @@ export const MomentumRing: React.FC<MomentumRingProps> = ({
   // Determine color based on progress
   const getProgressColor = () => {
     if (percent >= 100) return '#22C55E'; // Green - goal complete
-    if (percent >= 60) return '#3B82F6';  // Blue - good progress
+    if (percent >= 60) return '#4CC9F0';  // Blue - good progress
     return '#6B7280';                      // Gray - getting started
   };
 

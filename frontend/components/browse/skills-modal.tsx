@@ -106,7 +106,7 @@ export function SkillsModal({
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center">
+            <div className="size-8 rounded-lg bg-accent-blue flex items-center justify-center">
               <Sparkles className="size-4 text-white" />
             </div>
             Set Your Skills
@@ -265,7 +265,7 @@ export function SkillsModal({
           <Button
             onClick={handleSave}
             disabled={saving || !hasChanges}
-            className="bg-gradient-to-r from-accent-blue to-accent-peach text-white hover:opacity-90"
+            className="bg-accent-blue text-white hover:opacity-90"
           >
             {saving ? "Saving..." : "Save Skills"}
           </Button>

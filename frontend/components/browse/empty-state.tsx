@@ -48,7 +48,7 @@ export function EmptyState({ onClearFilters, className }: EmptyStateProps) {
       <Button
         onClick={onClearFilters}
         size="lg"
-        className="bg-gradient-to-r from-accent-blue to-accent-peach"
+        className="bg-accent-blue"
       >
         Clear All Filters
       </Button>

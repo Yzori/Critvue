@@ -114,7 +114,7 @@ export default function LeaderboardPage() {
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 },
-              colors: ['#F97316', '#3B82F6', '#22C55E'],
+              colors: ['#F97316', '#4CC9F0', '#22C55E'],
             });
           }, 500);
           hasShownConfetti.current = true;

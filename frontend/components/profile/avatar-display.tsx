@@ -160,7 +160,7 @@ export function AvatarDisplay({
           <button
             onClick={() => setShowUploader(true)}
             className={cn(
-              "absolute bottom-0 right-0 rounded-full bg-gradient-to-r from-accent-blue to-accent-peach text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
+              "absolute bottom-0 right-0 rounded-full bg-accent-blue text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform",
               size === "2xl" ? "size-12" : "size-10"
             )}
           >

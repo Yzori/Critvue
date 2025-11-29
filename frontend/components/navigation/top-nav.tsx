@@ -320,7 +320,7 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
                     <Button
                       size="sm"
                       className={cn(
-                        "bg-gradient-to-r from-accent-blue to-accent-peach",
+                        "bg-accent-blue",
                         "text-white font-semibold",
                         "hover:opacity-90 hover:shadow-lg",
                         "transition-all duration-200"

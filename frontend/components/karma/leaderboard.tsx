@@ -242,7 +242,7 @@ const LeaderboardRow: React.FC<LeaderboardRowProps> = ({ entry, position }) => {
       {/* Avatar */}
       <Avatar className="h-10 w-10">
         <AvatarImage src={entry.avatar_url || undefined} alt={entry.username} />
-        <AvatarFallback className="bg-gradient-to-br from-accent-blue to-accent-peach text-white text-xs">
+        <AvatarFallback className="bg-accent-blue text-white text-xs">
           {getInitials(entry.username)}
         </AvatarFallback>
       </Avatar>

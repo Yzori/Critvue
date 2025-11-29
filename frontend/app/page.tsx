@@ -273,7 +273,7 @@ export default function HomePage() {
 
               {/* Attribution */}
               <div className="flex items-center justify-center gap-3">
-                <div className="size-12 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center text-white font-bold">
+                <div className="size-12 rounded-full bg-accent-blue flex items-center justify-center text-white font-bold">
                   SK
                 </div>
                 <div className="text-left">
@@ -346,13 +346,13 @@ export default function HomePage() {
               transition={{ delay: 0.1 }}
             >
               <div className="absolute -top-3 left-4 z-10">
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent-blue to-accent-peach text-white text-xs font-bold uppercase tracking-wide">
+                <span className="px-3 py-1 rounded-full bg-accent-blue text-white text-xs font-bold uppercase tracking-wide">
                   Human Expert
                 </span>
               </div>
               <div className="p-5 md:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-orange-50 border-2 border-accent-blue/20 h-full">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="size-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center shrink-0 text-white font-bold text-xs">
+                  <div className="size-8 rounded-lg bg-accent-blue flex items-center justify-center shrink-0 text-white font-bold text-xs">
                     MK
                   </div>
                   <div className="space-y-2 text-sm text-gray-800">
@@ -1030,7 +1030,7 @@ export default function HomePage() {
 
                 {/* Author */}
                 <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center text-white font-bold text-sm">
+                  <div className="size-12 rounded-full bg-accent-blue flex items-center justify-center text-white font-bold text-sm">
                     {testimonial.avatar}
                   </div>
                   <div>
@@ -1109,7 +1109,7 @@ export default function HomePage() {
             <Button
               size="lg"
               onClick={() => router.push("/register")}
-              className="w-full bg-gradient-to-r from-accent-blue to-accent-peach text-white font-semibold text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300 group touch-manipulation"
+              className="w-full bg-accent-blue text-white font-semibold text-base sm:text-lg rounded-2xl min-h-[56px] shadow-lg hover:shadow-xl transition-all duration-300 group touch-manipulation"
             >
               <motion.span
                 className="flex items-center justify-center gap-2"
@@ -1235,7 +1235,7 @@ function Footer({ router }: { router: any }) {
           <div className="hidden md:grid md:grid-cols-5 md:gap-8 md:mb-12">
             {/* Column 1: Branding + Newsletter */}
             <div className="col-span-2">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent mb-3">
+              <h3 className="text-2xl font-bold text-accent-blue mb-3">
                 Critvue
               </h3>
               <p className="text-gray-400 text-sm leading-relaxed mb-6 max-w-xs">
@@ -1305,7 +1305,7 @@ function Footer({ router }: { router: any }) {
           <div className="md:hidden">
             {/* Brand */}
             <div className="mb-8">
-              <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent mb-3">
+              <h3 className="text-2xl font-bold text-accent-blue mb-3">
                 Critvue
               </h3>
               <p className="text-gray-400 text-sm leading-relaxed">
@@ -1455,7 +1455,7 @@ function Footer({ router }: { router: any }) {
         <div className="px-6 py-3">
           <Button
             onClick={() => router.push("/register")}
-            className="w-full h-14 bg-gradient-to-r from-accent-blue to-accent-peach hover:shadow-lg text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation"
+            className="w-full h-14 bg-accent-blue hover:shadow-lg text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 touch-manipulation"
           >
             Get Started Free
             <ArrowRight className="size-5" />

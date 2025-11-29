@@ -136,7 +136,7 @@ const BottomNav = React.forwardRef<HTMLElement, BottomNavProps>(
                         "min-w-[16px] h-4 px-1",
                         "flex items-center justify-center",
                         "text-[10px] font-bold text-white",
-                        "bg-gradient-to-r from-accent-blue to-accent-peach rounded-full",
+                        "bg-accent-blue rounded-full",
                         "shadow-sm"
                       )}
                       aria-label={`${item.badge} notifications`}

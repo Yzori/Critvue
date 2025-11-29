@@ -127,7 +127,7 @@ function FilterChip({ label, selected, onClick }: FilterChipProps) {
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
         "active:scale-[0.98]",
         selected
-          ? "bg-gradient-to-r from-accent-blue to-accent-peach text-white shadow-lg shadow-accent-blue/30"
+          ? "bg-accent-blue text-white shadow-lg shadow-accent-blue/30"
           : "bg-white/50 backdrop-blur-sm border border-black/10 text-gray-700 hover:bg-white/80 hover:shadow-md"
       )}
     >

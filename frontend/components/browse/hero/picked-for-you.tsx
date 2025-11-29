@@ -83,11 +83,11 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
           {/* Header with Icon */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-12 rounded-xl bg-gradient-to-br from-accent-blue to-accent-peach flex items-center justify-center shadow-lg">
+              <div className="size-12 rounded-xl bg-accent-blue flex items-center justify-center shadow-lg">
                 <Sparkles className="size-6 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-accent-blue to-accent-peach bg-clip-text text-transparent">
+                <h2 className="text-2xl md:text-3xl font-bold text-accent-blue">
                   Picked for You
                 </h2>
                 <p className="text-gray-600 text-sm md:text-base mt-0.5">

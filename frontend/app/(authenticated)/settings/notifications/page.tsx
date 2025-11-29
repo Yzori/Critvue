@@ -427,7 +427,7 @@ export default function NotificationPreferencesPage() {
               onClick={handleSave}
               disabled={isSaving}
               className={cn(
-                "bg-gradient-to-r from-accent-blue to-accent-peach",
+                "bg-accent-blue",
                 "text-white font-semibold",
                 "hover:opacity-90"
               )}

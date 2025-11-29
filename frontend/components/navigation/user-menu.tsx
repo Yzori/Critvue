@@ -137,7 +137,7 @@ export function UserMenu({ user }: UserMenuProps) {
           const itemClasses = cn(
             "flex items-center gap-3 cursor-pointer rounded-md transition-colors",
             isPrimary && [
-              "bg-gradient-to-r from-accent-blue to-accent-peach",
+              "bg-accent-blue",
               "text-white font-medium",
               "hover:opacity-90",
               "focus:opacity-90",

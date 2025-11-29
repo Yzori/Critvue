@@ -78,7 +78,7 @@ export function MatchingVisualization({
             <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop
                 offset="0%"
-                stopColor={isCreator ? "#3B82F6" : "#F97316"}
+                stopColor={isCreator ? "#4CC9F0" : "#F97316"}
                 stopOpacity="0.8"
               />
               <stop

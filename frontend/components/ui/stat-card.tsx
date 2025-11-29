@@ -91,7 +91,7 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         case "down":
           return "#EF4444"; // red-500
         default:
-          return "#3B82F6"; // blue-500
+          return "#4CC9F0"; // blue-500
       }
     };
 

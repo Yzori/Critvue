@@ -62,7 +62,7 @@ const celebrationConfig: Record<CelebrationType, {
   },
   karma_milestone: {
     icon: <Star className="h-12 w-12" />,
-    color: '#3B82F6',
+    color: '#4CC9F0',
     bgGradient: 'from-blue-500/20 to-cyan-500/20',
   },
 };

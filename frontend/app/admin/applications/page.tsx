@@ -229,7 +229,7 @@ export default function AdminApplicationsPage() {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-accent-blue to-accent-peach shadow-lg">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-blue shadow-lg">
                 <ClipboardCheck className="h-6 w-6 text-white" />
               </div>
               <div>

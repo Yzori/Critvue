@@ -101,7 +101,7 @@ export function ContextualStatCard({
       {/* Sparkline background */}
       {sparklineData && sparklineData.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-16 opacity-20">
-          <Sparkline data={sparklineData} color={iconBg.includes('blue') ? '#3B82F6' : iconBg.includes('green') ? '#10B981' : iconBg.includes('amber') ? '#F59E0B' : '#8B5CF6'} />
+          <Sparkline data={sparklineData} color={iconBg.includes('blue') ? '#4CC9F0' : iconBg.includes('green') ? '#10B981' : iconBg.includes('amber') ? '#F59E0B' : '#8B5CF6'} />
         </div>
       )}
 

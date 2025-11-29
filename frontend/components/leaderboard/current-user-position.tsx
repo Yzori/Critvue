@@ -72,17 +72,17 @@ export function CurrentUserPosition({
           className
         )}
       >
-        <div className="rounded-xl border-2 border-[#3B82F6] bg-card p-3 shadow-xl backdrop-blur-sm">
+        <div className="rounded-xl border-2 border-[#4CC9F0] bg-card p-3 shadow-xl backdrop-blur-sm">
           <div className="flex items-center gap-3">
             {/* Avatar and Rank */}
             <div className="relative">
-              <Avatar className="h-12 w-12 border-2 border-[#3B82F6]">
+              <Avatar className="h-12 w-12 border-2 border-[#4CC9F0]">
                 <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-                <AvatarFallback className="bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] text-white font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-[#4CC9F0] to-[#8B5CF6] text-white font-semibold">
                   {getInitials(entry.displayName)}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#3B82F6] text-xs font-bold text-white shadow-md">
+              <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#4CC9F0] text-xs font-bold text-white shadow-md">
                 {entry.rank}
               </div>
             </div>
@@ -103,7 +103,7 @@ export function CurrentUserPosition({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[#3B82F6] text-sm">
+                <span className="font-bold text-[#4CC9F0] text-sm">
                   {formatLeaderboardStat(entry.primaryStat, statType)}
                 </span>
                 <TierBadge tier={entry.tier} size="sm" showTooltip={false} />
@@ -116,10 +116,10 @@ export function CurrentUserPosition({
                 size="icon-sm"
                 variant="ghost"
                 onClick={onJumpToPosition}
-                className="shrink-0 hover:bg-[#3B82F6]/10"
+                className="shrink-0 hover:bg-[#4CC9F0]/10"
                 aria-label="Jump to your position"
               >
-                <ChevronUp className="h-4 w-4 text-[#3B82F6]" />
+                <ChevronUp className="h-4 w-4 text-[#4CC9F0]" />
               </Button>
             )}
           </div>
@@ -133,23 +133,23 @@ export function CurrentUserPosition({
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
         className={cn('hidden lg:block', className)}
       >
-        <div className="sticky top-24 rounded-xl border-2 border-[#3B82F6] bg-card p-6 shadow-lg">
+        <div className="sticky top-24 rounded-xl border-2 border-[#4CC9F0] bg-card p-6 shadow-lg">
           {/* Header */}
           <div className="mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-[#3B82F6]" />
+            <Trophy className="h-5 w-5 text-[#4CC9F0]" />
             <h3 className="font-semibold text-foreground">Your Position</h3>
           </div>
 
           {/* Avatar and Rank */}
           <div className="mb-4 flex items-center gap-4">
             <div className="relative">
-              <Avatar className="h-16 w-16 border-2 border-[#3B82F6]">
+              <Avatar className="h-16 w-16 border-2 border-[#4CC9F0]">
                 <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
-                <AvatarFallback className="bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] text-white font-semibold text-lg">
+                <AvatarFallback className="bg-gradient-to-br from-[#4CC9F0] to-[#8B5CF6] text-white font-semibold text-lg">
                   {getInitials(entry.displayName)}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#3B82F6] font-bold text-sm text-white shadow-md">
+              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#4CC9F0] font-bold text-sm text-white shadow-md">
                 {entry.rank}
               </div>
             </div>
@@ -165,7 +165,7 @@ export function CurrentUserPosition({
           <div className="mb-4 space-y-3 rounded-lg bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">Rank</span>
-              <span className="font-bold text-[#3B82F6]">#{entry.rank}</span>
+              <span className="font-bold text-[#4CC9F0]">#{entry.rank}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground text-sm">Percentile</span>
@@ -214,7 +214,7 @@ export function CurrentUserPosition({
           {onJumpToPosition && (
             <Button
               onClick={onJumpToPosition}
-              className="w-full bg-[#3B82F6] hover:bg-[#3B82F6]/90"
+              className="w-full bg-[#4CC9F0] hover:bg-[#4CC9F0]/90"
               size="sm"
             >
               <ChevronUp className="mr-2 h-4 w-4" />

@@ -54,7 +54,7 @@ const sizeConfig = {
 
 // Brand colors
 const colors = {
-  primary: '#3B82F6',      // blue-500
+  primary: '#4CC9F0',      // blue-500
   primaryLight: '#93C5FD', // blue-300
   secondary: '#8B5CF6',    // violet-500
   accent: '#F59E0B',       // amber-500
@@ -382,7 +382,7 @@ export function ReviewerDNACompact({
           />
           <defs>
             <linearGradient id="compact-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#3B82F6" />
+              <stop offset="0%" stopColor="#4CC9F0" />
               <stop offset="100%" stopColor="#8B5CF6" />
             </linearGradient>
           </defs>

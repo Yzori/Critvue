@@ -234,7 +234,7 @@ export function AvatarUpload({
       {/* Avatar Preview with Edit Button */}
       <div className="relative inline-block">
         {/* Avatar Display */}
-        <div className="relative size-24 sm:size-32 lg:size-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-gradient-to-br from-accent-blue to-accent-peach">
+        <div className="relative size-24 sm:size-32 lg:size-40 rounded-full overflow-hidden border-4 border-white shadow-xl bg-accent-blue">
           {previewUrl ? (
             <img
               src={previewUrl}

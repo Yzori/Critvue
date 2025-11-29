@@ -174,7 +174,7 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
               <div
                 className={cn(
                   "relative size-12 rounded-full",
-                  "bg-gradient-to-r from-accent-blue to-accent-peach",
+                  "bg-accent-blue",
                   "p-[2px]"
                 )}
               >
@@ -302,7 +302,7 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
             <Link href="/register" onClick={onClose}>
               <Button
                 className={cn(
-                  "w-full bg-gradient-to-r from-accent-blue to-accent-peach",
+                  "w-full bg-accent-blue",
                   "text-white font-semibold",
                   "hover:opacity-90 hover:shadow-lg",
                   "transition-all duration-200"

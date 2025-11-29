@@ -14,7 +14,7 @@
  * - Categorized results
  *
  * Brand Compliance:
- * - Critvue accent colors (#3B82F6, #F97316)
+ * - Critvue accent colors (#4CC9F0, #F97316)
  * - Glassmorphic background
  * - Smooth spring animations
  * - WCAG AA keyboard accessibility

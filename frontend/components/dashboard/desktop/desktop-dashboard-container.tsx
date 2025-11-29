@@ -21,7 +21,7 @@
  * "How do we make users feel like they're making progress every time they open this?"
  *
  * Brand Compliance:
- * - Critvue brand colors (#3B82F6, #F97316)
+ * - Critvue brand colors (#4CC9F0, #F97316)
  * - WCAG AA accessible
  * - Smooth Framer Motion animations with reduced-motion support
  * - Responsive (1024px+ for optimal desktop experience)

@@ -12,7 +12,7 @@
  * - Reviewer Mode: Claim reviews, track earnings, manage submissions
  *
  * Brand Compliance:
- * - Uses Critvue brand colors (accent-blue #3B82F6, accent-peach #F97316)
+ * - Uses Critvue brand colors (accent-blue #4CC9F0, accent-peach #F97316)
  * - Mobile-first responsive design with 48px touch targets
  * - Smooth animated transitions with reduced motion support
  * - Glassmorphism and shadow system consistency

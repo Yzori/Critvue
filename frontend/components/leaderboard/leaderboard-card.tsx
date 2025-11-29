@@ -167,7 +167,7 @@ export function LeaderboardCard({
           : 'border-border bg-card hover:border-border/80 hover:shadow-md',
         isCurrentUser &&
           !isPodium &&
-          'ring-2 ring-[#3B82F6] ring-offset-2 ring-offset-background',
+          'ring-2 ring-[#4CC9F0] ring-offset-2 ring-offset-background',
         onClick && 'cursor-pointer',
         'min-h-[44px]' // Mobile touch target
       )}
@@ -202,7 +202,7 @@ export function LeaderboardCard({
           <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />
           <AvatarFallback
             className={cn(
-              isPodium ? config.textColor : 'bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] text-white'
+              isPodium ? config.textColor : 'bg-gradient-to-br from-[#4CC9F0] to-[#8B5CF6] text-white'
             )}
           >
             {getInitials(entry.displayName)}
@@ -221,7 +221,7 @@ export function LeaderboardCard({
               {entry.displayName}
             </h3>
             {isCurrentUser && !isPodium && (
-              <span className="shrink-0 rounded-full bg-[#3B82F6] px-2 py-0.5 text-xs font-medium text-white">
+              <span className="shrink-0 rounded-full bg-[#4CC9F0] px-2 py-0.5 text-xs font-medium text-white">
                 You
               </span>
             )}

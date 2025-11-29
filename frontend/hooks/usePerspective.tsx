@@ -27,7 +27,7 @@ interface PerspectiveContextValue {
 
 const creatorColors: PerspectiveColors = {
   primary: "accent-blue",
-  primaryHex: "#3B82F6",
+  primaryHex: "#4CC9F0",
   gradient: "from-blue-500 via-accent-blue to-blue-600",
   gradientFrom: "from-accent-blue",
   gradientTo: "to-blue-600",
