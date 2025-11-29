@@ -13,6 +13,13 @@ import {
   Star,
   Users,
   ArrowRight,
+  Code2,
+  Palette,
+  PenTool,
+  Video,
+  Music,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 
 export interface CommunityGalleryCardProps {
@@ -20,16 +27,14 @@ export interface CommunityGalleryCardProps {
 }
 
 /**
- * Community Gallery Card - Masonry-style card for free reviews
+ * Community Gallery Card - Modern card for free reviews
  *
  * Features:
- * - Large preview image (60% of card)
- * - Hover reveals full description
- * - "Good Karma" badge for free reviews
- * - Creator avatar in corner
- * - Category color-coded left border
- * - Heart icon for save/favorite
- * - Natural masonry layout
+ * - Category-specific placeholder gradients with icons
+ * - Subtle "Free" badge with backdrop blur
+ * - Enhanced hover states
+ * - Creator avatar overlay
+ * - Clean, modern design
  */
 export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
   const [isSaved, setIsSaved] = React.useState(false);
@@ -46,49 +51,98 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
     return `${daysUntil} days`;
   };
 
-  // Category color coding for left border
-  const getCategoryColor = (contentType: string) => {
-    const colors = {
-      design: "border-l-pink-500",
-      code: "border-l-blue-500",
-      writing: "border-l-purple-500",
-      marketing: "border-l-green-500",
-      video: "border-l-red-500",
-      other: "border-l-gray-400",
+  // Category-specific placeholder config
+  const getCategoryPlaceholder = (contentType: string) => {
+    const configs: Record<string, { gradient: string; icon: React.ReactNode; iconBg: string }> = {
+      design: {
+        gradient: "from-violet-100 via-purple-50 to-fuchsia-100",
+        icon: <Palette className="size-12 text-violet-400" />,
+        iconBg: "bg-violet-200/50",
+      },
+      code: {
+        gradient: "from-blue-100 via-cyan-50 to-sky-100",
+        icon: <Code2 className="size-12 text-blue-400" />,
+        iconBg: "bg-blue-200/50",
+      },
+      writing: {
+        gradient: "from-amber-100 via-orange-50 to-yellow-100",
+        icon: <PenTool className="size-12 text-amber-500" />,
+        iconBg: "bg-amber-200/50",
+      },
+      video: {
+        gradient: "from-rose-100 via-pink-50 to-red-100",
+        icon: <Video className="size-12 text-rose-400" />,
+        iconBg: "bg-rose-200/50",
+      },
+      audio: {
+        gradient: "from-emerald-100 via-teal-50 to-green-100",
+        icon: <Music className="size-12 text-emerald-400" />,
+        iconBg: "bg-emerald-200/50",
+      },
+      document: {
+        gradient: "from-slate-100 via-gray-50 to-zinc-100",
+        icon: <FileText className="size-12 text-slate-400" />,
+        iconBg: "bg-slate-200/50",
+      },
+      other: {
+        gradient: "from-indigo-100 via-blue-50 to-purple-100",
+        icon: <Sparkles className="size-12 text-indigo-400" />,
+        iconBg: "bg-indigo-200/50",
+      },
     };
-    return colors[contentType as keyof typeof colors] || colors.other;
+    return configs[contentType] || configs.other;
   };
+
+  const placeholder = getCategoryPlaceholder(review.content_type);
 
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl bg-white border-l-4",
-        getCategoryColor(review.content_type),
-        "border-t border-r border-b border-gray-200",
-        "transition-all duration-300",
-        "hover:shadow-xl hover:-translate-y-1",
+        "group relative overflow-hidden rounded-2xl bg-white",
+        "border border-gray-200/80",
+        "transition-all duration-300 ease-out",
+        "hover:shadow-lg hover:shadow-gray-200/50 hover:-translate-y-1",
+        "hover:border-gray-300/80",
         "h-full flex flex-col"
       )}
     >
       <Link href={`/review/${review.id}`} className="flex flex-col h-full">
-        {/* Preview Image Section - Fixed aspect ratio */}
-        <div className="relative aspect-[4/3] flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        {/* Preview Image Section */}
+        <div className="relative aspect-[4/3] flex-shrink-0 overflow-hidden">
           {review.preview_image ? (
             <img
               src={getFileUrl(review.preview_image)}
               alt={review.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50" />
+            /* Category-specific placeholder */
+            <div className={cn(
+              "w-full h-full bg-gradient-to-br",
+              placeholder.gradient,
+              "flex items-center justify-center"
+            )}>
+              <div className={cn(
+                "size-20 rounded-2xl flex items-center justify-center",
+                placeholder.iconBg,
+                "backdrop-blur-sm"
+              )}>
+                {placeholder.icon}
+              </div>
+            </div>
           )}
 
-          {/* Good Karma Badge - Top Left */}
+          {/* Free Badge - Top Left - Subtle styling */}
           <div className="absolute top-3 left-3 z-10">
-            <Badge className="bg-green-500 text-white border-green-600 shadow-md px-2.5 py-1 font-semibold flex items-center gap-1.5">
-              <Heart className="size-3.5 fill-current" />
-              Good Karma
-            </Badge>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1",
+              "text-xs font-semibold uppercase tracking-wide",
+              "bg-white/90 backdrop-blur-md",
+              "text-gray-700 border border-gray-200/50",
+              "rounded-lg shadow-sm"
+            )}>
+              Free
+            </span>
           </div>
 
           {/* Save/Favorite Button - Top Right */}
@@ -99,25 +153,26 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
             }}
             className={cn(
               "absolute top-3 right-3 z-10",
-              "size-8 rounded-full backdrop-blur-md border-2 transition-all",
+              "size-9 rounded-full backdrop-blur-md transition-all",
               "flex items-center justify-center",
+              "shadow-sm",
               isSaved
-                ? "bg-red-500 border-red-600"
-                : "bg-white/80 border-white/40 hover:bg-white"
+                ? "bg-rose-500 text-white"
+                : "bg-white/90 text-gray-500 hover:text-rose-500 hover:bg-white border border-gray-200/50"
             )}
           >
             <Heart
               className={cn(
                 "size-4 transition-all",
-                isSaved ? "fill-white text-white" : "text-gray-600"
+                isSaved && "fill-current"
               )}
             />
           </button>
 
           {/* Creator Avatar - Bottom Left Corner */}
           <div className="absolute bottom-3 left-3 z-10">
-            <div className="size-10 rounded-full bg-white/90 backdrop-blur-sm border-2 border-white shadow-md flex items-center justify-center">
-              <div className="size-8 rounded-full bg-accent-blue" />
+            <div className="size-10 rounded-full bg-white/95 backdrop-blur-sm border-2 border-white shadow-md flex items-center justify-center overflow-hidden">
+              <div className="size-8 rounded-full bg-gradient-to-br from-accent-blue to-cyan-500" />
             </div>
           </div>
         </div>
@@ -125,32 +180,32 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
         {/* Content Section */}
         <div className="p-4 space-y-2.5 flex-1 flex flex-col">
           {/* Category Badge */}
-          <Badge variant="neutral" size="sm">
+          <Badge variant="neutral" size="sm" className="w-fit">
             {review.content_type.charAt(0).toUpperCase() + review.content_type.slice(1)}
           </Badge>
 
           {/* Title */}
-          <h3 className="font-bold text-base text-gray-900 group-hover:text-accent-blue transition-colors line-clamp-2 leading-tight">
+          <h3 className="font-semibold text-base text-gray-900 group-hover:text-accent-blue transition-colors line-clamp-2 leading-snug">
             {review.title}
           </h3>
 
-          {/* Short Description - Always Visible */}
-          <p className="text-xs text-gray-600 line-clamp-2 leading-snug">
+          {/* Short Description */}
+          <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed flex-1">
             {review.description}
           </p>
 
           {/* Metadata */}
-          <div className="flex items-center gap-3 text-xs text-gray-600 pt-1">
+          <div className="flex items-center gap-3 text-xs text-gray-500 pt-1 border-t border-gray-100">
             {/* Deadline */}
             <div className="flex items-center gap-1">
-              <Calendar className="size-3.5 text-gray-500" />
+              <Calendar className="size-3.5" />
               <span>{formatDeadline(review.deadline)}</span>
             </div>
 
             {/* Rating if available */}
             {review.creator_rating && (
               <>
-                <span className="text-gray-400">•</span>
+                <span className="text-gray-300">•</span>
                 <div className="flex items-center gap-1">
                   <Star className="size-3.5 fill-amber-400 text-amber-400" />
                   <span>{review.creator_rating.toFixed(1)}</span>
@@ -158,50 +213,12 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
               </>
             )}
 
-            {/* Slots if multiple */}
-            {(review.reviews_requested ?? 1) > 1 && (
-              <>
-                <span className="text-gray-400">•</span>
-                <div className="flex items-center gap-1">
-                  <Users className="size-3.5" />
-                  <span>{review.available_slots ?? 0}/{review.reviews_requested}</span>
-                </div>
-              </>
-            )}
+            {/* Slots */}
+            <div className="flex items-center gap-1 ml-auto">
+              <Users className="size-3.5" />
+              <span>{review.available_slots ?? 0}/{review.reviews_requested ?? 1}</span>
+            </div>
           </div>
-        </div>
-
-        {/* Hover Reveal: Full Description + CTA */}
-        <div
-          className={cn(
-            "absolute inset-0 bg-gradient-to-t from-white via-white/98 to-transparent",
-            "opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-            "flex flex-col justify-end p-4",
-            "pointer-events-none group-hover:pointer-events-auto"
-          )}
-        >
-          {/* Full Description */}
-          <div className="mb-3">
-            <p className="text-sm text-gray-700 leading-relaxed mb-2">
-              {review.description}
-            </p>
-            <p className="text-xs text-gray-500">
-              Help out the community and build your portfolio!
-            </p>
-          </div>
-
-          {/* CTA Button */}
-          <Button
-            className={cn(
-              "w-full h-9 text-sm font-semibold",
-              "bg-gradient-to-r from-green-500 to-emerald-500",
-              "hover:from-green-600 hover:to-emerald-600",
-              "text-white shadow-md"
-            )}
-          >
-            Help Out
-            <ArrowRight className="ml-1.5 size-4" />
-          </Button>
         </div>
       </Link>
     </div>

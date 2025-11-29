@@ -454,7 +454,7 @@ export default function BrowsePage() {
                       Community Gallery
                     </h2>
                     <p className="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
-                      Help out fellow creators and earn good karma
+                      Free reviews from the community
                     </p>
                   </div>
                   <div className="text-xs md:text-sm text-gray-500">

@@ -6,25 +6,69 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { BrowseReviewItem } from "@/lib/api/browse";
 import { getFileUrl } from "@/lib/api/client";
-import { Clock, DollarSign, Star } from "lucide-react";
+import {
+  Clock,
+  DollarSign,
+  Star,
+  Code2,
+  Palette,
+  PenTool,
+  Video,
+  Music,
+  FileText,
+  Sparkles,
+} from "lucide-react";
 
 export interface CompactReviewCardProps {
   review: BrowseReviewItem;
   className?: string;
 }
 
+// Category-specific placeholder config
+const categoryPlaceholders: Record<string, { gradient: string; icon: React.ReactNode }> = {
+  design: {
+    gradient: "from-violet-200 via-purple-100 to-fuchsia-200",
+    icon: <Palette className="size-8 text-violet-400/60" />,
+  },
+  code: {
+    gradient: "from-blue-200 via-cyan-100 to-sky-200",
+    icon: <Code2 className="size-8 text-blue-400/60" />,
+  },
+  writing: {
+    gradient: "from-amber-200 via-orange-100 to-yellow-200",
+    icon: <PenTool className="size-8 text-amber-500/60" />,
+  },
+  video: {
+    gradient: "from-rose-200 via-pink-100 to-red-200",
+    icon: <Video className="size-8 text-rose-400/60" />,
+  },
+  audio: {
+    gradient: "from-emerald-200 via-teal-100 to-green-200",
+    icon: <Music className="size-8 text-emerald-400/60" />,
+  },
+  document: {
+    gradient: "from-slate-200 via-gray-100 to-zinc-200",
+    icon: <FileText className="size-8 text-slate-400/60" />,
+  },
+  other: {
+    gradient: "from-indigo-200 via-blue-100 to-purple-200",
+    icon: <Sparkles className="size-8 text-indigo-400/60" />,
+  },
+};
+
 /**
  * Compact Review Card - Optimized for 2-column mobile grid
  *
  * Features:
  * - Square aspect ratio (1:1) for compact grid
- * - Minimal metadata (price/karma + deadline)
+ * - Category-specific placeholder gradients with icons
+ * - Minimal metadata (price/free + deadline)
  * - Overlay gradient with title
  * - Touch-optimized (no hover states)
- * - ~120px height vs ~280px for full cards
  */
 export function CompactReviewCard({ review, className }: CompactReviewCardProps) {
   const isPaid = review.review_type === "expert" && (review.price ?? 0) > 0;
+  const placeholder = categoryPlaceholders[review.content_type] || categoryPlaceholders.other;
 
   const formatDeadline = (deadline?: string) => {
     if (!deadline) return null;
@@ -53,7 +97,7 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
     >
       {/* Square aspect ratio container */}
       <div className="aspect-square relative">
-        {/* Background Image */}
+        {/* Background Image or Category Placeholder */}
         {review.preview_image ? (
           <img
             src={getFileUrl(review.preview_image)}
@@ -62,7 +106,12 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100" />
+          <div className={cn(
+            "absolute inset-0 bg-gradient-to-br flex items-center justify-center",
+            placeholder.gradient
+          )}>
+            {placeholder.icon}
+          </div>
         )}
 
         {/* Gradient Overlay */}
@@ -70,16 +119,16 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
 
         {/* Top badges */}
         <div className="absolute top-2 left-2 right-2 flex items-start justify-between">
-          {/* Price or Karma badge */}
+          {/* Price or Free badge */}
           {isPaid ? (
-            <Badge className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 shadow-lg">
+            <Badge className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 shadow-lg">
               <DollarSign className="size-3 mr-0.5" />
               {review.price}
             </Badge>
           ) : (
-            <Badge className="bg-emerald-500/90 text-white text-xs font-medium px-2 py-0.5 shadow-lg">
+            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-white/90 backdrop-blur-sm text-gray-700 rounded-md shadow-sm">
               Free
-            </Badge>
+            </span>
           )}
 
           {/* Deadline if urgent */}
