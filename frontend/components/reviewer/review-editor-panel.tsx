@@ -387,9 +387,13 @@ export function ReviewEditorPanel({
       {hasContentToPreview && slot.status !== "submitted" && (
         <button
           onClick={() => setIsMobileSheetOpen(true)}
-          className="lg:hidden fixed bottom-20 right-4 z-30 group"
+          className="lg:hidden fixed bottom-20 right-4 z-30 group flex flex-col items-center"
           aria-label="View work preview"
         >
+          {/* Subtle label - above */}
+          <span className="mb-1 text-[9px] font-medium text-muted-foreground/70 uppercase tracking-wider">
+            Preview
+          </span>
           {/* Thumbnail preview button */}
           <div className="relative size-16 rounded-2xl shadow-lg border-2 border-accent-blue/30 bg-white overflow-hidden hover:scale-105 active:scale-95 transition-transform">
             {workFiles[0]?.file_type.startsWith("image/") ? (
@@ -424,11 +428,7 @@ export function ReviewEditorPanel({
               </div>
             )}
           </div>
-          {/* Label below */}
-          <span className="block text-[10px] font-medium text-center text-muted-foreground mt-1">
-            Preview
-          </span>
-        </button>
+          </button>
       )}
 
       {/* Mobile Preview Bottom Sheet */}
