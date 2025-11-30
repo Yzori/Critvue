@@ -27,6 +27,7 @@ import {
   type ReviewSlot,
 } from "@/lib/api/reviewer";
 import { getReviewFiles, type FileResponse } from "@/lib/api/files";
+import { getFileUrl } from "@/lib/api/client";
 
 interface ReviewEditorPanelProps {
   slot: ReviewSlot;
@@ -87,7 +88,8 @@ export function ReviewEditorPanel({
 
     if (isDesignOrArt) {
       const imageFile = files.find((f) => f.file_type.startsWith("image/"));
-      return imageFile?.file_url || undefined;
+      // Use getFileUrl to convert relative paths to absolute URLs
+      return imageFile?.file_url ? getFileUrl(imageFile.file_url) : undefined;
     }
 
     return undefined;
