@@ -14,9 +14,16 @@ export interface Phase1QuickAssessment {
 
 // ===== Phase 2: Rubric Ratings =====
 
+// Rating justification - explains WHY a rating was given
+export interface RatingRationale {
+  strengths: string; // What earned this score
+  gaps: string; // What's holding it back (why not 5?)
+}
+
 export interface Phase2RubricRatings {
   content_type: string; // 'code' | 'design' | 'writing'
   ratings: Record<string, number>; // e.g., { functionality: 5, code_quality: 4 }
+  rationales?: Record<string, RatingRationale>; // Justification for each rating
 }
 
 // ===== Phase 3: Detailed Feedback =====
@@ -48,6 +55,30 @@ export interface ResourceLink {
   title?: string;
 }
 
+// Common design/development principles that can be referenced
+export type PrincipleCategory =
+  | 'ux-heuristic' // Nielsen's heuristics, etc.
+  | 'design-principle' // Gestalt, color theory, typography
+  | 'coding-standard' // SOLID, DRY, clean code
+  | 'accessibility' // WCAG, a11y guidelines
+  | 'performance' // Core Web Vitals, optimization
+  | 'security' // OWASP, security best practices
+  | 'seo' // Search engine guidelines
+  | 'content' // Writing frameworks, clarity
+  | 'other';
+
+// Impact types for explaining consequences
+export type ImpactType =
+  | 'conversion' // Affects sales/signups
+  | 'usability' // Makes harder to use
+  | 'trust' // Reduces credibility
+  | 'performance' // Slows down experience
+  | 'maintainability' // Creates tech debt
+  | 'accessibility' // Excludes users
+  | 'seo' // Hurts discoverability
+  | 'brand' // Damages perception
+  | 'other';
+
 export interface StructuredImprovement {
   id: string;
   issue: string; // What's the problem (required, min 10 chars)
@@ -60,6 +91,12 @@ export interface StructuredImprovement {
   category?: ImprovementCategory; // Categorize the improvement
   isQuickWin?: boolean; // Flag for quick wins (high impact, low effort)
   resources?: ResourceLink[]; // Supporting links/references
+  // NEW: Insight fields that transform opinions into expert guidance
+  principle?: string; // What rule/heuristic is being violated (e.g., "Nielsen's visibility of system status")
+  principleCategory?: PrincipleCategory; // Category of the principle
+  impact?: string; // What happens if not fixed (e.g., "Users abandon at checkout due to confusion")
+  impactType?: ImpactType; // Type of impact
+  afterState?: string; // What it would look like if fixed (visualization)
 }
 
 export interface StructuredStrength {
@@ -85,6 +122,12 @@ export interface FollowUpOffer {
   responseTime?: string; // Expected response time
 }
 
+// Top 3 Takeaways - the most critical actionable items
+export interface TopTakeaway {
+  issue: string; // Brief description of the issue
+  fix: string; // Concrete action to take
+}
+
 export interface Phase3DetailedFeedback {
   strengths: string[]; // Legacy: simple strings (1-10 items)
   improvements: string[]; // Legacy: simple strings (1-10 items)
@@ -93,6 +136,8 @@ export interface Phase3DetailedFeedback {
   additional_notes?: string; // Optional, up to 5000 chars
   visual_annotations?: VisualAnnotation[]; // Optional visual annotations for design/art (max 20)
   voice_memo?: VoiceMemo; // Optional voice memo
+  // Required: Top 3 Takeaways (the TL;DR checklist)
+  top_takeaways?: TopTakeaway[]; // 3 most important action items
   // Premium expert review sections
   executive_summary?: ExecutiveSummary; // TL;DR for busy creators
   follow_up_offer?: FollowUpOffer; // Continued support offer

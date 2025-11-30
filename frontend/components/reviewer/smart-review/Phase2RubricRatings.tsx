@@ -37,9 +37,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Phase2RubricRatings as Phase2Data,
   RatingDimension,
+  RatingRationale,
 } from "@/lib/types/smart-review";
 
 // Dimension icon and color mapping
@@ -159,20 +161,24 @@ export function Phase2RubricRatings({
   const [ratings, setRatings] = React.useState<Record<string, number>>(
     data?.ratings || {}
   );
+  const [rationales, setRationales] = React.useState<Record<string, RatingRationale>>(
+    data?.rationales || {}
+  );
   const [collapsedDimensions, setCollapsedDimensions] = React.useState<Set<string>>(
     new Set()
   );
   const [collapseAll, setCollapseAll] = React.useState(false);
 
-  // Update parent when ratings change
+  // Update parent when ratings or rationales change
   React.useEffect(() => {
     if (Object.keys(ratings).length > 0) {
       onChange({
         content_type: contentType,
         ratings,
+        rationales: Object.keys(rationales).length > 0 ? rationales : undefined,
       });
     }
-  }, [ratings, contentType, onChange]);
+  }, [ratings, rationales, contentType, onChange]);
 
   const setRating = (dimensionId: string, rating: number) => {
     setRatings((prev) => ({
@@ -180,8 +186,34 @@ export function Phase2RubricRatings({
       [dimensionId]: rating,
     }));
 
-    // Auto-collapse when rated
-    setCollapsedDimensions((prev) => new Set(prev).add(dimensionId));
+    // Initialize rationale for this dimension if not exists
+    if (!rationales[dimensionId]) {
+      setRationales((prev) => ({
+        ...prev,
+        [dimensionId]: { strengths: "", gaps: "" },
+      }));
+    }
+
+    // Don't auto-collapse anymore - we want them to fill in rationale
+  };
+
+  const updateRationale = (dimensionId: string, field: 'strengths' | 'gaps', value: string) => {
+    setRationales((prev) => {
+      const existing = prev[dimensionId] || { strengths: "", gaps: "" };
+      return {
+        ...prev,
+        [dimensionId]: {
+          ...existing,
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  // Check if rationale is complete (both fields have content)
+  const isRationaleComplete = (dimensionId: string) => {
+    const rationale = rationales[dimensionId];
+    return rationale && rationale.strengths.length >= 10 && rationale.gaps.length >= 10;
   };
 
   const toggleDimension = (dimensionId: string) => {
@@ -282,6 +314,7 @@ export function Phase2RubricRatings({
           const DimensionIcon = style.icon;
 
           // Collapsed summary view
+          const hasCompleteRationale = isRationaleComplete(dimension.id);
           if (isCollapsed && rating) {
             return (
               <button
@@ -292,7 +325,8 @@ export function Phase2RubricRatings({
                   "w-full rounded-xl border p-3 flex items-center justify-between gap-3 transition-all touch-manipulation animate-in slide-in-from-top-2 duration-200",
                   style.border,
                   style.bg,
-                  "hover:shadow-sm"
+                  "hover:shadow-sm",
+                  !hasCompleteRationale && "border-amber-300 bg-amber-50/50"
                 )}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -303,8 +337,11 @@ export function Phase2RubricRatings({
                     <p className="text-sm font-semibold text-foreground truncate">
                       {dimension.label}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Rated {rating}/5
+                    <p className={cn(
+                      "text-xs",
+                      hasCompleteRationale ? "text-green-600" : "text-amber-600"
+                    )}>
+                      {rating}/5 {hasCompleteRationale ? "✓ Justified" : "⚠ Needs justification"}
                     </p>
                   </div>
                 </div>
@@ -416,6 +453,83 @@ export function Phase2RubricRatings({
                 )}
               </div>
 
+              {/* Rating Justification - appears after rating is given */}
+              {rating && (
+                <div className={cn("space-y-3 pt-3 border-t animate-in slide-in-from-top-2 duration-300", style.border)}>
+                  <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <span className={cn("size-1 rounded-full", style.color.replace('text-', 'bg-'))} />
+                    Justify Your Rating
+                    <span className="text-muted-foreground font-normal">(required)</span>
+                  </p>
+
+                  {/* Strengths - What earned this score */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-green-700 flex items-center gap-1">
+                      ✓ What earned this score?
+                    </label>
+                    <Textarea
+                      placeholder="List key strengths... (e.g., Great modularity, Clear naming conventions, Solid error handling)"
+                      value={rationales[dimension.id]?.strengths || ""}
+                      onChange={(e) => updateRationale(dimension.id, 'strengths', e.target.value)}
+                      className={cn(
+                        "min-h-[60px] text-sm resize-y bg-white",
+                        "focus:ring-2 focus:ring-green-500/50 focus:border-green-300",
+                        (rationales[dimension.id]?.strengths?.length ?? 0) >= 10 && "border-green-300"
+                      )}
+                      maxLength={500}
+                    />
+                    <span className={cn(
+                      "text-xs",
+                      (rationales[dimension.id]?.strengths?.length || 0) >= 10
+                        ? "text-green-600"
+                        : "text-muted-foreground"
+                    )}>
+                      {rationales[dimension.id]?.strengths?.length || 0}/500
+                      {(rationales[dimension.id]?.strengths?.length || 0) < 10 && " (min 10 chars)"}
+                    </span>
+                  </div>
+
+                  {/* Gaps - What's holding it back */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-amber-700 flex items-center gap-1">
+                      △ What's holding it back?
+                      {rating === 5 && <span className="text-muted-foreground font-normal">(what could make it even better?)</span>}
+                    </label>
+                    <Textarea
+                      placeholder={rating === 5
+                        ? "Even at 5 stars, what could be enhanced? (e.g., Could add more edge case tests, Documentation could be expanded)"
+                        : "What prevents a higher score? (e.g., Inconsistent naming, Missing JSDoc comments, Repeated API logic)"
+                      }
+                      value={rationales[dimension.id]?.gaps || ""}
+                      onChange={(e) => updateRationale(dimension.id, 'gaps', e.target.value)}
+                      className={cn(
+                        "min-h-[60px] text-sm resize-y bg-white",
+                        "focus:ring-2 focus:ring-amber-500/50 focus:border-amber-300",
+                        (rationales[dimension.id]?.gaps?.length ?? 0) >= 10 && "border-amber-300"
+                      )}
+                      maxLength={500}
+                    />
+                    <span className={cn(
+                      "text-xs",
+                      (rationales[dimension.id]?.gaps?.length || 0) >= 10
+                        ? "text-amber-600"
+                        : "text-muted-foreground"
+                    )}>
+                      {rationales[dimension.id]?.gaps?.length || 0}/500
+                      {(rationales[dimension.id]?.gaps?.length || 0) < 10 && " (min 10 chars)"}
+                    </span>
+                  </div>
+
+                  {/* Completion indicator */}
+                  {isRationaleComplete(dimension.id) && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 border border-green-200">
+                      <CheckCircle2 className="size-4 text-green-600" />
+                      <span className="text-xs font-medium text-green-700">Justification complete!</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Criteria Checklist */}
               <div className={cn("pt-3 border-t", style.border)}>
                 <p className="text-xs font-semibold text-foreground mb-2.5 flex items-center gap-1.5">
@@ -439,29 +553,55 @@ export function Phase2RubricRatings({
       {/* Progress Summary */}
       <div className="rounded-xl border border-border bg-muted/30 p-4">
         <h4 className="text-sm font-semibold mb-2">Phase 2 Progress:</h4>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {completedCount} of {totalCount} dimensions rated
-          </p>
-          <div className="flex items-center gap-1">
-            {dimensions.map((dim) => (
-              <div
-                key={dim.id}
-                className={cn(
-                  "size-2 rounded-full",
-                  ratings[dim.id]
-                    ? "bg-green-500"
-                    : "bg-gray-300"
-                )}
-                aria-label={`${dim.label}: ${ratings[dim.id] ? `${ratings[dim.id]}/5` : "not rated"}`}
-              />
-            ))}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {completedCount} of {totalCount} dimensions rated
+            </p>
+            <div className="flex items-center gap-1">
+              {dimensions.map((dim) => (
+                <div
+                  key={dim.id}
+                  className={cn(
+                    "size-2 rounded-full",
+                    ratings[dim.id] && isRationaleComplete(dim.id)
+                      ? "bg-green-500"
+                      : ratings[dim.id]
+                        ? "bg-amber-400"
+                        : "bg-gray-300"
+                  )}
+                  aria-label={`${dim.label}: ${ratings[dim.id] ? `${ratings[dim.id]}/5${isRationaleComplete(dim.id) ? ' justified' : ' needs justification'}` : "not rated"}`}
+                />
+              ))}
+            </div>
           </div>
+          {completedCount > 0 && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">
+                {dimensions.filter(d => isRationaleComplete(d.id)).length} of {completedCount} justified
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1">
+                  <span className="size-2 rounded-full bg-green-500" /> Complete
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="size-2 rounded-full bg-amber-400" /> Needs why
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        {completedCount === totalCount && (
+        {completedCount === totalCount && dimensions.every(d => isRationaleComplete(d.id)) && (
           <div className="mt-3 pt-3 border-t border-border">
             <p className="text-xs font-medium text-green-600 flex items-center gap-1">
-              <span className="text-base">✨</span> Great work! All dimensions have been rated.
+              <span className="text-base">✨</span> Excellent! All ratings are justified with reasoning.
+            </p>
+          </div>
+        )}
+        {completedCount === totalCount && !dimensions.every(d => isRationaleComplete(d.id)) && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs font-medium text-amber-600 flex items-center gap-1">
+              <span className="text-base">⚠️</span> All rated, but some need justification. Click to expand and add reasoning.
             </p>
           </div>
         )}

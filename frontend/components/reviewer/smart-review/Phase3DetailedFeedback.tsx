@@ -11,7 +11,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, HelpCircle, ChevronDown, ChevronUp, Star, Award, FileText, CheckCircle2, ArrowRight, MessageCircle, Clock } from "lucide-react";
+import { Plus, HelpCircle, ChevronDown, ChevronUp, Star, Award, FileText, CheckCircle2, ArrowRight, MessageCircle, Clock, Target } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation, VoiceMemo, StructuredImprovement, StructuredStrength, ExecutiveSummary, FollowUpOffer } from "@/lib/types/smart-review";
+import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation, VoiceMemo, StructuredImprovement, StructuredStrength, ExecutiveSummary, FollowUpOffer, TopTakeaway } from "@/lib/types/smart-review";
 import { ImageAnnotation } from "./ImageAnnotation";
 import { VoiceMemoRecorder } from "./VoiceMemoRecorder";
 import {
@@ -127,6 +127,15 @@ export function Phase3DetailedFeedback({
     data?.follow_up_offer?.available || false
   );
 
+  // Top 3 Takeaways state - the TL;DR action items
+  const [topTakeaways, setTopTakeaways] = React.useState<TopTakeaway[]>(
+    data?.top_takeaways || [
+      { issue: "", fix: "" },
+      { issue: "", fix: "" },
+      { issue: "", fix: "" },
+    ]
+  );
+
   // Final Verdict state
   const [rating, setRating] = React.useState(overallRating);
   const [summary, setSummary] = React.useState(quickSummary);
@@ -183,6 +192,11 @@ export function Phase3DetailedFeedback({
       responseTime: followUpOffer.responseTime?.trim() || undefined,
     } : undefined;
 
+    // Build valid top takeaways (filter out empty ones)
+    const validTopTakeaways = topTakeaways.filter(
+      (t) => t.issue.trim().length >= 5 && t.fix.trim().length >= 5
+    );
+
     if (validStrengths.length > 0 || validImprovements.length > 0) {
       onChange({
         // Legacy format (for backward compatibility)
@@ -194,12 +208,14 @@ export function Phase3DetailedFeedback({
         additional_notes: additionalNotes.trim() || undefined,
         visual_annotations: visualAnnotations.length > 0 ? visualAnnotations : undefined,
         voice_memo: voiceMemo,
+        // Top takeaways
+        top_takeaways: validTopTakeaways.length > 0 ? validTopTakeaways : undefined,
         // Premium fields
         executive_summary: validExecutiveSummary,
         follow_up_offer: validFollowUpOffer,
       });
     }
-  }, [structuredStrengths, structuredImprovements, additionalNotes, visualAnnotations, voiceMemo, executiveSummary, followUpOffer, onChange]);
+  }, [structuredStrengths, structuredImprovements, additionalNotes, visualAnnotations, voiceMemo, topTakeaways, executiveSummary, followUpOffer, onChange]);
 
   // Voice memo handlers
   const handleVoiceRecordingComplete = (audioBlob: Blob, duration: number) => {
@@ -829,28 +845,136 @@ export function Phase3DetailedFeedback({
           </p>
         </div>
 
-        {/* Verdict Progress */}
-        <div className="flex items-center gap-3 pt-2 border-t border-purple-200">
-          <div className={cn(
-            "size-6 rounded-full flex items-center justify-center text-xs font-bold",
-            rating > 0 && summary.length >= 50 && summary.length <= 300
-              ? "bg-green-500 text-white"
-              : "bg-muted text-muted-foreground"
-          )}>
-            {rating > 0 && summary.length >= 50 && summary.length <= 300 ? "✓" : "!"}
+        {/* Top 3 Takeaways - The TL;DR action list */}
+        <div className="space-y-4 pt-4 border-t border-purple-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="size-5 text-purple-600" />
+              <Label className="text-base font-semibold">Top 3 Takeaways</Label>
+              <span className="text-xs text-red-500">*required</span>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {topTakeaways.filter(t => t.issue.length >= 5 && t.fix.length >= 5).length}/3 complete
+            </span>
           </div>
-          <span className={cn(
-            "text-sm font-medium",
-            rating > 0 && summary.length >= 50 && summary.length <= 300
-              ? "text-green-600"
-              : "text-muted-foreground"
-          )}>
-            {rating === 0 && "Select a rating"}
-            {rating > 0 && summary.length < 50 && "Add your summary (50+ chars)"}
-            {rating > 0 && summary.length >= 50 && summary.length <= 300 && "Ready to submit!"}
-            {summary.length > 300 && "Summary too long"}
-          </span>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Give creators a clear, actionable checklist. What are the 3 most important things to fix right now?
+          </p>
+
+          <div className="space-y-3">
+            {topTakeaways.map((takeaway, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "p-4 rounded-xl border-2 transition-all",
+                  takeaway.issue.length >= 5 && takeaway.fix.length >= 5
+                    ? "bg-green-50 border-green-200"
+                    : "bg-white border-gray-200"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={cn(
+                    "size-7 rounded-full flex items-center justify-center text-sm font-bold",
+                    takeaway.issue.length >= 5 && takeaway.fix.length >= 5
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-200 text-gray-600"
+                  )}>
+                    {takeaway.issue.length >= 5 && takeaway.fix.length >= 5 ? "✓" : index + 1}
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Takeaway #{index + 1}
+                  </span>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-amber-700">
+                      Issue
+                    </label>
+                    <Input
+                      placeholder={
+                        index === 0
+                          ? "e.g., Hero contrast too low"
+                          : index === 1
+                            ? "e.g., Naming inconsistencies"
+                            : "e.g., Layout collapse on tablet"
+                      }
+                      value={takeaway.issue}
+                      onChange={(e) => {
+                        const newTakeaways = [...topTakeaways];
+                        newTakeaways[index] = { ...takeaway, issue: e.target.value };
+                        setTopTakeaways(newTakeaways);
+                      }}
+                      className="text-sm bg-white"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-green-700">
+                      Fix
+                    </label>
+                    <Input
+                      placeholder={
+                        index === 0
+                          ? "e.g., Increase to 4.5:1 contrast ratio"
+                          : index === 1
+                            ? "e.g., Use camelCase consistently"
+                            : "e.g., Add tablet breakpoint at 768px"
+                      }
+                      value={takeaway.fix}
+                      onChange={(e) => {
+                        const newTakeaways = [...topTakeaways];
+                        newTakeaways[index] = { ...takeaway, fix: e.target.value };
+                        setTopTakeaways(newTakeaways);
+                      }}
+                      className="text-sm bg-white"
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {topTakeaways.every(t => t.issue.length >= 5 && t.fix.length >= 5) && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-green-100 border border-green-300">
+              <CheckCircle2 className="size-5 text-green-600" />
+              <span className="text-sm font-medium text-green-800">
+                All takeaways complete! Creators will love this clear action plan.
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Verdict Progress */}
+        {(() => {
+          const takeawaysComplete = topTakeaways.every(t => t.issue.length >= 5 && t.fix.length >= 5);
+          const verdictComplete = rating > 0 && summary.length >= 50 && summary.length <= 300 && takeawaysComplete;
+          return (
+            <div className="flex items-center gap-3 pt-2 border-t border-purple-200">
+              <div className={cn(
+                "size-6 rounded-full flex items-center justify-center text-xs font-bold",
+                verdictComplete
+                  ? "bg-green-500 text-white"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                {verdictComplete ? "✓" : "!"}
+              </div>
+              <span className={cn(
+                "text-sm font-medium",
+                verdictComplete
+                  ? "text-green-600"
+                  : "text-muted-foreground"
+              )}>
+                {rating === 0 && "Select a rating"}
+                {rating > 0 && summary.length < 50 && "Add your summary (50+ chars)"}
+                {rating > 0 && summary.length >= 50 && summary.length <= 300 && !takeawaysComplete && "Complete your top 3 takeaways"}
+                {verdictComplete && "Ready to submit!"}
+                {summary.length > 300 && "Summary too long"}
+              </span>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Executive Summary - Premium Section */}

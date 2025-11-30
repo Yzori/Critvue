@@ -19,6 +19,7 @@
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ReviewStudio } from "@/components/reviewer/review-studio";
 import { SmartReviewEditor } from "@/components/reviewer/smart-review";
 import { WorkPreviewPanel, type WorkFile } from "@/components/reviewer/smart-review/WorkPreviewPanel";
 import {
@@ -30,6 +31,7 @@ import {
   PanelLeft,
   Maximize2,
   Play,
+  Sparkles,
 } from "lucide-react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
@@ -48,6 +50,9 @@ interface ReviewEditorPanelProps {
   onSubmitSuccess?: () => void;
 }
 
+// Editor mode type
+type EditorMode = "studio" | "legacy";
+
 export function ReviewEditorPanel({
   slot,
   onSubmitSuccess,
@@ -57,6 +62,9 @@ export function ReviewEditorPanel({
   const [isBriefCollapsed, setIsBriefCollapsed] = React.useState(false);
   const [showPreview, setShowPreview] = React.useState(true);
   const [previewCollapsed, setPreviewCollapsed] = React.useState(false);
+
+  // Editor mode - default to Studio for design/art content
+  const [editorMode, setEditorMode] = React.useState<EditorMode>("studio");
 
   // Fetch files for the review request
   React.useEffect(() => {
@@ -204,8 +212,31 @@ export function ReviewEditorPanel({
                 )}
               </div>
             </div>
-            {/* Desktop Preview Toggle */}
-            {hasContentToPreview && slot.status !== "submitted" && (
+            {/* Editor Mode Toggle */}
+            {slot.status !== "submitted" && (
+              <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                <Button
+                  variant={editorMode === "studio" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setEditorMode("studio")}
+                  className="gap-1.5 text-xs h-7"
+                >
+                  <Sparkles className="size-3" />
+                  Studio
+                </Button>
+                <Button
+                  variant={editorMode === "legacy" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setEditorMode("legacy")}
+                  className="gap-1.5 text-xs h-7"
+                >
+                  Classic
+                </Button>
+              </div>
+            )}
+
+            {/* Desktop Preview Toggle - Only show in legacy mode */}
+            {hasContentToPreview && slot.status !== "submitted" && editorMode === "legacy" && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -280,8 +311,20 @@ export function ReviewEditorPanel({
             </div>
           </div>
         </div>
+      ) : editorMode === "studio" ? (
+        /* ReviewStudio - Full-screen split layout */
+        <div className="h-[calc(100vh-120px)]">
+          <ReviewStudio
+            slotId={slot.id}
+            contentType={slot.review_request?.content_type || "code"}
+            contentSubcategory={(slot.review_request as { content_subcategory?: string })?.content_subcategory}
+            imageUrl={imageUrl}
+            externalUrl={externalUrl}
+            onSubmitSuccess={onSubmitSuccess}
+          />
+        </div>
       ) : (
-        /* True Side-by-Side Split Layout */
+        /* Legacy Side-by-Side Split Layout */
         <div className="flex">
           {/* LEFT: Sticky Preview Panel - Desktop Only */}
           {showPreview && hasContentToPreview && (
@@ -383,8 +426,8 @@ export function ReviewEditorPanel({
         </div>
       )}
 
-      {/* Mobile Preview FAB - Bottom Right Corner */}
-      {hasContentToPreview && slot.status !== "submitted" && (
+      {/* Mobile Preview FAB - Bottom Right Corner - Only in legacy mode */}
+      {hasContentToPreview && slot.status !== "submitted" && editorMode === "legacy" && (
         <button
           onClick={() => setIsMobileSheetOpen(true)}
           className="lg:hidden fixed bottom-20 right-4 z-30 group flex flex-col items-center"

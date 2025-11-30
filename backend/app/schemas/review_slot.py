@@ -2,7 +2,8 @@
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional, List, Any
+from enum import Enum
+from typing import Optional, List, Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review_slot import (
@@ -12,6 +13,280 @@ from app.models.review_slot import (
     PaymentStatus,
     DisputeResolution
 )
+
+
+# ===== Expert Review Enums =====
+
+class PrincipleCategory(str, Enum):
+    """Categories for design/development principles"""
+    UX_HEURISTIC = "ux-heuristic"  # Nielsen's heuristics, etc.
+    DESIGN_PRINCIPLE = "design-principle"  # Gestalt, color theory, typography
+    CODING_STANDARD = "coding-standard"  # SOLID, DRY, clean code
+    ACCESSIBILITY = "accessibility"  # WCAG, a11y guidelines
+    PERFORMANCE = "performance"  # Core Web Vitals, optimization
+    SECURITY = "security"  # OWASP, security best practices
+    SEO = "seo"  # Search engine guidelines
+    CONTENT = "content"  # Writing frameworks, clarity
+    OTHER = "other"
+
+
+class ImpactType(str, Enum):
+    """Types of impact for explaining consequences"""
+    CONVERSION = "conversion"  # Affects sales/signups
+    USABILITY = "usability"  # Makes harder to use
+    TRUST = "trust"  # Reduces credibility
+    PERFORMANCE = "performance"  # Slows down experience
+    MAINTAINABILITY = "maintainability"  # Creates tech debt
+    ACCESSIBILITY = "accessibility"  # Excludes users
+    SEO = "seo"  # Hurts discoverability
+    BRAND = "brand"  # Damages perception
+    OTHER = "other"
+
+
+class EffortEstimate(str, Enum):
+    """Effort estimate for implementing a fix"""
+    QUICK_FIX = "quick-fix"
+    MODERATE = "moderate"
+    MAJOR_REFACTOR = "major-refactor"
+
+
+class ConfidenceLevel(str, Enum):
+    """Confidence level for suggestions"""
+    CERTAIN = "certain"
+    LIKELY = "likely"
+    SUGGESTION = "suggestion"
+
+
+class ImprovementCategory(str, Enum):
+    """Categories for improvements"""
+    PERFORMANCE = "performance"
+    UX = "ux"
+    SECURITY = "security"
+    ACCESSIBILITY = "accessibility"
+    MAINTAINABILITY = "maintainability"
+    DESIGN = "design"
+    CONTENT = "content"
+    OTHER = "other"
+
+
+# ===== Rating Justification Schemas =====
+
+class RatingRationale(BaseModel):
+    """Justification for a rating - explains WHY a rating was given"""
+    strengths: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="What earned this score"
+    )
+    gaps: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="What's holding it back (why not 5?)"
+    )
+
+
+class RatingRationaleDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    strengths: Optional[str] = Field(
+        default="",
+        max_length=500,
+        description="What earned this score"
+    )
+    gaps: Optional[str] = Field(
+        default="",
+        max_length=500,
+        description="What's holding it back"
+    )
+
+
+# ===== Structured Feedback Schemas =====
+
+class ResourceLink(BaseModel):
+    """Supporting link/reference for an improvement"""
+    url: str = Field(..., description="URL to resource")
+    title: Optional[str] = Field(None, max_length=200, description="Display title")
+
+
+class StructuredImprovement(BaseModel):
+    """Structured improvement item with expert insight fields"""
+    id: str = Field(..., description="Unique ID (client-generated UUID)")
+    issue: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="What's the problem"
+    )
+    location: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="Where in the work"
+    )
+    suggestion: str = Field(
+        ...,
+        min_length=10,
+        max_length=1000,
+        description="Concrete fix"
+    )
+    priority: Literal["critical", "important", "nice-to-have"] = Field(
+        ...,
+        description="How urgent"
+    )
+    # Premium fields for expert reviews
+    effort: Optional[EffortEstimate] = Field(None, description="How much work to implement")
+    confidence: Optional[ConfidenceLevel] = Field(None, description="How confident in this suggestion")
+    category: Optional[ImprovementCategory] = Field(None, description="Categorize the improvement")
+    is_quick_win: Optional[bool] = Field(None, description="Flag for quick wins (high impact, low effort)")
+    resources: Optional[List[ResourceLink]] = Field(None, description="Supporting links/references")
+    # Expert insight fields
+    principle: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="What rule/heuristic is being violated"
+    )
+    principle_category: Optional[PrincipleCategory] = Field(
+        None,
+        description="Category of the principle"
+    )
+    impact: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="What happens if not fixed"
+    )
+    impact_type: Optional[ImpactType] = Field(
+        None,
+        description="Type of impact"
+    )
+    after_state: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="What it would look like if fixed"
+    )
+
+
+class StructuredImprovementDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    id: str = Field(..., description="Unique ID")
+    issue: Optional[str] = Field(default="", max_length=500)
+    location: Optional[str] = Field(None, max_length=200)
+    suggestion: Optional[str] = Field(default="", max_length=1000)
+    priority: Optional[Literal["critical", "important", "nice-to-have"]] = None
+    effort: Optional[str] = None
+    confidence: Optional[str] = None
+    category: Optional[str] = None
+    is_quick_win: Optional[bool] = None
+    resources: Optional[List[Any]] = None
+    principle: Optional[str] = Field(None, max_length=200)
+    principle_category: Optional[str] = None
+    impact: Optional[str] = Field(None, max_length=500)
+    impact_type: Optional[str] = None
+    after_state: Optional[str] = Field(None, max_length=500)
+
+
+class StructuredStrength(BaseModel):
+    """Structured strength item"""
+    id: str = Field(..., description="Unique ID (client-generated UUID)")
+    what: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="What's good"
+    )
+    why: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Why it works well"
+    )
+    impact: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Business/UX impact of this strength"
+    )
+
+
+class StructuredStrengthDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    id: str = Field(..., description="Unique ID")
+    what: Optional[str] = Field(default="", max_length=500)
+    why: Optional[str] = Field(None, max_length=500)
+    impact: Optional[str] = Field(None, max_length=500)
+
+
+# ===== Top Takeaways Schema =====
+
+class TopTakeaway(BaseModel):
+    """Top 3 Takeaways - the most critical actionable items"""
+    issue: str = Field(
+        ...,
+        min_length=5,
+        max_length=200,
+        description="Brief description of the issue"
+    )
+    fix: str = Field(
+        ...,
+        min_length=5,
+        max_length=300,
+        description="Concrete action to take"
+    )
+
+
+class TopTakeawayDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    issue: Optional[str] = Field(default="", max_length=200)
+    fix: Optional[str] = Field(default="", max_length=300)
+
+
+# ===== Executive Summary Schemas =====
+
+class ExecutiveSummary(BaseModel):
+    """TL;DR for busy creators - premium expert review section"""
+    tldr: str = Field(
+        ...,
+        min_length=50,
+        max_length=200,
+        description="1-3 sentence takeaway"
+    )
+    key_strengths: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=3,
+        description="Top 3 bullet points"
+    )
+    key_actions: List[str] = Field(
+        ...,
+        min_length=1,
+        max_length=3,
+        description="Top 3 priority actions"
+    )
+    overall_readiness: Optional[Literal["ready", "almost-ready", "needs-work", "major-revision"]] = Field(
+        None,
+        description="Overall assessment"
+    )
+
+
+class ExecutiveSummaryDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    tldr: Optional[str] = Field(default="", max_length=200)
+    key_strengths: Optional[List[str]] = Field(default=[])
+    key_actions: Optional[List[str]] = Field(default=[])
+    overall_readiness: Optional[str] = None
+
+
+class FollowUpOffer(BaseModel):
+    """Continued support offer - premium expert review section"""
+    available: bool = Field(..., description="Is reviewer offering follow-up?")
+    type: Optional[Literal["code-review", "design-feedback", "consultation", "pair-session", "other"]] = None
+    description: Optional[str] = Field(None, max_length=500, description="What they're offering")
+    response_time: Optional[str] = Field(None, max_length=100, description="Expected response time")
+
+
+class FollowUpOfferDraft(BaseModel):
+    """Draft version with relaxed validation"""
+    available: Optional[bool] = False
+    type: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=500)
+    response_time: Optional[str] = Field(None, max_length=100)
 
 
 # ===== ReviewSlot Base Schemas =====
@@ -170,6 +445,10 @@ class Phase2RubricRatings(BaseModel):
         ...,
         description="Dimension ratings (e.g., {'functionality': 5, 'code_quality': 4})"
     )
+    rationales: Optional[dict[str, RatingRationale]] = Field(
+        None,
+        description="Justification for each rating"
+    )
 
     @field_validator('ratings')
     @classmethod
@@ -187,6 +466,10 @@ class Phase2RubricRatingsDraft(BaseModel):
     ratings: Optional[dict[str, int]] = Field(
         default={},
         description="Dimension ratings (can be partial in draft)"
+    )
+    rationales: Optional[dict[str, RatingRationaleDraft]] = Field(
+        default={},
+        description="Justification for each rating (can be partial in draft)"
     )
 
 
@@ -254,11 +537,11 @@ class Phase3DetailedFeedbackDraft(BaseModel):
         max_length=10,
         description="List of improvements (can be empty in draft)"
     )
-    structured_strengths: Optional[List[Any]] = Field(
+    structured_strengths: Optional[List[StructuredStrengthDraft]] = Field(
         default=None,
         description="Structured strength items with detailed fields"
     )
-    structured_improvements: Optional[List[Any]] = Field(
+    structured_improvements: Optional[List[StructuredImprovementDraft]] = Field(
         default=None,
         description="Structured improvement items with detailed fields"
     )
@@ -276,11 +559,18 @@ class Phase3DetailedFeedbackDraft(BaseModel):
         None,
         description="Voice memo data"
     )
-    executive_summary: Optional[Any] = Field(
+    # Required: Top 3 Takeaways (the TL;DR checklist)
+    top_takeaways: Optional[List[TopTakeawayDraft]] = Field(
+        default=None,
+        max_length=3,
+        description="Top 3 most important action items"
+    )
+    # Premium expert review sections
+    executive_summary: Optional[ExecutiveSummaryDraft] = Field(
         None,
         description="Executive summary for premium reviews"
     )
-    follow_up_offer: Optional[Any] = Field(
+    follow_up_offer: Optional[FollowUpOfferDraft] = Field(
         None,
         description="Follow-up offer for premium reviews"
     )
