@@ -206,17 +206,8 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
     (c) => c.isQuickWin || (c.priority !== "nice-to-have" && c.effort === "quick-fix")
   ).length;
 
-  // FAB handler
-  const handleFabClick = () => {
-    if (activeTab === "issues") {
-      addIssueCard();
-    } else if (activeTab === "strengths") {
-      addStrengthCard();
-    }
-  };
-
   return (
-    <div className={cn("flex flex-col h-full relative", className)}>
+    <div className={cn("flex flex-col h-full", className)}>
       {/* Tab Navigation */}
       <div className="flex items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 border-b bg-background sticky top-0 z-10 overflow-x-auto">
         <Button
@@ -353,35 +344,54 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                 )}
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
-              >
-                <SortableContext
-                  items={filteredIssues.map((c) => c.id)}
-                  strategy={verticalListSortingStrategy}
+              <>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
                 >
-                  {filteredIssues.map((card, index) => (
-                    <SortableIssueCard key={card.id} card={card} index={index} />
-                  ))}
-                </SortableContext>
+                  <SortableContext
+                    items={filteredIssues.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {filteredIssues.map((card, index) => (
+                      <SortableIssueCard key={card.id} card={card} index={index} />
+                    ))}
+                  </SortableContext>
 
-                {/* Drag Overlay */}
-                <DragOverlay>
-                  {activeIssueCard && (
-                    <div className="opacity-80">
-                      <IssueCardEditor
-                        card={activeIssueCard}
-                        index={filteredIssues.findIndex((c) => c.id === activeIssueCard.id)}
-                        isDragging
-                      />
-                    </div>
-                  )}
-                </DragOverlay>
-              </DndContext>
+                  {/* Drag Overlay */}
+                  <DragOverlay>
+                    {activeIssueCard && (
+                      <div className="opacity-80">
+                        <IssueCardEditor
+                          card={activeIssueCard}
+                          index={filteredIssues.findIndex((c) => c.id === activeIssueCard.id)}
+                          isDragging
+                        />
+                      </div>
+                    )}
+                  </DragOverlay>
+                </DndContext>
+
+                {/* Add Issue Button - below cards */}
+                {issueFilter === "all" && (
+                  <button
+                    onClick={() => addIssueCard()}
+                    className={cn(
+                      "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-orange-300",
+                      "flex items-center justify-center gap-2",
+                      "text-orange-500 font-medium",
+                      "hover:bg-orange-50 hover:border-orange-400",
+                      "transition-all duration-200"
+                    )}
+                  >
+                    <Plus className="size-5" />
+                    Add Issue
+                  </button>
+                )}
+              </>
             )}
 
           </div>
@@ -407,35 +417,52 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                 </Button>
               </div>
             ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
-              >
-                <SortableContext
-                  items={sortedStrengths.map((c) => c.id)}
-                  strategy={verticalListSortingStrategy}
+              <>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
                 >
-                  {sortedStrengths.map((card, index) => (
-                    <SortableStrengthCard key={card.id} card={card} index={index} />
-                  ))}
-                </SortableContext>
+                  <SortableContext
+                    items={sortedStrengths.map((c) => c.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {sortedStrengths.map((card, index) => (
+                      <SortableStrengthCard key={card.id} card={card} index={index} />
+                    ))}
+                  </SortableContext>
 
-                {/* Drag Overlay */}
-                <DragOverlay>
-                  {activeStrengthCard && (
-                    <div className="opacity-80">
-                      <StrengthCardEditor
-                        card={activeStrengthCard}
-                        index={sortedStrengths.findIndex((c) => c.id === activeStrengthCard.id)}
-                        isDragging
-                      />
-                    </div>
+                  {/* Drag Overlay */}
+                  <DragOverlay>
+                    {activeStrengthCard && (
+                      <div className="opacity-80">
+                        <StrengthCardEditor
+                          card={activeStrengthCard}
+                          index={sortedStrengths.findIndex((c) => c.id === activeStrengthCard.id)}
+                          isDragging
+                        />
+                      </div>
+                    )}
+                  </DragOverlay>
+                </DndContext>
+
+                {/* Add Strength Button - below cards */}
+                <button
+                  onClick={() => addStrengthCard()}
+                  className={cn(
+                    "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-green-300",
+                    "flex items-center justify-center gap-2",
+                    "text-green-500 font-medium",
+                    "hover:bg-green-50 hover:border-green-400",
+                    "transition-all duration-200"
                   )}
-                </DragOverlay>
-              </DndContext>
+                >
+                  <Plus className="size-5" />
+                  Add Strength
+                </button>
+              </>
             )}
           </div>
 
@@ -449,27 +476,6 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
         </div>
       )}
 
-      {/* Floating Action Button - always visible for Issues/Strengths */}
-      {activeTab !== "verdict" && (
-        <button
-          onClick={handleFabClick}
-          className={cn(
-            "absolute bottom-4 right-4 z-20",
-            "flex items-center justify-center",
-            "size-14 rounded-full",
-            "text-white font-medium",
-            "shadow-lg hover:shadow-xl",
-            "transition-all duration-200",
-            "hover:scale-105 active:scale-95",
-            activeTab === "issues"
-              ? "bg-orange-500 hover:bg-orange-600"
-              : "bg-green-500 hover:bg-green-600"
-          )}
-          aria-label={activeTab === "issues" ? "Add Issue" : "Add Strength"}
-        >
-          <Plus className="size-6" />
-        </button>
-      )}
     </div>
   );
 }
