@@ -498,6 +498,7 @@ async def save_smart_review_draft(
     import json
     from datetime import datetime
     from bleach import clean
+    from fastapi.encoders import jsonable_encoder
 
     # Allowed HTML tags (basic formatting only)
     ALLOWED_TAGS = ['b', 'i', 'u', 'br', 'p', 'ul', 'ol', 'li', 'strong', 'em']
@@ -562,8 +563,8 @@ async def save_smart_review_draft(
                     strip=True
                 )
 
-        # Save as JSON in draft_sections field
-        slot.draft_sections = json.dumps(draft_dict)
+        # Save as JSON in draft_sections field (use jsonable_encoder to handle datetime)
+        slot.draft_sections = json.dumps(jsonable_encoder(draft_dict))
 
         # Also save overall rating for backward compatibility
         if draft_dict.get('phase1_quick_assessment', {}).get('overall_rating'):
