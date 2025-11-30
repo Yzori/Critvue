@@ -148,6 +148,21 @@ class Phase1QuickAssessment(BaseModel):
         return v
 
 
+class Phase1QuickAssessmentDraft(BaseModel):
+    """Phase 1 Draft: Relaxed validation for saving incomplete drafts"""
+    overall_rating: Optional[int] = Field(None, ge=0, le=5, description="Overall rating (0-5, 0 = not set)")
+    primary_focus_areas: Optional[List[str]] = Field(
+        default=[],
+        max_length=6,
+        description="Selected focus areas"
+    )
+    quick_summary: Optional[str] = Field(
+        default="",
+        max_length=300,
+        description="Brief summary (can be incomplete in draft)"
+    )
+
+
 class Phase2RubricRatings(BaseModel):
     """Phase 2: Content-specific rubric ratings"""
     content_type: str = Field(..., description="Content type: code, design, writing")
@@ -164,6 +179,15 @@ class Phase2RubricRatings(BaseModel):
             if not (1 <= rating <= 5):
                 raise ValueError(f'Rating for {dimension} must be between 1 and 5')
         return v
+
+
+class Phase2RubricRatingsDraft(BaseModel):
+    """Phase 2 Draft: Relaxed validation for saving incomplete drafts"""
+    content_type: Optional[str] = Field(None, description="Content type: code, design, writing")
+    ratings: Optional[dict[str, int]] = Field(
+        default={},
+        description="Dimension ratings (can be partial in draft)"
+    )
 
 
 class VisualAnnotation(BaseModel):
@@ -218,6 +242,50 @@ class Phase3DetailedFeedback(BaseModel):
         return validated
 
 
+class Phase3DetailedFeedbackDraft(BaseModel):
+    """Phase 3 Draft: Relaxed validation for saving incomplete drafts"""
+    strengths: Optional[List[str]] = Field(
+        default=[],
+        max_length=10,
+        description="List of strengths (can be empty in draft)"
+    )
+    improvements: Optional[List[str]] = Field(
+        default=[],
+        max_length=10,
+        description="List of improvements (can be empty in draft)"
+    )
+    structured_strengths: Optional[List[Any]] = Field(
+        default=None,
+        description="Structured strength items with detailed fields"
+    )
+    structured_improvements: Optional[List[Any]] = Field(
+        default=None,
+        description="Structured improvement items with detailed fields"
+    )
+    additional_notes: Optional[str] = Field(
+        None,
+        max_length=5000,
+        description="Additional notes or context (optional)"
+    )
+    visual_annotations: Optional[List[Any]] = Field(
+        None,
+        max_length=20,
+        description="Visual annotations for design/art reviews"
+    )
+    voice_memo: Optional[Any] = Field(
+        None,
+        description="Voice memo data"
+    )
+    executive_summary: Optional[Any] = Field(
+        None,
+        description="Executive summary for premium reviews"
+    )
+    follow_up_offer: Optional[Any] = Field(
+        None,
+        description="Follow-up offer for premium reviews"
+    )
+
+
 class QualityMetrics(BaseModel):
     """Auto-calculated quality metrics"""
     completeness_score: int = Field(..., ge=0, le=100, description="Completeness (0-100%)")
@@ -239,10 +307,10 @@ class SmartReviewMetadata(BaseModel):
 
 
 class SmartReviewDraft(BaseModel):
-    """Draft for Smart Adaptive Review Editor"""
-    phase1_quick_assessment: Optional[Phase1QuickAssessment] = None
-    phase2_rubric: Optional[Phase2RubricRatings] = None
-    phase3_detailed_feedback: Optional[Phase3DetailedFeedback] = None
+    """Draft for Smart Adaptive Review Editor - uses relaxed validation for saving incomplete drafts"""
+    phase1_quick_assessment: Optional[Phase1QuickAssessmentDraft] = None
+    phase2_rubric: Optional[Phase2RubricRatingsDraft] = None
+    phase3_detailed_feedback: Optional[Phase3DetailedFeedbackDraft] = None
     quality_metrics: Optional[QualityMetrics] = None
     metadata: Optional[SmartReviewMetadata] = None
 

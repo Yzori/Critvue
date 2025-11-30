@@ -447,7 +447,6 @@ export function SmartReviewEditor({
               onChange={handlePhase3Change}
               contentType={contentType}
               imageUrl={imageUrl}
-              selectedFocusAreas={draft.phase1_quick_assessment?.primary_focus_areas}
               overallRating={draft.phase1_quick_assessment?.overall_rating || 0}
               quickSummary={draft.phase1_quick_assessment?.quick_summary || ""}
               onVerdictChange={handleVerdictChange}

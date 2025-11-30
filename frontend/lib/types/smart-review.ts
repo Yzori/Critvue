@@ -38,18 +38,51 @@ export interface VoiceMemo {
 // Structured feedback for actionable improvements
 export type FeedbackPriority = 'critical' | 'important' | 'nice-to-have';
 
+// Premium fields for expert reviews
+export type EffortEstimate = 'quick-fix' | 'moderate' | 'major-refactor';
+export type ConfidenceLevel = 'certain' | 'likely' | 'suggestion';
+export type ImprovementCategory = 'performance' | 'ux' | 'security' | 'accessibility' | 'maintainability' | 'design' | 'content' | 'other';
+
+export interface ResourceLink {
+  url: string;
+  title?: string;
+}
+
 export interface StructuredImprovement {
   id: string;
   issue: string; // What's the problem (required, min 10 chars)
   location?: string; // Where in the work (optional but encouraged)
   suggestion: string; // Concrete fix (required, min 10 chars)
   priority: FeedbackPriority; // How urgent
+  // Premium fields for expert reviews
+  effort?: EffortEstimate; // How much work to implement
+  confidence?: ConfidenceLevel; // How confident in this suggestion
+  category?: ImprovementCategory; // Categorize the improvement
+  isQuickWin?: boolean; // Flag for quick wins (high impact, low effort)
+  resources?: ResourceLink[]; // Supporting links/references
 }
 
 export interface StructuredStrength {
   id: string;
   what: string; // What's good (required, min 10 chars)
   why?: string; // Why it works well (optional but encouraged)
+  // Premium field
+  impact?: string; // Business/UX impact of this strength
+}
+
+// Expert review premium sections
+export interface ExecutiveSummary {
+  tldr: string; // 1-3 sentence takeaway (50-200 chars)
+  keyStrengths: string[]; // Top 3 bullet points
+  keyActions: string[]; // Top 3 priority actions
+  overallReadiness?: 'ready' | 'almost-ready' | 'needs-work' | 'major-revision'; // Overall assessment
+}
+
+export interface FollowUpOffer {
+  available: boolean; // Is reviewer offering follow-up?
+  type?: 'code-review' | 'design-feedback' | 'consultation' | 'pair-session' | 'other';
+  description?: string; // What they're offering
+  responseTime?: string; // Expected response time
 }
 
 export interface Phase3DetailedFeedback {
@@ -60,6 +93,9 @@ export interface Phase3DetailedFeedback {
   additional_notes?: string; // Optional, up to 5000 chars
   visual_annotations?: VisualAnnotation[]; // Optional visual annotations for design/art (max 20)
   voice_memo?: VoiceMemo; // Optional voice memo
+  // Premium expert review sections
+  executive_summary?: ExecutiveSummary; // TL;DR for busy creators
+  follow_up_offer?: FollowUpOffer; // Continued support offer
 }
 
 // ===== Quality Metrics =====

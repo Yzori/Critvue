@@ -11,10 +11,11 @@
 "use client";
 
 import * as React from "react";
-import { Plus, HelpCircle, ChevronDown, ChevronUp, Star, Award } from "lucide-react";
+import { Plus, HelpCircle, ChevronDown, ChevronUp, Star, Award, FileText, CheckCircle2, ArrowRight, MessageCircle, Clock } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -22,7 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation, VoiceMemo, StructuredImprovement, StructuredStrength } from "@/lib/types/smart-review";
+import { Phase3DetailedFeedback as Phase3Data, VisualAnnotation, VoiceMemo, StructuredImprovement, StructuredStrength, ExecutiveSummary, FollowUpOffer } from "@/lib/types/smart-review";
 import { ImageAnnotation } from "./ImageAnnotation";
 import { VoiceMemoRecorder } from "./VoiceMemoRecorder";
 import {
@@ -37,7 +38,7 @@ interface Phase3DetailedFeedbackProps {
   onChange: (data: Phase3Data) => void;
   contentType?: string; // Content type to determine if visual annotations should be shown
   imageUrl?: string; // Image URL for design/art reviews
-  selectedFocusAreas?: string[]; // Focus areas from Phase 1 for suggestion filtering
+  _selectedFocusAreas?: string[]; // Focus areas from Phase 1 for suggestion filtering (reserved for future use)
   // Final Verdict props (stored in Phase1 data but edited in Phase3)
   overallRating?: number;
   quickSummary?: string;
@@ -49,7 +50,6 @@ export function Phase3DetailedFeedback({
   onChange,
   contentType,
   imageUrl,
-  selectedFocusAreas,
   overallRating = 0,
   quickSummary = "",
   onVerdictChange,
@@ -101,6 +101,32 @@ export function Phase3DetailedFeedback({
   );
   const [notesExpanded, setNotesExpanded] = React.useState(false);
 
+  // Executive Summary state
+  const [executiveSummary, setExecutiveSummary] = React.useState<ExecutiveSummary>(
+    data?.executive_summary || {
+      tldr: "",
+      keyStrengths: ["", "", ""],
+      keyActions: ["", "", ""],
+      overallReadiness: undefined,
+    }
+  );
+  const [showExecutiveSummary, setShowExecutiveSummary] = React.useState(
+    !!(data?.executive_summary?.tldr)
+  );
+
+  // Follow-up Offer state
+  const [followUpOffer, setFollowUpOffer] = React.useState<FollowUpOffer>(
+    data?.follow_up_offer || {
+      available: false,
+      type: undefined,
+      description: "",
+      responseTime: "",
+    }
+  );
+  const [showFollowUpOffer, setShowFollowUpOffer] = React.useState(
+    data?.follow_up_offer?.available || false
+  );
+
   // Final Verdict state
   const [rating, setRating] = React.useState(overallRating);
   const [summary, setSummary] = React.useState(quickSummary);
@@ -141,6 +167,22 @@ export function Phase3DetailedFeedback({
     const legacyStrengths = validStrengths.map((s) => s.what);
     const legacyImprovements = validImprovements.map((i) => `${i.issue} → ${i.suggestion}`);
 
+    // Build executive summary if valid
+    const validExecutiveSummary = executiveSummary.tldr.length >= 50 ? {
+      tldr: executiveSummary.tldr,
+      keyStrengths: executiveSummary.keyStrengths.filter(s => s.trim().length > 0),
+      keyActions: executiveSummary.keyActions.filter(a => a.trim().length > 0),
+      overallReadiness: executiveSummary.overallReadiness,
+    } : undefined;
+
+    // Build follow-up offer if valid
+    const validFollowUpOffer = followUpOffer.available ? {
+      available: true,
+      type: followUpOffer.type,
+      description: followUpOffer.description?.trim() || undefined,
+      responseTime: followUpOffer.responseTime?.trim() || undefined,
+    } : undefined;
+
     if (validStrengths.length > 0 || validImprovements.length > 0) {
       onChange({
         // Legacy format (for backward compatibility)
@@ -152,9 +194,12 @@ export function Phase3DetailedFeedback({
         additional_notes: additionalNotes.trim() || undefined,
         visual_annotations: visualAnnotations.length > 0 ? visualAnnotations : undefined,
         voice_memo: voiceMemo,
+        // Premium fields
+        executive_summary: validExecutiveSummary,
+        follow_up_offer: validFollowUpOffer,
       });
     }
-  }, [structuredStrengths, structuredImprovements, additionalNotes, visualAnnotations, voiceMemo, onChange]);
+  }, [structuredStrengths, structuredImprovements, additionalNotes, visualAnnotations, voiceMemo, executiveSummary, followUpOffer, onChange]);
 
   // Voice memo handlers
   const handleVoiceRecordingComplete = (audioBlob: Blob, duration: number) => {
@@ -173,18 +218,12 @@ export function Phase3DetailedFeedback({
     setVoiceMemo(undefined);
   };
 
-  // Auto-collapse sections when they reach minimum content (1 complete item)
+  // Auto-collapse annotations when they reach minimum content
   React.useEffect(() => {
-    const validStrengths = structuredStrengths.filter((s) => s.what.length >= 10);
-    const validImprovements = structuredImprovements.filter(
-      (i) => i.issue.length >= 10 && i.suggestion.length >= 10
-    );
-
-    // Auto-collapse annotations when >= 1 annotation
     if (visualAnnotations.length >= 1 && !annotationsCollapsed) {
       setAnnotationsCollapsed(true);
     }
-  }, [structuredStrengths, structuredImprovements, visualAnnotations, annotationsCollapsed]);
+  }, [visualAnnotations, annotationsCollapsed]);
 
   // Check if phase is complete (for compact summary view)
   const isPhaseComplete = React.useMemo(() => {
@@ -244,7 +283,7 @@ export function Phase3DetailedFeedback({
   const annotationsRef = React.useRef<HTMLDivElement>(null);
   const notesRef = React.useRef<HTMLDivElement>(null);
 
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -696,7 +735,7 @@ export function Phase3DetailedFeedback({
         existingDuration={voiceMemo?.duration}
       />
 
-      {/* Final Verdict Section */}
+      {/* Final Verdict Section - Moved BEFORE Executive Summary */}
       <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-amber-50/30 p-4 md:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-gradient-to-br from-purple-500 to-amber-500 flex items-center justify-center">
@@ -812,6 +851,244 @@ export function Phase3DetailedFeedback({
             {summary.length > 300 && "Summary too long"}
           </span>
         </div>
+      </div>
+
+      {/* Executive Summary - Premium Section */}
+      {/* Auto-populated top 3 from existing strengths/improvements */}
+      <div className="rounded-xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-purple-50/30 p-4 md:p-6 space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+              <FileText className="size-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Executive Summary</h3>
+                <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">Premium</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                TL;DR for busy creators
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant={showExecutiveSummary ? "outline" : "default"}
+            size="sm"
+            onClick={() => setShowExecutiveSummary(!showExecutiveSummary)}
+            className="min-h-[40px]"
+          >
+            {showExecutiveSummary ? "Collapse" : "Add Summary"}
+          </Button>
+        </div>
+
+        {showExecutiveSummary && (
+          <div className="space-y-5 animate-in slide-in-from-top-2 duration-300">
+            {/* TL;DR */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="tldr" className="text-base font-semibold">TL;DR</Label>
+                <span className={cn(
+                  "text-xs font-medium px-2 py-1 rounded-full",
+                  executiveSummary.tldr.length < 50 && "bg-amber-100 text-amber-700",
+                  executiveSummary.tldr.length >= 50 && executiveSummary.tldr.length <= 200 && "bg-green-100 text-green-700",
+                  executiveSummary.tldr.length > 200 && "bg-red-100 text-red-700"
+                )}>
+                  {executiveSummary.tldr.length}/200
+                </span>
+              </div>
+              <Textarea
+                id="tldr"
+                placeholder="1-3 sentence takeaway: What's the single most important thing the creator should know?"
+                value={executiveSummary.tldr}
+                onChange={(e) => setExecutiveSummary({ ...executiveSummary, tldr: e.target.value })}
+                className={cn(
+                  "min-h-[80px] text-base resize-y",
+                  "rounded-xl border-2 bg-white px-4 py-3",
+                  "focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-300"
+                )}
+                maxLength={200}
+              />
+            </div>
+
+            {/* Auto-populated Top 3 Strengths */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Top 3 Strengths</Label>
+                <span className="text-xs text-muted-foreground">(Auto-populated from your feedback)</span>
+              </div>
+              <div className="space-y-2 p-3 rounded-lg bg-green-50 border border-green-200">
+                {structuredStrengths.filter(s => s.what.length >= 10).slice(0, 3).map((strength) => (
+                  <div key={strength.id} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="size-4 text-green-600 mt-0.5 shrink-0" />
+                    <span className="text-foreground">{strength.what}</span>
+                  </div>
+                ))}
+                {structuredStrengths.filter(s => s.what.length >= 10).length === 0 && (
+                  <p className="text-sm text-muted-foreground italic">Add strengths above to auto-populate</p>
+                )}
+              </div>
+            </div>
+
+            {/* Auto-populated Top 3 Actions */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label className="text-base font-semibold">Top 3 Actions</Label>
+                <span className="text-xs text-muted-foreground">(Auto-populated from improvements)</span>
+              </div>
+              <div className="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                {structuredImprovements.filter(i => i.suggestion.length >= 10).slice(0, 3).map((improvement) => (
+                  <div key={improvement.id} className="flex items-start gap-2 text-sm">
+                    <ArrowRight className="size-4 text-amber-600 mt-0.5 shrink-0" />
+                    <span className="text-foreground">{improvement.suggestion}</span>
+                  </div>
+                ))}
+                {structuredImprovements.filter(i => i.suggestion.length >= 10).length === 0 && (
+                  <p className="text-sm text-muted-foreground italic">Add improvements above to auto-populate</p>
+                )}
+              </div>
+            </div>
+
+            {/* Overall Readiness */}
+            <div className="space-y-2">
+              <Label className="text-base font-semibold">Overall Readiness</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {[
+                  { value: 'ready', label: 'Ship It! 🚀', color: 'green' },
+                  { value: 'almost-ready', label: 'Almost There', color: 'blue' },
+                  { value: 'needs-work', label: 'Needs Work', color: 'amber' },
+                  { value: 'major-revision', label: 'Major Revision', color: 'red' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setExecutiveSummary({
+                      ...executiveSummary,
+                      overallReadiness: option.value as ExecutiveSummary['overallReadiness']
+                    })}
+                    className={cn(
+                      "px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      "border-2 min-h-[44px] touch-manipulation",
+                      executiveSummary.overallReadiness === option.value
+                        ? option.color === 'green' ? "bg-green-100 border-green-400 text-green-800"
+                        : option.color === 'blue' ? "bg-blue-100 border-blue-400 text-blue-800"
+                        : option.color === 'amber' ? "bg-amber-100 border-amber-400 text-amber-800"
+                        : "bg-red-100 border-red-400 text-red-800"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Follow-up Offer - Optional Premium Section */}
+      <div className="rounded-xl border-2 border-cyan-200 bg-gradient-to-br from-cyan-50/50 to-blue-50/30 p-4 md:p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+              <MessageCircle className="size-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-foreground">Offer Follow-up Support</h3>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-xs font-semibold">Optional</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Build client relationships
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant={followUpOffer.available ? "outline" : "ghost"}
+            size="sm"
+            onClick={() => {
+              setFollowUpOffer({ ...followUpOffer, available: !followUpOffer.available });
+              setShowFollowUpOffer(!followUpOffer.available);
+            }}
+            className="min-h-[40px]"
+          >
+            {followUpOffer.available ? "Remove Offer" : "Add Offer"}
+          </Button>
+        </div>
+
+        {showFollowUpOffer && followUpOffer.available && (
+          <div className="space-y-4 animate-in slide-in-from-top-2 duration-300">
+            {/* Offer Type */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">What are you offering?</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'code-review', label: 'Code Review' },
+                  { value: 'design-feedback', label: 'Design Feedback' },
+                  { value: 'consultation', label: 'Consultation' },
+                  { value: 'pair-session', label: 'Pair Session' },
+                  { value: 'other', label: 'Other' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFollowUpOffer({
+                      ...followUpOffer,
+                      type: option.value as FollowUpOffer['type']
+                    })}
+                    className={cn(
+                      "px-3 py-2 rounded-full text-sm font-medium transition-all",
+                      "border min-h-[36px] touch-manipulation",
+                      followUpOffer.type === option.value
+                        ? "bg-cyan-100 border-cyan-400 text-cyan-800"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-cyan-300"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="follow-up-desc" className="text-sm font-semibold">Brief description (optional)</Label>
+              <Input
+                id="follow-up-desc"
+                placeholder="e.g., Happy to review your revised version or answer questions"
+                value={followUpOffer.description || ""}
+                onChange={(e) => setFollowUpOffer({ ...followUpOffer, description: e.target.value })}
+                className="bg-white"
+                maxLength={200}
+              />
+            </div>
+
+            {/* Response Time */}
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Response time</Label>
+              <div className="flex flex-wrap gap-2">
+                {['Within 24h', '2-3 days', 'Within a week'].map((time) => (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={() => setFollowUpOffer({ ...followUpOffer, responseTime: time })}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all",
+                      "border min-h-[36px] touch-manipulation",
+                      followUpOffer.responseTime === time
+                        ? "bg-cyan-100 border-cyan-400 text-cyan-800"
+                        : "bg-white border-gray-200 text-gray-700 hover:border-cyan-300"
+                    )}
+                  >
+                    <Clock className="size-3.5" />
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Progress Summary */}

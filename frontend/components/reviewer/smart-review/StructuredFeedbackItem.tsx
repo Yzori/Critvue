@@ -9,7 +9,7 @@
 "use client";
 
 import * as React from "react";
-import { X, ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Lightbulb, MapPin, Wrench, Sparkles, MessageSquare } from "lucide-react";
+import { X, ChevronDown, ChevronUp, AlertTriangle, AlertCircle, Lightbulb, MapPin, Wrench, Sparkles, MessageSquare, Zap, Clock, HardHat, Shield, Target, Link2, Plus, Trash2, CheckCircle2, HelpCircle, Gauge } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,16 @@ import {
   StructuredImprovement,
   StructuredStrength,
   FeedbackPriority,
+  EffortEstimate,
+  ConfidenceLevel,
+  ImprovementCategory,
+  ResourceLink,
 } from "@/lib/types/smart-review";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Priority configuration
 const PRIORITY_CONFIG: Record<FeedbackPriority, { label: string; color: string; bg: string; border: string; icon: typeof AlertTriangle }> = {
@@ -43,6 +52,65 @@ const PRIORITY_CONFIG: Record<FeedbackPriority, { label: string; color: string; 
     border: "border-blue-300",
     icon: Lightbulb,
   },
+};
+
+// Effort estimate configuration
+const EFFORT_CONFIG: Record<EffortEstimate, { label: string; description: string; color: string; bg: string; icon: typeof Zap }> = {
+  "quick-fix": {
+    label: "Quick Fix",
+    description: "< 30 mins",
+    color: "text-green-700",
+    bg: "bg-green-100",
+    icon: Zap,
+  },
+  moderate: {
+    label: "Moderate",
+    description: "1-4 hours",
+    color: "text-amber-700",
+    bg: "bg-amber-100",
+    icon: Clock,
+  },
+  "major-refactor": {
+    label: "Major",
+    description: "1+ days",
+    color: "text-purple-700",
+    bg: "bg-purple-100",
+    icon: HardHat,
+  },
+};
+
+// Confidence level configuration
+const CONFIDENCE_CONFIG: Record<ConfidenceLevel, { label: string; description: string; color: string; bg: string }> = {
+  certain: {
+    label: "Certain",
+    description: "I'm confident this will help",
+    color: "text-green-700",
+    bg: "bg-green-100",
+  },
+  likely: {
+    label: "Likely",
+    description: "Should work based on my experience",
+    color: "text-blue-700",
+    bg: "bg-blue-100",
+  },
+  suggestion: {
+    label: "Worth Exploring",
+    description: "Consider investigating this approach",
+    color: "text-gray-600",
+    bg: "bg-gray-100",
+  },
+};
+
+// Category configuration
+const CATEGORY_CONFIG: Record<ImprovementCategory, { label: string; icon: typeof Shield }> = {
+  performance: { label: "Performance", icon: Gauge },
+  ux: { label: "User Experience", icon: Target },
+  security: { label: "Security", icon: Shield },
+  accessibility: { label: "Accessibility", icon: Target },
+  maintainability: { label: "Maintainability", icon: Wrench },
+  design: { label: "Design", icon: Sparkles },
+  content: { label: "Content", icon: MessageSquare },
+  other: { label: "Other", icon: Lightbulb },
 };
 
 // Smart placeholder prompts for improvements
@@ -90,7 +158,7 @@ const STRENGTH_PLACEHOLDERS = {
 
 // Get random placeholder
 function getRandomPlaceholder(array: string[]): string {
-  return array[Math.floor(Math.random() * array.length)];
+  return array[Math.floor(Math.random() * array.length)] ?? array[0] ?? "";
 }
 
 interface StructuredImprovementItemProps {
@@ -109,6 +177,9 @@ export function StructuredImprovementItem({
   index,
 }: StructuredImprovementItemProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
+  const [showPremiumFields, setShowPremiumFields] = React.useState(false);
+  const [newResourceUrl, setNewResourceUrl] = React.useState("");
+  const [newResourceTitle, setNewResourceTitle] = React.useState("");
   const [placeholders] = React.useState({
     issue: getRandomPlaceholder(IMPROVEMENT_PLACEHOLDERS.issue),
     location: getRandomPlaceholder(IMPROVEMENT_PLACEHOLDERS.location),
@@ -146,7 +217,7 @@ export function StructuredImprovementItem({
             <span className="text-xs font-bold text-muted-foreground">#{index + 1}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className={cn(
                 "text-xs font-medium px-2 py-0.5 rounded-full",
                 PRIORITY_CONFIG[item.priority].bg,
@@ -154,6 +225,16 @@ export function StructuredImprovementItem({
               )}>
                 {PRIORITY_CONFIG[item.priority].label}
               </span>
+              {item.isQuickWin && (
+                <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                  <Zap className="size-3" /> Quick Win
+                </span>
+              )}
+              {item.effort && (
+                <span className={cn("text-xs px-2 py-0.5 rounded-full", EFFORT_CONFIG[item.effort].bg, EFFORT_CONFIG[item.effort].color)}>
+                  {EFFORT_CONFIG[item.effort].label}
+                </span>
+              )}
               {item.location && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <MapPin className="size-3" />
@@ -163,6 +244,12 @@ export function StructuredImprovementItem({
             </div>
             <p className="text-sm font-medium text-foreground line-clamp-1">{item.issue}</p>
             <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">→ {item.suggestion}</p>
+            {item.resources && item.resources.length > 0 && (
+              <p className="text-xs text-indigo-600 mt-0.5 flex items-center gap-1">
+                <Link2 className="size-3" />
+                {item.resources.length} reference link{item.resources.length > 1 ? "s" : ""}
+              </p>
+            )}
           </div>
           <ChevronDown className="size-4 text-muted-foreground shrink-0" />
         </div>
@@ -294,10 +381,241 @@ export function StructuredImprovementItem({
         </div>
       </div>
 
+      {/* Premium Fields Toggle */}
+      <div className="pt-2 border-t border-border">
+        <button
+          type="button"
+          onClick={() => setShowPremiumFields(!showPremiumFields)}
+          className="flex items-center gap-2 text-sm font-medium text-accent-blue hover:text-accent-blue/80 transition-colors touch-manipulation"
+        >
+          <Sparkles className="size-4" />
+          {showPremiumFields ? "Hide expert details" : "Add expert details"}
+          <span className="text-xs text-muted-foreground">(effort, confidence, resources)</span>
+          {showPremiumFields ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+        </button>
+      </div>
+
+      {/* Premium Fields (Collapsible) */}
+      {showPremiumFields && (
+        <div className="space-y-4 pt-3 animate-in slide-in-from-top-2 duration-200">
+          {/* Quick Win + Category Row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Quick Win Toggle */}
+            <button
+              type="button"
+              onClick={() => updateField("isQuickWin", !item.isQuickWin)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 transition-all",
+                "text-sm font-medium touch-manipulation",
+                item.isQuickWin
+                  ? "bg-green-100 border-green-400 text-green-700"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-green-300"
+              )}
+            >
+              <Zap className={cn("size-4", item.isQuickWin && "fill-green-500")} />
+              Quick Win
+            </button>
+
+            {/* Category Dropdown */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-muted-foreground">Category:</label>
+              <select
+                value={item.category || ""}
+                onChange={(e) => updateField("category", e.target.value as ImprovementCategory || undefined)}
+                className="text-sm border rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-accent-blue/50"
+              >
+                <option value="">Select...</option>
+                {(Object.keys(CATEGORY_CONFIG) as ImprovementCategory[]).map((cat) => (
+                  <option key={cat} value={cat}>{CATEGORY_CONFIG[cat].label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Effort Estimate */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <Clock className="size-3.5 text-purple-600" />
+              Estimated Effort
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="size-4 text-muted-foreground hover:text-foreground">
+                    <HelpCircle className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Help creators prioritize by knowing how much work each fix requires</TooltipContent>
+              </Tooltip>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(EFFORT_CONFIG) as EffortEstimate[]).map((effort) => {
+                const config = EFFORT_CONFIG[effort];
+                const Icon = config.icon;
+                const isSelected = item.effort === effort;
+                return (
+                  <button
+                    key={effort}
+                    type="button"
+                    onClick={() => updateField("effort", isSelected ? undefined : effort)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 transition-all",
+                      "text-sm font-medium touch-manipulation",
+                      isSelected
+                        ? cn(config.bg, "border-current", config.color)
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    )}
+                  >
+                    <Icon className="size-4" />
+                    <span>{config.label}</span>
+                    <span className="text-xs opacity-70">{config.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Confidence Level */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-blue-600" />
+              Confidence Level
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="size-4 text-muted-foreground hover:text-foreground">
+                    <HelpCircle className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>How confident are you that this suggestion will improve the work?</TooltipContent>
+              </Tooltip>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(CONFIDENCE_CONFIG) as ConfidenceLevel[]).map((confidence) => {
+                const config = CONFIDENCE_CONFIG[confidence];
+                const isSelected = item.confidence === confidence;
+                return (
+                  <button
+                    key={confidence}
+                    type="button"
+                    onClick={() => updateField("confidence", isSelected ? undefined : confidence)}
+                    className={cn(
+                      "flex flex-col items-start px-3 py-2 rounded-lg border-2 transition-all",
+                      "text-sm font-medium touch-manipulation text-left",
+                      isSelected
+                        ? cn(config.bg, "border-current", config.color)
+                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    )}
+                  >
+                    <span>{config.label}</span>
+                    <span className="text-xs opacity-70 font-normal">{config.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Resource Links */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-1.5">
+              <Link2 className="size-3.5 text-indigo-600" />
+              Reference Links
+              <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+            </label>
+
+            {/* Existing links */}
+            {item.resources && item.resources.length > 0 && (
+              <div className="space-y-1.5">
+                {item.resources.map((resource, idx) => (
+                  <div key={idx} className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg text-sm">
+                    <Link2 className="size-3.5 text-indigo-600 shrink-0" />
+                    <a
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-700 hover:underline truncate flex-1"
+                    >
+                      {resource.title || resource.url}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newResources = item.resources?.filter((_, i) => i !== idx);
+                        updateField("resources", newResources?.length ? newResources : undefined);
+                      }}
+                      className="p-1 text-red-500 hover:bg-red-100 rounded touch-manipulation"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new link */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                placeholder="https://example.com/resource"
+                value={newResourceUrl}
+                onChange={(e) => setNewResourceUrl(e.target.value)}
+                className="text-sm flex-1"
+              />
+              <Input
+                placeholder="Title (optional)"
+                value={newResourceTitle}
+                onChange={(e) => setNewResourceTitle(e.target.value)}
+                className="text-sm sm:w-32"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!newResourceUrl.trim()}
+                onClick={() => {
+                  if (newResourceUrl.trim()) {
+                    const newResource: ResourceLink = {
+                      url: newResourceUrl.trim(),
+                      title: newResourceTitle.trim() || undefined,
+                    };
+                    updateField("resources", [...(item.resources || []), newResource]);
+                    setNewResourceUrl("");
+                    setNewResourceTitle("");
+                  }
+                }}
+                className="shrink-0 touch-manipulation"
+              >
+                <Plus className="size-4 mr-1" />
+                Add
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Add links to docs, tutorials, or examples that support your suggestion
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Completion indicator */}
       {isComplete && (
         <div className="flex items-center gap-2 pt-2 border-t border-border">
           <span className="text-xs text-green-600 font-medium">✓ Complete</span>
+          {/* Show premium field badges */}
+          {(item.effort || item.confidence || item.isQuickWin || item.resources?.length) && (
+            <div className="flex items-center gap-1.5 ml-2">
+              {item.isQuickWin && (
+                <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                  <Zap className="size-3" /> Quick Win
+                </span>
+              )}
+              {item.effort && (
+                <span className={cn("text-xs px-1.5 py-0.5 rounded-full", EFFORT_CONFIG[item.effort].bg, EFFORT_CONFIG[item.effort].color)}>
+                  {EFFORT_CONFIG[item.effort].label}
+                </span>
+              )}
+              {item.resources && item.resources.length > 0 && (
+                <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">
+                  {item.resources.length} link{item.resources.length > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
