@@ -263,7 +263,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
 
       {/* Issues Tab Content */}
       {activeTab === "issues" && (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Quick Filters */}
           <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
             <Filter className="h-4 w-4 text-muted-foreground" />
@@ -318,8 +318,8 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
             </div>
           </div>
 
-          {/* Card List */}
-          <div className="p-2 sm:p-4 space-y-2 sm:space-y-3 pb-20">
+          {/* Card List - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3">
             {filteredIssues.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-20" />
@@ -377,9 +377,9 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
 
           </div>
 
-          {/* Sticky Add Issue Button - only show when list has items */}
+          {/* Fixed Add Issue Button Footer - only show when list has items */}
           {filteredIssues.length > 0 && issueFilter === "all" && (
-            <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
+            <div className="shrink-0 p-3 border-t bg-[#fafafa]">
               <Button
                 onClick={() => addIssueCard()}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
@@ -394,8 +394,9 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
 
       {/* Strengths Tab Content */}
       {activeTab === "strengths" && (
-        <div className="flex-1 overflow-y-auto flex flex-col">
-          <div className="p-2 sm:p-4 space-y-2 sm:space-y-3 pb-20 flex-1">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Card List - Scrollable */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3">
             {sortedStrengths.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <ThumbsUp className="h-12 w-12 mx-auto mb-4 opacity-20" />
@@ -441,9 +442,9 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
             )}
           </div>
 
-          {/* Sticky Add Strength Button - only show when list has items */}
+          {/* Fixed Add Strength Button Footer - only show when list has items */}
           {sortedStrengths.length > 0 && (
-            <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
+            <div className="shrink-0 p-3 border-t bg-[#fafafa]">
               <Button
                 onClick={() => addStrengthCard()}
                 className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
