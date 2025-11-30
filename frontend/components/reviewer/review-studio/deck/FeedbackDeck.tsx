@@ -377,8 +377,8 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
 
           </div>
 
-          {/* Sticky Add Issue Button */}
-          {issueFilter === "all" && (
+          {/* Sticky Add Issue Button - only show when list has items */}
+          {filteredIssues.length > 0 && issueFilter === "all" && (
             <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
               <Button
                 onClick={() => addIssueCard()}
@@ -441,16 +441,18 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
             )}
           </div>
 
-          {/* Sticky Add Strength Button */}
-          <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
-            <Button
-              onClick={() => addStrengthCard()}
-              className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Strength
-            </Button>
-          </div>
+          {/* Sticky Add Strength Button - only show when list has items */}
+          {sortedStrengths.length > 0 && (
+            <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
+              <Button
+                onClick={() => addStrengthCard()}
+                className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Strength
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
