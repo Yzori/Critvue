@@ -61,119 +61,73 @@ export function EarningsDashboard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'relative overflow-hidden rounded-2xl',
-        'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50',
-        'border border-emerald-200/60 shadow-sm',
+        'rounded-xl',
+        'bg-card border border-border/60',
         className
       )}
     >
-      {/* Decorative background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-200/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-200/30 rounded-full blur-2xl" />
-      </div>
-
-      <div className="relative p-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/25">
-            <DollarSign className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-foreground">Your Earnings</h3>
-            <p className="text-xs text-muted-foreground">Track your progress</p>
+      <div className="p-4">
+        {/* Compact Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-emerald-50">
+              <DollarSign className="w-4 h-4 text-emerald-600" />
+            </div>
+            <span className="text-sm font-medium text-foreground">Earnings</span>
           </div>
           {goalAchieved && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="ml-auto flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium"
-            >
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-medium">
               <Trophy className="w-3 h-3" />
-              Goal reached!
-            </motion.div>
+              Goal!
+            </span>
           )}
         </div>
 
-        {/* Main stat - This week with goal */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground mb-2">This Week</p>
-          <div className="flex items-baseline gap-3">
-            <span className="text-5xl font-bold text-emerald-600">
-              <AnimatedCurrency value={thisWeek} duration={1200} />
+        {/* Main stat - Compact */}
+        <div className="mb-3">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-emerald-600">
+              <AnimatedCurrency value={thisWeek} duration={800} />
             </span>
-            <span className="text-lg text-muted-foreground">
-              / ${weeklyGoal} goal
+            <span className="text-sm text-muted-foreground">
+              / ${weeklyGoal}
             </span>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="h-3 bg-emerald-100 rounded-full overflow-hidden">
+          {/* Thinner progress bar */}
+          <div className="mt-2">
+            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <motion.div
-                className={cn(
-                  'h-full rounded-full',
-                  goalAchieved
-                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500'
-                    : 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                )}
+                className="h-full rounded-full bg-emerald-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${goalProgress}%` }}
-                transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
+                transition={{ duration: 0.8 }}
               />
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-              <span>{Math.round(goalProgress)}% of goal</span>
-              {!goalAchieved && (
-                <span>${weeklyGoal - thisWeek} to go</span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-emerald-200/60">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Today</p>
-            <p className="text-xl font-semibold text-foreground">
-              <AnimatedCurrency value={today} delay={400} />
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">This Month</p>
-            <p className="text-xl font-semibold text-foreground">
-              <AnimatedCurrency value={thisMonth} delay={500} />
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">All Time</p>
-            <p className="text-xl font-semibold text-foreground">
-              <AnimatedCurrency value={allTime} delay={600} />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {Math.round(goalProgress)}% weekly goal
             </p>
           </div>
         </div>
 
-        {/* Best day highlight */}
-        {bestDay && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/60 border border-emerald-100"
-          >
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span className="text-sm text-muted-foreground">
-              Best day this month:{' '}
-              <span className="font-semibold text-foreground">
-                ${bestDay.amount}
-              </span>
-              {' '}on {bestDay.date}
-            </span>
-          </motion.div>
-        )}
+        {/* Compact stats row */}
+        <div className="flex items-center gap-4 pt-3 border-t border-border/60 text-xs">
+          <div>
+            <p className="text-muted-foreground">Today</p>
+            <p className="font-semibold"><AnimatedCurrency value={today} delay={200} /></p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Month</p>
+            <p className="font-semibold"><AnimatedCurrency value={thisMonth} delay={300} /></p>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Total</p>
+            <p className="font-semibold"><AnimatedCurrency value={allTime} delay={400} /></p>
+          </div>
+        </div>
       </div>
     </motion.div>
   );

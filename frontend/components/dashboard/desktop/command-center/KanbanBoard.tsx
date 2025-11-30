@@ -103,13 +103,13 @@ export function KanbanBoard({
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Board Grid */}
+    <div className={cn("", className)}>
+      {/* Board Grid - Tighter layout */}
       <div
         className={cn(
-          "grid gap-4",
+          "grid gap-3",
           "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-          "auto-rows-[minmax(320px,1fr)]"
+          "auto-rows-[minmax(260px,auto)]"
         )}
       >
         {columns.map((column, index) => (
@@ -156,19 +156,19 @@ function KanbanColumn({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.3,
-        delay: index * 0.1,
+        duration: 0.2,
+        delay: index * 0.05,
       }}
       className={cn(
         "flex flex-col",
-        "rounded-2xl",
-        "border border-border/80",
+        "rounded-xl",
+        "border border-border/60",
         "bg-white",
         "overflow-hidden",
-        "min-h-[300px]"
+        "min-h-[240px]"
       )}
     >
       {/* Colored Header Bar - thicker for stronger visual presence */}

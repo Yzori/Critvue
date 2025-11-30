@@ -445,13 +445,13 @@ export function ElevatedDashboard({
 
   return (
     <div className={cn('min-h-screen bg-[#FAFAFC]', className)}>
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3">
 
-        {/* Header Section */}
+        {/* Header Section - Compact */}
         <motion.header
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             {/* Left: Greeting + Tier Ring */}
@@ -543,12 +543,15 @@ export function ElevatedDashboard({
 
         </motion.header>
 
+        {/* Divider */}
+        <div className="border-b border-slate-200/60 mb-4" />
+
         {/* Main Content with Role Transition */}
         <DashboardTransition role={role}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] xl:grid-cols-[1fr_300px] gap-4">
 
-            {/* Main Column (2/3) */}
-            <div className="lg:col-span-2 space-y-6">
+            {/* Main Column */}
+            <div className="space-y-4">
 
               {/* Hero Action Block */}
               <HeroActionBlock
@@ -566,7 +569,7 @@ export function ElevatedDashboard({
 
                   {/* Activity Kanban */}
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Your Activity</h3>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Your Pipeline</p>
                     <KanbanBoard
                       role={role}
                       columns={kanbanColumns}
@@ -595,7 +598,7 @@ export function ElevatedDashboard({
 
                   {/* Activity Kanban */}
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Your Reviews</h3>
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">Your Review Pipeline</p>
                     <KanbanBoard
                       role={role}
                       columns={kanbanColumns}
@@ -606,36 +609,44 @@ export function ElevatedDashboard({
               )}
             </div>
 
-            {/* Sidebar (1/3) */}
-            <div className="space-y-6">
+            {/* Sidebar - Organized sections */}
+            <div className="space-y-5">
 
-              {/* Story Mode Stats */}
-              <StoryModeStats
-                stats={storyStats}
-                role={role}
-                userName={user?.full_name || undefined}
-              />
-
-              {/* Upcoming Events / Anticipation */}
-              <HideInZenMode>
-                <UpcomingEventsSection
-                  moments={countdownMoments}
-                  predictions={predictions}
+              {/* INSIGHTS SECTION */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-1">
+                  Insights
+                </p>
+                <StoryModeStats
+                  stats={storyStats}
+                  role={role}
+                  userName={user?.full_name || undefined}
                 />
-              </HideInZenMode>
+                <HideInZenMode>
+                  <UpcomingEventsSection
+                    moments={countdownMoments}
+                    predictions={predictions}
+                  />
+                </HideInZenMode>
+              </div>
 
-              {/* Live Activity Feed */}
-              <LiveActivityFeed events={activityEvents} maxItems={4} />
+              {/* ACTIVITY SECTION */}
+              <LiveActivityFeed events={activityEvents} maxItems={3} />
 
-              {/* Reviewer: Efficiency Metrics - real data from API */}
+              {/* PERFORMANCE SECTION - Reviewer only */}
               {role === 'reviewer' && (
-                <EfficiencyMetrics
-                  avgTimePerReview={35}
-                  acceptanceRate={userStoryStats?.acceptance_rate ?? 95}
-                  avgRating={userStoryStats?.average_rating ?? 4.7}
-                  percentileRank={userStoryStats?.percentile_rank ?? 50}
-                  totalReviews={userStoryStats?.total_reviews_given ?? completedReviews.length}
-                />
+                <div className="space-y-2">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-1">
+                    Performance
+                  </p>
+                  <EfficiencyMetrics
+                    avgTimePerReview={35}
+                    acceptanceRate={userStoryStats?.acceptance_rate ?? 95}
+                    avgRating={userStoryStats?.average_rating ?? 4.7}
+                    percentileRank={userStoryStats?.percentile_rank ?? 50}
+                    totalReviews={userStoryStats?.total_reviews_given ?? completedReviews.length}
+                  />
+                </div>
               )}
             </div>
           </div>

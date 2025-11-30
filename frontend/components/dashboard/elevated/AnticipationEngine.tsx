@@ -90,57 +90,36 @@ export function LiveActivityFeed({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        'p-4 rounded-2xl bg-card border border-border',
-        className
-      )}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <div className="relative">
-          <Bell className="w-4 h-4 text-muted-foreground" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-        </div>
-        <span className="text-sm font-medium text-muted-foreground">
-          Right now on Critvue
+    <div className={cn('space-y-2', className)}>
+      <div className="flex items-center gap-1.5 px-1">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+          Live
         </span>
       </div>
 
-      <div className="space-y-2">
-        <AnimatePresence mode="popLayout">
-          {visibleEvents.map((event, index) => {
-            const Icon = activityIcons[event.type];
-            const color = activityColors[event.type];
+      <div className="rounded-lg bg-card border border-border/60 divide-y divide-border/40">
+        {visibleEvents.slice(0, 3).map((event) => {
+          const Icon = activityIcons[event.type];
+          const color = activityColors[event.type];
 
-            return (
-              <motion.div
-                key={event.id}
-                initial={{ opacity: 0, x: -20, height: 0 }}
-                animate={{ opacity: 1, x: 0, height: 'auto' }}
-                exit={{ opacity: 0, x: 20, height: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={cn(
-                  'flex items-center gap-3 py-2',
-                  index < visibleEvents.length - 1 && 'border-b border-border/50'
-                )}
-              >
-                <div className={cn('p-1.5 rounded-lg bg-muted/50', color)}>
-                  <Icon className="w-3.5 h-3.5" />
-                </div>
-                <p className="flex-1 text-sm text-muted-foreground">
-                  {event.message}
-                </p>
-                <span className="text-xs text-muted-foreground/60">
-                  {formatTimeAgo(event.timestamp)}
-                </span>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
+          return (
+            <div key={event.id} className="flex items-center gap-2 px-3 py-2">
+              <Icon className={cn('w-3 h-3 flex-shrink-0', color)} />
+              <p className="flex-1 text-[11px] text-muted-foreground truncate">
+                {event.message}
+              </p>
+              <span className="text-[10px] text-muted-foreground/50 flex-shrink-0">
+                {formatTimeAgo(event.timestamp)}
+              </span>
+            </div>
+          );
+        })}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -176,59 +155,38 @@ export function PredictionCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, height: 0 }}
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
       className={cn(
-        'relative p-4 rounded-xl',
-        'bg-gradient-to-br from-violet-50/80 via-indigo-50/60 to-blue-50/40',
-        'border border-violet-200/60',
+        'p-3 rounded-lg',
+        'bg-slate-50/80 border border-border/60',
         className
       )}
     >
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-lg bg-white/60 border border-violet-100/80">
-          <Icon className="w-4 h-4 text-violet-600" />
+      <div className="flex items-start gap-2.5">
+        <div className="p-1.5 rounded-md bg-slate-100">
+          <Icon className="w-3.5 h-3.5 text-slate-500" />
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-medium text-violet-600/70 uppercase tracking-wider">
-              Based on your patterns
-            </span>
-            {prediction.confidence && prediction.confidence >= 80 && (
-              <span className="text-xs text-violet-500">
-                {prediction.confidence}% confident
-              </span>
-            )}
-          </div>
-          <h4 className="font-medium text-foreground text-sm">
+          <p className="text-xs font-medium text-foreground leading-snug">
             {prediction.title}
-          </h4>
-          <p className="text-xs text-muted-foreground mt-1">
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
             {prediction.description}
           </p>
 
           {prediction.action && (
             <Link
               href={prediction.action.href}
-              className="inline-flex items-center gap-1 mt-3 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors"
+              className="inline-flex items-center gap-1 mt-2 text-[11px] font-medium text-blue-600 hover:text-blue-700"
             >
               {prediction.action.label}
               <ArrowRight className="w-3 h-3" />
             </Link>
           )}
         </div>
-
-        {onDismiss && (
-          <button
-            onClick={onDismiss}
-            className="p-1 hover:bg-violet-100 rounded transition-colors"
-          >
-            <span className="sr-only">Dismiss</span>
-            <span className="text-violet-400 text-lg leading-none">&times;</span>
-          </button>
-        )}
       </div>
     </motion.div>
   );
@@ -327,99 +285,58 @@ export function CountdownCard({ moment, className }: CountdownCardProps) {
 
   const Icon = moment.icon || Sparkles;
 
-  const gradients: Record<CountdownMoment['type'], string> = {
-    streak: 'from-orange-500 to-red-500',
-    badge: 'from-violet-500 to-purple-500',
-    earnings: 'from-emerald-500 to-teal-500',
-    tier: 'from-amber-500 to-orange-500',
-    deadline: 'from-blue-500 to-indigo-500',
-  };
-
-  const backgrounds: Record<CountdownMoment['type'], string> = {
-    streak: 'from-orange-50 to-red-50 border-orange-200/60',
-    badge: 'from-violet-50 to-purple-50 border-violet-200/60',
-    earnings: 'from-emerald-50 to-teal-50 border-emerald-200/60',
-    tier: 'from-amber-50 to-orange-50 border-amber-200/60',
-    deadline: 'from-blue-50 to-indigo-50 border-blue-200/60',
+  const iconColors: Record<CountdownMoment['type'], string> = {
+    streak: 'bg-orange-50 text-orange-500',
+    badge: 'bg-violet-50 text-violet-500',
+    earnings: 'bg-emerald-50 text-emerald-500',
+    tier: 'bg-amber-50 text-amber-500',
+    deadline: 'bg-blue-50 text-blue-500',
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'relative overflow-hidden p-4 rounded-xl',
-        'bg-gradient-to-br border',
-        backgrounds[moment.type],
+        'p-3 rounded-lg',
+        'bg-card border border-border/60',
         className
       )}
     >
-      {/* Animated background shimmer */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-        animate={{ x: ['-100%', '200%'] }}
-        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-      />
-
-      <div className="relative flex items-center gap-4">
-        <div
-          className={cn(
-            'p-2.5 rounded-xl bg-gradient-to-br text-white',
-            gradients[moment.type]
-          )}
-        >
-          <Icon className="w-5 h-5" />
+      <div className="flex items-center gap-3">
+        <div className={cn('p-1.5 rounded-md', iconColors[moment.type])}>
+          <Icon className="w-3.5 h-3.5" />
         </div>
 
-        <div className="flex-1">
-          <p className="text-xs text-muted-foreground/70 uppercase tracking-wider mb-0.5">
-            Coming up
-          </p>
-          <h4 className="font-medium text-foreground text-sm">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-foreground truncate">
             {moment.title}
-          </h4>
+          </p>
 
-          {/* Progress if applicable */}
+          {/* Compact progress */}
           {moment.currentValue !== undefined && moment.targetValue !== undefined && (
-            <div className="mt-2">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {moment.currentValue} / {moment.targetValue}
-                </span>
-              </div>
-              <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
-                <motion.div
-                  className={cn('h-full rounded-full bg-gradient-to-r', gradients[moment.type])}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(moment.currentValue / moment.targetValue) * 100}%` }}
-                  transition={{ duration: 0.8 }}
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-slate-400 rounded-full"
+                  style={{ width: `${(moment.currentValue / moment.targetValue) * 100}%` }}
                 />
               </div>
+              <span className="text-[10px] text-muted-foreground">
+                {moment.currentValue}/{moment.targetValue}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Countdown display */}
+        {/* Compact countdown */}
         <div className="text-right">
           {timeLeft.total > 0 ? (
-            <div className="space-y-0.5">
-              {timeLeft.days > 0 && (
-                <div className="text-2xl font-bold tabular-nums">
-                  {timeLeft.days}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">
-                    {timeLeft.days === 1 ? 'day' : 'days'}
-                  </span>
-                </div>
-              )}
-              <div className="text-sm tabular-nums text-muted-foreground">
-                {String(timeLeft.hours).padStart(2, '0')}:
-                {String(timeLeft.minutes).padStart(2, '0')}:
-                {String(timeLeft.seconds).padStart(2, '0')}
-              </div>
-            </div>
+            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              {timeLeft.days > 0 ? `${timeLeft.days}d` : ''} {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}
+            </span>
           ) : (
-            <span className="text-sm font-medium text-emerald-600">Ready!</span>
+            <span className="text-xs font-medium text-emerald-600">Ready!</span>
           )}
         </div>
       </div>
@@ -447,23 +364,16 @@ export function UpcomingEventsSection({
   }
 
   return (
-    <div className={cn('space-y-4', className)}>
-      <div className="flex items-center gap-2">
-        <Target className="w-4 h-4 text-muted-foreground" />
-        <h3 className="font-semibold text-foreground">What's Coming</h3>
-      </div>
+    <div className={cn('space-y-2', className)}>
+      {/* Countdown moments first */}
+      {moments.slice(0, 2).map((moment) => (
+        <CountdownCard key={moment.id} moment={moment} />
+      ))}
 
-      <div className="space-y-3">
-        {/* Countdown moments first */}
-        {moments.slice(0, 2).map((moment) => (
-          <CountdownCard key={moment.id} moment={moment} />
-        ))}
-
-        {/* Then predictions */}
-        {predictions.slice(0, 2).map((prediction) => (
-          <PredictionCard key={prediction.id} prediction={prediction} />
-        ))}
-      </div>
+      {/* Then predictions */}
+      {predictions.slice(0, 1).map((prediction) => (
+        <PredictionCard key={prediction.id} prediction={prediction} />
+      ))}
     </div>
   );
 }

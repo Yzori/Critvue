@@ -232,173 +232,82 @@ export function StoryModeStats({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'relative overflow-hidden rounded-2xl',
-        'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
-        'border border-slate-700/50 shadow-xl',
+        'rounded-xl',
+        'bg-card border border-border/60',
         className
       )}
     >
-      {/* Decorative background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-        {/* Stars pattern */}
-        <div className="absolute inset-0 opacity-30">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                opacity: [0.3, 1, 0.3],
-                scale: [1, 1.2, 1],
-              }}
-              transition={{
-                duration: 2 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="relative p-6">
-        {/* Chapter header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-            <BookOpen className="w-5 h-5 text-white" />
+      <div className="p-4">
+        {/* Compact header */}
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100">
+            <BookOpen className="w-4 h-4 text-slate-600" />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-white/50 uppercase tracking-wider">
-                Chapter {chapter.number}
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                Ch. {chapter.number}
               </span>
               {narrative.highlight && (
-                <motion.span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-xs font-medium"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: 'spring' }}
-                >
-                  <Sparkles className="w-3 h-3" />
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
                   {narrative.highlight}
-                </motion.span>
+                </span>
               )}
             </div>
-            <h3 className="text-lg font-semibold text-white">{chapter.name}</h3>
+            <p className="text-sm font-medium text-foreground truncate">{chapter.name}</p>
           </div>
         </div>
 
-        {/* Main narrative */}
-        <div className="mb-6">
-          <motion.h2
-            className="text-2xl sm:text-3xl font-bold text-white leading-tight"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {narrative.primary}
-          </motion.h2>
-          <motion.p
-            className="mt-2 text-white/60"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {narrative.secondary}
-          </motion.p>
-        </div>
+        {/* Narrative - compact */}
+        <p className="text-sm font-medium text-foreground leading-snug mb-1">
+          {narrative.primary}
+        </p>
+        <p className="text-xs text-muted-foreground mb-3">
+          {narrative.secondary}
+        </p>
 
-        {/* Quick stats row */}
-        <motion.div
-          className="flex flex-wrap gap-2 mb-6"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        {/* Minimal stats - inline */}
+        <div className="flex flex-wrap gap-2 text-xs">
           {stats.currentStreak > 0 && (
-            <StatPill
-              icon={Flame}
-              value={stats.currentStreak}
-              label="day streak"
-              color="orange"
-            />
+            <div className="flex items-center gap-1 text-orange-600">
+              <Flame className="w-3 h-3" />
+              <span className="font-medium">{stats.currentStreak}d</span>
+            </div>
           )}
           {stats.averageRating > 0 && (
-            <StatPill
-              icon={Star}
-              value={stats.averageRating.toFixed(1)}
-              label="avg rating"
-              color="purple"
-            />
+            <div className="flex items-center gap-1 text-amber-600">
+              <Star className="w-3 h-3 fill-current" />
+              <span className="font-medium">{stats.averageRating.toFixed(1)}</span>
+            </div>
           )}
           {stats.inProgressReviews > 0 && (
-            <StatPill
-              icon={Clock}
-              value={stats.inProgressReviews}
-              label="in progress"
-              color="blue"
-            />
-          )}
-          {role === 'reviewer' && stats.acceptanceRate && (
-            <StatPill
-              icon={Heart}
-              value={`${stats.acceptanceRate}%`}
-              label="accepted"
-              color="green"
-            />
-          )}
-        </motion.div>
-
-        {/* Progress to next chapter */}
-        {stats.totalReviews > 0 && (
-          <motion.div
-            className="pt-4 border-t border-white/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-white/50">Progress to next chapter</span>
-              <span className="text-white/70 font-medium">
-                {getProgressToNextChapter(stats.totalReviews).current} / {getProgressToNextChapter(stats.totalReviews).target}
-              </span>
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              <span>{stats.inProgressReviews} active</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          )}
+        </div>
+
+        {/* Compact progress bar */}
+        {stats.totalReviews > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/60">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+              <span>Next chapter</span>
+              <span>{getProgressToNextChapter(stats.totalReviews).current}/{getProgressToNextChapter(stats.totalReviews).target}</span>
+            </div>
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-blue-500 to-violet-500 rounded-full"
+                className="h-full bg-slate-400 rounded-full"
                 initial={{ width: 0 }}
-                animate={{
-                  width: `${getProgressToNextChapter(stats.totalReviews).percentage}%`,
-                }}
-                transition={{ duration: 1, delay: 0.6, ease: 'easeOut' }}
+                animate={{ width: `${getProgressToNextChapter(stats.totalReviews).percentage}%` }}
+                transition={{ duration: 0.8 }}
               />
             </div>
-          </motion.div>
+          </div>
         )}
-
-        {/* See full story link */}
-        <motion.div
-          className="mt-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-        >
-          <Link
-            href={role === 'creator' ? '/profile#story' : '/profile#story'}
-            className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white transition-colors group"
-          >
-            <span>See your full story</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </motion.div>
       </div>
     </motion.div>
   );
