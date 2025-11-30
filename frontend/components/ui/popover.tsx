@@ -21,8 +21,9 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
+  showArrow = false,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content> & { showArrow?: boolean }) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -34,7 +35,16 @@ function PopoverContent({
           className
         )}
         {...props}
-      />
+      >
+        {props.children}
+        {showArrow && (
+          <PopoverPrimitive.Arrow
+            className="fill-white drop-shadow-sm"
+            width={12}
+            height={6}
+          />
+        )}
+      </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   )
 }

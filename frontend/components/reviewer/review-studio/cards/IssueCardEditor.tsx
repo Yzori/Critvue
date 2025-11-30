@@ -157,16 +157,16 @@ const CONFIDENCE_CONFIG: Record<
 
 const CATEGORY_CONFIG: Record<
   ImprovementCategory,
-  { label: string; icon: typeof Shield }
+  { label: string; icon: typeof Shield; color: string; bg: string; border: string }
 > = {
-  performance: { label: "Performance", icon: Gauge },
-  ux: { label: "User Experience", icon: Target },
-  security: { label: "Security", icon: Shield },
-  accessibility: { label: "Accessibility", icon: Target },
-  maintainability: { label: "Maintainability", icon: Wrench },
-  design: { label: "Design", icon: Sparkles },
-  content: { label: "Content", icon: MessageSquare },
-  other: { label: "Other", icon: Lightbulb },
+  performance: { label: "Performance", icon: Gauge, color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-300" },
+  ux: { label: "User Experience", icon: Target, color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-300" },
+  security: { label: "Security", icon: Shield, color: "text-red-700", bg: "bg-red-50", border: "border-red-300" },
+  accessibility: { label: "Accessibility", icon: Target, color: "text-teal-700", bg: "bg-teal-50", border: "border-teal-300" },
+  maintainability: { label: "Maintainability", icon: Wrench, color: "text-slate-700", bg: "bg-slate-50", border: "border-slate-300" },
+  design: { label: "Design", icon: Sparkles, color: "text-pink-700", bg: "bg-pink-50", border: "border-pink-300" },
+  content: { label: "Content", icon: MessageSquare, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-300" },
+  other: { label: "Other", icon: Lightbulb, color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-300" },
 };
 
 const PRINCIPLE_CATEGORY_CONFIG: Record<
@@ -413,10 +413,12 @@ export function IssueCardEditor({
           </div>
           <span className="text-sm font-semibold">Issue #{index + 1}</span>
 
-          {/* Category badge */}
+          {/* Category badge with color */}
           <span
             className={cn(
-              "text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground"
+              "text-xs px-2 py-0.5 rounded-full",
+              CATEGORY_CONFIG[card.category].bg,
+              CATEGORY_CONFIG[card.category].color
             )}
           >
             {CATEGORY_CONFIG[card.category].label}
@@ -461,13 +463,13 @@ export function IssueCardEditor({
                 type="button"
                 onClick={() => updateField("category", cat)}
                 className={cn(
-                  "flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all touch-manipulation",
+                  "flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-xs font-medium transition-all touch-manipulation",
                   isSelected
-                    ? "bg-accent-blue/10 border-accent-blue text-accent-blue"
-                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    ? cn(config.bg, config.border, config.color)
+                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 )}
               >
-                <Icon className="size-3.5" />
+                <Icon className={cn("size-3.5", isSelected && config.color)} />
                 {config.label}
               </button>
             );

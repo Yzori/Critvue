@@ -302,8 +302,8 @@ function ReviewStudioInner({
           <ContentViewer imageUrl={imageUrl} externalUrl={externalUrl} className="h-full" />
         </div>
 
-        {/* RIGHT: Feedback Deck */}
-        <div className="w-1/2 overflow-hidden bg-background">
+        {/* RIGHT: Feedback Deck - subtle tint for visual separation */}
+        <div className="w-1/2 overflow-hidden bg-[#fafafa] border-l border-border/50">
           <FeedbackDeck className="h-full" />
         </div>
       </div>

@@ -319,7 +319,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
           </div>
 
           {/* Card List */}
-          <div className="p-2 sm:p-4 space-y-2 sm:space-y-3">
+          <div className="p-2 sm:p-4 space-y-2 sm:space-y-3 pb-20">
             {filteredIssues.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-20" />
@@ -329,7 +329,10 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                     : `No ${issueFilter === "quick-wins" ? "quick wins" : issueFilter} issues`}
                 </p>
                 {issueFilter === "all" && (
-                  <Button variant="outline" onClick={() => addIssueCard()}>
+                  <Button
+                    onClick={() => addIssueCard()}
+                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6 shadow-md hover:shadow-lg transition-all"
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add First Issue
                   </Button>
@@ -372,76 +375,82 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
               </DndContext>
             )}
 
-            {/* Add Button (when list has items) */}
-            {filteredIssues.length > 0 && issueFilter === "all" && (
+          </div>
+
+          {/* Sticky Add Issue Button */}
+          {issueFilter === "all" && (
+            <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
               <Button
-                variant="outline"
                 onClick={() => addIssueCard()}
-                className="w-full border-dashed"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Issue
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Strengths Tab Content */}
       {activeTab === "strengths" && (
-        <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3">
-          {sortedStrengths.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <ThumbsUp className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p className="mb-4">No strength cards yet</p>
-              <Button variant="outline" onClick={() => addStrengthCard()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Strength
-              </Button>
-            </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
-            >
-              <SortableContext
-                items={sortedStrengths.map((c) => c.id)}
-                strategy={verticalListSortingStrategy}
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          <div className="p-2 sm:p-4 space-y-2 sm:space-y-3 pb-20 flex-1">
+            {sortedStrengths.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <ThumbsUp className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p className="mb-4">No strength cards yet</p>
+                <Button
+                  onClick={() => addStrengthCard()}
+                  className="bg-green-500 hover:bg-green-600 text-white rounded-full px-6 shadow-md hover:shadow-lg transition-all"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Strength
+                </Button>
+              </div>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
               >
-                {sortedStrengths.map((card, index) => (
-                  <SortableStrengthCard key={card.id} card={card} index={index} />
-                ))}
-              </SortableContext>
+                <SortableContext
+                  items={sortedStrengths.map((c) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedStrengths.map((card, index) => (
+                    <SortableStrengthCard key={card.id} card={card} index={index} />
+                  ))}
+                </SortableContext>
 
-              {/* Drag Overlay */}
-              <DragOverlay>
-                {activeStrengthCard && (
-                  <div className="opacity-80">
-                    <StrengthCardEditor
-                      card={activeStrengthCard}
-                      index={sortedStrengths.findIndex((c) => c.id === activeStrengthCard.id)}
-                      isDragging
-                    />
-                  </div>
-                )}
-              </DragOverlay>
-            </DndContext>
-          )}
+                {/* Drag Overlay */}
+                <DragOverlay>
+                  {activeStrengthCard && (
+                    <div className="opacity-80">
+                      <StrengthCardEditor
+                        card={activeStrengthCard}
+                        index={sortedStrengths.findIndex((c) => c.id === activeStrengthCard.id)}
+                        isDragging
+                      />
+                    </div>
+                  )}
+                </DragOverlay>
+              </DndContext>
+            )}
+          </div>
 
-          {/* Add Button (when list has items) */}
-          {sortedStrengths.length > 0 && (
+          {/* Sticky Add Strength Button */}
+          <div className="sticky bottom-0 p-3 bg-gradient-to-t from-[#fafafa] via-[#fafafa] to-transparent pt-6">
             <Button
-              variant="outline"
               onClick={() => addStrengthCard()}
-              className="w-full border-dashed"
+              className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Strength
             </Button>
-          )}
+          </div>
         </div>
       )}
 

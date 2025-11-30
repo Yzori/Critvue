@@ -711,7 +711,7 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
                     {annotation.number || "?"}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 bg-white" align="center" side="top">
+                <PopoverContent className="w-80 bg-white shadow-lg" align="center" side="top" sideOffset={8} showArrow>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-sm flex items-center gap-2">
