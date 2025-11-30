@@ -487,9 +487,20 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
                 {!isSummaryValid && (
                   <li>• Write a summary (50-300 characters)</li>
                 )}
-                {!areTakeawaysComplete && (
-                  <li>• Complete all 3 takeaways (issue + fix)</li>
-                )}
+                {verdict.topTakeaways.map((t, i) => {
+                  const issueShort = t.issue.length < 5;
+                  const fixShort = t.fix.length < 5;
+                  if (!issueShort && !fixShort) return null;
+                  return (
+                    <li key={i}>
+                      • Takeaway #{i + 1}: {issueShort && fixShort
+                        ? "Issue and fix need at least 5 characters each"
+                        : issueShort
+                          ? "Issue needs at least 5 characters"
+                          : "Recommended action needs at least 5 characters"}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
