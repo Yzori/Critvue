@@ -132,25 +132,22 @@ export function draftToStudioState(
     })
   );
 
-  // Build verdict card from phase1 + phase3 data
-  let verdictCard: VerdictCard | null = null;
-  if (phase1?.overall_rating || phase1?.quick_summary || phase3?.top_takeaways) {
-    verdictCard = {
-      id: "verdict",
-      type: "verdict",
-      order: 0,
-      createdAt: metadata?.created_at || new Date().toISOString(),
-      rating: phase1?.overall_rating || 0,
-      summary: phase1?.quick_summary || "",
-      topTakeaways: phase3?.top_takeaways || [
-        { issue: "", fix: "" },
-        { issue: "", fix: "" },
-        { issue: "", fix: "" },
-      ],
-      executiveSummary: phase3?.executive_summary,
-      followUpOffer: phase3?.follow_up_offer,
-    };
-  }
+  // Build verdict card from phase1 + phase3 data (always create one)
+  const verdictCard: VerdictCard = {
+    id: "verdict",
+    type: "verdict",
+    order: 0,
+    createdAt: metadata?.created_at || new Date().toISOString(),
+    rating: phase1?.overall_rating || 0,
+    summary: phase1?.quick_summary || "",
+    topTakeaways: phase3?.top_takeaways || [
+      { issue: "", fix: "" },
+      { issue: "", fix: "" },
+      { issue: "", fix: "" },
+    ],
+    executiveSummary: phase3?.executive_summary,
+    followUpOffer: phase3?.follow_up_offer,
+  };
 
   return {
     slotId,
