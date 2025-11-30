@@ -29,18 +29,14 @@ import {
   isVerdictComplete,
 } from "@/lib/types/review-studio";
 
-import {
-  draftToStudioState,
-  studioStateToDraft,
-  createInitialState,
-} from "../utils/data-converter";
+import { createInitialState, draftToStudioState } from "../utils/data-converter";
 
 import { generateCardId, generateAnnotationId, getNextAnnotationNumber } from "../utils/card-helpers";
 
 import {
-  saveSmartReviewDraft,
-  getSmartReviewDraft,
-  submitSmartReview,
+  saveStudioDraft,
+  getStudioDraft,
+  submitStudioReview,
 } from "@/lib/api/smart-review";
 import { ApiClientError } from "@/lib/api/client";
 
@@ -327,6 +323,7 @@ function reducer(state: ReviewStudioState, action: ReviewStudioAction): ReviewSt
 interface ReviewStudioProviderProps {
   slotId: number;
   contentType: string;
+  mode?: "reviewer" | "creator";
   children: React.ReactNode;
 }
 
@@ -335,8 +332,11 @@ interface ReviewStudioProviderProps {
 export function ReviewStudioProvider({
   slotId,
   contentType,
+  mode = "reviewer",
   children,
 }: ReviewStudioProviderProps) {
+  // In creator mode, we're read-only - no saving
+  const isReadOnly = mode === "creator";
   const [state, dispatch] = React.useReducer(
     reducer,
     createInitialState(slotId, contentType)
@@ -441,24 +441,37 @@ export function ReviewStudioProvider({
     dispatch({ type: "SET_SAVING", payload: true });
 
     try {
-      const draft = studioStateToDraft(state);
-      const draftJson = JSON.stringify(draft);
+      // Prepare state for saving (exclude UI-only fields)
+      const stateToSave = {
+        slotId: state.slotId,
+        contentType: state.contentType,
+        issueCards: state.issueCards,
+        strengthCards: state.strengthCards,
+        verdictCard: state.verdictCard,
+        annotations: state.annotations,
+        focusAreas: state.focusAreas,
+        rubricRatings: state.rubricRatings,
+        rubricRationales: state.rubricRationales,
+        timeSpentSeconds: state.timeSpentSeconds,
+      };
+
+      const stateJson = JSON.stringify(stateToSave);
 
       // Skip if nothing changed
-      if (draftJson === lastSaveRef.current) {
+      if (stateJson === lastSaveRef.current) {
         dispatch({ type: "SET_SAVING", payload: false });
         return;
       }
 
-      await saveSmartReviewDraft(state.slotId, draft);
-      lastSaveRef.current = draftJson;
+      // Save directly using new studio endpoint (no conversion needed)
+      await saveStudioDraft(state.slotId, stateToSave);
+      lastSaveRef.current = stateJson;
       dispatch({ type: "SET_LAST_SAVED", payload: new Date() });
     } catch (error) {
       console.error("Failed to save draft:", error);
       let errorMessage = "Failed to save";
 
       if (error instanceof ApiClientError) {
-        // Extract detailed API error info
         errorMessage = error.message;
         console.error("API Error Details:",
           "status=" + error.status,
@@ -467,7 +480,6 @@ export function ReviewStudioProvider({
           "isRetryable=" + error.isRetryable()
         );
 
-        // Check if it's a retryable error (network/server issues)
         if (error.isNetworkError()) {
           errorMessage = "Network error - will retry automatically";
         } else if (error.status === 403) {
@@ -490,26 +502,73 @@ export function ReviewStudioProvider({
 
   const loadDraft = React.useCallback(async () => {
     try {
-      const draft = await getSmartReviewDraft(slotId);
-      if (draft) {
-        const loadedState = draftToStudioState(draft, slotId, contentType);
-        dispatch({ type: "LOAD_STATE", payload: loadedState });
-        lastSaveRef.current = JSON.stringify(draft);
+      // Both reviewer and creator modes use the same studio endpoint
+      // The backend handles authorization based on user role
+      const loadedData = await getStudioDraft(slotId);
+
+      if (loadedData && Object.keys(loadedData).length > 0) {
+        // Check if this is studio format (has _format marker or issueCards/strengthCards)
+        const isStudioFormat = loadedData._format === "studio" ||
+          loadedData.issueCards !== undefined ||
+          loadedData.strengthCards !== undefined;
+
+        let stateToLoad: Partial<ReviewStudioState>;
+
+        if (isStudioFormat) {
+          // New format - load directly
+          stateToLoad = loadedData;
+        } else {
+          // Legacy SmartReviewDraft format - convert it
+          // This handles old reviews that were saved before the studio format
+          console.log("Converting legacy SmartReviewDraft format to studio format");
+          stateToLoad = draftToStudioState(loadedData as any, slotId, contentType);
+        }
+
+        // Load the state
+        dispatch({ type: "LOAD_STATE", payload: stateToLoad });
+
+        if (!isReadOnly) {
+          // Only track for change detection in reviewer mode
+          const stateToTrack = {
+            slotId: stateToLoad.slotId,
+            contentType: stateToLoad.contentType,
+            issueCards: stateToLoad.issueCards,
+            strengthCards: stateToLoad.strengthCards,
+            verdictCard: stateToLoad.verdictCard,
+            annotations: stateToLoad.annotations,
+            focusAreas: stateToLoad.focusAreas,
+            rubricRatings: stateToLoad.rubricRatings,
+            rubricRationales: stateToLoad.rubricRationales,
+            timeSpentSeconds: stateToLoad.timeSpentSeconds,
+          };
+          lastSaveRef.current = JSON.stringify(stateToTrack);
+        }
       }
     } catch (error) {
       console.log("No existing draft found, starting fresh");
     }
-  }, [slotId, contentType]);
+  }, [slotId, contentType, isReadOnly]);
 
   const submitReview = React.useCallback(async () => {
     dispatch({ type: "SET_SAVING", payload: true });
 
     try {
-      const draft = studioStateToDraft(state);
-      await submitSmartReview(state.slotId, {
-        smart_review: draft,
-        attachments: [],
-      });
+      // Prepare state for submission (exclude UI-only fields)
+      const stateToSubmit = {
+        slotId: state.slotId,
+        contentType: state.contentType,
+        issueCards: state.issueCards,
+        strengthCards: state.strengthCards,
+        verdictCard: state.verdictCard,
+        annotations: state.annotations,
+        focusAreas: state.focusAreas,
+        rubricRatings: state.rubricRatings,
+        rubricRationales: state.rubricRationales,
+        timeSpentSeconds: state.timeSpentSeconds,
+      };
+
+      // Submit directly using new studio endpoint (no conversion needed)
+      await submitStudioReview(state.slotId, stateToSubmit);
     } catch (error) {
       dispatch({
         type: "SET_SAVE_ERROR",
@@ -569,6 +628,9 @@ export function ReviewStudioProvider({
   // ===== Auto-save Effect =====
 
   React.useEffect(() => {
+    // Skip auto-save in creator (read-only) mode
+    if (isReadOnly) return;
+
     // Clear existing timer
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
@@ -592,6 +654,7 @@ export function ReviewStudioProvider({
     state.focusAreas,
     state.rubricRatings,
     saveDraft,
+    isReadOnly,
   ]);
 
   // ===== Load Draft on Mount =====

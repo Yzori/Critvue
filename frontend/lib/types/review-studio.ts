@@ -163,6 +163,11 @@ export interface ReviewStudioState {
   // Metadata
   slotId: number;
   timeSpentSeconds: number;
+
+  // Format markers (added by backend)
+  _format?: "studio";
+  _version?: string;
+  _submitted_at?: string;
 }
 
 // ===== Actions =====

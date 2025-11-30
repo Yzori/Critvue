@@ -79,6 +79,7 @@ export interface ReviewSlotResponse {
   review_text?: string;
   rating?: number;
   review_attachments?: any[];
+  draft_sections?: string; // JSON string containing SmartReviewDraft
 
   // Acceptance/Rejection metadata
   acceptance_type?: AcceptanceType;

@@ -1606,3 +1606,281 @@ async def get_disputed_slots(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while fetching disputed slots"
         )
+
+
+# ===== Review Studio (Card-Based) Endpoints =====
+# These endpoints work with ReviewStudioState directly, without conversion
+
+
+@router.post(
+    "/{slot_id}/studio/save-draft",
+    response_model=DraftSaveSuccess,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("60/minute")
+async def save_studio_draft(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Save Review Studio draft (ReviewStudioState format) directly.
+
+    Accepts raw JSON and stores it directly in draft_sections without conversion.
+    This preserves all card data including annotations with their linked card IDs.
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot
+    - Slot must be in 'claimed' status
+
+    **Rate Limit:** 60 requests per minute
+    """
+    import json
+    from datetime import datetime
+
+    try:
+        # Get raw JSON body
+        body = await request.json()
+
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if slot.status != "claimed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot save draft for non-claimed slot"
+            )
+
+        # Mark as studio format and store directly
+        body["_format"] = "studio"
+        body["_version"] = "2.0"
+
+        # Store as JSON
+        slot.draft_sections = json.dumps(body)
+
+        # Extract rating for backward compatibility if verdict exists
+        if body.get("verdictCard", {}).get("rating"):
+            slot.rating = body["verdictCard"]["rating"]
+
+        slot.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(slot)
+
+        logger.info(f"User {current_user.id} saved Studio draft for slot {slot_id}")
+
+        return DraftSaveSuccess(
+            success=True,
+            last_saved_at=slot.updated_at
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error saving Studio draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while saving draft"
+        )
+
+
+@router.get(
+    "/{slot_id}/studio/draft",
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("30/minute")
+async def get_studio_draft(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get Review Studio draft (ReviewStudioState format) directly.
+
+    Returns the raw JSON stored in draft_sections without conversion.
+
+    **Requirements:**
+    - User must be the reviewer who claimed the slot, OR
+    - User is the creator viewing a submitted review
+
+    **Rate Limit:** 30 requests per minute
+    """
+    import json
+
+    try:
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        # Allow access if user is the reviewer OR the creator
+        is_reviewer = slot.reviewer_id == current_user.id
+        is_creator = slot.review_request and slot.review_request.requester_id == current_user.id
+
+        if not is_reviewer and not is_creator:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this draft"
+            )
+
+        # For creators, only allow access to submitted reviews
+        if is_creator and not is_reviewer and slot.status != "submitted":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Review not yet submitted"
+            )
+
+        # Return raw JSON
+        if slot.draft_sections:
+            draft_data = json.loads(slot.draft_sections)
+            return JSONResponse(content=draft_data)
+        else:
+            # Return empty state
+            return JSONResponse(content={})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading Studio draft for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while loading draft"
+        )
+
+
+@router.post(
+    "/{slot_id}/studio/submit",
+    response_model=ReviewSlotResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("20/minute")
+async def submit_studio_review(
+    request: Request,
+    slot_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Submit a Review Studio review (ReviewStudioState format).
+
+    Stores ReviewStudioState directly in draft_sections and marks slot as submitted.
+
+    **Requirements:**
+    - Slot must be in 'claimed' status
+    - User must be the reviewer who claimed the slot
+    - Must have at least one issue or strength card with content
+    - Must have a verdict with rating
+
+    **Rate Limit:** 20 requests per minute
+    """
+    import json
+    from datetime import datetime, timedelta
+
+    try:
+        # Get raw JSON body
+        body = await request.json()
+
+        slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
+
+        if not slot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Slot not found"
+            )
+
+        if slot.reviewer_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not your review"
+            )
+
+        if slot.status != "claimed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot submit review for non-claimed slot"
+            )
+
+        # Validate minimum requirements
+        issue_cards = body.get("issueCards", [])
+        strength_cards = body.get("strengthCards", [])
+        verdict = body.get("verdictCard", {})
+
+        # Must have at least one card with content
+        has_content = False
+        for card in issue_cards:
+            if card.get("issue") and len(card.get("issue", "").strip()) > 0:
+                has_content = True
+                break
+        if not has_content:
+            for card in strength_cards:
+                if card.get("what") and len(card.get("what", "").strip()) > 0:
+                    has_content = True
+                    break
+
+        if not has_content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Must have at least one issue or strength with content"
+            )
+
+        # Must have rating
+        if not verdict.get("rating") or verdict.get("rating") < 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Must provide an overall rating"
+            )
+
+        # Mark as studio format and store directly
+        body["_format"] = "studio"
+        body["_version"] = "2.0"
+        body["_submitted_at"] = datetime.utcnow().isoformat()
+
+        # Store as JSON
+        slot.draft_sections = json.dumps(body)
+
+        # Update slot status
+        slot.status = "submitted"
+        slot.rating = verdict.get("rating")
+        slot.submitted_at = datetime.utcnow()
+        slot.updated_at = datetime.utcnow()
+
+        # Set auto-accept time (72 hours from now)
+        slot.auto_accept_at = datetime.utcnow() + timedelta(hours=72)
+
+        await db.commit()
+        await db.refresh(slot)
+
+        # Award karma for submitting review
+        await on_review_submitted(db, slot.id, current_user.id)
+
+        # Send notification to requester
+        await notify_review_submitted(db, slot_id, current_user.id)
+
+        logger.info(f"User {current_user.id} submitted Studio Review for slot {slot_id}")
+
+        return slot
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting Studio Review for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while submitting the review"
+        )

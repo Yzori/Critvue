@@ -4,6 +4,10 @@
  * Main shell component for the split-screen review workspace.
  * LEFT: Interactive Content Viewer with annotation support
  * RIGHT: Draggable card-based feedback deck
+ *
+ * Supports two modes:
+ * - "reviewer": Full editing mode for creating reviews
+ * - "creator": Read-only mode for reviewing submitted feedback with accept/reject actions
  */
 
 "use client";
@@ -22,6 +26,10 @@ import {
   AlertTriangle,
   Image,
   MessageSquare,
+  XCircle,
+  RotateCcw,
+  Eye,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +50,13 @@ import { cn } from "@/lib/utils";
 
 import { ReviewStudioProvider, useReviewStudio } from "./context/ReviewStudioContext";
 import { FeedbackDeck } from "./deck/FeedbackDeck";
+import { FeedbackDeckViewer } from "./deck/FeedbackDeckViewer";
 import { ContentViewer } from "./viewer/ContentViewer";
+import { ContentViewerReadOnly } from "./viewer/ContentViewerReadOnly";
+
+// ===== Types =====
+
+export type ReviewStudioMode = "reviewer" | "creator";
 
 // ===== Props =====
 
@@ -52,7 +66,14 @@ interface ReviewStudioProps {
   contentSubcategory?: string | null;
   imageUrl?: string;
   externalUrl?: string | null;
+  // Reviewer mode callbacks
   onSubmitSuccess?: () => void;
+  // Creator mode callbacks
+  mode?: ReviewStudioMode;
+  reviewerName?: string;
+  onAccept?: () => void;
+  onReject?: () => void;
+  onRequestRevision?: () => void;
   className?: string;
 }
 
@@ -60,14 +81,23 @@ interface ReviewStudioProps {
 
 type MobilePanel = "content" | "feedback";
 
+interface ReviewStudioInnerProps extends Omit<ReviewStudioProps, "slotId"> {
+  mode: ReviewStudioMode;
+}
+
 function ReviewStudioInner({
   contentType,
   contentSubcategory,
   imageUrl,
   externalUrl,
   onSubmitSuccess,
+  mode,
+  reviewerName,
+  onAccept,
+  onReject,
+  onRequestRevision,
   className,
-}: Omit<ReviewStudioProps, "slotId">) {
+}: ReviewStudioInnerProps) {
   const {
     state,
     addIssueCard,
@@ -78,6 +108,8 @@ function ReviewStudioInner({
     isReadyToSubmit,
     getValidationErrors,
   } = useReviewStudio();
+
+  const isCreatorMode = mode === "creator";
 
   // Mobile panel switcher
   const [mobilePanel, setMobilePanel] = React.useState<MobilePanel>("feedback");
@@ -121,147 +153,187 @@ function ReviewStudioInner({
     <div className={cn("flex flex-col h-full bg-background", className)}>
       {/* Header Bar */}
       <header className="flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center gap-1 sm:gap-3">
-          {/* Selection Mode Toggle - Hidden on mobile when in feedback panel */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={state.selectionMode === "annotate" ? "default" : "outline"}
-                  size="sm"
-                  onClick={toggleSelectionMode}
-                  className={cn(
-                    "gap-2",
-                    mobilePanel === "feedback" && "hidden sm:flex"
-                  )}
-                >
-                  {state.selectionMode === "annotate" ? (
-                    <>
-                      <Crosshair className="h-4 w-4" />
-                      <span className="hidden sm:inline">Annotating</span>
-                    </>
-                  ) : (
-                    <>
-                      <MousePointer className="h-4 w-4" />
-                      <span className="hidden sm:inline">Select</span>
-                    </>
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {state.selectionMode === "annotate"
-                  ? "Click anywhere on the content to add annotations. ESC to cancel."
-                  : "Click to enable annotation mode"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        {isCreatorMode ? (
+          /* ===== CREATOR MODE HEADER ===== */
+          <>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+                <Eye className="h-4 w-4" />
+                <span className="text-xs font-medium hidden sm:inline">Viewing Review</span>
+              </div>
+              {reviewerName && (
+                <span className="text-sm text-muted-foreground hidden sm:inline">
+                  from <span className="font-medium text-foreground">{reviewerName}</span>
+                </span>
+              )}
+            </div>
 
-          {/* Quick Add Buttons */}
-          <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addIssueCard()}
-                    className="gap-1.5 h-8 px-2 sm:px-3"
-                  >
-                    <AlertTriangle className="h-4 w-4 text-orange-500" />
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Add Issue Card</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addStrengthCard()}
-                    className="gap-1.5 h-8 px-2 sm:px-3"
-                  >
-                    <ThumbsUp className="h-4 w-4 text-green-500" />
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Add Strength Card</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-
-        {/* Right side: Save status + Submit */}
-        <div className="flex items-center gap-1 sm:gap-3">
-          {/* Save Status */}
-          <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
-            {state.isSaving ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="hidden sm:inline">Saving...</span>
-              </>
-            ) : state.saveError ? (
+            {/* Stats */}
+            <div className="flex items-center gap-2 sm:gap-4 text-sm">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4 text-orange-500" />
+                <span className="font-medium">{state.issueCards.length}</span>
+                <span className="text-muted-foreground hidden sm:inline">issues</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ThumbsUp className="h-4 w-4 text-green-500" />
+                <span className="font-medium">{state.strengthCards.length}</span>
+                <span className="text-muted-foreground hidden sm:inline">strengths</span>
+              </div>
+              {state.annotations.length > 0 && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 text-blue-500" />
+                  <span className="font-medium">{state.annotations.length}</span>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          /* ===== REVIEWER MODE HEADER ===== */
+          <>
+            <div className="flex items-center gap-1 sm:gap-3">
+              {/* Selection Mode Toggle - Hidden on mobile when in feedback panel */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button
-                      onClick={() => saveDraft()}
-                      className="flex items-center gap-1 sm:gap-2 text-destructive hover:text-destructive/80 transition-colors"
+                    <Button
+                      variant={state.selectionMode === "annotate" ? "default" : "outline"}
+                      size="sm"
+                      onClick={toggleSelectionMode}
+                      className={cn(
+                        "gap-2",
+                        mobilePanel === "feedback" && "hidden sm:flex"
+                      )}
                     >
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="hidden sm:inline text-xs">
-                        Save failed - tap to retry
-                      </span>
-                    </button>
+                      {state.selectionMode === "annotate" ? (
+                        <>
+                          <Crosshair className="h-4 w-4" />
+                          <span className="hidden sm:inline">Annotating</span>
+                        </>
+                      ) : (
+                        <>
+                          <MousePointer className="h-4 w-4" />
+                          <span className="hidden sm:inline">Select</span>
+                        </>
+                      )}
+                    </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[200px]">
-                    <p className="text-xs">{state.saveError}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Click to retry</p>
+                  <TooltipContent>
+                    {state.selectionMode === "annotate"
+                      ? "Click anywhere on the content to add annotations. ESC to cancel."
+                      : "Click to enable annotation mode"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            ) : state.lastSavedAt ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="hidden lg:inline">
-                  {formatSaveTime(state.lastSavedAt)}
-                </span>
-              </>
-            ) : null}
-          </div>
 
-          {/* Manual Save */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => saveDraft()}
-                  disabled={state.isSaving}
-                  className="h-8 w-8 p-0"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Save draft (auto-saves every 3s)</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+              {/* Quick Add Buttons */}
+              <div className="flex items-center gap-1">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addIssueCard()}
+                        className="gap-1.5 h-8 px-2 sm:px-3"
+                      >
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Add Issue Card</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-          {/* Submit Button */}
-          <Button
-            size="sm"
-            onClick={() => setShowSubmitDialog(true)}
-            disabled={!isReadyToSubmit()}
-            className="gap-2 h-8"
-          >
-            <Send className="h-4 w-4" />
-            <span className="hidden sm:inline">Submit</span>
-          </Button>
-        </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addStrengthCard()}
+                        className="gap-1.5 h-8 px-2 sm:px-3"
+                      >
+                        <ThumbsUp className="h-4 w-4 text-green-500" />
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Add Strength Card</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
+
+            {/* Right side: Save status + Submit */}
+            <div className="flex items-center gap-1 sm:gap-3">
+              {/* Save Status */}
+              <div className="flex items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
+                {state.isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="hidden sm:inline">Saving...</span>
+                  </>
+                ) : state.saveError ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => saveDraft()}
+                          className="flex items-center gap-1 sm:gap-2 text-destructive hover:text-destructive/80 transition-colors"
+                        >
+                          <AlertCircle className="h-4 w-4" />
+                          <span className="hidden sm:inline text-xs">
+                            Save failed - tap to retry
+                          </span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[200px]">
+                        <p className="text-xs">{state.saveError}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Click to retry</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : state.lastSavedAt ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span className="hidden lg:inline">
+                      {formatSaveTime(state.lastSavedAt)}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+
+              {/* Manual Save */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => saveDraft()}
+                      disabled={state.isSaving}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Save draft (auto-saves every 3s)</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Submit Button */}
+              <Button
+                size="sm"
+                onClick={() => setShowSubmitDialog(true)}
+                disabled={!isReadyToSubmit()}
+                className="gap-2 h-8"
+              >
+                <Send className="h-4 w-4" />
+                <span className="hidden sm:inline">Submit</span>
+              </Button>
+            </div>
+          </>
+        )}
       </header>
 
       {/* Mobile Panel Switcher */}
@@ -299,23 +371,89 @@ function ReviewStudioInner({
       <div className="flex-1 hidden md:flex overflow-hidden">
         {/* LEFT: Content Viewer */}
         <div className="w-1/2 border-r overflow-hidden bg-muted/30">
-          <ContentViewer imageUrl={imageUrl} externalUrl={externalUrl} className="h-full" />
+          {isCreatorMode ? (
+            <ContentViewerReadOnly
+              imageUrl={imageUrl}
+              externalUrl={externalUrl}
+              annotations={state.annotations}
+              className="h-full"
+            />
+          ) : (
+            <ContentViewer imageUrl={imageUrl} externalUrl={externalUrl} className="h-full" />
+          )}
         </div>
 
         {/* RIGHT: Feedback Deck - subtle tint for visual separation */}
         <div className="w-1/2 overflow-hidden bg-[#fafafa] border-l border-border/50">
-          <FeedbackDeck className="h-full" />
+          {isCreatorMode ? (
+            <FeedbackDeckViewer className="h-full" />
+          ) : (
+            <FeedbackDeck className="h-full" />
+          )}
         </div>
       </div>
 
       {/* Mobile Layout - Stacked with panel switcher */}
       <div className="flex-1 md:hidden overflow-hidden">
         {mobilePanel === "content" ? (
-          <ContentViewer imageUrl={imageUrl} externalUrl={externalUrl} className="h-full" />
+          isCreatorMode ? (
+            <ContentViewerReadOnly
+              imageUrl={imageUrl}
+              externalUrl={externalUrl}
+              annotations={state.annotations}
+              className="h-full"
+            />
+          ) : (
+            <ContentViewer imageUrl={imageUrl} externalUrl={externalUrl} className="h-full" />
+          )
         ) : (
-          <FeedbackDeck className="h-full" />
+          isCreatorMode ? (
+            <FeedbackDeckViewer className="h-full" />
+          ) : (
+            <FeedbackDeck className="h-full" />
+          )
         )}
       </div>
+
+      {/* Creator Mode Action Buttons (sticky footer) */}
+      {isCreatorMode && (
+        <div className="border-t bg-background p-3 sm:p-4 shadow-[0_-4px_8px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
+            {/* Reject */}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onReject}
+              className="flex-1 min-h-[48px] border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+            >
+              <XCircle className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Reject</span>
+            </Button>
+
+            {/* Request Revision */}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={onRequestRevision}
+              className="flex-1 min-h-[48px] border-2 border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300"
+            >
+              <RotateCcw className="h-5 w-5 mr-2" />
+              <span className="hidden sm:inline">Request Revision</span>
+              <span className="sm:hidden">Revise</span>
+            </Button>
+
+            {/* Accept */}
+            <Button
+              size="lg"
+              onClick={onAccept}
+              className="flex-1 min-h-[48px] bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20"
+            >
+              <CheckCircle2 className="h-5 w-5 mr-2" />
+              Accept
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Submit Confirmation Dialog */}
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
@@ -401,11 +539,11 @@ function ReviewStudioInner({
 // ===== Main Export (wraps with Provider) =====
 
 export function ReviewStudio(props: ReviewStudioProps) {
-  const { slotId, contentType, ...rest } = props;
+  const { slotId, contentType, mode = "reviewer", ...rest } = props;
 
   return (
-    <ReviewStudioProvider slotId={slotId} contentType={contentType}>
-      <ReviewStudioInner contentType={contentType} {...rest} />
+    <ReviewStudioProvider slotId={slotId} contentType={contentType} mode={mode}>
+      <ReviewStudioInner contentType={contentType} mode={mode} {...rest} />
     </ReviewStudioProvider>
   );
 }

@@ -3,7 +3,7 @@
  * Page where requesters can view, accept, or reject submitted reviews
  *
  * Features:
- * - Full review content display
+ * - Full Review Studio view in creator mode (read-only)
  * - Reviewer information
  * - Auto-accept countdown timer at top
  * - Accept button (green, prominent)
@@ -16,20 +16,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AutoAcceptTimer } from "@/components/dashboard";
 import { AcceptReviewModal, AcceptReviewData } from "@/components/dashboard/accept-review-modal";
 import { RejectReviewModal, RejectReviewData } from "@/components/dashboard/reject-review-modal";
 import {
   ArrowLeft,
-  User,
-  Calendar,
-  Star,
-  CheckCircle2,
-  XCircle,
   Loader2,
-  FileText,
   AlertCircle,
 } from "lucide-react";
 import {
@@ -38,7 +31,9 @@ import {
   rejectReview,
   ReviewSlotResponse,
 } from "@/lib/api/review-slots";
+import { getReviewDetail, ReviewRequestDetail } from "@/lib/api/reviews";
 import { getErrorMessage } from "@/lib/api/client";
+import { ReviewStudio } from "@/components/reviewer/review-studio/ReviewStudio";
 
 export default function ReviewAcceptancePage() {
   const params = useParams();
@@ -46,6 +41,7 @@ export default function ReviewAcceptancePage() {
   const slotId = parseInt(params.slotId as string);
 
   const [slot, setSlot] = useState<ReviewSlotResponse | null>(null);
+  const [reviewRequest, setReviewRequest] = useState<ReviewRequestDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,21 +50,32 @@ export default function ReviewAcceptancePage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch review slot data
+  // Fetch review slot data and review request data
   useEffect(() => {
-    const fetchSlot = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await getReviewSlot(slotId);
+        const slotData = await getReviewSlot(slotId);
 
         // Verify slot is in submitted state
-        if (data.status !== "submitted") {
+        if (slotData.status !== "submitted") {
           setError("This review is not available for acceptance");
           return;
         }
 
-        setSlot(data);
+        setSlot(slotData);
+
+        // Also fetch the review request to get content type, image URL, etc.
+        if (slotData.review_request_id) {
+          try {
+            const requestData = await getReviewDetail(slotData.review_request_id);
+            setReviewRequest(requestData);
+          } catch (reqErr) {
+            console.warn("Failed to fetch review request details:", reqErr);
+            // Don't fail the whole page if we can't get request details
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch review slot:", err);
         setError(getErrorMessage(err));
@@ -78,7 +85,7 @@ export default function ReviewAcceptancePage() {
     };
 
     if (slotId) {
-      fetchSlot();
+      fetchData();
     }
   }, [slotId]);
 
@@ -116,18 +123,6 @@ export default function ReviewAcceptancePage() {
       setIsSubmitting(false);
       setShowRejectModal(false);
     }
-  };
-
-  // Format date
-  const formatDate = (isoDate?: string) => {
-    if (!isoDate) return "Unknown";
-    return new Date(isoDate).toLocaleDateString(undefined, {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
   };
 
   // Loading state
@@ -171,146 +166,48 @@ export default function ReviewAcceptancePage() {
   const isPaidReview = slot.payment_amount !== undefined && slot.payment_amount > 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/dashboard")}
-          className="mb-4"
-        >
-          <ArrowLeft className="size-4" />
-          Back to Dashboard
-        </Button>
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      {/* Top Bar with Back Button and Timer */}
+      <div className="flex-shrink-0 border-b bg-background px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/dashboard")}
+          >
+            <ArrowLeft className="size-4" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+          </Button>
 
-        {/* Auto-Accept Timer (Top Priority) */}
-        {slot.auto_accept_at && (
-          <AutoAcceptTimer autoAcceptAt={slot.auto_accept_at} />
-        )}
-
-        {/* Main Content Card */}
-        <div className="rounded-2xl border-2 border-border bg-card shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-peach/5 border-b border-border p-6 space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                  Review Submitted
-                </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Please review this submission and decide whether to accept or reject it
-                </p>
-              </div>
-
-              {/* Rating Display */}
-              {slot.rating && (
-                <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                  <Star className="size-5 fill-amber-500 text-amber-500" />
-                  <span className="text-xl font-bold text-amber-600">
-                    {slot.rating}
-                  </span>
-                </div>
-              )}
+          {/* Auto-Accept Timer */}
+          {slot.auto_accept_at && (
+            <div className="flex-1 max-w-md">
+              <AutoAcceptTimer autoAcceptAt={slot.auto_accept_at} compact />
             </div>
+          )}
 
-            {/* Reviewer Info */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
-                <User className="size-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">
-                  {slot.reviewer?.full_name || "Anonymous Reviewer"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border">
-                <Calendar className="size-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  Submitted {formatDate(slot.submitted_at)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Review Content */}
-          <div className="p-6 space-y-6">
-            {/* Review Text */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <FileText className="size-4 text-accent-blue" />
-                <span>Review Content</span>
-              </div>
-
-              <div className="rounded-xl bg-muted/50 border border-border p-6">
-                <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
-                  {slot.review_text}
-                </div>
-              </div>
-
-              <div className="text-xs text-muted-foreground">
-                {slot.review_text?.length || 0} characters
-              </div>
-            </div>
-
-            {/* Attachments (if any) */}
-            {slot.review_attachments && slot.review_attachments.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <FileText className="size-4 text-accent-blue" />
-                  <span>Attachments ({slot.review_attachments.length})</span>
-                </div>
-
-                <div className="grid gap-2">
-                  {slot.review_attachments.map((attachment: any, index: number) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border"
-                    >
-                      <FileText className="size-4 text-muted-foreground" />
-                      <span className="text-sm text-foreground">
-                        {attachment.filename || `Attachment ${index + 1}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <div className="w-[100px] sm:w-auto" /> {/* Spacer for centering */}
         </div>
+      </div>
 
-        {/* Action Buttons (Sticky on Mobile) */}
-        <div className="fixed bottom-0 left-0 right-0 lg:relative bg-background border-t border-border lg:border-0 p-4 lg:p-0 shadow-[0_-4px_8px_rgba(0,0,0,0.04)] lg:shadow-none z-50">
-          <div className="max-w-4xl mx-auto grid gap-3 sm:grid-cols-2">
-            {/* Reject Button */}
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setShowRejectModal(true)}
-              className={cn(
-                "w-full min-h-[56px] font-semibold touch-manipulation active:scale-[0.98]",
-                "border-2 border-red-500/30 text-red-600 hover:bg-red-500/5 hover:border-red-500"
-              )}
-            >
-              <XCircle className="size-5" />
-              Reject Review
-            </Button>
-
-            {/* Accept Button */}
-            <Button
-              size="lg"
-              onClick={() => setShowAcceptModal(true)}
-              className={cn(
-                "w-full min-h-[56px] font-semibold touch-manipulation active:scale-[0.98]",
-                "bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20"
-              )}
-            >
-              <CheckCircle2 className="size-5" />
-              Accept Review
-            </Button>
-          </div>
-        </div>
-
-        {/* Spacer for fixed buttons on mobile */}
-        <div className="h-20 lg:h-0" />
+      {/* Review Studio in Creator Mode - Full Screen */}
+      <div className="flex-1 overflow-hidden">
+        <ReviewStudio
+          slotId={slotId}
+          contentType={reviewRequest?.content_type || "design"}
+          contentSubcategory={reviewRequest?.content_subcategory}
+          imageUrl={reviewRequest?.files?.[0]?.file_url || undefined}
+          externalUrl={reviewRequest?.external_links?.[0] || null}
+          mode="creator"
+          reviewerName={slot.reviewer?.full_name}
+          onAccept={() => setShowAcceptModal(true)}
+          onReject={() => setShowRejectModal(true)}
+          onRequestRevision={() => {
+            // For now, just open reject modal - can add revision-specific modal later
+            setShowRejectModal(true);
+          }}
+          className="h-full"
+        />
       </div>
 
       {/* Accept Modal */}
