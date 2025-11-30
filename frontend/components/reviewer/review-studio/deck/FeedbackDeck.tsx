@@ -206,8 +206,17 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
     (c) => c.isQuickWin || (c.priority !== "nice-to-have" && c.effort === "quick-fix")
   ).length;
 
+  // FAB handler
+  const handleFabClick = () => {
+    if (activeTab === "issues") {
+      addIssueCard();
+    } else if (activeTab === "strengths") {
+      addStrengthCard();
+    }
+  };
+
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div className={cn("flex flex-col h-full relative", className)}>
       {/* Tab Navigation */}
       <div className="flex items-center gap-0.5 sm:gap-1 p-1.5 sm:p-2 border-b bg-background sticky top-0 z-10 overflow-x-auto">
         <Button
@@ -377,18 +386,6 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
 
           </div>
 
-          {/* Fixed Add Issue Button Footer - only show when list has items */}
-          {filteredIssues.length > 0 && issueFilter === "all" && (
-            <div className="shrink-0 p-3 border-t bg-[#fafafa]">
-              <Button
-                onClick={() => addIssueCard()}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Issue
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
@@ -442,18 +439,6 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
             )}
           </div>
 
-          {/* Fixed Add Strength Button Footer - only show when list has items */}
-          {sortedStrengths.length > 0 && (
-            <div className="shrink-0 p-3 border-t bg-[#fafafa]">
-              <Button
-                onClick={() => addStrengthCard()}
-                className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full shadow-md hover:shadow-lg transition-all"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Strength
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
@@ -462,6 +447,28 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
         <div className="flex-1 overflow-y-auto p-2 sm:p-4">
           <VerdictCardEditor />
         </div>
+      )}
+
+      {/* Floating Action Button - always visible for Issues/Strengths */}
+      {activeTab !== "verdict" && (
+        <button
+          onClick={handleFabClick}
+          className={cn(
+            "absolute bottom-4 right-4 z-20",
+            "flex items-center justify-center",
+            "size-14 rounded-full",
+            "text-white font-medium",
+            "shadow-lg hover:shadow-xl",
+            "transition-all duration-200",
+            "hover:scale-105 active:scale-95",
+            activeTab === "issues"
+              ? "bg-orange-500 hover:bg-orange-600"
+              : "bg-green-500 hover:bg-green-600"
+          )}
+          aria-label={activeTab === "issues" ? "Add Issue" : "Add Strength"}
+        >
+          <Plus className="size-6" />
+        </button>
       )}
     </div>
   );
