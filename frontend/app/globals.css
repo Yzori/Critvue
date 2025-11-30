@@ -81,11 +81,16 @@
 .touch-manipulation {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
 
+/* Light theme color tokens (default) */
+:root {
   /* Animation Durations */
   --duration-fast: 150ms;
   --duration-normal: 300ms;
   --duration-slow: 500ms;
+
+  /* Semantic color tokens */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

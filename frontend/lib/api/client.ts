@@ -12,9 +12,20 @@ export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localh
 /**
  * Get full URL for file served by backend
  * Handles both absolute URLs and relative paths
+ * Rejects unsafe URLs (file://, javascript:, etc.)
  */
 export function getFileUrl(path: string | null | undefined): string {
   if (!path) return "";
+
+  // Reject unsafe URL schemes
+  const lowerPath = path.toLowerCase();
+  if (lowerPath.startsWith("file://") ||
+      lowerPath.startsWith("javascript:") ||
+      lowerPath.startsWith("data:")) {
+    console.warn("Rejected unsafe URL scheme:", path.substring(0, 50));
+    return "";
+  }
+
   // If already absolute URL, return as-is
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;

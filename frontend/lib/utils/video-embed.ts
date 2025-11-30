@@ -21,11 +21,18 @@ export interface VideoEmbed {
 
 /**
  * Parse a URL and extract video embed information
+ * Only accepts http:// and https:// URLs for security
  */
 export function parseVideoUrl(url: string): VideoEmbed | null {
   if (!url) return null;
 
   const trimmedUrl = url.trim();
+
+  // Only accept http(s) URLs - reject file://, javascript:, data:, etc.
+  const lowerUrl = trimmedUrl.toLowerCase();
+  if (!lowerUrl.startsWith("http://") && !lowerUrl.startsWith("https://")) {
+    return null;
+  }
 
   // YouTube
   const youtubeMatch = trimmedUrl.match(
