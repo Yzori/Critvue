@@ -750,8 +750,14 @@ async def submit_smart_review(
                     strip=True
                 )
 
+        # Helper to serialize datetime objects
+        def json_serial(obj):
+            if isinstance(obj, datetime):
+                return obj.isoformat()
+            raise TypeError(f"Type {type(obj)} not serializable")
+
         # Save Smart Review data to draft_sections (keep feedback_sections for legacy format only)
-        slot.draft_sections = json.dumps(review_dict)
+        slot.draft_sections = json.dumps(review_dict, default=json_serial)
         slot.feedback_sections = None  # Smart Reviews don't use the legacy feedback_sections format
 
         # Extract overall rating for backward compatibility
