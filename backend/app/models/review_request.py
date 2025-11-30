@@ -161,6 +161,13 @@ class ReviewRequest(Base):
         doc="Version of the NDA template used for this request"
     )
 
+    # External content links (for video/streaming content like YouTube, Twitch, etc.)
+    external_links = Column(
+        JSON,
+        nullable=True,
+        doc="JSON array of external URLs (YouTube, Twitch, Vimeo, etc.) for video/streaming content"
+    )
+
     # Multi-review support
     reviews_requested = Column(
         Integer,

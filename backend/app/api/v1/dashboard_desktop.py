@@ -624,7 +624,8 @@ async def get_desktop_reviewer_active(
                     "description": slot.review_request.description,  # Full description for desktop
                     "content_type": slot.review_request.content_type.value,
                     "content_subcategory": getattr(slot.review_request, 'content_subcategory', None),
-                    "review_type": slot.review_request.review_type.value if hasattr(slot.review_request, 'review_type') else None
+                    "review_type": slot.review_request.review_type.value if hasattr(slot.review_request, 'review_type') else None,
+                    "external_links": getattr(slot.review_request, 'external_links', None),
                 } if slot.review_request else None,
                 "claimed_at": slot.claimed_at.isoformat() if slot.claimed_at else None,
                 "claim_deadline": slot.claim_deadline.isoformat() if slot.claim_deadline else None,

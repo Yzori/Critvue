@@ -68,6 +68,9 @@ export interface CreateReviewResponse {
   requires_nda?: boolean;
   nda_version?: string;
   nda_signed_by_current_user?: boolean;
+
+  // External links for video/streaming content
+  external_links?: string[] | null;
 }
 
 /**
@@ -181,6 +184,9 @@ export interface UpdateReviewRequest {
 
   // NDA field
   requires_nda?: boolean;
+
+  // External links for video/streaming content
+  external_links?: string[];
 }
 
 /**

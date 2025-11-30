@@ -81,6 +81,7 @@ export interface ReviewSlot {
     deadline: string | null;
     status: string;
     user_id: number;
+    external_links?: string[] | null;
   };
 }
 

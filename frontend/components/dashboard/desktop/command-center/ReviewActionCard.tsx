@@ -39,6 +39,7 @@ import {
   Eye,
   Users,
   TrendingUp,
+  Cast,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ export interface ReviewActionCardProps {
   /**
    * Content type
    */
-  contentType: "design" | "code" | "video" | "audio" | "writing" | "art";
+  contentType: "design" | "code" | "video" | "stream" | "audio" | "writing" | "art";
 
   /**
    * Review status
@@ -152,6 +153,11 @@ const contentTypeConfig = {
     color: "text-purple-600",
     bg: "bg-purple-500/10",
   },
+  stream: {
+    icon: Cast,
+    color: "text-purple-600",
+    bg: "bg-purple-500/10",
+  },
   audio: {
     icon: Mic,
     color: "text-pink-600",
@@ -212,9 +218,13 @@ export function ReviewActionCard({
   const [isHovered, setIsHovered] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
 
-  const contentConfig = contentTypeConfig[contentType];
+  const contentConfig = contentTypeConfig[contentType as keyof typeof contentTypeConfig] || {
+    icon: FileText,
+    color: "text-slate-600",
+    bg: "bg-slate-500/10",
+  };
   const ContentIcon = contentConfig.icon;
-  const statusInfo = statusConfig[status];
+  const statusInfo = statusConfig[status] || { variant: "secondary" as const, label: status };
 
   return (
     <motion.div

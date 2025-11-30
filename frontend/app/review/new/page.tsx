@@ -289,6 +289,8 @@ export default function NewReviewPage() {
         estimated_duration: formState.reviewType === "expert" ? (estimatedDuration ?? undefined) : undefined,
         // NDA protection (expert reviews only)
         requires_nda: formState.reviewType === "expert" ? formState.requiresNda : undefined,
+        // External links for video/streaming content
+        external_links: formState.externalLinks.length > 0 ? formState.externalLinks : undefined,
       });
 
       // Show success state

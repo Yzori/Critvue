@@ -175,6 +175,7 @@ async def get_reviewer_dashboard(
                         "title": slot.review_request.title,
                         "content_type": slot.review_request.content_type.value,
                         "review_type": slot.review_request.review_type.value,
+                        "external_links": getattr(slot.review_request, 'external_links', None),
                     },
                     "claimed_at": slot.claimed_at.isoformat() if slot.claimed_at else None,
                     "claim_deadline": slot.claim_deadline.isoformat() if slot.claim_deadline else None,

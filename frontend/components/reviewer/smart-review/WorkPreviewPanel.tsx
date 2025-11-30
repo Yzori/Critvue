@@ -18,7 +18,6 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  Minimize2,
   ExternalLink,
   Pin,
   PinOff,
@@ -29,10 +28,23 @@ import {
   ChevronRight,
   Download,
   Eye,
+  Play,
+  Video,
+  X,
+  RotateCcw,
+  Smartphone,
+  PictureInPicture2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogPortal,
+  DialogOverlay,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { getFileUrl } from "@/lib/api/client";
+import { parseVideoUrl, getProviderName, type VideoEmbed } from "@/lib/utils/video-embed";
 
 export interface WorkFile {
   id: number;
@@ -65,18 +77,121 @@ export function WorkPreviewPanel({
   const [isPinned, setIsPinned] = React.useState(true);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [isLandscape, setIsLandscape] = React.useState(false);
+  const [showRotateHint, setShowRotateHint] = React.useState(false);
+  const [isPiPActive, setIsPiPActive] = React.useState(false);
+  const [isPiPSupported, setIsPiPSupported] = React.useState(false);
   const imageRef = React.useRef<HTMLImageElement>(null);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  // Check if PiP is supported
+  React.useEffect(() => {
+    setIsPiPSupported(
+      typeof document !== 'undefined' &&
+      'pictureInPictureEnabled' in document &&
+      document.pictureInPictureEnabled
+    );
+  }, []);
+
+  // Handle PiP toggle
+  const handlePiPToggle = React.useCallback(async () => {
+    if (!videoRef.current) return;
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+      } else {
+        await videoRef.current.requestPictureInPicture();
+        setIsPiPActive(true);
+      }
+    } catch (error) {
+      console.error('PiP error:', error);
+    }
+  }, []);
+
+  // Listen for PiP events
+  React.useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleEnterPiP = () => setIsPiPActive(true);
+    const handleLeavePiP = () => setIsPiPActive(false);
+
+    video.addEventListener('enterpictureinpicture', handleEnterPiP);
+    video.addEventListener('leavepictureinpicture', handleLeavePiP);
+
+    return () => {
+      video.removeEventListener('enterpictureinpicture', handleEnterPiP);
+      video.removeEventListener('leavepictureinpicture', handleLeavePiP);
+    };
+  }, [currentFileIndex]);
+
+  // Check if device is mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Handle screen rotation for mobile
+  const handleRotateScreen = React.useCallback(async () => {
+    try {
+      // Check if Screen Orientation API is available
+      if (screen.orientation && 'lock' in screen.orientation) {
+        const currentOrientation = screen.orientation.type;
+
+        if (currentOrientation.includes('portrait')) {
+          await screen.orientation.lock('landscape');
+          setIsLandscape(true);
+        } else {
+          await screen.orientation.unlock();
+          setIsLandscape(false);
+        }
+      } else {
+        // Fallback: show hint to rotate device manually
+        setShowRotateHint(true);
+        setTimeout(() => setShowRotateHint(false), 3000);
+      }
+    } catch {
+      // API not supported or permission denied - show hint
+      setShowRotateHint(true);
+      setTimeout(() => setShowRotateHint(false), 3000);
+    }
+  }, []);
+
+  // Reset orientation when closing fullscreen
+  React.useEffect(() => {
+    if (!isExpanded && isLandscape) {
+      try {
+        if (screen.orientation && 'unlock' in screen.orientation) {
+          screen.orientation.unlock();
+        }
+      } catch {
+        // Ignore errors
+      }
+      setIsLandscape(false);
+    }
+  }, [isExpanded, isLandscape]);
 
   const currentFile = files[currentFileIndex];
   const hasMultipleFiles = files.length > 1;
 
+  // Parse external URL for video embedding
+  const videoEmbed = React.useMemo(() => {
+    if (externalUrl) {
+      return parseVideoUrl(externalUrl);
+    }
+    return null;
+  }, [externalUrl]);
+
   // Determine file type icon
   const getFileIcon = (fileType: string) => {
     if (fileType.startsWith("image/")) return ImageIcon;
+    if (fileType.startsWith("video/")) return Video;
     if (fileType === "application/pdf") return FileText;
     if (fileType.includes("text") || fileType.includes("code")) return Code;
     return FileText;
   };
+
+  // Check if file is a video
+  const isVideoFile = (fileType: string) => fileType.startsWith("video/");
 
   // Handle zoom
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 25, 200));
@@ -112,96 +227,182 @@ export function WorkPreviewPanel({
     );
   }
 
-  // Expanded fullscreen modal
-  if (isExpanded) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleZoomOut}
-            className="text-white hover:bg-white/20"
-          >
-            <ZoomOut className="size-5" />
-          </Button>
-          <span className="text-white text-sm font-medium min-w-[60px] text-center">
-            {zoom}%
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleZoomIn}
-            className="text-white hover:bg-white/20"
-          >
-            <ZoomIn className="size-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
+  // Determine content type for fullscreen
+  const isImageFullscreen = currentFile && currentFile.file_type.startsWith("image/");
+  const isVideoFileFullscreen = currentFile && currentFile.file_type.startsWith("video/");
+
+  // Fullscreen modal using Dialog with proper portal
+  const FullscreenModal = () => (
+    <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+      <DialogPortal>
+        <DialogOverlay className="bg-black" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+          {/* Close button - always visible, top right */}
+          <button
             onClick={() => setIsExpanded(false)}
-            className="text-white hover:bg-white/20"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close fullscreen"
           >
-            <Minimize2 className="size-5" />
-          </Button>
+            <X className="size-6 text-white" />
+          </button>
+
+          {/* Rotate button - mobile only, for video content */}
+          {isMobile && (videoEmbed || isVideoFileFullscreen) && (
+            <button
+              onClick={handleRotateScreen}
+              className="absolute top-4 left-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center gap-2"
+              aria-label={isLandscape ? "Exit landscape mode" : "Rotate to landscape"}
+            >
+              <RotateCcw className={cn("size-5 text-white", isLandscape && "rotate-90")} />
+              <span className="text-white text-xs hidden sm:inline">
+                {isLandscape ? "Portrait" : "Landscape"}
+              </span>
+            </button>
+          )}
+
+          {/* Rotate hint toast - shown when API not supported */}
+          {showRotateHint && (
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-white/90 text-gray-900 px-4 py-2 rounded-full shadow-lg animate-in fade-in slide-in-from-top-2">
+              <Smartphone className="size-4 rotate-90" />
+              <span className="text-sm font-medium">Rotate your device for best viewing</span>
+            </div>
+          )}
+
+          {/* Zoom controls for images */}
+          {isImageFullscreen && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleZoomOut}
+                className="size-8 text-white hover:bg-white/20"
+              >
+                <ZoomOut className="size-4" />
+              </Button>
+              <span className="text-white text-sm font-medium min-w-[50px] text-center">
+                {zoom}%
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleZoomIn}
+                className="size-8 text-white hover:bg-white/20"
+              >
+                <ZoomIn className="size-4" />
+              </Button>
+            </div>
+          )}
+
+          {/* Image preview */}
+          {isImageFullscreen && currentFile && (
+            <img
+              src={getFileUrl(currentFile.file_url)}
+              alt={currentFile.file_name}
+              className="max-h-[90vh] max-w-[90vw] object-contain"
+              style={{ transform: `scale(${zoom / 100})` }}
+            />
+          )}
+
+          {/* Video file preview */}
+          {isVideoFileFullscreen && currentFile && (
+            <video
+              src={getFileUrl(currentFile.file_url)}
+              controls
+              autoPlay
+              className="max-h-[90vh] max-w-[90vw]"
+            >
+              Your browser does not support the video tag.
+            </video>
+          )}
+
+          {/* Video embed preview (YouTube, Twitch, etc.) */}
+          {!currentFile && videoEmbed && (
+            <div className="w-full max-w-5xl aspect-video px-4">
+              {videoEmbed.provider === 'direct' ? (
+                <video
+                  src={videoEmbed.embedUrl}
+                  controls
+                  autoPlay
+                  className="w-full h-full"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <iframe
+                  src={videoEmbed.embedUrl}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Video preview"
+                />
+              )}
+            </div>
+          )}
+
+          {/* File navigation */}
+          {hasMultipleFiles && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/50 rounded-full px-3 py-1.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={prevFile}
+                className="size-8 text-white hover:bg-white/20"
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <span className="text-white text-sm">
+                {currentFileIndex + 1} / {files.length}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={nextFile}
+                className="size-8 text-white hover:bg-white/20"
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          )}
         </div>
-
-        {currentFile && currentFile.file_type.startsWith("image/") && (
-          <img
-            src={getFileUrl(currentFile.file_url)}
-            alt={currentFile.file_name}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            style={{ transform: `scale(${zoom / 100})` }}
-          />
-        )}
-
-        {hasMultipleFiles && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={prevFile}
-              className="text-white hover:bg-white/20"
-            >
-              <ChevronLeft className="size-5" />
-            </Button>
-            <span className="text-white text-sm">
-              {currentFileIndex + 1} / {files.length}
-            </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={nextFile}
-              className="text-white hover:bg-white/20"
-            >
-              <ChevronRight className="size-5" />
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  }
+      </DialogPortal>
+    </Dialog>
+  );
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border-2 border-accent-blue/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 overflow-hidden",
-        isPinned && "lg:sticky lg:top-4",
-        className
-      )}
-    >
+    <>
+      {/* Fullscreen Modal */}
+      <FullscreenModal />
+
+      <div
+        className={cn(
+          "rounded-2xl border-2 border-accent-blue/30 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 overflow-hidden",
+          isPinned && "lg:sticky lg:top-4",
+          className
+        )}
+      >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-accent-blue/20 bg-white/60 backdrop-blur-sm">
         <div className="flex items-center gap-2 min-w-0">
           <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
-            <Eye className="size-4 text-accent-blue" />
+            {videoEmbed ? (
+              <Play className="size-4 text-accent-blue" />
+            ) : (
+              <Eye className="size-4 text-accent-blue" />
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-foreground truncate">
               {title}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {files.length} file{files.length !== 1 ? "s" : ""} to review
+              {files.length > 0
+                ? `${files.length} file${files.length !== 1 ? "s" : ""} to review`
+                : videoEmbed
+                  ? `${getProviderName(videoEmbed.provider)} video`
+                  : externalUrl
+                    ? "External content"
+                    : "Content to review"
+              }
             </p>
           </div>
         </div>
@@ -273,25 +474,135 @@ export function WorkPreviewPanel({
           </div>
         )}
 
-        {/* No files - show description or external link */}
-        {files.length === 0 && (
-          <div className="p-6 text-center">
-            {description && (
-              <p className="text-sm text-muted-foreground mb-4">{description}</p>
-            )}
-            {externalUrl && (
-              <Button
-                variant="outline"
-                onClick={() => window.open(externalUrl, "_blank")}
+        {/* Video File Preview (direct uploads) */}
+        {currentFile && isVideoFile(currentFile.file_type) && (
+          <div className="p-4 relative">
+            <video
+              ref={videoRef}
+              src={getFileUrl(currentFile.file_url)}
+              controls
+              className="w-full max-h-[400px] rounded-lg bg-black"
+              preload="metadata"
+            >
+              Your browser does not support the video tag.
+            </video>
+            {/* PiP Button */}
+            {isPiPSupported && (
+              <button
+                onClick={handlePiPToggle}
+                className={cn(
+                  "absolute top-6 right-6 p-2 rounded-full transition-colors",
+                  isPiPActive
+                    ? "bg-accent-blue text-white"
+                    : "bg-black/60 text-white hover:bg-black/80"
+                )}
+                title={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
               >
-                <ExternalLink className="size-4 mr-2" />
-                View External Link
-              </Button>
+                <PictureInPicture2 className="size-4" />
+              </button>
             )}
-            {!description && !externalUrl && (
-              <p className="text-sm text-muted-foreground">
-                No preview available for this content type
-              </p>
+          </div>
+        )}
+
+        {/* No files - show video embed or external link */}
+        {files.length === 0 && (
+          <div className="p-4">
+            {/* Video Embed (YouTube, Vimeo, Twitch, etc.) */}
+            {videoEmbed && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Play className="size-4" />
+                  <span>{getProviderName(videoEmbed.provider)}</span>
+                </div>
+                {videoEmbed.provider === 'direct' ? (
+                  <div className="relative">
+                    <video
+                      ref={videoRef}
+                      src={videoEmbed.embedUrl}
+                      controls
+                      className="w-full aspect-video rounded-lg bg-black"
+                      preload="metadata"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    {/* PiP Button */}
+                    {isPiPSupported && (
+                      <button
+                        onClick={handlePiPToggle}
+                        className={cn(
+                          "absolute top-2 right-2 p-2 rounded-full transition-colors",
+                          isPiPActive
+                            ? "bg-accent-blue text-white"
+                            : "bg-black/60 text-white hover:bg-black/80"
+                        )}
+                        title={isPiPActive ? "Exit Picture-in-Picture" : "Picture-in-Picture"}
+                      >
+                        <PictureInPicture2 className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black">
+                      <iframe
+                        src={videoEmbed.embedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="Video preview"
+                      />
+                    </div>
+                    {/* PiP hint for iframe embeds on mobile */}
+                    {isMobile && (
+                      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
+                        <PictureInPicture2 className="size-3" />
+                        Use player controls for Picture-in-Picture
+                      </p>
+                    )}
+                  </div>
+                )}
+                {externalUrl && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.open(externalUrl, "_blank")}
+                    className="w-full text-xs"
+                  >
+                    <ExternalLink className="size-3 mr-1.5" />
+                    Open in new tab
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Non-video external link */}
+            {!videoEmbed && externalUrl && (
+              <div className="text-center py-4">
+                {description && (
+                  <p className="text-sm text-muted-foreground mb-4">{description}</p>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(externalUrl, "_blank")}
+                >
+                  <ExternalLink className="size-4 mr-2" />
+                  View External Link
+                </Button>
+              </div>
+            )}
+
+            {/* No content at all */}
+            {!videoEmbed && !externalUrl && (
+              <div className="text-center py-4">
+                {description && (
+                  <p className="text-sm text-muted-foreground mb-4">{description}</p>
+                )}
+                {!description && (
+                  <p className="text-sm text-muted-foreground">
+                    No preview available for this content type
+                  </p>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -386,6 +697,7 @@ export function WorkPreviewPanel({
           </a>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

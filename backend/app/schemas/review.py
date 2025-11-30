@@ -100,6 +100,13 @@ class ReviewRequestBase(BaseModel):
         description="Whether reviewers must sign an NDA before viewing this request (expert reviews only)"
     )
 
+    # External content links (for video/streaming content)
+    external_links: Optional[List[str]] = Field(
+        None,
+        max_length=10,
+        description="List of external URLs (YouTube, Twitch, Vimeo, etc.) for video/streaming content"
+    )
+
     @field_validator('title')
     @classmethod
     def validate_title(cls, v: str) -> str:
@@ -246,6 +253,9 @@ class ReviewRequestUpdate(BaseModel):
 
     # NDA field
     requires_nda: Optional[bool] = None
+
+    # External content links
+    external_links: Optional[List[str]] = Field(None, max_length=10)
 
     @field_validator('title')
     @classmethod

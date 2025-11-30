@@ -28,7 +28,10 @@ import {
   EyeOff,
   PanelLeftClose,
   PanelLeft,
+  Maximize2,
+  Play,
 } from "lucide-react";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
 import { cn } from "@/lib/utils";
 import {
@@ -143,12 +146,28 @@ export function ReviewEditorPanel({
       }));
   }, [files]);
 
-  // Determine if we should show the preview panel (only if there are files)
-  const hasFilesToPreview = workFiles.length > 0;
+  // Determine if we should show the preview panel (files OR external URL)
+  // Get first external link for video/streaming content
+  const externalUrl = slot.review_request?.external_links?.[0] || null;
+  const hasContentToPreview = workFiles.length > 0 || !!externalUrl;
 
-  // Mobile PiP state
-  const [showMobilePip, setShowMobilePip] = React.useState(true);
-  const [pipExpanded, setPipExpanded] = React.useState(false);
+  // Mobile preview sheet state
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = React.useState(false);
+
+  // Check if external URL is a video
+  const isVideoContent = React.useMemo(() => {
+    if (!externalUrl) return false;
+    const videoPatterns = [
+      /youtube\.com/i,
+      /youtu\.be/i,
+      /vimeo\.com/i,
+      /twitch\.tv/i,
+      /kick\.com/i,
+      /loom\.com/i,
+      /\.(mp4|webm|mov|avi)$/i,
+    ];
+    return videoPatterns.some(pattern => pattern.test(externalUrl));
+  }, [externalUrl]);
 
   return (
     <div className="min-h-full">
@@ -186,7 +205,7 @@ export function ReviewEditorPanel({
               </div>
             </div>
             {/* Desktop Preview Toggle */}
-            {hasFilesToPreview && slot.status !== "submitted" && (
+            {hasContentToPreview && slot.status !== "submitted" && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -265,7 +284,7 @@ export function ReviewEditorPanel({
         /* True Side-by-Side Split Layout */
         <div className="flex">
           {/* LEFT: Sticky Preview Panel - Desktop Only */}
-          {showPreview && hasFilesToPreview && (
+          {showPreview && hasContentToPreview && (
             <div className={cn(
               "hidden lg:block border-r border-border/50 bg-muted/30 transition-all duration-300",
               previewCollapsed ? "w-14" : "w-[420px] min-w-[380px]"
@@ -306,7 +325,7 @@ export function ReviewEditorPanel({
                         title={slot.review_request?.title || "Work Preview"}
                         description={slot.review_request?.description}
                         contentType={slot.review_request?.content_type || "code"}
-                        externalUrl={slot.review_request?.external_url}
+                        externalUrl={externalUrl || undefined}
                       />
 
                       {/* Creator's Brief in Preview Panel */}
@@ -328,7 +347,7 @@ export function ReviewEditorPanel({
           {/* RIGHT: Review Form - Scrollable */}
           <div className="flex-1 min-w-0">
             {/* Brief Card - Only shown on mobile or when preview is hidden */}
-            {(!showPreview || !hasFilesToPreview) && (
+            {(!showPreview || !hasContentToPreview) && (
               <div className="p-4 border-b border-border/50 bg-muted/20 lg:hidden">
                 <button
                   onClick={() => setIsBriefCollapsed(!isBriefCollapsed)}
@@ -364,81 +383,107 @@ export function ReviewEditorPanel({
         </div>
       )}
 
-      {/* Mobile PiP Preview - Bottom Right Corner */}
-      {hasFilesToPreview && slot.status !== "submitted" && showMobilePip && (
-        <div className="lg:hidden fixed bottom-4 right-4 z-30">
-          {pipExpanded ? (
-            /* Expanded PiP */
-            <div className="w-72 rounded-2xl shadow-2xl border-2 border-accent-blue/30 bg-white overflow-hidden animate-in slide-in-from-bottom-4 duration-200">
-              <div className="flex items-center justify-between p-2 bg-accent-blue/10 border-b border-accent-blue/20">
-                <span className="text-xs font-semibold text-foreground px-2">Work Preview</span>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setPipExpanded(false)}
-                    className="p-1.5 rounded-md hover:bg-accent-blue/20 transition-colors"
-                  >
-                    <ChevronDown className="size-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => setShowMobilePip(false)}
-                    className="p-1.5 rounded-md hover:bg-red-100 transition-colors"
-                  >
-                    <EyeOff className="size-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                <WorkPreviewPanel
-                  files={workFiles}
-                  title={slot.review_request?.title || "Work Preview"}
-                  contentType={slot.review_request?.content_type || "code"}
-                  className="border-0 rounded-none"
-                />
-              </div>
-            </div>
-          ) : (
-            /* Collapsed PiP - Thumbnail */
-            <button
-              onClick={() => setPipExpanded(true)}
-              className="group relative size-16 rounded-2xl shadow-lg border-2 border-accent-blue/30 bg-white overflow-hidden hover:scale-105 transition-transform"
-            >
-              {workFiles[0]?.file_type.startsWith("image/") ? (
-                <img
-                  src={getFileUrl(workFiles[0].file_url)}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-accent-blue/10">
-                  <Eye className="size-6 text-accent-blue" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ChevronUp className="size-5 text-white drop-shadow-lg" />
-                </div>
-              </div>
-              {/* File count badge */}
-              {workFiles.length > 1 && (
-                <div className="absolute -top-1 -right-1 size-5 rounded-full bg-accent-blue text-white text-xs font-bold flex items-center justify-center">
-                  {workFiles.length}
-                </div>
-              )}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Mobile PiP restore button - shown when PiP is hidden */}
-      {hasFilesToPreview && slot.status !== "submitted" && !showMobilePip && (
+      {/* Mobile Preview FAB - Bottom Right Corner */}
+      {hasContentToPreview && slot.status !== "submitted" && (
         <button
-          onClick={() => setShowMobilePip(true)}
-          className="lg:hidden fixed bottom-4 right-4 z-30 px-3 py-2 rounded-full shadow-lg bg-accent-blue text-white text-xs font-medium flex items-center gap-1.5"
+          onClick={() => setIsMobileSheetOpen(true)}
+          className="lg:hidden fixed bottom-20 right-4 z-30 group"
+          aria-label="View work preview"
         >
-          <Eye className="size-3.5" />
-          Show Preview
+          {/* Thumbnail preview button */}
+          <div className="relative size-16 rounded-2xl shadow-lg border-2 border-accent-blue/30 bg-white overflow-hidden hover:scale-105 active:scale-95 transition-transform">
+            {workFiles[0]?.file_type.startsWith("image/") ? (
+              <img
+                src={getFileUrl(workFiles[0].file_url)}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : isVideoContent ? (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500/20 to-red-600/30">
+                <Play className="size-6 text-red-600" />
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-accent-blue/10">
+                <Eye className="size-6 text-accent-blue" />
+              </div>
+            )}
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+              <Maximize2 className="size-4 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+            </div>
+            {/* File count badge */}
+            {workFiles.length > 1 && (
+              <div className="absolute -top-1 -right-1 size-5 rounded-full bg-accent-blue text-white text-xs font-bold flex items-center justify-center shadow">
+                {workFiles.length}
+              </div>
+            )}
+            {/* Video indicator */}
+            {isVideoContent && workFiles.length === 0 && (
+              <div className="absolute -top-1 -left-1 size-5 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                <Play className="size-2.5" />
+              </div>
+            )}
+          </div>
+          {/* Label below */}
+          <span className="block text-[10px] font-medium text-center text-muted-foreground mt-1">
+            Preview
+          </span>
         </button>
       )}
+
+      {/* Mobile Preview Bottom Sheet */}
+      <BottomSheet
+        isOpen={isMobileSheetOpen}
+        onClose={() => setIsMobileSheetOpen(false)}
+        title="Work Preview"
+        description={slot.review_request?.title}
+        snapPoints={[85]}
+        className="lg:hidden"
+      >
+        <div className="space-y-4">
+          {/* Work Preview Panel */}
+          <WorkPreviewPanel
+            files={workFiles}
+            title={slot.review_request?.title || "Work Preview"}
+            description={slot.review_request?.description}
+            contentType={slot.review_request?.content_type || "code"}
+            externalUrl={externalUrl || undefined}
+            className="border-2 border-accent-blue/20"
+          />
+
+          {/* Creator's Brief */}
+          <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+            <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              💬 Creator's Brief
+            </h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {slot.review_request?.description || "No specific guidance provided"}
+            </p>
+          </div>
+
+          {/* Quick stats */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-accent-blue/5 border border-accent-blue/20">
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">{formatPayment(slot.payment_amount)}</p>
+              <p className="text-xs text-muted-foreground">Payment</p>
+            </div>
+            <div className="h-8 w-px bg-accent-blue/20" />
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">
+                {workFiles.length + (externalUrl ? 1 : 0)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {workFiles.length === 1 && !externalUrl ? "File" : "Items"}
+              </p>
+            </div>
+            <div className="h-8 w-px bg-accent-blue/20" />
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">{config.label}</p>
+              <p className="text-xs text-muted-foreground">Type</p>
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }

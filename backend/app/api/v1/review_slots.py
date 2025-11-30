@@ -1219,6 +1219,7 @@ async def get_my_review_slots(
                 "description": slot.review_request.description,
                 "content_type": slot.review_request.content_type.value,
                 "status": slot.review_request.status.value,
+                "external_links": slot.review_request.external_links,
             } if slot.review_request else None
 
             items_with_request.append(slot_dict)
@@ -1290,6 +1291,7 @@ async def get_pending_reviews_for_requester(
                 "title": slot.review_request.title,
                 "description": slot.review_request.description,
                 "content_type": slot.review_request.content_type.value,
+                "external_links": slot.review_request.external_links,
             } if slot.review_request else None
 
             items_with_request.append(slot_dict)
@@ -1357,6 +1359,7 @@ async def get_urgent_pending_count(
                 "id": slot.review_request.id,
                 "title": slot.review_request.title,
                 "content_type": slot.review_request.content_type.value,
+                "external_links": slot.review_request.external_links,
             } if slot.review_request else None
 
             items_with_request.append(slot_dict)
