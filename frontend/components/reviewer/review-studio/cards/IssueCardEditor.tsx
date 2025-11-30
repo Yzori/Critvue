@@ -303,9 +303,8 @@ export function IssueCardEditor({
     return (
       <div
         className={cn(
-          "group rounded-lg border-2 p-2 sm:p-3 transition-all cursor-pointer hover:shadow-md",
+          "group rounded-lg border-2 p-2 sm:p-3 transition-all cursor-pointer hover:shadow-md bg-white",
           PRIORITY_CONFIG[card.priority].border,
-          PRIORITY_CONFIG[card.priority].bg,
           isDragging && "shadow-lg opacity-90"
         )}
         onClick={toggleExpanded}
@@ -321,8 +320,8 @@ export function IssueCardEditor({
           </div>
 
           {/* Order Badge */}
-          <div className="size-6 rounded-full bg-white/50 flex items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-muted-foreground">
+          <div className={cn("size-6 rounded-full flex items-center justify-center shrink-0", PRIORITY_CONFIG[card.priority].bg)}>
+            <span className={cn("text-xs font-bold", PRIORITY_CONFIG[card.priority].color)}>
               #{index + 1}
             </span>
           </div>
