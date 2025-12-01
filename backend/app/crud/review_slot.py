@@ -86,7 +86,11 @@ async def get_review_slot(
     Returns:
         ReviewSlot or None if not found
     """
-    query = select(ReviewSlot).where(ReviewSlot.id == slot_id)
+    query = (
+        select(ReviewSlot)
+        .where(ReviewSlot.id == slot_id)
+        .options(selectinload(ReviewSlot.review_request))  # Eager load for authorization checks
+    )
 
     # Optionally filter by user access
     if user_id is not None:

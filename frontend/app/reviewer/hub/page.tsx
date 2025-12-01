@@ -96,6 +96,11 @@ export default function ReviewerHubPage() {
     window.history.pushState({}, "", url.toString());
   }, []);
 
+  // Clear error when mode changes
+  React.useEffect(() => {
+    setError(null);
+  }, [mode]);
+
   // Fetch reviewer data (reviews I gave)
   React.useEffect(() => {
     const fetchReviewerData = async () => {

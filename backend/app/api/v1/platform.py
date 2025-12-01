@@ -523,7 +523,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
             )
@@ -537,7 +537,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.status == ReviewSlotStatus.SUBMITTED
                 )
             )
@@ -551,7 +551,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.status == ReviewSlotStatus.CLAIMED
                 )
             )
@@ -565,7 +565,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.rating.isnot(None),
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
@@ -580,7 +580,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.accepted_at >= week_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
@@ -595,7 +595,7 @@ async def get_user_story_stats(
                 ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id
             ).where(
                 and_(
-                    ReviewRequest.requester_id == current_user.id,
+                    ReviewRequest.user_id == current_user.id,
                     ReviewSlot.accepted_at >= month_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
@@ -604,7 +604,7 @@ async def get_user_story_stats(
             last_month_activity = month_activity_result.scalar() or 0
 
             # Total creators for percentile
-            all_creators_query = select(func.count(func.distinct(ReviewRequest.requester_id)))
+            all_creators_query = select(func.count(func.distinct(ReviewRequest.user_id)))
             all_creators_result = await db.execute(all_creators_query)
             total_creators = all_creators_result.scalar() or 1
 

@@ -638,7 +638,10 @@ export function ReviewStudioProvider({
 
     // Set new timer for auto-save (3 seconds after last change)
     autoSaveTimerRef.current = setTimeout(() => {
-      saveDraft();
+      // Only auto-save if not already saving (prevent race conditions)
+      if (!state.isSaving) {
+        saveDraft();
+      }
     }, 3000);
 
     return () => {
@@ -653,6 +656,7 @@ export function ReviewStudioProvider({
     state.annotations,
     state.focusAreas,
     state.rubricRatings,
+    state.isSaving,
     saveDraft,
     isReadOnly,
   ]);

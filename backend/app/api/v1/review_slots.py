@@ -296,7 +296,7 @@ async def save_review_draft(
                 detail="Not your review"
             )
 
-        if slot.status.value != "claimed":
+        if slot.status != "claimed":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot save draft for non-claimed slot"
@@ -392,7 +392,14 @@ async def load_review_draft(
         import json
         from app.schemas.review_slot import FeedbackSection
 
-        draft_sections_data = json.loads(slot.draft_sections) if isinstance(slot.draft_sections, str) else slot.draft_sections
+        try:
+            draft_sections_data = json.loads(slot.draft_sections) if isinstance(slot.draft_sections, str) else slot.draft_sections
+        except json.JSONDecodeError as e:
+            logger.error(f"Corrupted draft data for slot {slot_id}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Draft data is corrupted and cannot be loaded"
+            )
 
         # Check if this is Smart Review data (dict with phase keys) or legacy data (list)
         if isinstance(draft_sections_data, dict) and any(key.startswith('phase') for key in draft_sections_data.keys()):
@@ -632,7 +639,14 @@ async def get_smart_review_draft(
 
         # Parse draft_sections JSON
         if slot.draft_sections:
-            draft_data = json.loads(slot.draft_sections)
+            try:
+                draft_data = json.loads(slot.draft_sections)
+            except json.JSONDecodeError as e:
+                logger.error(f"Corrupted Smart Review draft data for slot {slot_id}: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Draft data is corrupted and cannot be loaded"
+                )
             return SmartReviewDraft(**draft_data)
         else:
             # Return empty draft
@@ -1731,7 +1745,7 @@ async def get_studio_draft(
 
         # Allow access if user is the reviewer OR the creator
         is_reviewer = slot.reviewer_id == current_user.id
-        is_creator = slot.review_request and slot.review_request.requester_id == current_user.id
+        is_creator = slot.review_request and slot.review_request.user_id == current_user.id
 
         if not is_reviewer and not is_creator:
             raise HTTPException(
@@ -1748,7 +1762,14 @@ async def get_studio_draft(
 
         # Return raw JSON
         if slot.draft_sections:
-            draft_data = json.loads(slot.draft_sections)
+            try:
+                draft_data = json.loads(slot.draft_sections)
+            except json.JSONDecodeError as e:
+                logger.error(f"Corrupted Studio draft data for slot {slot_id}: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Draft data is corrupted and cannot be loaded"
+                )
             return JSONResponse(content=draft_data)
         else:
             # Return empty state
@@ -1796,6 +1817,7 @@ async def submit_studio_review(
         # Get raw JSON body
         body = await request.json()
 
+        # First check authorization without lock
         slot = await crud_review_slot.get_review_slot(db, slot_id, user_id=current_user.id)
 
         if not slot:
@@ -1810,7 +1832,10 @@ async def submit_studio_review(
                 detail="Not your review"
             )
 
-        if slot.status != "claimed":
+        # Now acquire row-level lock and re-check status to prevent race conditions
+        slot = await crud_review_slot.get_review_slot_with_lock(db, slot_id)
+
+        if not slot or slot.status != "claimed":
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Cannot submit review for non-claimed slot"
