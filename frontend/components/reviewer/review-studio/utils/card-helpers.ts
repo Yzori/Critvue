@@ -188,7 +188,7 @@ export function getIssuePlaceholder(category: string): string {
       "The error message doesn't explain how to fix the problem...",
     other: "Describe the specific issue you've identified...",
   };
-  return placeholders[category] || placeholders.other;
+  return placeholders[category] ?? placeholders.other ?? "";
 }
 
 /**
@@ -205,7 +205,7 @@ export function getFixPlaceholder(category: string): string {
     content: "Rewrite to include specific steps the user can take...",
     other: "Suggest a specific, actionable fix...",
   };
-  return placeholders[category] || placeholders.other;
+  return placeholders[category] ?? placeholders.other ?? "";
 }
 
 /**

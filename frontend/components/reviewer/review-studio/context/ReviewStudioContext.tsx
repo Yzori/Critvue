@@ -31,7 +31,7 @@ import {
 
 import { createInitialState, draftToStudioState } from "../utils/data-converter";
 
-import { generateCardId, generateAnnotationId, getNextAnnotationNumber } from "../utils/card-helpers";
+import { generateAnnotationId, getNextAnnotationNumber } from "../utils/card-helpers";
 
 import {
   saveStudioDraft,
@@ -155,10 +155,13 @@ function reducer(state: ReviewStudioState, action: ReviewStudioAction): ReviewSt
       const issueIndex = state.issueCards.findIndex((c) => c.id === cardId);
       if (issueIndex !== -1) {
         const updatedCards = [...state.issueCards];
-        updatedCards[issueIndex] = {
-          ...updatedCards[issueIndex],
-          isExpanded: !updatedCards[issueIndex].isExpanded,
-        };
+        const existingCard = updatedCards[issueIndex];
+        if (existingCard) {
+          updatedCards[issueIndex] = {
+            ...existingCard,
+            isExpanded: !existingCard.isExpanded,
+          };
+        }
         return { ...state, issueCards: updatedCards };
       }
 
@@ -166,10 +169,13 @@ function reducer(state: ReviewStudioState, action: ReviewStudioAction): ReviewSt
       const strengthIndex = state.strengthCards.findIndex((c) => c.id === cardId);
       if (strengthIndex !== -1) {
         const updatedCards = [...state.strengthCards];
-        updatedCards[strengthIndex] = {
-          ...updatedCards[strengthIndex],
-          isExpanded: !updatedCards[strengthIndex].isExpanded,
-        };
+        const existingCard = updatedCards[strengthIndex];
+        if (existingCard) {
+          updatedCards[strengthIndex] = {
+            ...existingCard,
+            isExpanded: !existingCard.isExpanded,
+          };
+        }
         return { ...state, strengthCards: updatedCards };
       }
 
@@ -216,12 +222,15 @@ function reducer(state: ReviewStudioState, action: ReviewStudioAction): ReviewSt
       const issueIndex = state.issueCards.findIndex((c) => c.id === cardId);
       if (issueIndex !== -1) {
         const updatedCards = [...state.issueCards];
-        const existingIds = updatedCards[issueIndex].annotationIds || [];
-        if (!existingIds.includes(annotationId)) {
-          updatedCards[issueIndex] = {
-            ...updatedCards[issueIndex],
-            annotationIds: [...existingIds, annotationId],
-          };
+        const existingCard = updatedCards[issueIndex];
+        if (existingCard) {
+          const existingIds = existingCard.annotationIds || [];
+          if (!existingIds.includes(annotationId)) {
+            updatedCards[issueIndex] = {
+              ...existingCard,
+              annotationIds: [...existingIds, annotationId],
+            };
+          }
         }
         return {
           ...state,
@@ -249,12 +258,15 @@ function reducer(state: ReviewStudioState, action: ReviewStudioAction): ReviewSt
       const issueIndex = state.issueCards.findIndex((c) => c.id === cardId);
       if (issueIndex !== -1) {
         const updatedCards = [...state.issueCards];
-        updatedCards[issueIndex] = {
-          ...updatedCards[issueIndex],
-          annotationIds: (updatedCards[issueIndex].annotationIds || []).filter(
-            (id) => id !== annotationId
-          ),
-        };
+        const existingCard = updatedCards[issueIndex];
+        if (existingCard) {
+          updatedCards[issueIndex] = {
+            ...existingCard,
+            annotationIds: (existingCard.annotationIds || []).filter(
+              (id) => id !== annotationId
+            ),
+          };
+        }
         return {
           ...state,
           annotations: updatedAnnotations,

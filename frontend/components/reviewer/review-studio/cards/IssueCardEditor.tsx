@@ -266,16 +266,6 @@ export function IssueCardEditor({
     dispatch({ type: "TOGGLE_CARD_EXPANDED", payload: card.id });
   };
 
-  const startEditing = () => {
-    dispatch({ type: "SET_EDITING_CARD", payload: card.id });
-    updateCard(card.id, { isEditing: true, isExpanded: true });
-  };
-
-  const stopEditing = () => {
-    dispatch({ type: "SET_EDITING_CARD", payload: null });
-    updateCard(card.id, { isEditing: false });
-  };
-
   const handleDelete = () => {
     deleteCard(card.id, "issue");
   };

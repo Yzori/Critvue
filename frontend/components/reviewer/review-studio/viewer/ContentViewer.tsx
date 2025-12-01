@@ -47,7 +47,7 @@ import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 
 import type { StudioAnnotation } from "@/lib/types/review-studio";
 import { useReviewStudio } from "../context/ReviewStudioContext";
-import { parseVideoUrl, getProviderName, type VideoEmbed } from "@/lib/utils/video-embed";
+import { parseVideoUrl, getProviderName } from "@/lib/utils/video-embed";
 
 // ===== Props =====
 
@@ -70,7 +70,7 @@ function formatTimestamp(seconds: number): string {
 function parseTimestampInput(input: string): number | null {
   // Handle formats: "1:30", "01:30", "90" (seconds only)
   const colonMatch = input.match(/^(\d+):(\d{1,2})$/);
-  if (colonMatch) {
+  if (colonMatch && colonMatch[1] && colonMatch[2]) {
     const mins = parseInt(colonMatch[1], 10);
     const secs = parseInt(colonMatch[2], 10);
     if (secs < 60) {
@@ -99,7 +99,7 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editComment, setEditComment] = React.useState("");
   const [zoom, setZoom] = React.useState(1);
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [_isFullscreen, setIsFullscreen] = React.useState(false);
 
   // Video-specific state
   const [currentTime, setCurrentTime] = React.useState(0);

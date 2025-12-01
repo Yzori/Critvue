@@ -86,8 +86,8 @@ interface ReviewStudioInnerProps extends Omit<ReviewStudioProps, "slotId"> {
 }
 
 function ReviewStudioInner({
-  contentType,
-  contentSubcategory,
+  contentType: _contentType,
+  contentSubcategory: _contentSubcategory,
   imageUrl,
   externalUrl,
   onSubmitSuccess,

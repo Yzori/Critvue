@@ -241,36 +241,46 @@ class TopTakeawayDraft(BaseModel):
 
 class ExecutiveSummary(BaseModel):
     """TL;DR for busy creators - premium expert review section"""
-    tldr: str = Field(
-        ...,
-        min_length=50,
-        max_length=200,
-        description="1-3 sentence takeaway"
-    )
-    key_strengths: List[str] = Field(
-        ...,
-        min_length=1,
-        max_length=3,
-        description="Top 3 bullet points"
-    )
-    key_actions: List[str] = Field(
-        ...,
-        min_length=1,
-        max_length=3,
-        description="Top 3 priority actions"
-    )
-    overall_readiness: Optional[Literal["ready", "almost-ready", "needs-work", "major-revision"]] = Field(
+    one_liner: Optional[str] = Field(
         None,
-        description="Overall assessment"
+        max_length=200,
+        description="A single sentence that captures the essence"
     )
+    biggest_win: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="The strongest aspect of this work"
+    )
+    critical_fix: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="The single most important thing to address"
+    )
+    quick_win: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="An easy improvement with high impact"
+    )
+
+    class Config:
+        # Allow camelCase from frontend
+        populate_by_name = True
+
+    @field_validator("one_liner", "biggest_win", "critical_fix", "quick_win", mode="before")
+    @classmethod
+    def allow_camel_case(cls, v, info):
+        return v
 
 
 class ExecutiveSummaryDraft(BaseModel):
     """Draft version with relaxed validation"""
-    tldr: Optional[str] = Field(default="", max_length=200)
-    key_strengths: Optional[List[str]] = Field(default=[])
-    key_actions: Optional[List[str]] = Field(default=[])
-    overall_readiness: Optional[str] = None
+    one_liner: Optional[str] = Field(default=None, max_length=200, alias="oneLiner")
+    biggest_win: Optional[str] = Field(default=None, max_length=200, alias="biggestWin")
+    critical_fix: Optional[str] = Field(default=None, max_length=200, alias="criticalFix")
+    quick_win: Optional[str] = Field(default=None, max_length=200, alias="quickWin")
+
+    class Config:
+        populate_by_name = True
 
 
 class FollowUpOffer(BaseModel):

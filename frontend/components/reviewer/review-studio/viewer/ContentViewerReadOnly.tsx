@@ -15,7 +15,6 @@ import {
   RotateCcw,
   Play,
   ExternalLink,
-  Maximize2,
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

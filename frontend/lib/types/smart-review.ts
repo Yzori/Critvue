@@ -109,10 +109,10 @@ export interface StructuredStrength {
 
 // Expert review premium sections
 export interface ExecutiveSummary {
-  tldr: string; // 1-3 sentence takeaway (50-200 chars)
-  keyStrengths: string[]; // Top 3 bullet points
-  keyActions: string[]; // Top 3 priority actions
-  overallReadiness?: 'ready' | 'almost-ready' | 'needs-work' | 'major-revision'; // Overall assessment
+  oneLiner?: string; // A single sentence that captures the essence (max 200 chars)
+  biggestWin?: string; // The strongest aspect of this work (max 200 chars)
+  criticalFix?: string; // The single most important thing to address (max 200 chars)
+  quickWin?: string; // An easy improvement with high impact (max 200 chars)
 }
 
 export interface FollowUpOffer {

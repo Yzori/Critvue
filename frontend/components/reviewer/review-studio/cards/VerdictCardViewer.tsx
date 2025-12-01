@@ -7,7 +7,6 @@
 
 "use client";
 
-import * as React from "react";
 import {
   Star,
   Sparkles,
@@ -211,9 +210,9 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
             </p>
           )}
 
-          {verdict.followUpOffer.timeframe && (
+          {verdict.followUpOffer.responseTime && (
             <p className="text-xs text-green-600">
-              Timeframe: {verdict.followUpOffer.timeframe}
+              Response time: {verdict.followUpOffer.responseTime}
             </p>
           )}
         </div>

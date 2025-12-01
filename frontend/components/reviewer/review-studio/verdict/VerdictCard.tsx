@@ -22,13 +22,12 @@ import {
   ArrowRight,
   CalendarClock,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 
-import type { VerdictCard as VerdictCardType, TopTakeaway } from "@/lib/types/review-studio";
 import { useReviewStudio } from "../context/ReviewStudioContext";
+import type { TopTakeaway } from "@/lib/types/smart-review";
 
 // ===== Star Rating Component =====
 
@@ -450,16 +449,16 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
 
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">
-                    Timeframe
+                    Response Time
                   </label>
                   <Input
-                    value={verdict.followUpOffer?.timeframe || ""}
+                    value={verdict.followUpOffer?.responseTime || ""}
                     onChange={(e) =>
                       updateVerdict({
                         followUpOffer: {
                           ...verdict.followUpOffer,
                           available: true,
-                          timeframe: e.target.value,
+                          responseTime: e.target.value,
                         },
                       })
                     }

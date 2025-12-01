@@ -11,8 +11,6 @@ import {
   PointerSensor,
   TouchSensor,
   KeyboardSensor,
-  type PointerActivationConstraint,
-  type TouchActivationConstraint,
 } from "@dnd-kit/core";
 
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
@@ -22,7 +20,7 @@ import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
  * Requires 8px of movement before drag starts
  * Prevents accidental drags on click
  */
-const pointerConstraint: PointerActivationConstraint = {
+const pointerConstraint = {
   distance: 8,
 };
 
@@ -31,7 +29,7 @@ const pointerConstraint: PointerActivationConstraint = {
  * Requires 200ms long-press before drag starts
  * Allows normal scrolling without triggering drag
  */
-const touchConstraint: TouchActivationConstraint = {
+const touchConstraint = {
   delay: 200,
   tolerance: 8,
 };
