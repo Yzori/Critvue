@@ -80,21 +80,20 @@ class NotificationType(str, enum.Enum):
     SYSTEM_ANNOUNCEMENT = "system_announcement"
     FEATURE_ANNOUNCEMENT = "feature_announcement"
 
-    # Battles
-    BATTLE_CHALLENGE_RECEIVED = "battle_challenge_received"
-    BATTLE_CHALLENGE_ACCEPTED = "battle_challenge_accepted"
-    BATTLE_CHALLENGE_DECLINED = "battle_challenge_declined"
-    BATTLE_CHALLENGE_EXPIRED = "battle_challenge_expired"
-    BATTLE_MATCHED = "battle_matched"                    # Matched via queue
-    BATTLE_STARTED = "battle_started"                    # Battle has begun
-    BATTLE_OPPONENT_SUBMITTED = "battle_opponent_submitted"
-    BATTLE_VOTING_STARTED = "battle_voting_started"
-    BATTLE_RESULTS_READY = "battle_results_ready"
-    BATTLE_WON = "battle_won"
-    BATTLE_LOST = "battle_lost"
-    BATTLE_DRAW = "battle_draw"
-    BATTLE_REMINDER_SUBMIT = "battle_reminder_submit"    # Submission deadline approaching
-    BATTLE_REMINDER_VOTE = "battle_reminder_vote"        # Voting deadline approaching
+    # Challenges
+    CHALLENGE_INVITATION_RECEIVED = "challenge_invitation_received"
+    CHALLENGE_INVITATION_ACCEPTED = "challenge_invitation_accepted"
+    CHALLENGE_INVITATION_DECLINED = "challenge_invitation_declined"
+    CHALLENGE_INVITATION_EXPIRED = "challenge_invitation_expired"
+    CHALLENGE_STARTED = "challenge_started"              # Challenge has begun
+    CHALLENGE_OPPONENT_SUBMITTED = "challenge_opponent_submitted"
+    CHALLENGE_VOTING_STARTED = "challenge_voting_started"
+    CHALLENGE_RESULTS_READY = "challenge_results_ready"
+    CHALLENGE_WON = "challenge_won"
+    CHALLENGE_LOST = "challenge_lost"
+    CHALLENGE_DRAW = "challenge_draw"
+    CHALLENGE_REMINDER_SUBMIT = "challenge_reminder_submit"  # Submission deadline approaching
+    CHALLENGE_REMINDER_VOTE = "challenge_reminder_vote"      # Voting deadline approaching
 
 
 class NotificationPriority(str, enum.Enum):
@@ -123,9 +122,9 @@ class EntityType(str, enum.Enum):
     PAYMENT = "payment"
     DISPUTE = "dispute"
     SYSTEM = "system"
-    BATTLE = "battle"
-    BATTLE_ENTRY = "battle_entry"
-    BATTLE_CHALLENGE = "battle_challenge"
+    CHALLENGE = "challenge"
+    CHALLENGE_ENTRY = "challenge_entry"
+    CHALLENGE_INVITATION = "challenge_invitation"
 
 
 class Notification(Base):

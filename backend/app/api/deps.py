@@ -85,6 +85,46 @@ async def get_current_user(
     return user
 
 
+async def get_current_user_optional(
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+) -> Optional[User]:
+    """
+    Dependency to optionally get the current authenticated user.
+    Returns None if not authenticated instead of raising an exception.
+
+    Args:
+        access_token: JWT access token from httpOnly cookie
+        db: Database session
+
+    Returns:
+        Current authenticated user or None if not authenticated
+    """
+    if not access_token:
+        return None
+
+    # Check if token is blacklisted
+    if redis_service.is_token_blacklisted(access_token):
+        return None
+
+    payload = decode_access_token(access_token)
+    if payload is None:
+        return None
+
+    user_id: Optional[int] = payload.get("user_id")
+    if user_id is None:
+        return None
+
+    # Fetch user from database
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if user is None or not user.is_active:
+        return None
+
+    return user
+
+
 async def get_current_active_user(
     current_user: User = Depends(get_current_user)
 ) -> User:

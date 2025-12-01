@@ -1,35 +1,36 @@
-"""Battle Entry model for participant submissions in battles"""
+"""Challenge Entry model for participant submissions in challenges"""
 
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.models.user import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.battle import Battle
-    from app.models.battle_vote import BattleVote
+    from app.models.challenge import Challenge
+    from app.models.challenge_vote import ChallengeVote
 
 
-class BattleEntry(Base):
+class ChallengeEntry(Base):
     """
-    Battle Entry model for participant submissions.
+    Challenge Entry model for participant submissions.
 
-    Each participant in a battle submits one entry.
-    Entries are blind until both participants have submitted.
+    Each participant in a challenge submits one entry.
+    For 1v1: Entries are blind until both participants have submitted.
+    For Category: All entries are visible after submission.
     """
 
-    __tablename__ = "battle_entries"
+    __tablename__ = "challenge_entries"
 
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    battle_id = Column(
+    challenge_id = Column(
         Integer,
-        ForeignKey("battles.id", ondelete="CASCADE"),
+        ForeignKey("challenges.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -63,13 +64,18 @@ class BattleEntry(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     submitted_at = Column(DateTime, nullable=True)  # NULL until officially submitted
 
+    # Ensure one entry per user per challenge
+    __table_args__ = (
+        UniqueConstraint('challenge_id', 'user_id', name='unique_challenge_entry'),
+    )
+
     # Relationships
-    battle = relationship("Battle", back_populates="entries")
-    user = relationship("User", backref="battle_entries")
-    votes = relationship("BattleVote", back_populates="entry", cascade="all, delete-orphan")
+    challenge = relationship("Challenge", back_populates="entries")
+    user = relationship("User", backref="challenge_entries")
+    votes = relationship("ChallengeVote", back_populates="entry", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
-        return f"<BattleEntry {self.id}: Battle {self.battle_id} by User {self.user_id}>"
+        return f"<ChallengeEntry {self.id}: Challenge {self.challenge_id} by User {self.user_id}>"
 
     @property
     def is_submitted(self) -> bool:

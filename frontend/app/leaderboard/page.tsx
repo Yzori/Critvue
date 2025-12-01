@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Trophy, AlertCircle, RefreshCw, Navigation, Swords, Star, Medal, Flame } from 'lucide-react';
+import { Trophy, AlertCircle, RefreshCw, Navigation, Sparkles, Star, Medal, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserTier } from '@/lib/types/tier';
 import { Button } from '@/components/ui/button';
@@ -36,12 +36,12 @@ import {
   DiscoveryUser,
 } from '@/lib/api/leaderboard';
 import {
-  getBattleLeaderboard,
-  BattleLeaderboardEntry,
-  BattleLeaderboardResponse,
-} from '@/lib/api/battles';
+  getLeaderboard as getChallengeLeaderboard,
+  ChallengeLeaderboardEntry,
+  ChallengeLeaderboardResponse,
+} from '@/lib/api/challenges';
 
-type LeaderboardMode = 'reviews' | 'battles';
+type LeaderboardMode = 'reviews' | 'challenges';
 
 /**
  * Leaderboard Page - Modern Redesign
@@ -56,8 +56,8 @@ type LeaderboardMode = 'reviews' | 'battles';
 export default function LeaderboardPage() {
   const searchParams = useSearchParams();
 
-  // Mode state (Reviews vs Battles) - read from URL if provided
-  const initialMode = searchParams.get('mode') === 'battles' ? 'battles' : 'reviews';
+  // Mode state (Reviews vs Challenges) - read from URL if provided
+  const initialMode = searchParams.get('mode') === 'challenges' ? 'challenges' : 'reviews';
   const [mode, setMode] = React.useState<LeaderboardMode>(initialMode);
 
   // Reviews state
@@ -80,10 +80,10 @@ export default function LeaderboardPage() {
   const [page, setPage] = React.useState(1);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-  // Battles state
-  const [battlesData, setBattlesData] = React.useState<BattleLeaderboardResponse | null>(null);
-  const [isBattlesLoading, setIsBattlesLoading] = React.useState(false);
-  const [battlesError, setBattlesError] = React.useState<string | null>(null);
+  // Challenges state
+  const [challengesData, setChallengesData] = React.useState<ChallengeLeaderboardResponse | null>(null);
+  const [isChallengesLoading, setIsChallengesLoading] = React.useState(false);
+  const [challengesError, setChallengesError] = React.useState<string | null>(null);
 
   // Refs
   const currentUserRef = React.useRef<HTMLDivElement>(null);
@@ -168,18 +168,18 @@ export default function LeaderboardPage() {
     }
   }, []);
 
-  // Fetch battles leaderboard
-  const fetchBattlesLeaderboard = React.useCallback(async () => {
+  // Fetch challenges leaderboard
+  const fetchChallengesLeaderboard = React.useCallback(async () => {
     try {
-      setIsBattlesLoading(true);
-      setBattlesError(null);
-      const data = await getBattleLeaderboard(50);
-      setBattlesData(data);
+      setIsChallengesLoading(true);
+      setChallengesError(null);
+      const data = await getChallengeLeaderboard(50);
+      setChallengesData(data);
     } catch (err) {
-      console.error('Failed to fetch battles leaderboard:', err);
-      setBattlesError('Failed to load battles leaderboard.');
+      console.error('Failed to fetch challenges leaderboard:', err);
+      setChallengesError('Failed to load challenges leaderboard.');
     } finally {
-      setIsBattlesLoading(false);
+      setIsChallengesLoading(false);
     }
   }, []);
 
@@ -195,7 +195,7 @@ export default function LeaderboardPage() {
       hasShownConfetti.current = false;
       fetchLeaderboard(1, false);
     } else {
-      fetchBattlesLeaderboard();
+      fetchChallengesLeaderboard();
     }
   }, [mode]);
 
@@ -337,7 +337,7 @@ export default function LeaderboardPage() {
           </motion.div>
         )}
 
-        {/* Mode Toggle - Reviews vs Battles */}
+        {/* Mode Toggle - Reviews vs Challenges */}
         <div className="flex justify-center">
           <div className="inline-flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
             <button
@@ -353,16 +353,16 @@ export default function LeaderboardPage() {
               Reviews
             </button>
             <button
-              onClick={() => setMode('battles')}
+              onClick={() => setMode('challenges')}
               className={cn(
                 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all',
-                mode === 'battles'
+                mode === 'challenges'
                   ? 'bg-accent-peach text-white shadow-sm'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               )}
             >
-              <Swords className="h-4 w-4" />
-              Battles
+              <Sparkles className="h-4 w-4" />
+              Challenges
             </button>
           </div>
         </div>
@@ -594,40 +594,40 @@ export default function LeaderboardPage() {
           </div>
         </div>
         ) : (
-          /* Battles Leaderboard */
+          /* Challenges Leaderboard */
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-            {isBattlesLoading ? (
+            {isChallengesLoading ? (
               <div className="p-6 space-y-4">
                 <LeaderboardSkeleton count={10} />
               </div>
-            ) : battlesError ? (
+            ) : challengesError ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
                 <h3 className="mb-2 font-semibold text-lg text-gray-900">
-                  Unable to Load Battle Rankings
+                  Unable to Load Challenge Rankings
                 </h3>
-                <p className="mb-6 text-gray-600 text-sm">{battlesError}</p>
-                <Button onClick={fetchBattlesLeaderboard} variant="outline">
+                <p className="mb-6 text-gray-600 text-sm">{challengesError}</p>
+                <Button onClick={fetchChallengesLeaderboard} variant="outline">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Try Again
                 </Button>
               </div>
-            ) : !battlesData || battlesData.entries.length === 0 ? (
+            ) : !challengesData || challengesData.entries.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
-                <Swords className="mb-4 h-16 w-16 text-gray-300" />
+                <Sparkles className="mb-4 h-16 w-16 text-gray-300" />
                 <h3 className="mb-2 font-semibold text-lg text-gray-900">
-                  No Battle Champions Yet
+                  No Challenge Champions Yet
                 </h3>
                 <p className="text-gray-500 text-sm">
-                  Win battles to climb the leaderboard!
+                  Win challenges to climb the leaderboard!
                 </p>
               </div>
             ) : (
               <>
-                {/* Battles Podium - Top 3 */}
+                {/* Challenges Podium - Top 3 */}
                 <div className="p-6 bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
                   <div className="flex items-end justify-center gap-6">
-                    {battlesData.entries.slice(0, 3).map((entry, index) => {
+                    {challengesData.entries.slice(0, 3).map((entry, index) => {
                       const rank = index + 1;
                       const order = rank === 1 ? 'order-2' : rank === 2 ? 'order-1' : 'order-3';
                       const size = rank === 1 ? 'h-20 w-20' : 'h-14 w-14';
@@ -667,7 +667,7 @@ export default function LeaderboardPage() {
                           <p className="font-semibold text-gray-900 text-sm truncate max-w-[100px]">
                             {entry.userName}
                           </p>
-                          <p className="text-xs text-gray-500">{entry.battlesWon} wins</p>
+                          <p className="text-xs text-gray-500">{entry.challengesWon} wins</p>
                           <div className={cn(
                             'w-20 rounded-t-lg mt-3 flex flex-col items-center justify-end pb-2',
                             rank === 1 ? 'bg-yellow-100' : rank === 2 ? 'bg-gray-100' : 'bg-amber-100',
@@ -686,9 +686,9 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
 
-                {/* Battles List - 4+ */}
+                {/* Challenges List - 4+ */}
                 <div className="p-3 space-y-2">
-                  {battlesData.entries.slice(3).map((entry, index) => (
+                  {challengesData.entries.slice(3).map((entry, index) => (
                     <motion.div
                       key={entry.userId}
                       initial={{ opacity: 0, x: -10 }}
@@ -715,7 +715,7 @@ export default function LeaderboardPage() {
                       </div>
                       <div className="flex items-center gap-4 text-sm">
                         <div className="text-center">
-                          <p className="font-semibold text-gray-900">{entry.battlesWon}</p>
+                          <p className="font-semibold text-gray-900">{entry.challengesWon}</p>
                           <p className="text-xs text-gray-500">Wins</p>
                         </div>
                         {entry.bestStreak > 0 && (
@@ -730,11 +730,11 @@ export default function LeaderboardPage() {
                 </div>
 
                 {/* Current User Rank */}
-                {battlesData.currentUserRank && (
+                {challengesData.currentUserRank && (
                   <div className="border-t border-gray-100 p-4 bg-gray-50">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Your Rank</span>
-                      <span className="font-bold text-accent-peach">#{battlesData.currentUserRank}</span>
+                      <span className="font-bold text-accent-peach">#{challengesData.currentUserRank}</span>
                     </div>
                   </div>
                 )}

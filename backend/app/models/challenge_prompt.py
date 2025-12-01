@@ -1,4 +1,4 @@
-"""Battle Prompt model for platform-curated challenges"""
+"""Challenge Prompt model for platform-curated challenges"""
 
 import enum
 from datetime import datetime
@@ -10,25 +10,25 @@ from app.models.user import Base
 from app.models.review_request import ContentType
 
 if TYPE_CHECKING:
-    from app.models.battle import Battle
+    from app.models.challenge import Challenge
 
 
 class PromptDifficulty(str, enum.Enum):
-    """Difficulty levels for battle prompts"""
+    """Difficulty levels for challenge prompts"""
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
 
 
-class BattlePrompt(Base):
+class ChallengePrompt(Base):
     """
-    Battle Prompt model for platform-curated challenges.
+    Challenge Prompt model for platform-curated challenges.
 
-    Pre-defined prompts that users select when creating/joining battles.
+    Pre-defined prompts that admins select when creating challenges.
     Prompts are categorized by content type and difficulty.
     """
 
-    __tablename__ = "battle_prompts"
+    __tablename__ = "challenge_prompts"
 
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
@@ -61,10 +61,10 @@ class BattlePrompt(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    battles = relationship("Battle", back_populates="prompt")
+    challenges = relationship("Challenge", back_populates="prompt")
 
     def __repr__(self) -> str:
-        return f"<BattlePrompt {self.id}: {self.title[:30]} [{self.content_type}]>"
+        return f"<ChallengePrompt {self.id}: {self.title[:30]} [{self.content_type}]>"
 
     def increment_usage(self) -> None:
         """Increment the usage counter"""

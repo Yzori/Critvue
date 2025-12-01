@@ -73,13 +73,14 @@ class KarmaAction(str, enum.Enum):
     LEADERBOARD_REWARD = "leaderboard_reward"            # Variable based on rank
     SEASONAL_BONUS = "seasonal_bonus"                    # End-of-season bonus
 
-    # Battle rewards
-    BATTLE_WIN = "battle_win"                            # +50-100 based on vote margin
-    BATTLE_LOSS = "battle_loss"                          # +5 participation bonus
-    BATTLE_DRAW = "battle_draw"                          # +25 each
-    BATTLE_WIN_STREAK_3 = "battle_win_streak_3"          # +50 bonus for 3-win streak
-    BATTLE_WIN_STREAK_5 = "battle_win_streak_5"          # +100 bonus for 5-win streak
-    BATTLE_VOTE_CAST = "battle_vote_cast"                # +2 for voting in a battle
+    # Challenge rewards
+    CHALLENGE_WIN = "challenge_win"                      # +50-100 based on vote margin
+    CHALLENGE_LOSS = "challenge_loss"                    # +5 participation bonus
+    CHALLENGE_DRAW = "challenge_draw"                    # +25 each
+    CHALLENGE_WIN_STREAK_3 = "challenge_win_streak_3"    # +50 bonus for 3-win streak
+    CHALLENGE_WIN_STREAK_5 = "challenge_win_streak_5"    # +100 bonus for 5-win streak
+    CHALLENGE_VOTE_CAST = "challenge_vote_cast"          # +2 for voting in a challenge
+    CHALLENGE_CATEGORY_WIN = "challenge_category_win"    # +25-75 for category challenge placement
 
 
 class KarmaTransaction(Base):

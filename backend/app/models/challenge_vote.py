@@ -1,4 +1,4 @@
-"""Battle Vote model for community voting on battles"""
+"""Challenge Vote model for community voting on challenges"""
 
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -9,28 +9,28 @@ from app.models.user import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.battle import Battle
-    from app.models.battle_entry import BattleEntry
+    from app.models.challenge import Challenge
+    from app.models.challenge_entry import ChallengeEntry
 
 
-class BattleVote(Base):
+class ChallengeVote(Base):
     """
-    Battle Vote model for community voting.
+    Challenge Vote model for community voting.
 
-    Each user can vote once per battle.
+    Each user can vote once per challenge.
     Votes are final and cannot be changed.
     Vote counts are hidden until voting ends (blind voting).
     """
 
-    __tablename__ = "battle_votes"
+    __tablename__ = "challenge_votes"
 
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    battle_id = Column(
+    challenge_id = Column(
         Integer,
-        ForeignKey("battles.id", ondelete="CASCADE"),
+        ForeignKey("challenges.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -42,7 +42,7 @@ class BattleVote(Base):
     )
     entry_id = Column(
         Integer,
-        ForeignKey("battle_entries.id", ondelete="CASCADE"),
+        ForeignKey("challenge_entries.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
@@ -50,15 +50,15 @@ class BattleVote(Base):
     # Timestamp
     voted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
-    # Ensure one vote per user per battle
+    # Ensure one vote per user per challenge
     __table_args__ = (
-        UniqueConstraint('battle_id', 'voter_id', name='unique_battle_voter'),
+        UniqueConstraint('challenge_id', 'voter_id', name='unique_challenge_voter'),
     )
 
     # Relationships
-    battle = relationship("Battle", back_populates="votes")
-    voter = relationship("User", backref="battle_votes")
-    entry = relationship("BattleEntry", back_populates="votes")
+    challenge = relationship("Challenge", back_populates="votes")
+    voter = relationship("User", backref="challenge_votes")
+    entry = relationship("ChallengeEntry", back_populates="votes")
 
     def __repr__(self) -> str:
-        return f"<BattleVote {self.id}: User {self.voter_id} voted for Entry {self.entry_id} in Battle {self.battle_id}>"
+        return f"<ChallengeVote {self.id}: User {self.voter_id} voted for Entry {self.entry_id} in Challenge {self.challenge_id}>"

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Home, Search, LayoutDashboard, User, Swords } from "lucide-react";
+import { Home, Search, LayoutDashboard, User, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { TopNav } from "./top-nav";
@@ -50,7 +50,7 @@ export function Navigation({ transparent = false }: NavigationProps) {
   const getActiveBottomNavId = () => {
     if (pathname === "/") return "home";
     if (pathname.startsWith("/browse")) return "browse";
-    if (pathname.startsWith("/battles")) return "battles";
+    if (pathname.startsWith("/challenges")) return "challenges";
     if (pathname.startsWith("/dashboard")) return "dashboard";
     if (pathname.startsWith("/profile")) return "profile";
     return "home";
@@ -73,11 +73,11 @@ export function Navigation({ transparent = false }: NavigationProps) {
       onClick: () => router.push("/browse"),
     },
     {
-      id: "battles",
-      label: "Battles",
-      icon: <Swords className="size-6" />,
-      activeIcon: <Swords className="size-6" fill="currentColor" />,
-      onClick: () => router.push("/battles"),
+      id: "challenges",
+      label: "Challenges",
+      icon: <Sparkles className="size-6" />,
+      activeIcon: <Sparkles className="size-6" fill="currentColor" />,
+      onClick: () => router.push("/challenges"),
     },
     {
       id: "dashboard",
