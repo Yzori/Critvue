@@ -24,17 +24,10 @@ import {
   ChevronRight,
   PenLine,
   Inbox,
-  Clock,
   User,
-  Star,
   CheckCircle2,
-  XCircle,
-  ArrowRight,
-  FileText,
-  AlertCircle,
   Zap,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { ActiveReviewsSidebar } from "@/components/reviewer/active-reviews-sidebar";
 import { ReviewEditorPanel } from "@/components/reviewer/review-editor-panel";
 import { MobileReviewDrawer } from "@/components/reviewer/mobile-review-drawer";
@@ -137,7 +130,7 @@ export default function ReviewerHubPage() {
         setPendingReviews(data);
 
         // Set first pending review as current
-        if (data.length > 0) {
+        if (data.length > 0 && data[0]) {
           setCurrentPendingSlot(data[0]);
         }
       } catch (err) {

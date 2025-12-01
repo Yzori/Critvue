@@ -172,17 +172,6 @@ export interface SmartReviewDraft {
   metadata?: SmartReviewMetadata;
 }
 
-// ===== Submit Payload =====
-
-export interface SmartReviewSubmit {
-  smart_review: SmartReviewDraft;
-  attachments?: Array<{
-    file_url: string;
-    file_name: string;
-    file_type: string;
-  }>;
-}
-
 // ===== Rubric Configuration (from backend) =====
 
 export interface FocusArea {

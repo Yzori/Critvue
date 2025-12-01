@@ -7,12 +7,6 @@
 
 import {
   SmartReviewDraft,
-  Phase1QuickAssessment,
-  Phase2RubricRatings,
-  Phase3DetailedFeedback,
-  StructuredImprovement,
-  StructuredStrength,
-  VisualAnnotation,
 } from "@/lib/types/smart-review";
 
 import {
@@ -168,121 +162,6 @@ export function draftToStudioState(
     lastSavedAt: metadata?.last_updated_at ? new Date(metadata.last_updated_at) : null,
     saveError: null,
   };
-}
-
-/**
- * Convert ReviewStudioState to SmartReviewDraft
- * Used when saving or submitting
- */
-export function studioStateToDraft(state: ReviewStudioState): SmartReviewDraft {
-  // Convert issue cards back to structured improvements
-  const structuredImprovements: StructuredImprovement[] = state.issueCards
-    .sort((a, b) => a.order - b.order)
-    .map((card) => ({
-      id: card.id,
-      issue: card.issue,
-      location: card.location,
-      suggestion: card.fix,
-      priority: card.priority,
-      effort: card.effort,
-      confidence: card.confidence,
-      category: card.category,
-      isQuickWin: card.isQuickWin,
-      resources: card.resources,
-      principle: card.principle,
-      principleCategory: card.principleCategory,
-      impact: card.whyItMatters,
-      impactType: card.impactType,
-      afterState: card.afterState,
-    }));
-
-  // Convert strength cards back to structured strengths
-  const structuredStrengths: StructuredStrength[] = state.strengthCards
-    .sort((a, b) => a.order - b.order)
-    .map((card) => ({
-      id: card.id,
-      what: card.what,
-      why: card.why,
-      impact: card.impact,
-    }));
-
-  // Convert annotations back to visual annotations
-  const visualAnnotations: VisualAnnotation[] = state.annotations
-    .filter((a) => a.type === "pin" && a.x !== undefined && a.y !== undefined)
-    .map((ann) => ({
-      id: ann.id,
-      x: ann.x!,
-      y: ann.y!,
-      comment: ann.comment || "",
-    }));
-
-  // Build the draft
-  const draft: SmartReviewDraft = {
-    phase1_quick_assessment: {
-      overall_rating: state.verdictCard?.rating || 0,
-      primary_focus_areas: state.focusAreas,
-      quick_summary: state.verdictCard?.summary || "",
-    },
-    phase2_rubric: {
-      content_type: state.contentType,
-      ratings: state.rubricRatings,
-      rationales: state.rubricRationales,
-    },
-    phase3_detailed_feedback: {
-      // Legacy arrays for backward compatibility
-      strengths: state.strengthCards.map((c) => c.what).filter(Boolean),
-      improvements: state.issueCards
-        .map((c) => (c.issue && c.fix ? `${c.issue} → ${c.fix}` : c.issue))
-        .filter(Boolean),
-
-      // New structured format
-      structured_strengths: structuredStrengths,
-      structured_improvements: structuredImprovements,
-
-      // Additional fields
-      visual_annotations: visualAnnotations,
-      top_takeaways: state.verdictCard?.topTakeaways,
-      executive_summary: state.verdictCard?.executiveSummary,
-      follow_up_offer: state.verdictCard?.followUpOffer,
-    },
-    metadata: {
-      version: "2.0", // Mark as Review Studio format
-      created_at: new Date().toISOString(),
-      last_updated_at: new Date().toISOString(),
-      time_spent_seconds: state.timeSpentSeconds,
-      phases_completed: getCompletedPhases(state),
-    },
-  };
-
-  return draft;
-}
-
-/**
- * Determine which phases are complete based on state
- */
-function getCompletedPhases(state: ReviewStudioState): string[] {
-  const phases: string[] = [];
-
-  // Phase 1: Focus areas selected
-  if (state.focusAreas.length > 0) {
-    phases.push("phase1");
-  }
-
-  // Phase 2: At least one rating
-  if (Object.keys(state.rubricRatings).length > 0) {
-    phases.push("phase2");
-  }
-
-  // Phase 3: At least one card or verdict
-  if (
-    state.issueCards.length > 0 ||
-    state.strengthCards.length > 0 ||
-    (state.verdictCard && state.verdictCard.rating > 0)
-  ) {
-    phases.push("phase3");
-  }
-
-  return phases;
 }
 
 /**
