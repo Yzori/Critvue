@@ -237,26 +237,113 @@ export function formatNotificationTime(createdAt: string): string {
  */
 export function getNotificationIcon(type: string): string {
   switch (type) {
+    // Review Lifecycle
     case "review_slot_claimed":
       return "👤";
+    case "review_slot_available":
+      return "🔓";
     case "review_submitted":
       return "📝";
     case "review_accepted":
       return "✅";
     case "review_rejected":
       return "❌";
-    case "tier_promoted":
-      return "⭐";
+    case "review_auto_accepted":
+      return "✅";
+    case "review_abandoned":
+    case "review_abandoned_timeout":
+      return "🚫";
+    case "all_slots_claimed":
+      return "🎉";
+    case "all_reviews_completed":
+      return "🏆";
+
+    // Elaboration Requests
+    case "elaboration_requested":
+      return "💬";
+    case "elaboration_submitted":
+      return "💬";
+    case "elaboration_deadline_24h":
+      return "⏰";
+
+    // Deadlines & Reminders
+    case "claim_deadline_24h":
+    case "claim_deadline_6h":
+    case "auto_accept_deadline_48h":
+    case "auto_accept_deadline_24h":
+    case "submission_deadline_approaching":
+      return "⏰";
+
+    // Disputes
+    case "dispute_created":
+      return "⚖️";
+    case "dispute_resolved":
+    case "dispute_resolved_reviewer_wins":
+    case "dispute_resolved_creator_wins":
+      return "⚖️";
+
+    // Karma & Tier
     case "karma_earned":
       return "💎";
-    case "dispute_created":
-    case "dispute_resolved":
-      return "⚖️";
-    case "deadline_warning":
-      return "⏰";
+    case "karma_lost":
+      return "💔";
+    case "streak_milestone":
+      return "🔥";
+    case "tier_promoted":
+      return "⭐";
+    case "tier_progress":
+      return "📈";
+    case "acceptance_rate_warning":
+      return "⚠️";
+
+    // Expert Applications
+    case "expert_application_submitted":
+      return "📋";
+    case "expert_application_under_review":
+      return "🔍";
+    case "expert_application_approved":
+      return "🎉";
+    case "expert_application_rejected":
+      return "📋";
+
+    // Subscriptions & Payments
+    case "review_limit_approaching":
+    case "review_limit_reached":
+    case "review_limit_reset":
+      return "📊";
     case "subscription_created":
+      return "💳";
     case "subscription_canceled":
       return "💳";
+    case "payment_succeeded":
+      return "💰";
+    case "payment_failed":
+      return "❗";
+
+    // Expert/Paid Reviews
+    case "expert_review_claimed":
+      return "💼";
+    case "expert_payment_released":
+      return "💰";
+    case "expert_payment_refunded":
+      return "↩️";
+    case "weekly_paid_limit_reached":
+      return "📊";
+
+    // Account & Security
+    case "password_changed":
+      return "🔐";
+    case "email_changed":
+      return "📧";
+    case "new_login_device":
+      return "🔔";
+
+    // System
+    case "system_announcement":
+      return "📢";
+    case "feature_announcement":
+      return "✨";
+
     default:
       return "🔔";
   }

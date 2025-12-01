@@ -9,7 +9,7 @@ import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_, func, desc
+from sqlalchemy import select, and_, or_, func, desc, update, delete
 
 from app.models.notification import (
     Notification,
@@ -365,6 +365,69 @@ class NotificationService:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
+    async def get_notification_count(
+        self,
+        user_id: int,
+        read: Optional[bool] = None,
+        archived: Optional[bool] = None,
+        notification_type: Optional[NotificationType] = None,
+        priority: Optional[NotificationPriority] = None,
+    ) -> int:
+        """
+        Get count of notifications matching filters using efficient SQL COUNT.
+
+        Args:
+            user_id: User ID to count notifications for
+            read: Filter by read status
+            archived: Filter by archived status
+            notification_type: Filter by notification type
+            priority: Filter by priority
+
+        Returns:
+            Count of matching notifications
+        """
+        query = select(func.count(Notification.id)).where(Notification.user_id == user_id)
+
+        if read is not None:
+            query = query.where(Notification.read == read)
+
+        if archived is not None:
+            query = query.where(Notification.archived == archived)
+
+        if notification_type:
+            query = query.where(Notification.type == notification_type)
+
+        if priority:
+            query = query.where(Notification.priority == priority)
+
+        result = await self.db.execute(query)
+        return result.scalar_one()
+
+    async def get_notification_by_id(
+        self,
+        notification_id: int,
+        user_id: int
+    ) -> Optional[Notification]:
+        """
+        Get a specific notification by ID with ownership check.
+
+        Args:
+            notification_id: ID of notification to retrieve
+            user_id: User ID for ownership verification
+
+        Returns:
+            Notification if found and owned by user, None otherwise
+        """
+        result = await self.db.execute(
+            select(Notification).where(
+                and_(
+                    Notification.id == notification_id,
+                    Notification.user_id == user_id,
+                )
+            )
+        )
+        return result.scalar_one_or_none()
+
     async def get_unread_count(self, user_id: int) -> int:
         """Get count of unread notifications for a user"""
         result = await self.db.execute(
@@ -377,6 +440,63 @@ class NotificationService:
             )
         )
         return result.scalar_one()
+
+    async def get_notification_stats(self, user_id: int) -> Dict[str, Any]:
+        """
+        Get notification statistics using efficient SQL queries.
+
+        Returns dict with:
+        - total: Total notifications
+        - unread: Unread count
+        - archived: Archived count
+        - by_priority: Dict of counts by priority
+        - by_type: Dict of counts by type
+        """
+        # Total count
+        total_result = await self.db.execute(
+            select(func.count(Notification.id)).where(Notification.user_id == user_id)
+        )
+        total = total_result.scalar_one()
+
+        # Unread count
+        unread_result = await self.db.execute(
+            select(func.count(Notification.id)).where(
+                and_(Notification.user_id == user_id, Notification.read == False)
+            )
+        )
+        unread = unread_result.scalar_one()
+
+        # Archived count
+        archived_result = await self.db.execute(
+            select(func.count(Notification.id)).where(
+                and_(Notification.user_id == user_id, Notification.archived == True)
+            )
+        )
+        archived = archived_result.scalar_one()
+
+        # Count by priority using GROUP BY
+        priority_result = await self.db.execute(
+            select(Notification.priority, func.count(Notification.id))
+            .where(Notification.user_id == user_id)
+            .group_by(Notification.priority)
+        )
+        by_priority = {row[0].value: row[1] for row in priority_result.all()}
+
+        # Count by type using GROUP BY
+        type_result = await self.db.execute(
+            select(Notification.type, func.count(Notification.id))
+            .where(Notification.user_id == user_id)
+            .group_by(Notification.type)
+        )
+        by_type = {row[0].value: row[1] for row in type_result.all()}
+
+        return {
+            "total": total,
+            "unread": unread,
+            "archived": archived,
+            "by_priority": by_priority,
+            "by_type": by_type,
+        }
 
     async def mark_as_read(self, notification_id: int, user_id: int) -> Optional[Notification]:
         """Mark a notification as read"""
@@ -399,12 +519,20 @@ class NotificationService:
 
     async def mark_all_as_read(self, user_id: int) -> int:
         """Mark all notifications as read for a user. Returns count of updated notifications."""
-        notifications = await self.get_notifications(user_id, read=False)
+        # Use bulk UPDATE for efficiency
+        stmt = (
+            update(Notification)
+            .where(
+                and_(
+                    Notification.user_id == user_id,
+                    Notification.read == False,
+                )
+            )
+            .values(read=True, read_at=datetime.utcnow())
+        )
 
-        count = 0
-        for notification in notifications:
-            notification.mark_as_read()
-            count += 1
+        result = await self.db.execute(stmt)
+        count = result.rowcount
 
         if count > 0:
             await self.db.commit()
@@ -541,19 +669,19 @@ class NotificationService:
 
     async def cleanup_expired_notifications(self) -> int:
         """Delete expired notifications. Returns count of deleted notifications."""
-        result = await self.db.execute(
-            select(Notification).where(
+        # Use bulk DELETE for efficiency
+        stmt = (
+            delete(Notification)
+            .where(
                 and_(
                     Notification.expires_at.is_not(None),
                     Notification.expires_at < datetime.utcnow(),
                 )
             )
         )
-        expired = result.scalars().all()
 
-        count = len(expired)
-        for notification in expired:
-            await self.db.delete(notification)
+        result = await self.db.execute(stmt)
+        count = result.rowcount
 
         if count > 0:
             await self.db.commit()

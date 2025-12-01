@@ -2,7 +2,7 @@
 
 import enum
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional
 from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -14,6 +14,7 @@ class NotificationType(str, enum.Enum):
 
     # Review Lifecycle
     REVIEW_SLOT_CLAIMED = "review_slot_claimed"
+    REVIEW_SLOT_AVAILABLE = "review_slot_available"  # When a slot becomes available again (abandoned/released)
     REVIEW_SUBMITTED = "review_submitted"
     REVIEW_ACCEPTED = "review_accepted"
     REVIEW_REJECTED = "review_rejected"
@@ -37,6 +38,7 @@ class NotificationType(str, enum.Enum):
 
     # Disputes
     DISPUTE_CREATED = "dispute_created"
+    DISPUTE_RESOLVED = "dispute_resolved"  # Generic resolution notification
     DISPUTE_RESOLVED_REVIEWER_WINS = "dispute_resolved_reviewer_wins"
     DISPUTE_RESOLVED_CREATOR_WINS = "dispute_resolved_creator_wins"
 
@@ -195,26 +197,6 @@ class Notification(Base):
         if self.expires_at is None:
             return False
         return datetime.utcnow() > self.expires_at
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert notification to dictionary for API response"""
-        return {
-            "id": self.id,
-            "type": self.type.value,
-            "title": self.title,
-            "message": self.message,
-            "data": self.data,
-            "read": self.read,
-            "archived": self.archived,
-            "action_url": self.action_url,
-            "action_label": self.action_label,
-            "priority": self.priority.value,
-            "entity_type": self.entity_type.value if self.entity_type else None,
-            "entity_id": self.entity_id,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "read_at": self.read_at.isoformat() if self.read_at else None,
-            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-        }
 
 
 class EmailDigestFrequency(str, enum.Enum):

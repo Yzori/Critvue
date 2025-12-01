@@ -29,17 +29,22 @@ from app.models.expert_application import (
     FraudDetectionCheck
 )
 from app.services.verification_service import VerificationService
-from app.services.notification_service import NotificationService
 from app.core.exceptions import ApplicationError, ValidationError
+
+# NOTE: This service uses sync SQLAlchemy and is not currently integrated.
+# The actual expert application workflow is handled by committee_service.py
+# which uses async patterns with NotificationService.
 
 
 class ApplicationService:
-    """Service for managing expert applications"""
+    """Service for managing expert applications (DEPRECATED - use committee_service.py)"""
 
     def __init__(self, db: Session):
         self.db = db
         self.verification_service = VerificationService(db)
-        self.notification_service = NotificationService()
+        # NOTE: Notification methods in this class are stubs that need implementation
+        # if this service is ever activated. Use committee_service.py for the
+        # working expert application workflow.
 
     # =====================================================
     # APPLICATION SUBMISSION
@@ -184,8 +189,8 @@ class ApplicationService:
             details={'submitted_at': application.submitted_at.isoformat()}
         )
 
-        # Send confirmation email
-        self.notification_service.send_application_received(application)
+        # TODO: Send confirmation email when this service is activated
+        # self.notification_service.send_application_received(application)
 
         # Trigger automated pre-screening
         self._initiate_automated_prescreening(application)
@@ -533,12 +538,12 @@ class ApplicationService:
             self.db.add(portfolio_review)
             assignments.append(portfolio_review)
 
-            # Notify reviewer
-            self.notification_service.send_portfolio_review_assignment(
-                reviewer_id=reviewer_id,
-                application=application,
-                deadline=deadline
-            )
+            # TODO: Notify reviewer when this service is activated
+            # self.notification_service.send_portfolio_review_assignment(
+            #     reviewer_id=reviewer_id,
+            #     application=application,
+            #     deadline=deadline
+            # )
 
         # Update application status
         application.status = ApplicationStatus.PORTFOLIO_REVIEW
@@ -953,12 +958,12 @@ class ApplicationService:
             # Tier system not available, continue without it
             pass
 
-        # Send approval notification
-        self.notification_service.send_application_approved(
-            application=application,
-            approved_tier=approved_tier,
-            probation=probation
-        )
+        # TODO: Send approval notification when this service is activated
+        # self.notification_service.send_application_approved(
+        #     application=application,
+        #     approved_tier=approved_tier,
+        #     probation=probation
+        # )
 
     # =====================================================
     # RATE LIMITING
@@ -1275,11 +1280,11 @@ class ApplicationService:
 
         self.db.commit()
 
-        # Send rejection email
-        self.notification_service.send_application_rejected(
-            application=application,
-            reasons=reasons
-        )
+        # TODO: Send rejection email when this service is activated
+        # self.notification_service.send_application_rejected(
+        #     application=application,
+        #     reasons=reasons
+        # )
 
     def _detect_duplicates(self, application: ExpertApplication) -> int:
         """Detect potential duplicate applications from same person."""
@@ -1364,8 +1369,8 @@ class ApplicationService:
 
         self.db.commit()
 
-        # Send rejection email
-        self.notification_service.send_application_rejected(application)
+        # TODO: Send rejection email when this service is activated
+        # self.notification_service.send_application_rejected(application)
 
     def _handle_waitlist(
         self,
@@ -1397,8 +1402,8 @@ class ApplicationService:
         application.status = ApplicationStatus.WAITLISTED
         self.db.commit()
 
-        # Send waitlist notification
-        self.notification_service.send_application_waitlisted(
-            application=application,
-            waitlist=waitlist
-        )
+        # TODO: Send waitlist notification when this service is activated
+        # self.notification_service.send_application_waitlisted(
+        #     application=application,
+        #     waitlist=waitlist
+        # )

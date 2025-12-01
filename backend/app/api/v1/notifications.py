@@ -73,19 +73,14 @@ async def get_notifications(
             offset=offset,
         )
 
-        # Get total count and unread count
-        # For simplicity, we'll fetch all matching notifications to get accurate count
-        # In production, you'd want to use a separate count query
-        all_notifications = await service.get_notifications(
+        # Get total count using efficient SQL COUNT query
+        total = await service.get_notification_count(
             user_id=current_user.id,
             read=read,
             archived=archived,
             notification_type=notification_type,
             priority=priority,
-            limit=10000,  # Large number to get all
-            offset=0,
         )
-        total = len(all_notifications)
 
         # Get unread count
         unread_count = await service.get_unread_count(current_user.id)
@@ -157,36 +152,15 @@ async def get_notification_stats(
     try:
         service = NotificationService(db)
 
-        # Get all notifications
-        all_notifications = await service.get_notifications(
-            user_id=current_user.id,
-            limit=10000,
-            offset=0,
-        )
-
-        # Calculate stats
-        total = len(all_notifications)
-        unread = len([n for n in all_notifications if not n.read])
-        archived = len([n for n in all_notifications if n.archived])
-
-        # Count by priority
-        by_priority = {}
-        for notification in all_notifications:
-            priority_value = notification.priority.value
-            by_priority[priority_value] = by_priority.get(priority_value, 0) + 1
-
-        # Count by type
-        by_type = {}
-        for notification in all_notifications:
-            type_value = notification.type.value
-            by_type[type_value] = by_type.get(type_value, 0) + 1
+        # Use efficient SQL queries for stats
+        stats = await service.get_notification_stats(current_user.id)
 
         return NotificationStatsResponse(
-            total=total,
-            unread=unread,
-            archived=archived,
-            by_priority=by_priority,
-            by_type=by_type,
+            total=stats["total"],
+            unread=stats["unread"],
+            archived=stats["archived"],
+            by_priority=stats["by_priority"],
+            by_type=stats["by_type"],
         )
 
     except Exception as e:
@@ -207,14 +181,8 @@ async def get_notification(
     try:
         service = NotificationService(db)
 
-        # Get all notifications and find the matching one
-        notifications = await service.get_notifications(
-            user_id=current_user.id,
-            limit=10000,
-            offset=0,
-        )
-
-        notification = next((n for n in notifications if n.id == notification_id), None)
+        # Use direct lookup by ID
+        notification = await service.get_notification_by_id(notification_id, current_user.id)
 
         if not notification:
             raise HTTPException(
@@ -252,13 +220,8 @@ async def mark_notification_read(
         if data.read:
             notification = await service.mark_as_read(notification_id, current_user.id)
         else:
-            # For marking as unread, we need to manually update
-            notifications = await service.get_notifications(
-                user_id=current_user.id,
-                limit=10000,
-                offset=0,
-            )
-            notification = next((n for n in notifications if n.id == notification_id), None)
+            # For marking as unread, use direct lookup
+            notification = await service.get_notification_by_id(notification_id, current_user.id)
 
             if notification:
                 notification.read = False
@@ -330,13 +293,8 @@ async def archive_notification(
         if data.archived:
             notification = await service.archive_notification(notification_id, current_user.id)
         else:
-            # For unarchiving, manually update
-            notifications = await service.get_notifications(
-                user_id=current_user.id,
-                limit=10000,
-                offset=0,
-            )
-            notification = next((n for n in notifications if n.id == notification_id), None)
+            # For unarchiving, use direct lookup
+            notification = await service.get_notification_by_id(notification_id, current_user.id)
 
             if notification:
                 notification.archived = False
