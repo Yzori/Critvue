@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Trophy, AlertCircle, RefreshCw, Navigation } from 'lucide-react';
+import { Trophy, AlertCircle, RefreshCw, Navigation, Swords, Star, Medal, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserTier } from '@/lib/types/tier';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,13 @@ import {
   DiscoverySection,
   DiscoveryUser,
 } from '@/lib/api/leaderboard';
+import {
+  getBattleLeaderboard,
+  BattleLeaderboardEntry,
+  BattleLeaderboardResponse,
+} from '@/lib/api/battles';
+
+type LeaderboardMode = 'reviews' | 'battles';
 
 /**
  * Leaderboard Page - Modern Redesign
@@ -46,7 +54,13 @@ import {
  * - Social discovery sidebar
  */
 export default function LeaderboardPage() {
-  // State
+  const searchParams = useSearchParams();
+
+  // Mode state (Reviews vs Battles) - read from URL if provided
+  const initialMode = searchParams.get('mode') === 'battles' ? 'battles' : 'reviews';
+  const [mode, setMode] = React.useState<LeaderboardMode>(initialMode);
+
+  // Reviews state
   const [category, setCategory] = React.useState<LeaderboardCategory>(
     LeaderboardCategory.OVERALL
   );
@@ -65,6 +79,11 @@ export default function LeaderboardPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+
+  // Battles state
+  const [battlesData, setBattlesData] = React.useState<BattleLeaderboardResponse | null>(null);
+  const [isBattlesLoading, setIsBattlesLoading] = React.useState(false);
+  const [battlesError, setBattlesError] = React.useState<string | null>(null);
 
   // Refs
   const currentUserRef = React.useRef<HTMLDivElement>(null);
@@ -149,16 +168,44 @@ export default function LeaderboardPage() {
     }
   }, []);
 
+  // Fetch battles leaderboard
+  const fetchBattlesLeaderboard = React.useCallback(async () => {
+    try {
+      setIsBattlesLoading(true);
+      setBattlesError(null);
+      const data = await getBattleLeaderboard(50);
+      setBattlesData(data);
+    } catch (err) {
+      console.error('Failed to fetch battles leaderboard:', err);
+      setBattlesError('Failed to load battles leaderboard.');
+    } finally {
+      setIsBattlesLoading(false);
+    }
+  }, []);
+
   // Initial load
   React.useEffect(() => {
     fetchSeasonAndDiscovery();
   }, [fetchSeasonAndDiscovery]);
 
-  // Refetch on filter changes
+  // Fetch data based on mode
   React.useEffect(() => {
-    setPage(1);
-    hasShownConfetti.current = false;
-    fetchLeaderboard(1, false);
+    if (mode === 'reviews') {
+      setPage(1);
+      hasShownConfetti.current = false;
+      fetchLeaderboard(1, false);
+    } else {
+      fetchBattlesLeaderboard();
+    }
+  }, [mode]);
+
+  // Refetch on filter changes (reviews mode only)
+  React.useEffect(() => {
+    if (mode === 'reviews') {
+      setPage(1);
+      hasShownConfetti.current = false;
+      fetchLeaderboard(1, false);
+    }
   }, [category, period, tierFilter]);
 
   // Infinite scroll
@@ -290,52 +337,85 @@ export default function LeaderboardPage() {
           </motion.div>
         )}
 
-        {/* Category Tabs & Filters */}
-        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <StatCategoryTabs
-              category={category}
-              period={period}
-              onCategoryChange={setCategory}
-              onPeriodChange={setPeriod}
-            />
-
-            {/* Tier Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Tier:</span>
-              <Select
-                value={tierFilter}
-                onValueChange={(value) =>
-                  setTierFilter(value as UserTier | 'all')
-                }
-              >
-                <SelectTrigger className="w-[140px] h-8 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tiers</SelectItem>
-                  {Object.values(UserTier).map((tier) => (
-                    <SelectItem key={tier} value={tier}>
-                      {tier
-                        .split('_')
-                        .map(
-                          (word) =>
-                            word.charAt(0).toUpperCase() + word.slice(1)
-                        )
-                        .join(' ')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Mode Toggle - Reviews vs Battles */}
+        <div className="flex justify-center">
+          <div className="inline-flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+            <button
+              onClick={() => setMode('reviews')}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all',
+                mode === 'reviews'
+                  ? 'bg-accent-peach text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              )}
+            >
+              <Star className="h-4 w-4" />
+              Reviews
+            </button>
+            <button
+              onClick={() => setMode('battles')}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all',
+                mode === 'battles'
+                  ? 'bg-accent-peach text-white shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              )}
+            >
+              <Swords className="h-4 w-4" />
+              Battles
+            </button>
           </div>
         </div>
 
+        {/* Category Tabs & Filters - Only for Reviews mode */}
+        {mode === 'reviews' && (
+          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <StatCategoryTabs
+                category={category}
+                period={period}
+                onCategoryChange={setCategory}
+                onPeriodChange={setPeriod}
+              />
+
+              {/* Tier Filter */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Tier:</span>
+                <Select
+                  value={tierFilter}
+                  onValueChange={(value) =>
+                    setTierFilter(value as UserTier | 'all')
+                  }
+                >
+                  <SelectTrigger className="w-[140px] h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Tiers</SelectItem>
+                    {Object.values(UserTier).map((tier) => (
+                      <SelectItem key={tier} value={tier}>
+                        {tier
+                          .split('_')
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() + word.slice(1)
+                          )
+                          .join(' ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
-        <div className="flex gap-6">
-          {/* Leaderboard Column */}
-          <div className="flex-1 min-w-0">
-            {isLoading ? (
+        {mode === 'reviews' ? (
+          <div className="flex gap-6">
+            {/* Leaderboard Column */}
+            <div className="flex-1 min-w-0">
+              {isLoading ? (
               <div className="space-y-4">
                 {/* Podium Skeleton */}
                 <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -513,10 +593,159 @@ export default function LeaderboardPage() {
             </div>
           </div>
         </div>
+        ) : (
+          /* Battles Leaderboard */
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+            {isBattlesLoading ? (
+              <div className="p-6 space-y-4">
+                <LeaderboardSkeleton count={10} />
+              </div>
+            ) : battlesError ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
+                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                  Unable to Load Battle Rankings
+                </h3>
+                <p className="mb-6 text-gray-600 text-sm">{battlesError}</p>
+                <Button onClick={fetchBattlesLeaderboard} variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+              </div>
+            ) : !battlesData || battlesData.entries.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-12 text-center">
+                <Swords className="mb-4 h-16 w-16 text-gray-300" />
+                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                  No Battle Champions Yet
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  Win battles to climb the leaderboard!
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Battles Podium - Top 3 */}
+                <div className="p-6 bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+                  <div className="flex items-end justify-center gap-6">
+                    {battlesData.entries.slice(0, 3).map((entry, index) => {
+                      const rank = index + 1;
+                      const order = rank === 1 ? 'order-2' : rank === 2 ? 'order-1' : 'order-3';
+                      const size = rank === 1 ? 'h-20 w-20' : 'h-14 w-14';
+                      const podiumHeight = rank === 1 ? 'h-28' : rank === 2 ? 'h-20' : 'h-16';
+                      const medal = rank === 1 ? 'text-yellow-500' : rank === 2 ? 'text-gray-400' : 'text-amber-600';
+
+                      return (
+                        <motion.div
+                          key={entry.userId}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className={cn('flex flex-col items-center', order)}
+                        >
+                          <div className="relative mb-2">
+                            <div className={cn(
+                              'rounded-full bg-gray-200 overflow-hidden ring-4',
+                              rank === 1 ? 'ring-yellow-400' : rank === 2 ? 'ring-gray-300' : 'ring-amber-500',
+                              size
+                            )}>
+                              {entry.userAvatar ? (
+                                <img
+                                  src={entry.userAvatar}
+                                  alt={entry.userName}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-600 font-bold text-xl">
+                                  {entry.userName.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className={cn('absolute -bottom-1 -right-1 rounded-full bg-white p-1', medal)}>
+                              <Medal className="h-4 w-4" />
+                            </div>
+                          </div>
+                          <p className="font-semibold text-gray-900 text-sm truncate max-w-[100px]">
+                            {entry.userName}
+                          </p>
+                          <p className="text-xs text-gray-500">{entry.battlesWon} wins</p>
+                          <div className={cn(
+                            'w-20 rounded-t-lg mt-3 flex flex-col items-center justify-end pb-2',
+                            rank === 1 ? 'bg-yellow-100' : rank === 2 ? 'bg-gray-100' : 'bg-amber-100',
+                            podiumHeight
+                          )}>
+                            <span className={cn(
+                              'text-2xl font-bold',
+                              rank === 1 ? 'text-yellow-600' : rank === 2 ? 'text-gray-500' : 'text-amber-600'
+                            )}>
+                              {rank}
+                            </span>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Battles List - 4+ */}
+                <div className="p-3 space-y-2">
+                  {battlesData.entries.slice(3).map((entry, index) => (
+                    <motion.div
+                      key={entry.userId}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      onClick={() => window.location.href = `/profile/${entry.userId}`}
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    >
+                      <div className="w-8 text-center">
+                        <span className="text-sm font-medium text-gray-500">#{entry.rank}</span>
+                      </div>
+                      <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                        {entry.userAvatar ? (
+                          <img src={entry.userAvatar} alt={entry.userName} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-600 font-semibold">
+                            {entry.userName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{entry.userName}</p>
+                        <p className="text-xs text-gray-500">{entry.winRate}% win rate</p>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="text-center">
+                          <p className="font-semibold text-gray-900">{entry.battlesWon}</p>
+                          <p className="text-xs text-gray-500">Wins</p>
+                        </div>
+                        {entry.bestStreak > 0 && (
+                          <div className="flex items-center gap-1 text-orange-500">
+                            <Flame className="h-4 w-4" />
+                            <span className="font-medium">{entry.bestStreak}</span>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Current User Rank */}
+                {battlesData.currentUserRank && (
+                  <div className="border-t border-gray-100 p-4 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Your Rank</span>
+                      <span className="font-bold text-accent-peach">#{battlesData.currentUserRank}</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Mobile Current User Sticky Bar */}
-      {leaderboardData?.currentUser && !isLoading && (
+      {/* Mobile Current User Sticky Bar - Reviews mode only */}
+      {mode === 'reviews' && leaderboardData?.currentUser && !isLoading && (
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}

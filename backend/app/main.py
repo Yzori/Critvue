@@ -14,7 +14,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, nda, activity
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, nda, activity, battles
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 from app.services.scheduler import start_background_jobs, stop_background_jobs
@@ -64,6 +64,7 @@ app.include_router(platform.router, prefix="/api/v1")  # Platform-wide activity 
 app.include_router(admin_applications.router, prefix="/api/v1")  # Admin expert application review
 app.include_router(nda.router, prefix="/api/v1")  # NDA signing for confidential reviews
 app.include_router(activity.router, prefix="/api/v1")  # User activity heatmap and timeline
+app.include_router(battles.router, prefix="/api/v1")  # 1v1 creative battle competitions
 
 # Configure CORS
 app.add_middleware(

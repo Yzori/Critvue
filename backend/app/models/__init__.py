@@ -25,6 +25,12 @@ from app.models.rejection_reason import RejectionReason
 from app.models.application_review import ApplicationReview, ReviewStatus as AppReviewStatus, Vote
 # NDA system
 from app.models.nda_signature import NDASignature, NDARole, CURRENT_NDA_VERSION
+# Battle system models
+from app.models.battle_prompt import BattlePrompt, PromptDifficulty
+from app.models.battle import Battle, BattleStatus, BattleType
+from app.models.battle_entry import BattleEntry
+from app.models.battle_vote import BattleVote
+from app.models.battle_challenge import BattleChallenge, ChallengeStatus
 
 __all__ = [
     "User",
@@ -76,4 +82,14 @@ __all__ = [
     "NDASignature",
     "NDARole",
     "CURRENT_NDA_VERSION",
+    # Battle system
+    "BattlePrompt",
+    "PromptDifficulty",
+    "Battle",
+    "BattleStatus",
+    "BattleType",
+    "BattleEntry",
+    "BattleVote",
+    "BattleChallenge",
+    "ChallengeStatus",
 ]

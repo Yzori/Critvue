@@ -134,6 +134,13 @@ class User(Base):
     monthly_reviews_used = Column(Integer, nullable=False, default=0, server_default='0')
     reviews_reset_at = Column(DateTime, nullable=True)
 
+    # Battle stats
+    battles_won = Column(Integer, default=0, nullable=False, server_default='0')
+    battles_lost = Column(Integer, default=0, nullable=False, server_default='0')
+    battles_drawn = Column(Integer, default=0, nullable=False, server_default='0')
+    battle_win_streak = Column(Integer, default=0, nullable=False, server_default='0')
+    best_battle_streak = Column(Integer, default=0, nullable=False, server_default='0')
+
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
