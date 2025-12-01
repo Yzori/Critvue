@@ -40,10 +40,12 @@ import {
   getPendingReviewsForRequester,
   acceptReviewSlot,
   rejectReviewSlot,
+  requestElaboration,
 } from "@/lib/api/review-slots";
 import { getErrorMessage, getFileUrl } from "@/lib/api/client";
 import { AcceptReviewModal, type AcceptReviewData } from "@/components/dashboard/accept-review-modal";
 import { RejectReviewModal, type RejectReviewData } from "@/components/dashboard/reject-review-modal";
+import { RequestElaborationModal } from "@/components/dashboard/request-elaboration-modal";
 import { ReviewStudio } from "@/components/reviewer/review-studio/ReviewStudio";
 import { getReviewDetail, type ReviewRequestDetail } from "@/lib/api/reviews";
 import { toast } from "sonner";
@@ -79,6 +81,7 @@ export default function ReviewerHubPage() {
   // Creator mode: Modal state
   const [isAcceptModalOpen, setIsAcceptModalOpen] = React.useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
+  const [isElaborationModalOpen, setIsElaborationModalOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Update URL when mode changes
@@ -238,6 +241,28 @@ export default function ReviewerHubPage() {
     } catch (err) {
       console.error("Error rejecting review:", err);
       toast.error(`Failed to reject review: ${getErrorMessage(err)}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle request elaboration (creator mode)
+  const handleRequestElaboration = async (elaborationRequest: string) => {
+    if (!currentPendingSlot) return;
+
+    try {
+      setIsSubmitting(true);
+      await requestElaboration(currentPendingSlot.id, { elaboration_request: elaborationRequest });
+
+      // Remove from list (it's now in elaboration_requested status)
+      const remaining = pendingReviews.filter(f => f.id !== currentPendingSlot.id);
+      setPendingReviews(remaining);
+      setCurrentPendingSlot(remaining[0] ?? null);
+      setIsElaborationModalOpen(false);
+      toast.success("Elaboration request sent! The reviewer has 48 hours to respond.");
+    } catch (err) {
+      console.error("Error requesting elaboration:", err);
+      toast.error(`Failed to request elaboration: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -567,7 +592,7 @@ export default function ReviewerHubPage() {
                   reviewerName={currentPendingSlot.reviewer?.full_name}
                   onAccept={() => setIsAcceptModalOpen(true)}
                   onReject={() => setIsRejectModalOpen(true)}
-                  onRequestRevision={() => setIsRejectModalOpen(true)}
+                  onRequestRevision={() => setIsElaborationModalOpen(true)}
                   className="h-full"
                 />
               </div>
@@ -714,6 +739,15 @@ export default function ReviewerHubPage() {
                 reviewerName={currentPendingSlot.reviewer?.full_name}
                 isSubmitting={isSubmitting}
                 isPaidReview={currentPendingSlot.payment_amount !== undefined && currentPendingSlot.payment_amount > 0}
+              />
+              <RequestElaborationModal
+                isOpen={isElaborationModalOpen}
+                onClose={() => setIsElaborationModalOpen(false)}
+                onRequestElaboration={handleRequestElaboration}
+                reviewerName={currentPendingSlot.reviewer?.full_name}
+                isSubmitting={isSubmitting}
+                elaborationCount={currentPendingSlot.elaboration_count || 0}
+                maxElaborations={2}
               />
             </>
           )}

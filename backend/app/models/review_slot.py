@@ -35,6 +35,7 @@ class ReviewSlotStatus(str, enum.Enum):
     REJECTED = "rejected"        # Rejected by requester (refund issued)
     ABANDONED = "abandoned"      # Reviewer abandoned or timed out
     DISPUTED = "disputed"        # Rejection disputed, awaiting admin decision
+    ELABORATION_REQUESTED = "elaboration_requested"  # Creator wants more detail
 
 
 class AcceptanceType(str, enum.Enum):
@@ -124,6 +125,12 @@ class ReviewSlot(Base):
     dispute_resolved_at = Column(DateTime, nullable=True)
     dispute_resolution = Column(String(20), nullable=True)  # Use String for SQLite
     dispute_notes = Column(Text, nullable=True)  # Admin notes
+
+    # Elaboration request tracking
+    elaboration_request = Column(Text, nullable=True)  # What creator wants elaborated
+    elaboration_requested_at = Column(DateTime, nullable=True)
+    elaboration_count = Column(Integer, default=0, nullable=False)  # Track request count
+    elaboration_deadline = Column(DateTime, nullable=True, index=True)  # When reviewer needs to respond
 
     # Payment tracking (for expert reviews)
     payment_amount = Column(Numeric(10, 2), nullable=True)  # Amount reviewer receives
@@ -265,6 +272,24 @@ class ReviewSlot(Base):
     def requires_payment(self) -> bool:
         """Check if this is a paid review slot"""
         return self.payment_amount is not None and self.payment_amount > 0
+
+    @property
+    def is_elaboration_requestable(self) -> bool:
+        """Check if creator can request elaboration on this review"""
+        # Can only request elaboration on submitted reviews (max 2 times)
+        return (
+            self.status == ReviewSlotStatus.SUBMITTED.value and
+            self.elaboration_count < 2
+        )
+
+    @property
+    def is_elaboration_respondable(self) -> bool:
+        """Check if reviewer can respond to elaboration request"""
+        return (
+            self.status == ReviewSlotStatus.ELABORATION_REQUESTED.value and
+            self.elaboration_deadline is not None and
+            datetime.utcnow() < self.elaboration_deadline
+        )
 
     # ===== State Transition Methods =====
 
@@ -469,3 +494,53 @@ class ReviewSlot(Base):
         else:
             # Uphold rejection
             self.status = ReviewSlotStatus.REJECTED.value
+
+    def request_elaboration(
+        self,
+        request_text: str,
+        response_hours: int = 48
+    ) -> None:
+        """
+        Creator requests elaboration on specific areas of the review
+
+        Args:
+            request_text: What the creator wants elaborated
+            response_hours: Hours for reviewer to respond (default 48)
+
+        Raises:
+            ValueError: If slot cannot have elaboration requested
+        """
+        if not self.is_elaboration_requestable:
+            if self.elaboration_count >= 2:
+                raise ValueError("Maximum elaboration requests (2) reached")
+            raise ValueError(f"Cannot request elaboration in status '{self.status}'")
+
+        if not request_text or len(request_text.strip()) < 20:
+            raise ValueError("Elaboration request must be at least 20 characters")
+
+        now = datetime.utcnow()
+        self.elaboration_request = request_text.strip()
+        self.elaboration_requested_at = now
+        self.elaboration_count += 1
+        self.elaboration_deadline = now + timedelta(hours=response_hours)
+        self.status = ReviewSlotStatus.ELABORATION_REQUESTED.value
+        self.updated_at = now
+
+    def respond_to_elaboration(self) -> None:
+        """
+        Reviewer responds to elaboration request (resubmits review)
+        The actual content update happens through submit_smart_review endpoint
+
+        Raises:
+            ValueError: If slot is not in elaboration requested state
+        """
+        if self.status != ReviewSlotStatus.ELABORATION_REQUESTED.value:
+            raise ValueError(f"Can only respond to ELABORATION_REQUESTED slots, not '{self.status}'")
+
+        now = datetime.utcnow()
+        self.status = ReviewSlotStatus.SUBMITTED.value
+        self.submitted_at = now  # Update submission time
+        self.auto_accept_at = now + timedelta(days=7)  # Reset auto-accept
+        self.elaboration_request = None  # Clear the request
+        self.elaboration_deadline = None
+        self.updated_at = now

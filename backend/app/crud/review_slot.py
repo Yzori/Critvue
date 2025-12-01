@@ -740,6 +740,133 @@ async def get_disputed_slots(
     return slots, total
 
 
+# ===== Elaboration Operations =====
+
+async def request_elaboration(
+    db: AsyncSession,
+    slot_id: int,
+    requester_id: int,
+    elaboration_request: str,
+    response_hours: int = 48
+) -> ReviewSlot:
+    """
+    Request elaboration on a submitted review
+
+    Args:
+        db: Database session
+        slot_id: Slot ID
+        requester_id: Review requester user ID
+        elaboration_request: What the creator wants elaborated
+        response_hours: Hours for reviewer to respond (default 48)
+
+    Returns:
+        Updated review slot
+
+    Raises:
+        ValueError: If slot cannot have elaboration requested
+        PermissionError: If user is not the requester
+    """
+    slot = await get_review_slot(db, slot_id)
+
+    if not slot:
+        raise RuntimeError(f"Review slot {slot_id} not found")
+
+    # Get review request to verify ownership
+    request = await db.get(ReviewRequest, slot.review_request_id)
+    if not request:
+        raise RuntimeError(f"Review request not found")
+
+    if request.user_id != requester_id:
+        raise PermissionError("You cannot request elaboration for reviews you don't own")
+
+    # Request elaboration using model method
+    slot.request_elaboration(elaboration_request, response_hours)
+
+    await db.commit()
+    await db.refresh(slot)
+
+    logger.info(
+        f"User {requester_id} requested elaboration for slot {slot_id} "
+        f"(count: {slot.elaboration_count})"
+    )
+
+    return slot
+
+
+async def respond_to_elaboration(
+    db: AsyncSession,
+    slot_id: int,
+    reviewer_id: int
+) -> ReviewSlot:
+    """
+    Respond to an elaboration request (resubmits review to SUBMITTED status)
+
+    Note: The actual content update happens through the submit_smart_review endpoint.
+    This function just transitions the status back to SUBMITTED.
+
+    Args:
+        db: Database session
+        slot_id: Slot ID
+        reviewer_id: Reviewer user ID
+
+    Returns:
+        Updated review slot
+
+    Raises:
+        ValueError: If slot is not in elaboration requested state
+        PermissionError: If user is not the reviewer
+    """
+    slot = await get_review_slot(db, slot_id)
+
+    if not slot:
+        raise RuntimeError(f"Review slot {slot_id} not found")
+
+    if slot.reviewer_id != reviewer_id:
+        raise PermissionError("You cannot respond to an elaboration request for a slot you don't own")
+
+    # Respond to elaboration using model method
+    slot.respond_to_elaboration()
+
+    await db.commit()
+    await db.refresh(slot)
+
+    logger.info(
+        f"User {reviewer_id} responded to elaboration request for slot {slot_id}"
+    )
+
+    return slot
+
+
+async def get_elaboration_requested_slots(
+    db: AsyncSession,
+    reviewer_id: int
+) -> List[ReviewSlot]:
+    """
+    Get all slots with pending elaboration requests for a reviewer
+
+    Args:
+        db: Database session
+        reviewer_id: Reviewer user ID
+
+    Returns:
+        List of review slots awaiting elaboration
+    """
+    query = (
+        select(ReviewSlot)
+        .where(
+            and_(
+                ReviewSlot.reviewer_id == reviewer_id,
+                ReviewSlot.status == ReviewSlotStatus.ELABORATION_REQUESTED.value
+            )
+        )
+        .options(selectinload(ReviewSlot.review_request))
+        .order_by(ReviewSlot.elaboration_deadline.asc())
+    )
+
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
 # ===== Background Job Operations =====
 
 async def process_expired_claims(db: AsyncSession) -> int:

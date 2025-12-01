@@ -231,6 +231,30 @@ class DeadlineWarningData(BaseModel):
     warning_type: str  # "claim_timeout", "auto_accept", "submission"
 
 
+class ElaborationRequestedData(BaseModel):
+    """Data for elaboration requested notification (sent to reviewer)"""
+    slot_id: int
+    review_request_id: int
+    review_request_title: str
+    requester_id: int
+    requester_name: str
+    requester_avatar: Optional[str]
+    elaboration_request: str  # What the creator wants more detail on
+    elaboration_count: int  # How many times elaboration has been requested (1 or 2)
+    elaboration_deadline: datetime  # When the response is due
+
+
+class ElaborationSubmittedData(BaseModel):
+    """Data for elaboration submitted notification (sent to creator)"""
+    slot_id: int
+    review_request_id: int
+    review_request_title: str
+    reviewer_id: int
+    reviewer_name: str
+    reviewer_avatar: Optional[str]
+    elaboration_count: int  # Which elaboration this was (1 or 2)
+
+
 class SubscriptionEventData(BaseModel):
     """Data for subscription event notifications"""
     subscription_id: Optional[str]

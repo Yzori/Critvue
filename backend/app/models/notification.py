@@ -23,6 +23,11 @@ class NotificationType(str, enum.Enum):
     ALL_SLOTS_CLAIMED = "all_slots_claimed"
     ALL_REVIEWS_COMPLETED = "all_reviews_completed"
 
+    # Elaboration Requests
+    ELABORATION_REQUESTED = "elaboration_requested"  # Creator requests more detail from reviewer
+    ELABORATION_SUBMITTED = "elaboration_submitted"  # Reviewer responds with elaboration
+    ELABORATION_DEADLINE_24H = "elaboration_deadline_24h"  # 24h warning for elaboration deadline
+
     # Deadlines & Reminders
     CLAIM_DEADLINE_24H = "claim_deadline_24h"
     CLAIM_DEADLINE_6H = "claim_deadline_6h"

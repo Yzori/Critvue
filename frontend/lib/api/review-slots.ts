@@ -14,7 +14,8 @@ export type ReviewSlotStatus =
   | "accepted"
   | "rejected"
   | "abandoned"
-  | "disputed";
+  | "disputed"
+  | "elaboration_requested";
 
 export type AcceptanceType = "manual" | "auto";
 
@@ -54,6 +55,10 @@ export interface DisputeReviewRequest {
   dispute_reason: string; // Min 20 chars
 }
 
+export interface RequestElaborationRequest {
+  elaboration_request: string; // Min 20 chars, max 2000
+}
+
 // ===== Response Interfaces =====
 
 export interface ReviewerInfo {
@@ -91,6 +96,12 @@ export interface ReviewSlotResponse {
   dispute_reason?: string;
   dispute_resolved_at?: string;
   dispute_resolution?: DisputeResolution;
+
+  // Elaboration request tracking
+  elaboration_request?: string;
+  elaboration_requested_at?: string;
+  elaboration_count?: number;
+  elaboration_deadline?: string;
 
   // Payment info
   payment_amount?: number;
@@ -174,6 +185,18 @@ export async function rejectReview(
   data: RejectReviewRequest
 ): Promise<ReviewSlotResponse> {
   return apiClient.post<ReviewSlotResponse>(`/review-slots/${slotId}/reject`, data);
+}
+
+/**
+ * Request elaboration on a submitted review (requester action)
+ * Asks the reviewer to provide more detail on specific areas
+ * Maximum 2 elaboration requests per review
+ */
+export async function requestElaboration(
+  slotId: number,
+  data: RequestElaborationRequest
+): Promise<ReviewSlotResponse> {
+  return apiClient.post<ReviewSlotResponse>(`/review-slots/${slotId}/request-elaboration`, data);
 }
 
 /**

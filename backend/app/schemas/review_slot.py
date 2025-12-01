@@ -767,6 +767,25 @@ class ReviewReject(BaseModel):
         return v
 
 
+class RequestElaboration(BaseModel):
+    """Schema for requesting elaboration on a review"""
+    elaboration_request: str = Field(
+        ...,
+        min_length=20,
+        max_length=2000,
+        description="What specific areas the creator wants more detail on"
+    )
+
+    @field_validator('elaboration_request')
+    @classmethod
+    def validate_elaboration_request(cls, v: str) -> str:
+        """Validate elaboration request"""
+        v = v.strip()
+        if len(v) < 20:
+            raise ValueError('Elaboration request must be at least 20 characters')
+        return v
+
+
 class ReviewDispute(BaseModel):
     """Schema for disputing a rejection"""
     dispute_reason: str = Field(
@@ -841,6 +860,12 @@ class ReviewSlotResponse(BaseModel):
     dispute_reason: Optional[str] = None
     dispute_resolved_at: Optional[datetime] = None
     dispute_resolution: Optional[DisputeResolution] = None
+
+    # Elaboration request tracking
+    elaboration_request: Optional[str] = None
+    elaboration_requested_at: Optional[datetime] = None
+    elaboration_count: int = 0
+    elaboration_deadline: Optional[datetime] = None
 
     # Payment info (only for requester/reviewer)
     payment_amount: Optional[Decimal] = None

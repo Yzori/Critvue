@@ -24,6 +24,7 @@ from app.schemas.review_slot import (
     ReviewSubmit,
     ReviewAccept,
     ReviewReject,
+    RequestElaboration,
     ReviewDispute,
     DisputeResolve,
     ReviewerSlotWithRequest,
@@ -50,6 +51,8 @@ from app.services.notification_triggers import (
     notify_review_rejected,
     notify_dispute_created,
     notify_dispute_resolved,
+    notify_elaboration_requested,
+    notify_elaboration_submitted,
 )
 
 logger = logging.getLogger(__name__)
@@ -708,10 +711,12 @@ async def submit_smart_review(
                 detail="Not your review"
             )
 
-        if slot.status != "claimed":
+        # Allow submission for claimed slots or elaboration response
+        is_elaboration_response = slot.status == "elaboration_requested"
+        if slot.status not in ("claimed", "elaboration_requested"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot submit review for non-claimed slot"
+                detail="Cannot submit review for this slot status"
             )
 
         # Validate required phases
@@ -812,13 +817,15 @@ async def submit_smart_review(
         await db.commit()
         await db.refresh(slot)
 
-        # Award karma for submitting review
-        await on_review_submitted(db, slot.id, current_user.id)
-
-        # Send notification to requester
-        await notify_review_submitted(db, slot_id, current_user.id)
-
-        logger.info(f"User {current_user.id} submitted Smart Review for slot {slot_id}")
+        if is_elaboration_response:
+            # This is an elaboration response - notify the creator
+            await notify_elaboration_submitted(db, slot_id, current_user.id)
+            logger.info(f"User {current_user.id} responded to elaboration request for slot {slot_id}")
+        else:
+            # This is a new review submission - award karma and notify
+            await on_review_submitted(db, slot.id, current_user.id)
+            await notify_review_submitted(db, slot_id, current_user.id)
+            logger.info(f"User {current_user.id} submitted Smart Review for slot {slot_id}")
 
         return slot
 
@@ -1101,6 +1108,73 @@ async def reject_review(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while rejecting the review"
+        )
+
+
+# ===== Elaboration Operations =====
+
+@router.post(
+    "/{slot_id}/request-elaboration",
+    response_model=ReviewSlotResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("20/minute")
+async def request_elaboration(
+    request: Request,
+    slot_id: int,
+    elaboration_data: RequestElaboration,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Request elaboration on a submitted review
+
+    **Requirements:**
+    - Slot must be in 'submitted' status
+    - User must be the requester who created the review request
+    - Maximum 2 elaboration requests per review
+    - Request must be at least 20 characters
+
+    **Rate Limit:** 20 requests per minute
+    """
+    try:
+        elaborated_slot = await crud_review_slot.request_elaboration(
+            db,
+            slot_id,
+            current_user.id,
+            elaboration_data.elaboration_request
+        )
+
+        # Send notification to reviewer about elaboration request
+        await notify_elaboration_requested(db, slot_id, current_user.id)
+
+        logger.info(
+            f"User {current_user.id} requested elaboration for slot {slot_id} "
+            f"(count: {elaborated_slot.elaboration_count})"
+        )
+
+        return elaborated_slot
+
+    except PermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error requesting elaboration for slot {slot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while requesting elaboration"
         )
 
 
@@ -1834,10 +1908,13 @@ async def submit_studio_review(
         # Now acquire row-level lock and re-check status to prevent race conditions
         slot = await crud_review_slot.get_review_slot_with_lock(db, slot_id)
 
-        if not slot or slot.status != "claimed":
+        # Track if this is an elaboration response
+        is_elaboration_response = slot and slot.status == "elaboration_requested"
+
+        if not slot or slot.status not in ("claimed", "elaboration_requested"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot submit review for non-claimed slot"
+                detail="Cannot submit review for this slot status"
             )
 
         # Validate minimum requirements
@@ -1890,13 +1967,15 @@ async def submit_studio_review(
         await db.commit()
         await db.refresh(slot)
 
-        # Award karma for submitting review
-        await on_review_submitted(db, slot.id, current_user.id)
-
-        # Send notification to requester
-        await notify_review_submitted(db, slot_id, current_user.id)
-
-        logger.info(f"User {current_user.id} submitted Studio Review for slot {slot_id}")
+        if is_elaboration_response:
+            # This is an elaboration response - notify the creator
+            await notify_elaboration_submitted(db, slot_id, current_user.id)
+            logger.info(f"User {current_user.id} responded to elaboration request (Studio) for slot {slot_id}")
+        else:
+            # This is a new review submission - award karma and notify
+            await on_review_submitted(db, slot.id, current_user.id)
+            await notify_review_submitted(db, slot_id, current_user.id)
+            logger.info(f"User {current_user.id} submitted Studio Review for slot {slot_id}")
 
         return slot
 

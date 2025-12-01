@@ -578,3 +578,153 @@ async def notify_dispute_resolved(
 
     except Exception as e:
         logger.error(f"Error creating dispute resolution notification: {e}", exc_info=True)
+
+
+# ==================== Elaboration Request Events ====================
+
+async def notify_elaboration_requested(
+    db: AsyncSession,
+    slot_id: int,
+    requester_id: int
+) -> None:
+    """
+    Notify reviewer when the creator requests elaboration on their submitted review.
+
+    Args:
+        db: Database session
+        slot_id: ID of slot needing elaboration
+        requester_id: ID of the review request creator
+    """
+    try:
+        # Get slot
+        result = await db.execute(
+            select(ReviewSlot)
+            .where(ReviewSlot.id == slot_id)
+        )
+        slot = result.scalar_one_or_none()
+
+        if not slot:
+            logger.error(f"Slot {slot_id} not found for elaboration request notification")
+            return
+
+        if not slot.reviewer_id:
+            logger.error(f"Slot {slot_id} has no reviewer")
+            return
+
+        # Get review request
+        result = await db.execute(
+            select(ReviewRequest)
+            .where(ReviewRequest.id == slot.review_request_id)
+        )
+        review_request = result.scalar_one_or_none()
+
+        if not review_request:
+            logger.error(f"Review request {slot.review_request_id} not found")
+            return
+
+        # Get requester info
+        requester = await db.get(User, requester_id)
+        if not requester:
+            logger.error(f"Requester {requester_id} not found")
+            return
+
+        # Create notification for reviewer
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=slot.reviewer_id,
+            notification_type=NotificationType.ELABORATION_REQUESTED,
+            title="Elaboration requested on your review",
+            message=f"{requester.full_name or requester.email} would like more detail on your review for '{review_request.title}'. Please respond within 48 hours.",
+            data={
+                "slot_id": slot.id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "requester_id": requester.id,
+                "requester_name": requester.full_name or requester.email,
+                "requester_avatar": requester.avatar_url,
+                "elaboration_request": slot.elaboration_request,
+                "elaboration_count": slot.elaboration_count,
+                "elaboration_deadline": slot.elaboration_deadline.isoformat() if slot.elaboration_deadline else None,
+            },
+            priority=NotificationPriority.HIGH,
+            action_url=f"/reviewer/hub?slot={slot.id}",
+            action_label="Respond to Request",
+            entity_type=EntityType.REVIEW_SLOT,
+            entity_id=slot.id,
+        )
+
+        logger.info(f"Created elaboration requested notification for reviewer {slot.reviewer_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating elaboration requested notification: {e}", exc_info=True)
+
+
+async def notify_elaboration_submitted(
+    db: AsyncSession,
+    slot_id: int,
+    reviewer_id: int
+) -> None:
+    """
+    Notify creator when reviewer responds to an elaboration request.
+
+    Args:
+        db: Database session
+        slot_id: ID of slot with elaboration response
+        reviewer_id: ID of the reviewer who responded
+    """
+    try:
+        # Get slot
+        result = await db.execute(
+            select(ReviewSlot)
+            .where(ReviewSlot.id == slot_id)
+        )
+        slot = result.scalar_one_or_none()
+
+        if not slot:
+            logger.error(f"Slot {slot_id} not found for elaboration submitted notification")
+            return
+
+        # Get review request
+        result = await db.execute(
+            select(ReviewRequest)
+            .where(ReviewRequest.id == slot.review_request_id)
+        )
+        review_request = result.scalar_one_or_none()
+
+        if not review_request:
+            logger.error(f"Review request {slot.review_request_id} not found")
+            return
+
+        # Get reviewer info
+        reviewer = await db.get(User, reviewer_id)
+        if not reviewer:
+            logger.error(f"Reviewer {reviewer_id} not found")
+            return
+
+        # Create notification for requester/creator
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=review_request.user_id,
+            notification_type=NotificationType.ELABORATION_SUBMITTED,
+            title="Elaboration received on your review",
+            message=f"{reviewer.full_name or reviewer.email} has provided additional detail on their review for '{review_request.title}'.",
+            data={
+                "slot_id": slot.id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "reviewer_id": reviewer.id,
+                "reviewer_name": reviewer.full_name or reviewer.email,
+                "reviewer_avatar": reviewer.avatar_url,
+                "elaboration_count": slot.elaboration_count,
+            },
+            priority=NotificationPriority.HIGH,
+            action_url=f"/reviewer/hub?slot={slot.id}&mode=creator",
+            action_label="View Updated Review",
+            entity_type=EntityType.REVIEW_SLOT,
+            entity_id=slot.id,
+        )
+
+        logger.info(f"Created elaboration submitted notification for requester {review_request.user_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating elaboration submitted notification: {e}", exc_info=True)
