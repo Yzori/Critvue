@@ -102,7 +102,7 @@ export default function ReviewerHubPage() {
     const fetchReviewerData = async () => {
       try {
         setReviewerLoading(true);
-        const combinedSlots = await getMyReviews("claimed,submitted");
+        const combinedSlots = await getMyReviews("claimed,submitted,accepted,rejected,elaboration_requested");
         setAllSlots(combinedSlots);
 
         if (initialSlotId) {
@@ -326,6 +326,11 @@ export default function ReviewerHubPage() {
   // Count urgent reviews for creator mode
   const urgentCount = pendingReviews.filter(f => getUrgency(f.auto_accept_at).isUrgent).length;
 
+  // Count only active reviews for reviewer mode (needs action from reviewer)
+  const activeReviewerCount = allSlots.filter(s =>
+    s.status === "claimed" || s.status === "elaboration_requested"
+  ).length;
+
   if (isLoading) {
     return (
       <div
@@ -387,12 +392,12 @@ export default function ReviewerHubPage() {
           >
             <PenLine className="size-4" />
             <span className="hidden sm:inline">I Gave</span>
-            {allSlots.length > 0 && (
+            {activeReviewerCount > 0 && (
               <span className={cn(
                 "text-xs px-1.5 py-0.5 rounded-full",
                 mode === "reviewer" ? "bg-accent-blue/10 text-accent-blue" : "bg-muted-foreground/20"
               )}>
-                {allSlots.length}
+                {activeReviewerCount}
               </span>
             )}
           </button>
@@ -426,7 +431,7 @@ export default function ReviewerHubPage() {
           </h1>
           <p className="text-xs text-muted-foreground">
             {mode === "reviewer"
-              ? `${allSlots.length} active review${allSlots.length !== 1 ? "s" : ""}`
+              ? `${activeReviewerCount} active review${activeReviewerCount !== 1 ? "s" : ""}`
               : `${pendingReviews.length} pending${urgentCount > 0 ? ` (${urgentCount} urgent)` : ""}`}
           </p>
         </div>

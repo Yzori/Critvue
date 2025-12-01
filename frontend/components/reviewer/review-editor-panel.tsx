@@ -119,11 +119,26 @@ export function ReviewEditorPanel({
                   {formatPayment(slot.payment_amount)}
                 </Badge>
                 {slot.status === "submitted" && (
-                  <Badge variant="success" size="sm">
-                    ✓ Submitted
+                  <Badge variant="warning" size="sm">
+                    Awaiting Response
                   </Badge>
                 )}
-                {slot.status !== "submitted" && slot.claim_deadline && (
+                {slot.status === "accepted" && (
+                  <Badge variant="success" size="sm">
+                    Accepted
+                  </Badge>
+                )}
+                {slot.status === "rejected" && (
+                  <Badge variant="error" size="sm">
+                    Rejected
+                  </Badge>
+                )}
+                {slot.status === "elaboration_requested" && (
+                  <Badge variant="warning" size="sm">
+                    Needs Elaboration
+                  </Badge>
+                )}
+                {slot.status === "claimed" && slot.claim_deadline && (
                   <Badge
                     variant={urgency === "danger" ? "error" : urgency === "warning" ? "warning" : "success"}
                     size="sm"
@@ -159,7 +174,7 @@ export function ReviewEditorPanel({
             {slot.auto_accept_at && (
               <div className="p-4 bg-white/50 rounded-lg">
                 <p className="text-sm font-medium text-green-900 mb-1">
-                  ⏰ Auto-accept Countdown
+                  Auto-accept Countdown
                 </p>
                 <p className="text-xs text-green-700">
                   If the requester doesn't respond, your review will be automatically accepted on{" "}
@@ -170,7 +185,7 @@ export function ReviewEditorPanel({
 
             <div className="p-4 bg-white/50 rounded-lg">
               <p className="text-sm font-medium text-green-900 mb-2">
-                💰 Payment Status
+                Payment Status
               </p>
               <p className="text-xs text-green-700">
                 Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
@@ -188,8 +203,95 @@ export function ReviewEditorPanel({
             </div>
           </div>
         </div>
+      ) : slot.status === "accepted" ? (
+        /* Accepted Confirmation View */
+        <div className="p-4 sm:p-6">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-emerald-500/30 bg-emerald-50 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-full bg-emerald-500 flex items-center justify-center">
+                <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-emerald-900">Review Accepted!</h3>
+                <p className="text-sm text-emerald-700">
+                  The requester has approved your review
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white/50 rounded-lg">
+              <p className="text-sm font-medium text-emerald-900 mb-2">
+                Payment Complete
+              </p>
+              <p className="text-xs text-emerald-700">
+                Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> has been processed and added to your account.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = "/dashboard?role=reviewer"}
+                className="flex-1"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : slot.status === "rejected" ? (
+        /* Rejected View */
+        <div className="p-4 sm:p-6">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-red-500/30 bg-red-50 p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="size-12 rounded-full bg-red-500 flex items-center justify-center">
+                <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-red-900">Review Rejected</h3>
+                <p className="text-sm text-red-700">
+                  The requester has declined your review
+                </p>
+              </div>
+            </div>
+
+            {(slot as { rejection_reason?: string }).rejection_reason && (
+              <div className="p-4 bg-white/50 rounded-lg">
+                <p className="text-sm font-medium text-red-900 mb-2">
+                  Rejection Reason
+                </p>
+                <p className="text-xs text-red-700">
+                  {(slot as { rejection_reason?: string }).rejection_reason}
+                </p>
+              </div>
+            )}
+
+            <div className="p-4 bg-white/50 rounded-lg">
+              <p className="text-sm font-medium text-red-900 mb-2">
+                What Happens Next
+              </p>
+              <p className="text-xs text-red-700">
+                This review will not count towards your completion stats. You can find new review opportunities in the dashboard.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => window.location.href = "/dashboard?role=reviewer"}
+                className="flex-1"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
       ) : (
-        /* Review Studio - Full-screen split layout */
+        /* Review Studio - Full-screen split layout (for claimed and elaboration_requested) */
         <div className="h-[calc(100vh-120px)]">
           <ReviewStudio
             slotId={slot.id}

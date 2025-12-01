@@ -23,6 +23,9 @@ import {
   CheckCircle2,
   Loader2,
   AlertTriangle,
+  XCircle,
+  MessageSquarePlus,
+  Trophy,
 } from "lucide-react";
 import { getContentTypeConfig } from "@/lib/constants/content-types";
 import { cn } from "@/lib/utils";
@@ -48,6 +51,12 @@ export function ActiveReviewsSidebar({
   const inProgress = slots.filter(s => s.status === "claimed" && (s.review_text || s.rating));
   const claimed = slots.filter(s => s.status === "claimed" && !s.review_text && !s.rating);
   const submitted = slots.filter(s => s.status === "submitted");
+  const elaborationRequested = slots.filter(s => s.status === "elaboration_requested");
+  const accepted = slots.filter(s => s.status === "accepted");
+  const rejected = slots.filter(s => s.status === "rejected");
+
+  // Count only active reviews (needs action from reviewer)
+  const activeCount = inProgress.length + claimed.length + elaborationRequested.length;
 
   return (
     <div className="p-4 space-y-6">
@@ -57,7 +66,9 @@ export function ActiveReviewsSidebar({
           My Reviews
         </h2>
         <p className="text-xs text-muted-foreground">
-          {slots.length} active review{slots.length !== 1 ? "s" : ""}
+          {activeCount > 0
+            ? `${activeCount} active review${activeCount !== 1 ? "s" : ""}`
+            : `${slots.length} total review${slots.length !== 1 ? "s" : ""}`}
         </p>
       </div>
 
@@ -121,7 +132,76 @@ export function ActiveReviewsSidebar({
                 slot={slot}
                 isActive={slot.id === currentSlotId}
                 onSelect={() => onSlotChange(slot.id)}
-                isSubmitted
+                statusBadge="submitted"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Elaboration Requested Section */}
+      {elaborationRequested.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquarePlus className="size-4 text-blue-500" />
+            <h3 className="text-sm font-semibold text-foreground">
+              Needs Elaboration ({elaborationRequested.length})
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {elaborationRequested.map(slot => (
+              <ReviewCard
+                key={slot.id}
+                slot={slot}
+                isActive={slot.id === currentSlotId}
+                onSelect={() => onSlotChange(slot.id)}
+                statusBadge="elaboration"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Accepted Section */}
+      {accepted.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy className="size-4 text-emerald-500" />
+            <h3 className="text-sm font-semibold text-foreground">
+              Accepted ({accepted.length})
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {accepted.map(slot => (
+              <ReviewCard
+                key={slot.id}
+                slot={slot}
+                isActive={slot.id === currentSlotId}
+                onSelect={() => onSlotChange(slot.id)}
+                statusBadge="accepted"
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Section */}
+      {rejected.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <XCircle className="size-4 text-red-500" />
+            <h3 className="text-sm font-semibold text-foreground">
+              Rejected ({rejected.length})
+            </h3>
+          </div>
+          <div className="space-y-2">
+            {rejected.map(slot => (
+              <ReviewCard
+                key={slot.id}
+                slot={slot}
+                isActive={slot.id === currentSlotId}
+                onSelect={() => onSlotChange(slot.id)}
+                statusBadge="rejected"
               />
             ))}
           </div>
@@ -143,11 +223,11 @@ export function ActiveReviewsSidebar({
 interface ReviewCardProps {
   slot: ReviewSlot;
   isActive: boolean;
-  isSubmitted?: boolean;
+  statusBadge?: "submitted" | "accepted" | "rejected" | "elaboration";
   onSelect: () => void;
 }
 
-function ReviewCard({ slot, isActive, isSubmitted, onSelect }: ReviewCardProps) {
+function ReviewCard({ slot, isActive, statusBadge, onSelect }: ReviewCardProps) {
   const hoursRemaining = slot.claim_deadline
     ? calculateHoursRemaining(slot.claim_deadline)
     : 0;
@@ -155,14 +235,14 @@ function ReviewCard({ slot, isActive, isSubmitted, onSelect }: ReviewCardProps) 
 
   // Calculate progress
   const progress = React.useMemo(() => {
-    if (isSubmitted) return 100;
+    if (statusBadge) return 100; // All non-claimed statuses are "complete"
 
     let completion = 0;
     if (slot.rating) completion += 50;
     if (slot.review_text && slot.review_text.length >= 50) completion += 50;
 
     return completion;
-  }, [slot, isSubmitted]);
+  }, [slot, statusBadge]);
 
   // Use shared content type config
   const config = getContentTypeConfig(slot.review_request?.content_type);
@@ -204,8 +284,8 @@ function ReviewCard({ slot, isActive, isSubmitted, onSelect }: ReviewCardProps) 
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {!isSubmitted && (
+      {/* Progress Bar - only for claimed (in progress) reviews */}
+      {!statusBadge && (
         <div className="w-full">
           <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
             <div
@@ -224,8 +304,8 @@ function ReviewCard({ slot, isActive, isSubmitted, onSelect }: ReviewCardProps) 
         </div>
       )}
 
-      {/* Deadline Badge */}
-      {slot.claim_deadline && !isSubmitted && (
+      {/* Deadline Badge - only for claimed reviews */}
+      {slot.claim_deadline && !statusBadge && (
         <div
           className={cn(
             "flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium",
@@ -249,11 +329,29 @@ function ReviewCard({ slot, isActive, isSubmitted, onSelect }: ReviewCardProps) 
         {formatPayment(slot.payment_amount)}
       </Badge>
 
-      {/* Submitted Badge */}
-      {isSubmitted && (
-        <Badge variant="success" size="sm">
-          <CheckCircle2 className="size-3" />
-          Submitted
+      {/* Status Badge */}
+      {statusBadge === "submitted" && (
+        <Badge variant="secondary" size="sm" className="bg-amber-50 text-amber-700 border-amber-200">
+          <Clock className="size-3" />
+          Awaiting Response
+        </Badge>
+      )}
+      {statusBadge === "elaboration" && (
+        <Badge variant="secondary" size="sm" className="bg-blue-50 text-blue-700 border-blue-200">
+          <MessageSquarePlus className="size-3" />
+          Needs More Detail
+        </Badge>
+      )}
+      {statusBadge === "accepted" && (
+        <Badge variant="secondary" size="sm" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+          <Trophy className="size-3" />
+          Accepted
+        </Badge>
+      )}
+      {statusBadge === "rejected" && (
+        <Badge variant="secondary" size="sm" className="bg-red-50 text-red-700 border-red-200">
+          <XCircle className="size-3" />
+          Rejected
         </Badge>
       )}
     </Button>
