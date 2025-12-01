@@ -200,7 +200,22 @@ async def notify_review_submitted(db: AsyncSession, slot_id: int, reviewer_id: i
             return
 
         # Create review preview (first 150 chars)
-        review_preview = slot.review_text[:150] + "..." if len(slot.review_text) > 150 else slot.review_text
+        # For Studio reviews, review_text may be None - try to get summary from draft_sections
+        review_preview = None
+        if slot.review_text:
+            review_preview = slot.review_text[:150] + "..." if len(slot.review_text) > 150 else slot.review_text
+        elif slot.draft_sections:
+            # Try to extract summary from Studio draft (verdictCard.summary)
+            try:
+                import json
+                draft_data = slot.draft_sections if isinstance(slot.draft_sections, dict) else json.loads(slot.draft_sections)
+                if draft_data.get("verdictCard", {}).get("summary"):
+                    summary = draft_data["verdictCard"]["summary"]
+                    review_preview = summary[:150] + "..." if len(summary) > 150 else summary
+            except (json.JSONDecodeError, TypeError, KeyError):
+                pass
+        if not review_preview:
+            review_preview = "Review submitted - check the details in your dashboard"
 
         # Create notification for requester
         service = NotificationService(db)

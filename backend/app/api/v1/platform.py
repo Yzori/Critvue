@@ -194,15 +194,15 @@ async def get_platform_activity(
         # Get recent accepts
         accepts_query = select(
             ReviewSlot.id,
-            ReviewSlot.accepted_at,
+            ReviewSlot.reviewed_at,
             ReviewSlot.rating
         ).where(
             and_(
-                ReviewSlot.accepted_at >= since_time,
-                ReviewSlot.accepted_at.isnot(None),
+                ReviewSlot.reviewed_at >= since_time,
+                ReviewSlot.reviewed_at.isnot(None),
                 ReviewSlot.status == ReviewSlotStatus.ACCEPTED
             )
-        ).order_by(desc(ReviewSlot.accepted_at)).limit(limit)
+        ).order_by(desc(ReviewSlot.reviewed_at)).limit(limit)
 
         accepts_result = await db.execute(accepts_query)
         accepts = accepts_result.fetchall()
@@ -218,7 +218,7 @@ async def get_platform_activity(
                 id=f"accept_{acc.id}",
                 type="accept",
                 message=msg,
-                timestamp=acc.accepted_at,
+                timestamp=acc.reviewed_at,
                 highlight=highlight
             ))
 
@@ -295,7 +295,7 @@ async def get_platform_stats(
         # Completed today
         completed_today_query = select(func.count()).where(
             and_(
-                ReviewSlot.accepted_at >= today_start,
+                ReviewSlot.reviewed_at >= today_start,
                 ReviewSlot.status == ReviewSlotStatus.ACCEPTED
             )
         )
@@ -305,7 +305,7 @@ async def get_platform_stats(
         # Completed this week
         completed_week_query = select(func.count()).where(
             and_(
-                ReviewSlot.accepted_at >= week_start,
+                ReviewSlot.reviewed_at >= week_start,
                 ReviewSlot.status == ReviewSlotStatus.ACCEPTED
             )
         )
@@ -322,7 +322,7 @@ async def get_platform_stats(
         # Total earned this week
         earned_week_query = select(func.coalesce(func.sum(ReviewSlot.payment_amount), 0)).where(
             and_(
-                ReviewSlot.accepted_at >= week_start,
+                ReviewSlot.reviewed_at >= week_start,
                 ReviewSlot.status == ReviewSlotStatus.ACCEPTED
             )
         )
@@ -426,7 +426,7 @@ async def get_user_story_stats(
             week_activity_query = select(func.count()).where(
                 and_(
                     ReviewSlot.reviewer_id == current_user.id,
-                    ReviewSlot.accepted_at >= week_start,
+                    ReviewSlot.reviewed_at >= week_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
             )
@@ -437,7 +437,7 @@ async def get_user_story_stats(
             month_activity_query = select(func.count()).where(
                 and_(
                     ReviewSlot.reviewer_id == current_user.id,
-                    ReviewSlot.accepted_at >= month_start,
+                    ReviewSlot.reviewed_at >= month_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
             )
@@ -581,7 +581,7 @@ async def get_user_story_stats(
             ).where(
                 and_(
                     ReviewRequest.user_id == current_user.id,
-                    ReviewSlot.accepted_at >= week_start,
+                    ReviewSlot.reviewed_at >= week_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
             )
@@ -596,7 +596,7 @@ async def get_user_story_stats(
             ).where(
                 and_(
                     ReviewRequest.user_id == current_user.id,
-                    ReviewSlot.accepted_at >= month_start,
+                    ReviewSlot.reviewed_at >= month_start,
                     ReviewSlot.status == ReviewSlotStatus.ACCEPTED
                 )
             )

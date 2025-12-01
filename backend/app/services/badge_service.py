@@ -1512,8 +1512,8 @@ class BadgeService:
                 ReviewRequest.requester_id == user_id,
                 ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value,
                 ReviewSlot.submitted_at.isnot(None),
-                ReviewSlot.accepted_at.isnot(None),
-                ReviewSlot.accepted_at < ReviewSlot.submitted_at + timedelta(hours=24)
+                ReviewSlot.reviewed_at.isnot(None),
+                ReviewSlot.reviewed_at < ReviewSlot.submitted_at + timedelta(hours=24)
             )
         )
         result = await self.db.execute(stmt)

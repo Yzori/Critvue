@@ -970,16 +970,15 @@ async def accept_review(
         )
 
         # Get karma info for notification
-        from app.models.user import UserTier
         from sqlalchemy import select
         result = await db.execute(
-            select(UserTier).where(UserTier.user_id == accepted_slot.reviewer_id)
+            select(User).where(User.id == accepted_slot.reviewer_id)
         )
-        user_tier = result.scalar_one_or_none()
+        reviewer = result.scalar_one_or_none()
         karma_earned = 50  # Base karma for accepted review
         if accept_data.helpful_rating >= 4:
             karma_earned += 10
-        new_karma = user_tier.karma_points if user_tier else karma_earned
+        new_karma = reviewer.karma_points if reviewer else karma_earned
 
         # Send notification to reviewer
         await notify_review_accepted(
