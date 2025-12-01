@@ -43,6 +43,8 @@ import {
 } from "lucide-react";
 import type { DashboardRole } from "../desktop-dashboard-container";
 import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard";
+import { getNotifications } from "@/lib/api/notifications";
+import { getActivityTimeline } from "@/lib/api/activity";
 import useSWR from "swr";
 
 export interface DesktopRightPanelProps {
@@ -64,6 +66,26 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
     () => getDashboardStats(role, "week"),
     {
       refreshInterval: 30000,
+      revalidateOnFocus: true,
+    }
+  );
+
+  // Fetch notifications with SWR
+  const { data: notificationsData } = useSWR(
+    '/notifications?page_size=3',
+    () => getNotifications({ page_size: 3 }),
+    {
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
+    }
+  );
+
+  // Fetch activity timeline with SWR
+  const { data: activityData } = useSWR(
+    '/activity/timeline?limit=3',
+    () => getActivityTimeline(3, 0),
+    {
+      refreshInterval: 60000,
       revalidateOnFocus: true,
     }
   );
@@ -212,28 +234,22 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
         </div>
 
         <div className="space-y-2">
-          {/* Mock notifications - Replace with real data */}
-          <NotificationItem
-            type="review_submitted"
-            title="Review submitted"
-            message="Sarah completed your design review"
-            timestamp={new Date(Date.now() - 3600000)}
-            read={false}
-          />
-          <NotificationItem
-            type="review_accepted"
-            title="Review accepted"
-            message="Your code review was accepted"
-            timestamp={new Date(Date.now() - 7200000)}
-            read={true}
-          />
-          <NotificationItem
-            type="new_message"
-            title="New comment"
-            message="John left a comment on your review"
-            timestamp={new Date(Date.now() - 10800000)}
-            read={true}
-          />
+          {notificationsData?.notifications && notificationsData.notifications.length > 0 ? (
+            notificationsData.notifications.map((notification) => (
+              <NotificationItem
+                key={notification.id}
+                type={mapNotificationType(notification.type)}
+                title={notification.title}
+                message={notification.message}
+                timestamp={new Date(notification.created_at)}
+                read={notification.read}
+              />
+            ))
+          ) : (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              No new notifications
+            </div>
+          )}
         </div>
       </div>
 
@@ -251,29 +267,25 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
           {/* Timeline line */}
           <div className="absolute left-4 top-2 bottom-2 w-0.5 bg-border" />
 
-          {/* Mock activity items - Replace with real data */}
-          <TimelineItem
-            type="review_submitted"
-            title="Review submitted"
-            description="Completed design review for Sarah"
-            timestamp={new Date(Date.now() - 3600000)}
-          />
-          <TimelineItem
-            type="review_accepted"
-            title="Review accepted"
-            description="Your code review was accepted"
-            timestamp={new Date(Date.now() - 7200000)}
-          />
-          <TimelineItem
-            type="comment_added"
-            title="Comment added"
-            description="John replied to your feedback"
-            timestamp={new Date(Date.now() - 10800000)}
-          />
+          {activityData?.events && activityData.events.length > 0 ? (
+            activityData.events.map((event) => (
+              <TimelineItem
+                key={event.id}
+                type={mapActivityType(event.type)}
+                title={event.title}
+                description={event.description || ""}
+                timestamp={new Date(event.timestamp)}
+              />
+            ))
+          ) : (
+            <div className="text-sm text-muted-foreground text-center py-4 pl-12">
+              No recent activity
+            </div>
+          )}
         </div>
 
         <Link
-          href="/activity"
+          href="/dashboard/activity"
           className={cn(
             "flex items-center justify-between",
             "px-3 py-2 rounded-lg",
@@ -521,4 +533,35 @@ function formatRelativeTime(date: Date): string {
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
 
   return date.toLocaleDateString();
+}
+
+/**
+ * Map API notification type to component type
+ */
+function mapNotificationType(type: string): NotificationItemProps["type"] {
+  const typeMap: Record<string, NotificationItemProps["type"]> = {
+    review_submitted: "review_submitted",
+    review_accepted: "review_accepted",
+    review_rejected: "review_rejected",
+    new_comment: "new_message",
+    review_completed: "review_submitted",
+    slot_claimed: "review_submitted",
+    review_ready: "review_accepted",
+  };
+  return typeMap[type] || "new_message";
+}
+
+/**
+ * Map API activity type to timeline item type
+ */
+function mapActivityType(type: string): TimelineItemProps["type"] {
+  const typeMap: Record<string, TimelineItemProps["type"]> = {
+    review_given: "review_submitted",
+    review_received: "review_accepted",
+    badge_earned: "review_accepted",
+    milestone: "review_accepted",
+    karma_change: "comment_added",
+    review_created: "review_created",
+  };
+  return typeMap[type] || "comment_added";
 }

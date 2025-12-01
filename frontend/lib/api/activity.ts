@@ -135,3 +135,79 @@ export async function getActivityTimeline(
     hasMore: response.has_more,
   };
 }
+
+// ==================== Enhanced Stats Types ====================
+
+export interface TrendInfo {
+  value: number;
+  direction: 'up' | 'down' | 'neutral';
+  label?: string;
+}
+
+export interface StatWithContext {
+  value: number;
+  trend?: TrendInfo;
+  percentile?: number;
+  comparison?: string;
+  sparklineData?: number[];
+}
+
+export interface EnhancedStatsResponse {
+  reviewsGiven: StatWithContext;
+  karmaPoints: StatWithContext;
+  avgRating: StatWithContext;
+  avgResponseTime: StatWithContext;
+}
+
+// API response types (snake_case from backend)
+interface ApiTrendInfo {
+  value: number;
+  direction: string;
+  label?: string;
+}
+
+interface ApiStatWithContext {
+  value: number;
+  trend?: ApiTrendInfo;
+  percentile?: number;
+  comparison?: string;
+  sparkline_data?: number[];
+}
+
+interface ApiEnhancedStatsResponse {
+  reviews_given: ApiStatWithContext;
+  karma_points: ApiStatWithContext;
+  avg_rating: ApiStatWithContext;
+  avg_response_time: ApiStatWithContext;
+}
+
+/**
+ * Transform API stat to frontend format
+ */
+function transformStat(stat: ApiStatWithContext): StatWithContext {
+  return {
+    value: stat.value,
+    trend: stat.trend ? {
+      value: stat.trend.value,
+      direction: stat.trend.direction as 'up' | 'down' | 'neutral',
+      label: stat.trend.label,
+    } : undefined,
+    percentile: stat.percentile,
+    comparison: stat.comparison,
+    sparklineData: stat.sparkline_data,
+  };
+}
+
+/**
+ * Get enhanced profile stats with trends and percentiles
+ */
+export async function getEnhancedStats(): Promise<EnhancedStatsResponse> {
+  const response = await apiClient.get<ApiEnhancedStatsResponse>('/activity/stats/enhanced');
+
+  return {
+    reviewsGiven: transformStat(response.reviews_given),
+    karmaPoints: transformStat(response.karma_points),
+    avgRating: transformStat(response.avg_rating),
+    avgResponseTime: transformStat(response.avg_response_time),
+  };
+}

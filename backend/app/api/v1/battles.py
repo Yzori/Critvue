@@ -20,6 +20,8 @@ from app.schemas.battle import (
     BattleVoteCreate,
     BattleVoteResponse,
     BattleVoteStats,
+    BattlePromptCreate,
+    BattlePromptUpdate,
     BattlePromptResponse,
     BattlePromptListResponse,
     BattleStats,
@@ -28,10 +30,26 @@ from app.schemas.battle import (
     QueueStatus,
     BattleChallengeResponse,
 )
+from app.models.user import UserRole
 from app.services.battle_service import BattleService
 from app.core.logging_config import security_logger
 
 router = APIRouter(prefix="/battles", tags=["Battles"])
+
+
+# ==================== DEPENDENCIES ====================
+
+
+async def require_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Dependency to verify current user is an admin."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
 
 
 # ==================== PROMPTS ====================
@@ -99,6 +117,127 @@ async def get_prompt(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve prompt"
+        )
+
+
+# ==================== ADMIN: PROMPT MANAGEMENT ====================
+
+
+@router.post(
+    "/prompts",
+    response_model=BattlePromptResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a battle prompt (Admin only)"
+)
+async def create_prompt(
+    prompt_data: BattlePromptCreate,
+    admin_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+) -> BattlePromptResponse:
+    """
+    Create a new battle prompt (Admin only).
+
+    Prompts are platform-curated challenges that users can battle on.
+    """
+    try:
+        service = BattleService(db)
+        prompt = await service.create_prompt(
+            title=prompt_data.title,
+            description=prompt_data.description,
+            content_type=prompt_data.content_type,
+            difficulty=prompt_data.difficulty,
+            is_active=prompt_data.is_active
+        )
+
+        security_logger.logger.info(
+            f"Battle prompt created: id={prompt.id}, title={prompt.title}, by admin={admin_user.email}"
+        )
+
+        return BattlePromptResponse.model_validate(prompt)
+    except Exception as e:
+        security_logger.logger.error(f"Failed to create prompt: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create prompt"
+        )
+
+
+@router.put(
+    "/prompts/{prompt_id}",
+    response_model=BattlePromptResponse,
+    summary="Update a battle prompt (Admin only)"
+)
+async def update_prompt(
+    prompt_data: BattlePromptUpdate,
+    prompt_id: int = PathParam(..., ge=1, description="Prompt ID"),
+    admin_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+) -> BattlePromptResponse:
+    """Update an existing battle prompt (Admin only)."""
+    try:
+        service = BattleService(db)
+        prompt = await service.update_prompt(
+            prompt_id=prompt_id,
+            **prompt_data.model_dump(exclude_unset=True)
+        )
+
+        if not prompt:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prompt not found"
+            )
+
+        security_logger.logger.info(
+            f"Battle prompt updated: id={prompt_id}, by admin={admin_user.email}"
+        )
+
+        return BattlePromptResponse.model_validate(prompt)
+    except HTTPException:
+        raise
+    except Exception as e:
+        security_logger.logger.error(f"Failed to update prompt {prompt_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update prompt"
+        )
+
+
+@router.delete(
+    "/prompts/{prompt_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a battle prompt (Admin only)"
+)
+async def delete_prompt(
+    prompt_id: int = PathParam(..., ge=1, description="Prompt ID"),
+    admin_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+) -> None:
+    """
+    Delete a battle prompt (Admin only).
+
+    Note: This will soft-delete by setting is_active=False to preserve
+    historical battle data that references this prompt.
+    """
+    try:
+        service = BattleService(db)
+        success = await service.delete_prompt(prompt_id)
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Prompt not found"
+            )
+
+        security_logger.logger.info(
+            f"Battle prompt deleted: id={prompt_id}, by admin={admin_user.email}"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        security_logger.logger.error(f"Failed to delete prompt {prompt_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete prompt"
         )
 
 

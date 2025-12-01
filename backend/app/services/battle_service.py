@@ -79,6 +79,66 @@ class BattleService:
         """Get a specific prompt by ID."""
         return await self.db.get(BattlePrompt, prompt_id)
 
+    async def create_prompt(
+        self,
+        title: str,
+        description: str,
+        content_type: ContentType,
+        difficulty: str = "intermediate",
+        is_active: bool = True
+    ) -> BattlePrompt:
+        """Create a new battle prompt (admin only)."""
+        from app.models.battle_prompt import PromptDifficulty
+
+        prompt = BattlePrompt(
+            title=title,
+            description=description,
+            content_type=content_type,
+            difficulty=PromptDifficulty(difficulty) if isinstance(difficulty, str) else difficulty,
+            is_active=is_active,
+            times_used=0,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        self.db.add(prompt)
+        await self.db.commit()
+        await self.db.refresh(prompt)
+
+        return prompt
+
+    async def update_prompt(
+        self,
+        prompt_id: int,
+        **kwargs
+    ) -> Optional[BattlePrompt]:
+        """Update an existing battle prompt (admin only)."""
+        prompt = await self.get_prompt(prompt_id)
+        if not prompt:
+            return None
+
+        for key, value in kwargs.items():
+            if hasattr(prompt, key) and value is not None:
+                setattr(prompt, key, value)
+
+        prompt.updated_at = datetime.utcnow()
+        await self.db.commit()
+        await self.db.refresh(prompt)
+
+        return prompt
+
+    async def delete_prompt(self, prompt_id: int) -> bool:
+        """Soft-delete a battle prompt by setting is_active=False."""
+        prompt = await self.get_prompt(prompt_id)
+        if not prompt:
+            return False
+
+        prompt.is_active = False
+        prompt.updated_at = datetime.utcnow()
+        await self.db.commit()
+
+        return True
+
     # ==================== BATTLE CREATION ====================
 
     async def create_battle(

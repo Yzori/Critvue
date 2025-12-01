@@ -41,7 +41,7 @@ import {
 import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
 import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/karma";
-import { getActivityHeatmap, getActivityTimeline, DayActivity as ApiDayActivity, TimelineEvent as ApiTimelineEvent } from "@/lib/api/activity";
+import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/activity";
 import { ApiClientError } from "@/lib/api/client";
 
 // Component imports
@@ -232,6 +232,7 @@ export default function ProfilePage() {
   const [activityData, setActivityData] = useState<DayActivity[]>([]);
   const [activityStats, setActivityStats] = useState<{ currentStreak: number; longestStreak: number; totalContributions: number }>({ currentStreak: 0, longestStreak: 0, totalContributions: 0 });
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [enhancedStats, setEnhancedStats] = useState<EnhancedStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     type: "not_found" | "auth_required" | "network" | "server" | "unknown";
@@ -274,10 +275,11 @@ export default function ProfilePage() {
       const transformedBadges = transformApiBadges(earnedBadges, availableBadges);
       setBadges(transformedBadges);
 
-      // Fetch activity data (heatmap and timeline) in parallel
-      const [heatmapData, timelineData] = await Promise.all([
+      // Fetch activity data (heatmap, timeline, enhanced stats) in parallel
+      const [heatmapData, timelineData, enhancedStatsData] = await Promise.all([
         getActivityHeatmap(365).catch(() => null),
         getActivityTimeline(10).catch(() => null),
+        getEnhancedStats().catch(() => null),
       ]);
 
       // Set activity heatmap data
@@ -302,6 +304,11 @@ export default function ProfilePage() {
       if (timelineData) {
         const transformedEvents = transformTimelineEvents(timelineData.events);
         setTimelineEvents(transformedEvents);
+      }
+
+      // Set enhanced stats
+      if (enhancedStatsData) {
+        setEnhancedStats(enhancedStatsData);
       }
     } catch (err) {
       console.error("Profile load error:", err);
@@ -542,10 +549,10 @@ export default function ProfilePage() {
                 value={profileData.total_reviews_given}
                 icon={<MessageSquare className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-                trend={{ value: 23, direction: 'up', label: 'from last month' }}
-                percentile={92}
-                comparison="Top 8% of reviewers"
-                sparklineData={[12, 19, 15, 25, 22, 30, 28, 35, 32, 40, 38, 45]}
+                trend={enhancedStats?.reviewsGiven.trend}
+                percentile={enhancedStats?.reviewsGiven.percentile}
+                comparison={enhancedStats?.reviewsGiven.comparison}
+                sparklineData={enhancedStats?.reviewsGiven.sparklineData}
                 size="md"
               />
             </motion.div>
@@ -560,9 +567,9 @@ export default function ProfilePage() {
                 value={profileData.karma_points}
                 icon={<Star className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-purple-500 to-indigo-600"
-                trend={{ value: 15, direction: 'up' }}
-                percentile={78}
-                sparklineData={[100, 120, 115, 140, 135, 160, 155, 180, 175, 200]}
+                trend={enhancedStats?.karmaPoints.trend}
+                percentile={enhancedStats?.karmaPoints.percentile}
+                sparklineData={enhancedStats?.karmaPoints.sparklineData}
                 size="md"
               />
             </motion.div>
@@ -578,8 +585,8 @@ export default function ProfilePage() {
                 suffix=""
                 icon={<Star className="size-6 text-white fill-white" />}
                 iconBg="bg-gradient-to-br from-amber-400 to-amber-600"
-                percentile={85}
-                comparison="Above platform average"
+                percentile={enhancedStats?.avgRating.percentile}
+                comparison={enhancedStats?.avgRating.comparison}
                 size="md"
               />
             </motion.div>
@@ -595,9 +602,9 @@ export default function ProfilePage() {
                 suffix="h"
                 icon={<Clock className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-green-500 to-emerald-600"
-                trend={{ value: 12, direction: 'down', label: 'faster than last month' }}
-                percentile={88}
-                comparison="Faster than 88% of peers"
+                trend={enhancedStats?.avgResponseTime.trend}
+                percentile={enhancedStats?.avgResponseTime.percentile}
+                comparison={enhancedStats?.avgResponseTime.comparison}
                 size="md"
               />
             </motion.div>

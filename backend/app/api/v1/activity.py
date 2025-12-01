@@ -172,6 +172,324 @@ async def get_activity_heatmap(
     )
 
 
+# ==================== Enhanced Stats Schemas ====================
+
+class TrendInfo(BaseModel):
+    """Trend information for a stat"""
+    value: int  # percentage change
+    direction: str  # 'up', 'down', 'neutral'
+    label: Optional[str] = None  # e.g., "from last month"
+
+
+class StatWithContext(BaseModel):
+    """A stat with contextual information"""
+    value: float
+    trend: Optional[TrendInfo] = None
+    percentile: Optional[int] = None  # 0-100
+    comparison: Optional[str] = None  # e.g., "Top 8% of reviewers"
+    sparkline_data: Optional[List[int]] = None  # Historical data points
+
+
+class ProfileStatsWithContextResponse(BaseModel):
+    """Enhanced profile stats with trends and percentiles"""
+    reviews_given: StatWithContext
+    karma_points: StatWithContext
+    avg_rating: StatWithContext
+    avg_response_time: StatWithContext
+
+
+@router.get("/stats/enhanced", response_model=ProfileStatsWithContextResponse)
+async def get_enhanced_stats(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Get enhanced profile stats with trends, percentiles, and sparkline data.
+
+    Returns:
+    - Reviews given with monthly trend and percentile
+    - Karma points with trend and percentile
+    - Average rating with percentile
+    - Average response time with trend and percentile
+    """
+    from datetime import date
+    from calendar import monthrange
+
+    now = datetime.utcnow()
+    today = now.date()
+
+    # Calculate date ranges
+    # Current month
+    current_month_start = date(today.year, today.month, 1)
+    # Previous month
+    if today.month == 1:
+        prev_month_start = date(today.year - 1, 12, 1)
+        prev_month_end = date(today.year - 1, 12, 31)
+    else:
+        prev_month_start = date(today.year, today.month - 1, 1)
+        prev_month_end = date(today.year, today.month - 1, monthrange(today.year, today.month - 1)[1])
+
+    # ========== REVIEWS GIVEN ==========
+    # Current value
+    reviews_given_current = current_user.total_reviews_given or 0
+
+    # Get reviews this month vs last month for trend
+    reviews_this_month_query = (
+        select(func.count(ReviewSlot.id))
+        .where(
+            and_(
+                ReviewSlot.reviewer_id == current_user.id,
+                ReviewSlot.submitted_at.isnot(None),
+                func.date(ReviewSlot.submitted_at) >= current_month_start,
+            )
+        )
+    )
+    reviews_this_month = (await db.execute(reviews_this_month_query)).scalar() or 0
+
+    reviews_last_month_query = (
+        select(func.count(ReviewSlot.id))
+        .where(
+            and_(
+                ReviewSlot.reviewer_id == current_user.id,
+                ReviewSlot.submitted_at.isnot(None),
+                func.date(ReviewSlot.submitted_at) >= prev_month_start,
+                func.date(ReviewSlot.submitted_at) <= prev_month_end,
+            )
+        )
+    )
+    reviews_last_month = (await db.execute(reviews_last_month_query)).scalar() or 0
+
+    # Calculate trend percentage
+    if reviews_last_month > 0:
+        reviews_trend_pct = int(((reviews_this_month - reviews_last_month) / reviews_last_month) * 100)
+    else:
+        reviews_trend_pct = 100 if reviews_this_month > 0 else 0
+
+    reviews_trend_direction = 'up' if reviews_trend_pct > 0 else ('down' if reviews_trend_pct < 0 else 'neutral')
+
+    # Get percentile (rank among all users with reviews)
+    reviews_percentile_query = (
+        select(func.count(User.id))
+        .where(User.total_reviews_given < reviews_given_current)
+    )
+    users_below = (await db.execute(reviews_percentile_query)).scalar() or 0
+
+    total_users_with_reviews_query = (
+        select(func.count(User.id))
+        .where(User.total_reviews_given > 0)
+    )
+    total_users_with_reviews = (await db.execute(total_users_with_reviews_query)).scalar() or 1
+
+    reviews_percentile = int((users_below / total_users_with_reviews) * 100) if total_users_with_reviews > 0 else 50
+
+    # Get sparkline data (last 12 months)
+    reviews_sparkline = []
+    for i in range(11, -1, -1):
+        month_offset = today.month - i - 1
+        year = today.year + (month_offset // 12)
+        month = ((month_offset % 12) + 12) % 12 + 1
+
+        month_start = date(year, month, 1)
+        if month == 12:
+            month_end = date(year + 1, 1, 1) - timedelta(days=1)
+        else:
+            month_end = date(year, month + 1, 1) - timedelta(days=1)
+
+        count_query = (
+            select(func.count(ReviewSlot.id))
+            .where(
+                and_(
+                    ReviewSlot.reviewer_id == current_user.id,
+                    ReviewSlot.submitted_at.isnot(None),
+                    func.date(ReviewSlot.submitted_at) >= month_start,
+                    func.date(ReviewSlot.submitted_at) <= month_end,
+                )
+            )
+        )
+        count = (await db.execute(count_query)).scalar() or 0
+        reviews_sparkline.append(count)
+
+    # ========== KARMA POINTS ==========
+    karma_current = current_user.karma_points or 0
+
+    # Get karma gained this month vs last month
+    karma_this_month_query = (
+        select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+        .where(
+            and_(
+                KarmaTransaction.user_id == current_user.id,
+                func.date(KarmaTransaction.created_at) >= current_month_start,
+            )
+        )
+    )
+    karma_this_month = (await db.execute(karma_this_month_query)).scalar() or 0
+
+    karma_last_month_query = (
+        select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+        .where(
+            and_(
+                KarmaTransaction.user_id == current_user.id,
+                func.date(KarmaTransaction.created_at) >= prev_month_start,
+                func.date(KarmaTransaction.created_at) <= prev_month_end,
+            )
+        )
+    )
+    karma_last_month = (await db.execute(karma_last_month_query)).scalar() or 0
+
+    if karma_last_month > 0:
+        karma_trend_pct = int(((karma_this_month - karma_last_month) / karma_last_month) * 100)
+    else:
+        karma_trend_pct = 100 if karma_this_month > 0 else 0
+
+    karma_trend_direction = 'up' if karma_trend_pct > 0 else ('down' if karma_trend_pct < 0 else 'neutral')
+
+    # Karma percentile
+    karma_percentile_query = (
+        select(func.count(User.id))
+        .where(User.karma_points < karma_current)
+    )
+    karma_users_below = (await db.execute(karma_percentile_query)).scalar() or 0
+
+    total_users_query = select(func.count(User.id)).where(User.is_active == True)
+    total_users = (await db.execute(total_users_query)).scalar() or 1
+
+    karma_percentile = int((karma_users_below / total_users) * 100) if total_users > 0 else 50
+
+    # Karma sparkline (monthly totals for last 12 months, cumulative style)
+    karma_sparkline = []
+    cumulative_karma = karma_current
+    # Work backwards to calculate what karma was at each month
+    for i in range(11, -1, -1):
+        karma_sparkline.append(max(0, cumulative_karma))
+        # For simplicity, subtract this month's gains to approximate previous totals
+        if i > 0:
+            month_offset = today.month - i
+            year = today.year + ((month_offset - 1) // 12)
+            month = ((month_offset - 1) % 12) + 1
+
+            month_start = date(year, month, 1)
+            if month == 12:
+                month_end = date(year + 1, 1, 1) - timedelta(days=1)
+            else:
+                month_end = date(year, month + 1, 1) - timedelta(days=1)
+
+            monthly_karma_query = (
+                select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+                .where(
+                    and_(
+                        KarmaTransaction.user_id == current_user.id,
+                        func.date(KarmaTransaction.created_at) >= month_start,
+                        func.date(KarmaTransaction.created_at) <= month_end,
+                    )
+                )
+            )
+            monthly_karma = (await db.execute(monthly_karma_query)).scalar() or 0
+            cumulative_karma -= monthly_karma
+
+    karma_sparkline.reverse()
+
+    # ========== AVERAGE RATING ==========
+    avg_rating_current = float(current_user.avg_rating or 0)
+
+    # Rating percentile
+    rating_percentile_query = (
+        select(func.count(User.id))
+        .where(
+            and_(
+                User.avg_rating.isnot(None),
+                User.avg_rating < avg_rating_current,
+            )
+        )
+    )
+    rating_users_below = (await db.execute(rating_percentile_query)).scalar() or 0
+
+    total_rated_users_query = (
+        select(func.count(User.id))
+        .where(User.avg_rating.isnot(None))
+    )
+    total_rated_users = (await db.execute(total_rated_users_query)).scalar() or 1
+
+    rating_percentile = int((rating_users_below / total_rated_users) * 100) if total_rated_users > 0 else 50
+
+    # Platform average for comparison
+    platform_avg_query = (
+        select(func.avg(User.avg_rating))
+        .where(User.avg_rating.isnot(None))
+    )
+    platform_avg = (await db.execute(platform_avg_query)).scalar() or 0
+
+    rating_comparison = "Above platform average" if avg_rating_current > float(platform_avg) else "At platform average"
+
+    # ========== AVERAGE RESPONSE TIME ==========
+    avg_response_current = current_user.avg_response_time_hours or 0
+
+    # For response time, lower is better, so percentile calculation is inverted
+    response_percentile_query = (
+        select(func.count(User.id))
+        .where(
+            and_(
+                User.avg_response_time_hours.isnot(None),
+                User.avg_response_time_hours > avg_response_current,  # Higher (slower) is worse
+            )
+        )
+    )
+    response_users_slower = (await db.execute(response_percentile_query)).scalar() or 0
+
+    total_response_users_query = (
+        select(func.count(User.id))
+        .where(User.avg_response_time_hours.isnot(None))
+    )
+    total_response_users = (await db.execute(total_response_users_query)).scalar() or 1
+
+    response_percentile = int((response_users_slower / total_response_users) * 100) if total_response_users > 0 else 50
+
+    response_comparison = f"Faster than {response_percentile}% of peers" if response_percentile > 0 else "Average response time"
+
+    # Response time trend (estimate based on recent reviews)
+    # This is simplified - we'd need to track historical response times for accurate trends
+    response_trend_pct = 0
+    response_trend_direction = 'neutral'
+
+    return ProfileStatsWithContextResponse(
+        reviews_given=StatWithContext(
+            value=reviews_given_current,
+            trend=TrendInfo(
+                value=abs(reviews_trend_pct),
+                direction=reviews_trend_direction,
+                label="from last month",
+            ) if reviews_trend_pct != 0 else None,
+            percentile=reviews_percentile,
+            comparison=f"Top {100 - reviews_percentile}% of reviewers" if reviews_percentile >= 50 else None,
+            sparkline_data=reviews_sparkline,
+        ),
+        karma_points=StatWithContext(
+            value=karma_current,
+            trend=TrendInfo(
+                value=abs(karma_trend_pct),
+                direction=karma_trend_direction,
+                label="from last month",
+            ) if karma_trend_pct != 0 else None,
+            percentile=karma_percentile,
+            sparkline_data=karma_sparkline,
+        ),
+        avg_rating=StatWithContext(
+            value=avg_rating_current,
+            percentile=rating_percentile,
+            comparison=rating_comparison,
+        ),
+        avg_response_time=StatWithContext(
+            value=avg_response_current,
+            trend=TrendInfo(
+                value=abs(response_trend_pct),
+                direction=response_trend_direction,
+                label="faster than last month",
+            ) if response_trend_pct != 0 else None,
+            percentile=response_percentile,
+            comparison=response_comparison,
+        ),
+    )
+
+
 @router.get("/timeline", response_model=ActivityTimelineResponse)
 async def get_activity_timeline(
     limit: int = Query(20, ge=1, le=50, description="Number of events to return"),
