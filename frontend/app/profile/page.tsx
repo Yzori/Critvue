@@ -40,6 +40,8 @@ import {
 // API imports
 import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/karma";
+import { getActivityHeatmap, getActivityTimeline, DayActivity as ApiDayActivity, TimelineEvent as ApiTimelineEvent } from "@/lib/api/activity";
 import { ApiClientError } from "@/lib/api/client";
 
 // Component imports
@@ -110,44 +112,111 @@ function transformDNAResponse(response: ReviewerDNAResponse): ReviewerDNAData {
   return dnaData;
 }
 
-const mockBadges: BadgeType[] = [
-  { id: '1', name: 'First Review', description: 'Completed your first review', icon: 'trophy', category: 'milestone', status: 'earned', earnedAt: '2024-01-15', rarity: 'common' },
-  { id: '2', name: 'Speed Demon', description: 'Complete 10 reviews in under 24 hours', icon: 'zap', category: 'behavior', status: 'earned', earnedAt: '2024-02-20', rarity: 'uncommon' },
-  { id: '3', name: 'Century Club', description: 'Complete 100 reviews', icon: 'award', category: 'milestone', status: 'in_progress', progress: 67, currentValue: 67, targetValue: 100 },
-  { id: '4', name: 'Deep Thinker', description: 'Average 500+ words per review', icon: 'message', category: 'behavior', status: 'in_progress', progress: 45, currentValue: 225, targetValue: 500 },
-  { id: '5', name: 'Mentor', description: 'Help 10 new reviewers', icon: 'users', category: 'community', status: 'locked', requirement: 'Help 10 newcomers' },
-  { id: '6', name: 'Code Expert', description: 'Earn expertise in code reviews', icon: 'target', category: 'expertise', status: 'earned', earnedAt: '2024-03-10', rarity: 'rare' },
-];
+/**
+ * Transform API badges to component format
+ */
+function transformApiBadges(earnedBadges: ApiBadge[], availableBadges: ApiBadge[]): BadgeType[] {
+  const badgeIconMap: Record<string, keyof typeof badgeIconMapping> = {
+    // Milestone badges
+    first_review: 'trophy',
+    reviews_10: 'award',
+    reviews_50: 'award',
+    reviews_100: 'award',
+    reviews_500: 'trophy',
+    // Streak badges
+    streak_7: 'flame',
+    streak_30: 'flame',
+    streak_100: 'flame',
+    // Quality badges
+    five_star_streak: 'star',
+    helpful_reviewer: 'heart',
+    // Skill badges
+    code_expert: 'target',
+    design_expert: 'target',
+    writing_expert: 'target',
+    // Special badges
+    early_adopter: 'zap',
+    speed_demon: 'zap',
+    deep_thinker: 'message',
+    mentor: 'users',
+  };
 
-const mockActivityData: DayActivity[] = (() => {
-  const data: DayActivity[] = [];
-  const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const hasActivity = Math.random() > 0.4;
-    const reviewsGiven = hasActivity ? Math.floor(Math.random() * 5) : 0;
-    const reviewsReceived = hasActivity ? Math.floor(Math.random() * 3) : 0;
-    const commentsGiven = hasActivity ? Math.floor(Math.random() * 8) : 0;
-    const dateStr = date.toISOString().split('T')[0] ?? '';
-    data.push({
-      date: dateStr,
-      reviewsGiven,
-      reviewsReceived,
-      commentsGiven,
-      total: reviewsGiven + reviewsReceived + commentsGiven,
-    });
-  }
-  return data;
-})();
+  const badgeIconMapping = {
+    trophy: 'trophy' as const,
+    award: 'award' as const,
+    flame: 'flame' as const,
+    star: 'star' as const,
+    heart: 'heart' as const,
+    target: 'target' as const,
+    zap: 'zap' as const,
+    message: 'message' as const,
+    users: 'users' as const,
+    shield: 'shield' as const,
+    clock: 'clock' as const,
+    trending: 'trending' as const,
+  };
 
-const mockTimelineEvents: TimelineEvent[] = [
-  { id: '1', type: 'review_given', title: 'Reviewed "Dashboard Redesign"', description: 'Provided detailed feedback on UI/UX improvements', timestamp: new Date().toISOString(), metadata: { projectName: 'Dashboard Redesign', rating: 5, quote: 'Exceptional attention to detail!' } },
-  { id: '2', type: 'badge_earned', title: 'Earned "Speed Demon" badge', description: 'Completed 10 reviews in under 24 hours', timestamp: new Date(Date.now() - 86400000).toISOString(), metadata: { badgeName: 'Speed Demon' } },
-  { id: '3', type: 'milestone', title: 'Reached 50 reviews!', timestamp: new Date(Date.now() - 172800000).toISOString(), metadata: { milestoneValue: 50 } },
-  { id: '4', type: 'rating', title: 'Received 5-star rating', description: 'For review on E-commerce App', timestamp: new Date(Date.now() - 259200000).toISOString(), metadata: { rating: 5, projectName: 'E-commerce App' } },
-  { id: '5', type: 'review_given', title: 'Reviewed "Portfolio Website"', timestamp: new Date(Date.now() - 345600000).toISOString(), metadata: { projectName: 'Portfolio Website' } },
-];
+  const categoryMap: Record<string, BadgeType['category']> = {
+    skill: 'expertise',
+    milestone: 'milestone',
+    streak: 'streak',
+    quality: 'behavior',
+    special: 'community',
+    seasonal: 'community',
+  };
+
+  // Transform earned badges
+  const earned: BadgeType[] = earnedBadges.map((badge) => ({
+    id: badge.badge_code,
+    name: badge.badge_name,
+    description: badge.badge_description,
+    icon: badgeIconMap[badge.badge_code] || 'award',
+    category: categoryMap[badge.category] || 'milestone',
+    status: 'earned' as const,
+    earnedAt: badge.earned_at || undefined,
+    rarity: badge.rarity,
+  }));
+
+  // Transform available badges (in progress or locked)
+  const available: BadgeType[] = availableBadges.map((badge) => {
+    const hasProgress = badge.progress && badge.progress.percentage > 0;
+    return {
+      id: badge.badge_code,
+      name: badge.badge_name,
+      description: badge.badge_description,
+      icon: badgeIconMap[badge.badge_code] || 'award',
+      category: categoryMap[badge.category] || 'milestone',
+      status: hasProgress ? 'in_progress' as const : 'locked' as const,
+      progress: badge.progress?.percentage,
+      currentValue: badge.progress?.current,
+      targetValue: badge.progress?.required,
+      requirement: badge.progress?.description,
+      rarity: badge.rarity,
+    };
+  });
+
+  return [...earned, ...available];
+}
+
+/**
+ * Transform API timeline events to component format
+ */
+function transformTimelineEvents(apiEvents: ApiTimelineEvent[]): TimelineEvent[] {
+  return apiEvents.map((event) => ({
+    id: event.id,
+    type: event.type as TimelineEvent['type'],
+    title: event.title,
+    description: event.description,
+    timestamp: event.timestamp,
+    metadata: event.metadata ? {
+      projectName: event.metadata.project_name as string | undefined,
+      rating: event.metadata.rating as number | undefined,
+      quote: event.metadata.quote as string | undefined,
+      badgeName: event.metadata.badgeName as string | undefined,
+      milestoneValue: event.metadata.milestoneValue as number | undefined,
+    } : undefined,
+  }));
+}
 
 export default function ProfilePage() {
   const prefersReducedMotion = useReducedMotion();
@@ -159,6 +228,10 @@ export default function ProfilePage() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
   const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
+  const [badges, setBadges] = useState<BadgeType[]>([]);
+  const [activityData, setActivityData] = useState<DayActivity[]>([]);
+  const [activityStats, setActivityStats] = useState<{ currentStreak: number; longestStreak: number; totalContributions: number }>({ currentStreak: 0, longestStreak: 0, totalContributions: 0 });
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     type: "not_found" | "auth_required" | "network" | "server" | "unknown";
@@ -178,10 +251,12 @@ export default function ProfilePage() {
       const profile = await getMyProfile();
       setProfileData(profile);
 
-      // Fetch DNA and portfolio in parallel
-      const [portfolioResponse, dnaResponse] = await Promise.all([
+      // Fetch DNA, portfolio, and badges in parallel
+      const [portfolioResponse, dnaResponse, earnedBadges, availableBadges] = await Promise.all([
         getUserPortfolio(Number(profile.id), { page_size: 20 }),
         getMyDNA().catch(() => null), // DNA is optional - don't fail if unavailable
+        getMyBadges().catch(() => []), // Badges are optional
+        getAvailableBadges().catch(() => []), // Available badges are optional
       ]);
 
       setPortfolioItems(portfolioResponse.items);
@@ -193,6 +268,40 @@ export default function ProfilePage() {
           hasSufficientData: dnaResponse.has_sufficient_data,
           reviewsAnalyzed: dnaResponse.reviews_analyzed,
         });
+      }
+
+      // Transform and set badges
+      const transformedBadges = transformApiBadges(earnedBadges, availableBadges);
+      setBadges(transformedBadges);
+
+      // Fetch activity data (heatmap and timeline) in parallel
+      const [heatmapData, timelineData] = await Promise.all([
+        getActivityHeatmap(365).catch(() => null),
+        getActivityTimeline(10).catch(() => null),
+      ]);
+
+      // Set activity heatmap data
+      if (heatmapData) {
+        // Transform to component format (add commentsGiven field)
+        const transformedActivity: DayActivity[] = heatmapData.data.map((day) => ({
+          date: day.date,
+          reviewsGiven: day.reviewsGiven,
+          reviewsReceived: day.reviewsReceived,
+          commentsGiven: day.karmaEvents, // Use karma events as a proxy for activity
+          total: day.total,
+        }));
+        setActivityData(transformedActivity);
+        setActivityStats({
+          currentStreak: heatmapData.currentStreak,
+          longestStreak: heatmapData.longestStreak,
+          totalContributions: heatmapData.totalContributions,
+        });
+      }
+
+      // Set timeline events
+      if (timelineData) {
+        const transformedEvents = transformTimelineEvents(timelineData.events);
+        setTimelineEvents(transformedEvents);
       }
     } catch (err) {
       console.error("Profile load error:", err);
@@ -514,7 +623,7 @@ export default function ProfilePage() {
                 </Button>
               </Link>
             </div>
-            <BadgeGrid badges={mockBadges} maxDisplay={6} />
+            <BadgeGrid badges={badges.length > 0 ? badges : []} maxDisplay={6} />
           </motion.div>
 
           {/* Bio & Skills Card */}
@@ -583,10 +692,10 @@ export default function ProfilePage() {
               </div>
             </div>
             <ActivityHeatmap
-              data={mockActivityData}
-              currentStreak={12}
-              longestStreak={34}
-              totalContributions={mockActivityData.reduce((sum, d) => sum + d.total, 0)}
+              data={activityData.length > 0 ? activityData : []}
+              currentStreak={activityStats.currentStreak}
+              longestStreak={activityStats.longestStreak}
+              totalContributions={activityStats.totalContributions}
             />
           </motion.div>
 
@@ -598,7 +707,7 @@ export default function ProfilePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <ImpactTimeline events={mockTimelineEvents} maxDisplay={5} />
+            <ImpactTimeline events={timelineEvents.length > 0 ? timelineEvents : []} maxDisplay={5} />
           </motion.div>
 
           {/* Portfolio Preview */}

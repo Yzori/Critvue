@@ -22,7 +22,7 @@ import {
   Filter,
 } from 'lucide-react';
 
-export type TimelineEventType = 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'rating' | 'streak';
+export type TimelineEventType = 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'rating' | 'streak' | 'karma_change';
 
 export interface TimelineEvent {
   id: string;
@@ -88,6 +88,12 @@ const eventConfig: Record<TimelineEventType, {
     color: 'text-orange-600',
     bgColor: 'bg-orange-100',
     label: 'Streak',
+  },
+  karma_change: {
+    icon: TrendingUp,
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100',
+    label: 'Karma',
   },
 };
 
@@ -276,6 +282,14 @@ export function ImpactTimeline({
 /**
  * Individual Timeline Event Card
  */
+// Default config for unknown event types
+const defaultEventConfig = {
+  icon: FileText,
+  color: 'text-gray-600',
+  bgColor: 'bg-gray-100',
+  label: 'Activity',
+};
+
 function TimelineEventCard({
   event,
   index,
@@ -286,7 +300,7 @@ function TimelineEventCard({
   formatTime: (timestamp: string) => string;
 }) {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const config = eventConfig[event.type];
+  const config = eventConfig[event.type] || defaultEventConfig;
   const IconComponent = config.icon;
 
   return (
@@ -398,7 +412,7 @@ export function CompactTimeline({
   return (
     <div className={cn('space-y-2', className)}>
       {displayEvents.map((event, index) => {
-        const config = eventConfig[event.type];
+        const config = eventConfig[event.type] || defaultEventConfig;
         const IconComponent = config.icon;
 
         return (
