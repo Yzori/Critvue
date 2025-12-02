@@ -941,9 +941,15 @@ class ChallengeService:
         stmt = (
             stmt
             .options(
-                selectinload(Challenge.entries),
+                selectinload(Challenge.entries).selectinload(ChallengeEntry.user),
                 selectinload(Challenge.prompt),
-                selectinload(Challenge.invitations)
+                selectinload(Challenge.participant1),
+                selectinload(Challenge.participant2),
+                selectinload(Challenge.winner),
+                selectinload(Challenge.creator),
+                selectinload(Challenge.votes),
+                selectinload(Challenge.invitations).selectinload(ChallengeInvitation.user),
+                selectinload(Challenge.participants)
             )
             .order_by(Challenge.created_at.desc())
             .offset(skip)
@@ -965,8 +971,15 @@ class ChallengeService:
             select(Challenge)
             .where(Challenge.status == ChallengeStatus.VOTING)
             .options(
-                selectinload(Challenge.entries),
-                selectinload(Challenge.prompt)
+                selectinload(Challenge.entries).selectinload(ChallengeEntry.user),
+                selectinload(Challenge.prompt),
+                selectinload(Challenge.participant1),
+                selectinload(Challenge.participant2),
+                selectinload(Challenge.winner),
+                selectinload(Challenge.creator),
+                selectinload(Challenge.votes),
+                selectinload(Challenge.invitations).selectinload(ChallengeInvitation.user),
+                selectinload(Challenge.participants)
             )
             .order_by(Challenge.voting_started_at.desc())
             .limit(limit)
@@ -1096,11 +1109,15 @@ class ChallengeService:
             select(Challenge)
             .where(Challenge.id == challenge_id)
             .options(
-                selectinload(Challenge.entries),
+                selectinload(Challenge.entries).selectinload(ChallengeEntry.user),
                 selectinload(Challenge.votes),
-                selectinload(Challenge.invitations),
+                selectinload(Challenge.invitations).selectinload(ChallengeInvitation.user),
                 selectinload(Challenge.participants),
-                selectinload(Challenge.prompt)
+                selectinload(Challenge.prompt),
+                selectinload(Challenge.participant1),
+                selectinload(Challenge.participant2),
+                selectinload(Challenge.winner),
+                selectinload(Challenge.creator)
             )
         )
         result = await self.db.execute(stmt)

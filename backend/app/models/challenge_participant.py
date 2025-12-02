@@ -46,7 +46,7 @@ class ChallengeParticipant(Base):
     placement = Column(Integer, nullable=True)  # 1st, 2nd, 3rd, etc.
 
     # Karma earned from this challenge
-    karma_earned = Column(Integer, nullable=True)
+    karma_earned = Column(Integer, default=0, nullable=False)
 
     # Ensure one participation record per user per challenge
     __table_args__ = (

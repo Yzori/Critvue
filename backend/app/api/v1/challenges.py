@@ -807,6 +807,42 @@ async def get_active_challenges(
 
 
 @router.get(
+    "/leaderboard",
+    response_model=ChallengeLeaderboardResponse,
+    summary="Get challenge leaderboard"
+)
+async def get_leaderboard(
+    limit: int = Query(50, ge=1, le=100, description="Maximum entries"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+) -> ChallengeLeaderboardResponse:
+    """Get challenge leaderboard ranked by wins."""
+    try:
+        service = ChallengeService(db)
+        leaderboard = await service.get_leaderboard(limit=limit)
+
+        # Find current user's rank
+        current_user_rank = None
+        if current_user:
+            for entry in leaderboard:
+                if entry["user_id"] == current_user.id:
+                    current_user_rank = entry["rank"]
+                    break
+
+        return ChallengeLeaderboardResponse(
+            entries=[ChallengeLeaderboardEntry(**e) for e in leaderboard],
+            total_participants=len(leaderboard),
+            current_user_rank=current_user_rank
+        )
+    except Exception as e:
+        security_logger.logger.error(f"Failed to get leaderboard: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve leaderboard"
+        )
+
+
+@router.get(
     "/{challenge_id}",
     response_model=ChallengeResponse,
     summary="Get a specific challenge"
@@ -1253,40 +1289,4 @@ async def get_user_stats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve statistics"
-        )
-
-
-@router.get(
-    "/leaderboard",
-    response_model=ChallengeLeaderboardResponse,
-    summary="Get challenge leaderboard"
-)
-async def get_leaderboard(
-    limit: int = Query(50, ge=1, le=100, description="Maximum entries"),
-    current_user: Optional[User] = Depends(get_current_user_optional),
-    db: AsyncSession = Depends(get_db)
-) -> ChallengeLeaderboardResponse:
-    """Get challenge leaderboard ranked by wins."""
-    try:
-        service = ChallengeService(db)
-        leaderboard = await service.get_leaderboard(limit=limit)
-
-        # Find current user's rank
-        current_user_rank = None
-        if current_user:
-            for entry in leaderboard:
-                if entry["user_id"] == current_user.id:
-                    current_user_rank = entry["rank"]
-                    break
-
-        return ChallengeLeaderboardResponse(
-            entries=[ChallengeLeaderboardEntry(**e) for e in leaderboard],
-            total_participants=len(leaderboard),
-            current_user_rank=current_user_rank
-        )
-    except Exception as e:
-        security_logger.logger.error(f"Failed to get leaderboard: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve leaderboard"
         )

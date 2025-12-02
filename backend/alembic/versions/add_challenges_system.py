@@ -102,17 +102,17 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('challenge_id', sa.Integer(), sa.ForeignKey('challenges.id', ondelete='CASCADE'), nullable=False),
         sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('title', sa.String(255), nullable=True),
+        sa.Column('title', sa.String(255), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('submission_url', sa.String(500), nullable=True),
-        sa.Column('submission_data', sa.Text(), nullable=True),  # JSON
+        sa.Column('file_urls', sa.JSON(), nullable=True),  # JSON array of file metadata
+        sa.Column('external_links', sa.JSON(), nullable=True),  # JSON array of external links
+        sa.Column('thumbnail_url', sa.String(500), nullable=True),
         sa.Column('vote_count', sa.Integer(), nullable=False, server_default='0'),
-        sa.Column('is_winner', sa.Boolean(), nullable=False, server_default='0'),
-        sa.Column('placement', sa.Integer(), nullable=True),
-        sa.Column('submitted_at', sa.DateTime(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.Column('updated_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.Column('submitted_at', sa.DateTime(), nullable=True),
         # Unique: one entry per user per challenge
-        sa.UniqueConstraint('user_id', 'challenge_id', name='uq_challenge_entries_user_challenge'),
+        sa.UniqueConstraint('challenge_id', 'user_id', name='unique_challenge_entry'),
     )
     op.create_index('ix_challenge_entries_id', 'challenge_entries', ['id'])
     op.create_index('ix_challenge_entries_challenge_id', 'challenge_entries', ['challenge_id'])
@@ -123,35 +123,34 @@ def upgrade() -> None:
         'challenge_votes',
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('challenge_id', sa.Integer(), sa.ForeignKey('challenges.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('entry_id', sa.Integer(), sa.ForeignKey('challenge_entries.id', ondelete='CASCADE'), nullable=True),
         sa.Column('voter_id', sa.Integer(), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-        # For 1v1: which participant was voted for (1 or 2)
-        sa.Column('voted_for_participant', sa.Integer(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.Column('entry_id', sa.Integer(), sa.ForeignKey('challenge_entries.id', ondelete='CASCADE'), nullable=False),
+        sa.Column('voted_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
         # Unique constraint: one vote per user per challenge
-        sa.UniqueConstraint('voter_id', 'challenge_id', name='uq_challenge_votes_voter_challenge'),
+        sa.UniqueConstraint('challenge_id', 'voter_id', name='unique_challenge_voter'),
     )
     op.create_index('ix_challenge_votes_id', 'challenge_votes', ['id'])
     op.create_index('ix_challenge_votes_challenge_id', 'challenge_votes', ['challenge_id'])
-    op.create_index('ix_challenge_votes_entry_id', 'challenge_votes', ['entry_id'])
     op.create_index('ix_challenge_votes_voter_id', 'challenge_votes', ['voter_id'])
+    op.create_index('ix_challenge_votes_entry_id', 'challenge_votes', ['entry_id'])
 
     # ============= CHALLENGE_INVITATIONS TABLE =============
     op.create_table(
         'challenge_invitations',
         sa.Column('id', sa.Integer(), primary_key=True),
         sa.Column('challenge_id', sa.Integer(), sa.ForeignKey('challenges.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('invitee_id', sa.Integer(), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
-        sa.Column('invited_by_id', sa.Integer(), sa.ForeignKey('users.id', ondelete='SET NULL'), nullable=True),
-        sa.Column('status', sa.String(20), nullable=False, server_default='pending'),  # pending, accepted, declined, expired
+        sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+        sa.Column('slot', sa.Integer(), nullable=False),
+        sa.Column('status', sa.String(20), nullable=False, server_default='pending'),  # pending, accepted, declined, expired, replaced
         sa.Column('message', sa.Text(), nullable=True),
-        sa.Column('responded_at', sa.DateTime(), nullable=True),
-        sa.Column('expires_at', sa.DateTime(), nullable=True),
+        sa.Column('expires_at', sa.DateTime(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False, server_default=sa.text('CURRENT_TIMESTAMP')),
+        sa.Column('responded_at', sa.DateTime(), nullable=True),
+        sa.UniqueConstraint('challenge_id', 'user_id', name='unique_challenge_user_invite'),
     )
     op.create_index('ix_challenge_invitations_id', 'challenge_invitations', ['id'])
     op.create_index('ix_challenge_invitations_challenge_id', 'challenge_invitations', ['challenge_id'])
-    op.create_index('ix_challenge_invitations_invitee_id', 'challenge_invitations', ['invitee_id'])
+    op.create_index('ix_challenge_invitations_user_id', 'challenge_invitations', ['user_id'])
     op.create_index('ix_challenge_invitations_status', 'challenge_invitations', ['status'])
 
     # ============= CHALLENGE_PARTICIPANTS TABLE =============
