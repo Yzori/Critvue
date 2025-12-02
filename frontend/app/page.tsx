@@ -36,6 +36,11 @@ import {
   Volume2,
   VolumeX,
   X,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  Zap,
+  BadgeCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -130,7 +135,7 @@ export default function HomePage() {
               <span className="hidden sm:inline"> Not AI telling you what you want to hear.</span>
             </p>
 
-            {/* CTAs */}
+            {/* Split CTAs - Creator vs Reviewer */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
                 size="lg"
@@ -138,22 +143,35 @@ export default function HomePage() {
                 className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] shadow-2xl hover:shadow-3xl transition-all duration-300 group"
               >
                 <span className="flex items-center gap-2">
-                  Get Started Free
+                  Get Feedback
                   <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Button>
               <Button
                 size="lg"
-                onClick={() => setIsVideoModalOpen(true)}
+                onClick={() => router.push("/apply/expert")}
                 variant="outline"
-                className="w-full sm:w-auto bg-transparent border-2 border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] backdrop-blur-sm transition-all duration-300 group"
+                className="w-full sm:w-auto bg-gradient-to-r from-accent-peach/20 to-orange-500/20 border-2 border-accent-peach/50 text-white hover:bg-accent-peach/30 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] backdrop-blur-sm transition-all duration-300 group"
               >
                 <span className="flex items-center gap-2">
-                  <Play className="size-5 fill-current" />
-                  Watch Video
+                  <DollarSign className="size-5" />
+                  Become a Reviewer
                 </span>
               </Button>
             </div>
+
+            {/* Earnings indicator - social proof for reviewers */}
+            <motion.div
+              className="mt-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full text-sm text-green-300">
+                <TrendingUp className="size-4" />
+                <span>Alex earned <strong className="text-white">$120</strong> today reviewing 3 designs</span>
+              </div>
+            </motion.div>
 
             {/* Quick Stats */}
             <motion.div
@@ -279,7 +297,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Reviewer Path */}
+            {/* Reviewer Path - Stronger Visual */}
             <motion.div
               className="relative group"
               initial={{ opacity: 0, x: 20 }}
@@ -287,41 +305,79 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className="relative p-8 md:p-10 rounded-3xl bg-gradient-to-br from-orange-50 to-white border-2 border-orange-100 hover:border-accent-peach/50 transition-all duration-300 hover:shadow-2xl h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="size-14 rounded-2xl bg-accent-peach flex items-center justify-center">
-                    <Award className="size-7 text-white" />
+              {/* Earn Income Badge */}
+              <div className="absolute -top-3 right-6 z-10">
+                <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg animate-pulse">
+                  <DollarSign className="size-3 mr-1" />
+                  Earn Income
+                </Badge>
+              </div>
+
+              <div className="relative p-8 md:p-10 rounded-3xl bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 border-2 border-accent-peach/40 hover:border-accent-peach transition-all duration-300 hover:shadow-2xl shadow-lg h-full">
+                {/* Decorative gradient glow */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-peach/20 to-amber-400/20 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="size-14 rounded-2xl bg-gradient-to-br from-accent-peach to-orange-600 flex items-center justify-center shadow-lg">
+                      <Award className="size-7 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-accent-peach uppercase tracking-wide">For Experts</span>
+                      <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                        <TrendingUp className="size-3" />
+                        High demand
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sm font-bold text-accent-peach uppercase tracking-wide">For Experts</span>
+
+                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                    Get paid for your expertise
+                  </h3>
+                  <p className="text-gray-600 mb-6 text-lg">
+                    Turn your knowledge into income. Set your own rates, work on your schedule.
+                  </p>
+
+                  {/* Earnings highlight */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <DollarSign className="size-5 text-green-600" />
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Average monthly earnings</div>
+                        <div className="text-xl font-bold text-gray-900">$2,400+</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      { text: "Earn $50-150 per review", icon: DollarSign },
+                      { text: "Flexible schedule", icon: Clock },
+                      { text: "Build your reputation", icon: TrendingUp },
+                    ].map((benefit, i) => (
+                      <li key={i} className="flex items-center gap-3 text-gray-700">
+                        <div className="size-6 rounded-full bg-green-100 flex items-center justify-center">
+                          <benefit.icon className="size-3.5 text-green-600" />
+                        </div>
+                        {benefit.text}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    size="lg"
+                    onClick={() => router.push("/apply/expert")}
+                    className="w-full bg-gradient-to-r from-accent-peach to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold py-6 rounded-xl group/btn shadow-lg"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      Start Earning Today
+                      <ArrowRight className="size-5 group-hover/btn:translate-x-1 transition-transform" />
+                    </span>
+                  </Button>
+                  <p className="text-sm text-gray-500 text-center mt-4">Join 200+ experts earning on Critvue</p>
                 </div>
-
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                  Get paid for your expertise
-                </h3>
-                <p className="text-gray-600 mb-8 text-lg">
-                  Turn your knowledge into income. Set your own rates, work on your schedule.
-                </p>
-
-                <ul className="space-y-3 mb-8">
-                  {["Earn $50-150 per review", "Flexible schedule", "Build your reputation"].map((benefit, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-700">
-                      <CheckCircle className="size-5 text-green-500 shrink-0" />
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
-
-                <Button
-                  size="lg"
-                  onClick={() => router.push("/apply/expert")}
-                  className="w-full bg-accent-peach hover:bg-orange-500 text-white font-semibold py-6 rounded-xl group/btn"
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    Apply as Reviewer
-                    <ArrowRight className="size-5 group-hover/btn:translate-x-1 transition-transform" />
-                  </span>
-                </Button>
-                <p className="text-sm text-gray-500 text-center mt-4">Join 200+ experts</p>
               </div>
             </motion.div>
           </div>
@@ -330,30 +386,35 @@ export default function HomePage() {
 
       {/* ============================================
           CONTENT TYPES SECTION
-          What you can get reviewed
+          What you can get reviewed - Visually stronger
           ============================================ */}
-      <section className="py-16 md:py-24 bg-slate-50">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-6xl mx-auto px-6">
           <motion.div
             className="text-center mb-12"
             {...getMobileAnimation()}
           >
             <Badge variant="info" size="lg" className="mb-4">
-              What We Review
+              <Sparkles className="size-3 mr-1" />
+              All Creative Fields
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Feedback for any creative work
+              Experts across every creative field
             </h2>
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              Whatever you create, we have vetted experts ready to help you improve
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-5">
             {[
-              { icon: Camera, label: "Photography", color: "blue" },
-              { icon: Palette, label: "Design", color: "purple" },
-              { icon: Video, label: "Video", color: "red" },
-              { icon: PenTool, label: "Writing", color: "green" },
-              { icon: Mic, label: "Audio", color: "orange" },
-              { icon: ImageIcon, label: "Art", color: "pink" },
+              { icon: Camera, label: "Photography", color: "blue", gradient: "from-blue-50 to-cyan-50", borderColor: "border-blue-200" },
+              { icon: Palette, label: "Design", color: "purple", gradient: "from-purple-50 to-violet-50", borderColor: "border-purple-200" },
+              { icon: Video, label: "Video", color: "red", gradient: "from-red-50 to-rose-50", borderColor: "border-red-200" },
+              { icon: PenTool, label: "Writing", color: "green", gradient: "from-green-50 to-emerald-50", borderColor: "border-green-200" },
+              { icon: Mic, label: "Audio", color: "orange", gradient: "from-orange-50 to-amber-50", borderColor: "border-orange-200" },
+              { icon: ImageIcon, label: "Art", color: "pink", gradient: "from-pink-50 to-rose-50", borderColor: "border-pink-200" },
+              { icon: Play, label: "Streaming", color: "violet", gradient: "from-violet-50 to-purple-50", borderColor: "border-violet-200" },
             ].map((type, index) => (
               <motion.div
                 key={type.label}
@@ -362,30 +423,37 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05, y: -4 }}
+                whileHover={{ scale: 1.05, y: -6 }}
               >
-                <div className="p-6 rounded-2xl bg-white border border-gray-200 hover:border-accent-blue/30 hover:shadow-lg transition-all duration-300 text-center">
+                <div className={cn(
+                  "p-4 sm:p-6 lg:p-5 rounded-2xl bg-gradient-to-br border-2 hover:shadow-xl transition-all duration-300 text-center h-full",
+                  type.gradient,
+                  type.borderColor,
+                  "hover:border-accent-blue/40"
+                )}>
                   <div
                     className={cn(
-                      "size-12 mx-auto mb-3 rounded-xl flex items-center justify-center",
+                      "size-12 sm:size-14 lg:size-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-sm",
                       type.color === "blue" && "bg-blue-100 text-blue-600",
                       type.color === "purple" && "bg-purple-100 text-purple-600",
                       type.color === "red" && "bg-red-100 text-red-600",
                       type.color === "green" && "bg-green-100 text-green-600",
                       type.color === "orange" && "bg-orange-100 text-orange-600",
-                      type.color === "pink" && "bg-pink-100 text-pink-600"
+                      type.color === "pink" && "bg-pink-100 text-pink-600",
+                      type.color === "violet" && "bg-violet-100 text-violet-600"
                     )}
                   >
-                    <type.icon className="size-6" />
+                    <type.icon className="size-6 sm:size-7 lg:size-6" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">{type.label}</h3>
+                  <h3 className="font-bold text-gray-900 text-sm lg:text-base leading-tight">{type.label}</h3>
+                  <p className="text-xs text-gray-500 mt-1 hidden sm:block">Expert reviewers</p>
                 </div>
               </motion.div>
             ))}
           </div>
 
           <motion.div
-            className="text-center mt-10"
+            className="text-center mt-12"
             {...getMobileAnimation(0.3)}
           >
             <Button
@@ -403,7 +471,7 @@ export default function HomePage() {
 
       {/* ============================================
           PRICING SECTION
-          Simple, clear pricing
+          Clear pricing with emotional punch
           ============================================ */}
       <section className="py-16 md:py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
@@ -415,8 +483,11 @@ export default function HomePage() {
               Simple Pricing
             </Badge>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Start free, upgrade when ready
+              Invest in your craft
             </h2>
+            <p className="text-gray-600 text-lg">
+              Start free, upgrade when you're ready for more
+            </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -430,9 +501,14 @@ export default function HomePage() {
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
                 <div className="text-4xl font-black text-gray-900">$0</div>
+                <p className="text-sm text-gray-500 mt-1">Forever free</p>
               </div>
               <ul className="space-y-3 mb-8">
-                {["3 community reviews/month", "All content types", "Quick turnaround"].map((f, i) => (
+                {[
+                  "3 community reviews/month",
+                  "All content types supported",
+                  "48-hour turnaround"
+                ].map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-gray-600 text-sm">
                     <CheckCircle className="size-4 text-green-500" />
                     {f}
@@ -448,67 +524,95 @@ export default function HomePage() {
               </Button>
             </motion.div>
 
-            {/* Pro */}
+            {/* Pro - with clearer benefits */}
             <motion.div
-              className="p-8 rounded-3xl bg-gradient-to-br from-accent-blue/5 to-blue-50 border-2 border-accent-blue/30 md:scale-105 shadow-xl relative"
+              className="p-8 rounded-3xl bg-gradient-to-br from-accent-blue/10 to-blue-50 border-2 border-accent-blue/40 md:scale-105 shadow-xl relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
               <div className="absolute -top-3 right-6">
-                <Badge className="bg-accent-blue text-white">Most Popular</Badge>
+                <Badge className="bg-accent-blue text-white shadow-lg">Most Popular</Badge>
               </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
                 <div className="text-4xl font-black text-gray-900">
                   $9<span className="text-lg font-normal text-gray-500">/mo</span>
                 </div>
+                <p className="text-sm text-green-600 font-medium mt-1">Save $50+/month</p>
               </div>
               <ul className="space-y-3 mb-8">
-                {["Unlimited community reviews", "15% off expert reviews", "Priority queue"].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-gray-600 text-sm">
-                    <CheckCircle className="size-4 text-accent-blue" />
-                    {f}
+                {[
+                  { text: "Unlimited community reviews", icon: Sparkles },
+                  { text: "24-hour faster turnaround", icon: Zap },
+                  { text: "Priority queue placement", icon: TrendingUp },
+                  { text: "15% off all expert reviews", icon: BadgeCheck },
+                ].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-gray-700 text-sm">
+                    <div className="size-5 rounded-full bg-accent-blue/10 flex items-center justify-center">
+                      <f.icon className="size-3 text-accent-blue" />
+                    </div>
+                    {f.text}
                   </li>
                 ))}
               </ul>
               <Button
                 onClick={() => router.push("/pricing")}
-                className="w-full py-5 rounded-xl bg-accent-blue hover:bg-blue-600"
+                className="w-full py-5 rounded-xl bg-accent-blue hover:bg-blue-600 shadow-lg"
               >
                 Upgrade to Pro
               </Button>
             </motion.div>
 
-            {/* Expert */}
+            {/* Expert Reviews - connected to creator flow */}
             <motion.div
-              className="p-8 rounded-3xl bg-gradient-to-br from-accent-peach/5 to-orange-50 border-2 border-accent-peach/30"
+              className="p-8 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-accent-peach/40 relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
+              <div className="absolute -top-3 right-6">
+                <Badge variant="outline" className="bg-white border-accent-peach/40 text-accent-peach">
+                  <Award className="size-3 mr-1" />
+                  Premium
+                </Badge>
+              </div>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Expert Reviews</h3>
                 <div className="text-4xl font-black text-gray-900">
                   $50<span className="text-lg font-normal text-gray-500">-150</span>
                 </div>
+                <p className="text-sm text-gray-500 mt-1">Per review, pay as you go</p>
               </div>
+
+              {/* Why upgrade callout */}
+              <div className="bg-white/80 rounded-lg p-3 mb-4 border border-accent-peach/20">
+                <p className="text-xs text-gray-600">
+                  <strong className="text-accent-peach">Pro members save 15%</strong> on every expert review
+                </p>
+              </div>
+
               <ul className="space-y-3 mb-8">
-                {["Human expert reviewers", "Personalized critique", "24h turnaround"].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-gray-600 text-sm">
-                    <CheckCircle className="size-4 text-accent-peach" />
-                    {f}
+                {[
+                  { text: "Hand-picked industry experts", icon: Award },
+                  { text: "Deep, actionable feedback", icon: MessageSquare },
+                  { text: "Guaranteed 24h turnaround", icon: Clock },
+                ].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2 text-gray-700 text-sm">
+                    <div className="size-5 rounded-full bg-accent-peach/10 flex items-center justify-center">
+                      <f.icon className="size-3 text-accent-peach" />
+                    </div>
+                    {f.text}
                   </li>
                 ))}
               </ul>
               <Button
                 onClick={() => router.push("/browse")}
-                variant="outline"
-                className="w-full py-5 rounded-xl border-accent-peach text-accent-peach hover:bg-accent-peach/10"
+                className="w-full py-5 rounded-xl bg-gradient-to-r from-accent-peach to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
               >
-                Browse Experts
+                Find Your Expert
               </Button>
             </motion.div>
           </div>
