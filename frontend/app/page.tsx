@@ -76,9 +76,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* ============================================
           VIDEO HERO SECTION
-          Full viewport, cinematic experience
+          Compact on mobile, cinematic on desktop
           ============================================ */}
-      <section className="relative h-screen min-h-[600px] max-h-[900px] overflow-hidden">
+      <section className="relative h-[75vh] min-h-[500px] max-h-[800px] md:h-screen md:min-h-[600px] md:max-h-[900px] overflow-hidden">
         {/* Background Video */}
         <div className="absolute inset-0">
           <video
@@ -97,31 +97,31 @@ export default function HomePage() {
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 h-full flex flex-col justify-center items-center px-6 text-center">
+        <div className="relative z-10 h-full flex flex-col justify-center items-center px-4 sm:px-6 text-center">
           <motion.div
             className="max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mb-6"
+              transition={{ delay: 0.3 }}
+              className="mb-3 sm:mb-6"
             >
               <Badge
                 variant="outline"
-                className="bg-white/10 backdrop-blur-sm border-white/20 text-white px-4 py-2 text-sm"
+                className="bg-white/10 backdrop-blur-sm border-white/20 text-white px-3 py-1.5 text-xs sm:text-sm"
               >
-                <Sparkles className="size-4 mr-2" />
+                <Sparkles className="size-3 sm:size-4 mr-1.5" />
                 Human feedback for the AI age
               </Badge>
             </motion.div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
+            {/* Headline - tighter line height on mobile */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-6 tracking-tight leading-[1.05] sm:leading-[1.1]">
               Your work deserves
               <br />
               <span className="bg-gradient-to-r from-accent-blue via-cyan-400 to-accent-peach bg-clip-text text-transparent">
@@ -129,128 +129,143 @@ export default function HomePage() {
               </span>
             </h1>
 
-            {/* Subheadline */}
-            <p className="text-lg sm:text-xl md:text-2xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+            {/* Subheadline - 2 lines max on mobile */}
+            <p className="text-base sm:text-xl md:text-2xl text-white/80 mb-5 sm:mb-10 max-w-2xl mx-auto leading-snug sm:leading-relaxed">
               Expert critiques from humans who understand your craft.
               <span className="hidden sm:inline"> Not AI telling you what you want to hear.</span>
             </p>
 
-            {/* Split CTAs - Creator vs Reviewer */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* Split CTAs - Smaller on mobile with tap feedback */}
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 justify-center items-center">
               <Button
                 size="lg"
                 onClick={() => router.push("/register")}
-                className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] shadow-2xl hover:shadow-3xl transition-all duration-300 group"
+                className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 active:scale-[0.98] active:shadow-lg font-semibold px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg rounded-xl sm:rounded-2xl min-h-[48px] sm:min-h-[56px] shadow-2xl transition-all duration-150 group"
               >
                 <span className="flex items-center gap-2">
                   Get Feedback
-                  <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="size-4 sm:size-5 group-hover:translate-x-1 group-active:translate-x-0.5 transition-transform" />
                 </span>
               </Button>
               <Button
                 size="lg"
                 onClick={() => router.push("/apply/expert")}
                 variant="outline"
-                className="w-full sm:w-auto bg-gradient-to-r from-accent-peach/20 to-orange-500/20 border-2 border-accent-peach/50 text-white hover:bg-accent-peach/30 font-semibold px-8 py-6 text-lg rounded-2xl min-h-[56px] backdrop-blur-sm transition-all duration-300 group"
+                className="w-full sm:w-auto bg-gradient-to-r from-accent-peach/20 to-orange-500/20 border-2 border-accent-peach/50 text-white hover:bg-accent-peach/30 active:scale-[0.98] active:bg-accent-peach/40 font-semibold px-6 py-4 sm:px-8 sm:py-6 text-base sm:text-lg rounded-xl sm:rounded-2xl min-h-[48px] sm:min-h-[56px] backdrop-blur-sm transition-all duration-150 group"
               >
                 <span className="flex items-center gap-2">
-                  <DollarSign className="size-5" />
+                  <DollarSign className="size-4 sm:size-5 group-hover:scale-110 transition-transform" />
                   Become a Reviewer
                 </span>
               </Button>
             </div>
 
-            {/* Earnings indicator - social proof for reviewers */}
+            {/* Watch Video Link - more prominent on desktop */}
+            <motion.button
+              onClick={() => setIsVideoModalOpen(true)}
+              className="mt-4 sm:mt-6 md:mt-8 inline-flex items-center gap-2 sm:gap-2.5 text-white hover:text-white text-sm sm:text-base md:text-lg font-medium transition-all duration-200 active:scale-[0.98] group md:px-5 md:py-2.5 md:rounded-full md:bg-white/10 md:backdrop-blur-sm md:border md:border-white/20 md:hover:bg-white/20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="size-7 sm:size-8 md:size-10 rounded-full bg-white/20 md:bg-white/30 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/40 group-hover:scale-105 transition-all border border-white/30">
+                <Play className="size-3.5 sm:size-4 md:size-5 fill-current ml-0.5" />
+              </div>
+              <span>Watch how it works</span>
+              <span className="hidden md:inline text-white/60 text-sm">(2 min)</span>
+            </motion.button>
+
+            {/* Earnings indicator - smaller on mobile */}
             <motion.div
-              className="mt-6"
+              className="mt-4 sm:mt-6"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.5 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full text-sm text-green-300">
-                <TrendingUp className="size-4" />
-                <span>Alex earned <strong className="text-white">$120</strong> today reviewing 3 designs</span>
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500/20 backdrop-blur-sm border border-green-400/30 rounded-full text-xs sm:text-sm text-green-300">
+                <TrendingUp className="size-3 sm:size-4" />
+                <span>Alex earned <strong className="text-white">$120</strong> today</span>
               </div>
             </motion.div>
 
-            {/* Quick Stats */}
+            {/* Quick Stats - tighter on mobile */}
             <motion.div
-              className="mt-12 flex flex-wrap justify-center gap-8 text-white/70"
+              className="mt-6 sm:mt-12 flex flex-wrap justify-center gap-4 sm:gap-8 text-white/70"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
+              transition={{ delay: 0.6 }}
             >
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className="flex -space-x-1.5 sm:-space-x-2">
                   {["JM", "SK", "AL"].map((initials, i) => (
                     <div
                       key={i}
-                      className="size-8 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold"
+                      className="size-6 sm:size-8 rounded-full bg-gradient-to-br from-accent-blue to-accent-peach border-2 border-white/20 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold"
                     >
                       {initials}
                     </div>
                   ))}
                 </div>
-                <span className="text-sm">
+                <span className="text-xs sm:text-sm">
                   <strong className="text-white">2,500+</strong> creators
                 </span>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <div className="flex">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="size-4 fill-amber-400 text-amber-400" />
+                    <Star key={i} className="size-3 sm:size-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <span className="text-sm">
-                  <strong className="text-white">4.9/5</strong> rating
+                <span className="text-xs sm:text-sm">
+                  <strong className="text-white">4.9/5</strong>
                 </span>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Scroll Indicator */}
+          {/* Scroll Indicator - hidden on very small screens */}
           <motion.div
-            className="absolute bottom-8 left-1/2 -translate-x-1/2"
+            className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 hidden sm:block"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 8, 0] }}
+            animate={{ opacity: 1, y: [0, 6, 0] }}
             transition={{
-              opacity: { delay: 1.2 },
+              opacity: { delay: 1 },
               y: { repeat: Infinity, duration: 1.5, ease: "easeInOut" },
             }}
           >
-            <ChevronDown className="size-8 text-white/50" />
+            <ChevronDown className="size-6 sm:size-8 text-white/50" />
           </motion.div>
 
-          {/* Mute Toggle */}
+          {/* Mute Toggle - smaller on mobile */}
           <button
             onClick={() => setIsMuted(!isMuted)}
-            className="absolute bottom-8 right-8 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all"
+            className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 p-2 sm:p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all"
             aria-label={isMuted ? "Unmute video" : "Mute video"}
           >
-            {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+            {isMuted ? <VolumeX className="size-4 sm:size-5" /> : <Volume2 className="size-4 sm:size-5" />}
           </button>
         </div>
       </section>
 
       {/* ============================================
           TWO PATHS SECTION
-          Creator vs Reviewer paths
+          Creator vs Reviewer paths - Tighter on mobile
           ============================================ */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-10 sm:py-16 md:py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-10"
             {...getMobileAnimation()}
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
               Choose your path
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg">
               Whether you need feedback or want to give it
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             {/* Creator Path */}
             <motion.div
               className="relative group"
@@ -259,25 +274,25 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <div className="relative p-8 md:p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-white border-2 border-blue-100 hover:border-accent-blue/50 transition-all duration-300 hover:shadow-2xl h-full">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="size-14 rounded-2xl bg-accent-blue flex items-center justify-center">
-                    <Palette className="size-7 text-white" />
+              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 to-white border-2 border-blue-100 hover:border-accent-blue/50 transition-all duration-300 hover:shadow-2xl h-full">
+                <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="size-11 sm:size-14 rounded-xl sm:rounded-2xl bg-accent-blue flex items-center justify-center">
+                    <Palette className="size-5 sm:size-7 text-white" />
                   </div>
-                  <span className="text-sm font-bold text-accent-blue uppercase tracking-wide">For Creators</span>
+                  <span className="text-xs sm:text-sm font-bold text-accent-blue uppercase tracking-wide">For Creators</span>
                 </div>
 
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
                   Get feedback that actually helps
                 </h3>
-                <p className="text-gray-600 mb-8 text-lg">
+                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base md:text-lg">
                   Expert reviewers who understand your craft. Actionable insights within 24 hours.
                 </p>
 
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 sm:space-y-3 mb-5 sm:mb-8">
                   {["Detailed, specific feedback", "24-hour turnaround", "100% confidential"].map((benefit, i) => (
-                    <li key={i} className="flex items-center gap-3 text-gray-700">
-                      <CheckCircle className="size-5 text-green-500 shrink-0" />
+                    <li key={i} className="flex items-center gap-2 sm:gap-3 text-gray-700 text-sm sm:text-base">
+                      <CheckCircle className="size-4 sm:size-5 text-green-500 shrink-0" />
                       {benefit}
                     </li>
                   ))}
@@ -286,18 +301,18 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   onClick={() => router.push("/register")}
-                  className="w-full bg-accent-blue hover:bg-blue-600 text-white font-semibold py-6 rounded-xl group/btn"
+                  className="w-full bg-accent-blue hover:bg-blue-600 active:scale-[0.98] active:bg-blue-700 text-white font-semibold py-4 sm:py-5 text-sm sm:text-base rounded-lg sm:rounded-xl transition-all duration-150 group/btn"
                 >
                   <span className="flex items-center justify-center gap-2">
                     Get Your First Review
-                    <ArrowRight className="size-5 group-hover/btn:translate-x-1 transition-transform" />
+                    <ArrowRight className="size-4 sm:size-5 group-hover/btn:translate-x-1 group-active/btn:translate-x-0.5 transition-transform" />
                   </span>
                 </Button>
-                <p className="text-sm text-gray-500 text-center mt-4">Free to start</p>
+                <p className="text-xs sm:text-sm text-gray-500 text-center mt-2 sm:mt-4">Free to start</p>
               </div>
             </motion.div>
 
-            {/* Reviewer Path - Stronger Visual */}
+            {/* Reviewer Path - Stronger Visual, Tighter Mobile */}
             <motion.div
               className="relative group"
               initial={{ opacity: 0, x: 20 }}
@@ -305,61 +320,60 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              {/* Earn Income Badge */}
-              <div className="absolute -top-3 right-6 z-10">
-                <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg animate-pulse">
-                  <DollarSign className="size-3 mr-1" />
-                  Earn Income
-                </Badge>
-              </div>
-
-              <div className="relative p-8 md:p-10 rounded-3xl bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 border-2 border-accent-peach/40 hover:border-accent-peach transition-all duration-300 hover:shadow-2xl shadow-lg h-full">
+              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 border-2 border-accent-peach/40 hover:border-accent-peach transition-all duration-300 hover:shadow-2xl shadow-lg h-full">
                 {/* Decorative gradient glow */}
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-peach/20 to-amber-400/20 rounded-3xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-peach/20 to-amber-400/20 rounded-2xl sm:rounded-3xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="relative">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="size-14 rounded-2xl bg-gradient-to-br from-accent-peach to-orange-600 flex items-center justify-center shadow-lg">
-                      <Award className="size-7 text-white" />
+                  <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-5">
+                    <div className="size-11 sm:size-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-accent-peach to-orange-600 flex items-center justify-center shadow-lg">
+                      <Award className="size-5 sm:size-7 text-white" />
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-accent-peach uppercase tracking-wide">For Experts</span>
-                      <div className="flex items-center gap-1 text-xs text-green-600 font-medium">
-                        <TrendingUp className="size-3" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-accent-peach uppercase tracking-wide">For Experts</span>
+                        {/* Earn Income Badge - inline on mobile */}
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2 sm:py-1">
+                          <DollarSign className="size-2.5 sm:size-3 mr-0.5" />
+                          Earn
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] sm:text-xs text-green-600 font-medium">
+                        <TrendingUp className="size-2.5 sm:size-3" />
                         High demand
                       </div>
                     </div>
                   </div>
 
-                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">
                     Get paid for your expertise
                   </h3>
-                  <p className="text-gray-600 mb-6 text-lg">
+                  <p className="text-gray-600 mb-3 sm:mb-5 text-sm sm:text-base md:text-lg">
                     Turn your knowledge into income. Set your own rates, work on your schedule.
                   </p>
 
-                  {/* Earnings highlight */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <DollarSign className="size-5 text-green-600" />
+                  {/* Earnings highlight - compact on mobile */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-5">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                      <div className="size-8 sm:size-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <DollarSign className="size-4 sm:size-5 text-green-600" />
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">Average monthly earnings</div>
-                        <div className="text-xl font-bold text-gray-900">$2,400+</div>
+                        <div className="text-xs sm:text-sm text-gray-600">Avg monthly earnings</div>
+                        <div className="text-lg sm:text-xl font-bold text-gray-900">$2,400+</div>
                       </div>
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-2 sm:space-y-3 mb-5 sm:mb-6">
                     {[
                       { text: "Earn $50-150 per review", icon: DollarSign },
                       { text: "Flexible schedule", icon: Clock },
                       { text: "Build your reputation", icon: TrendingUp },
                     ].map((benefit, i) => (
-                      <li key={i} className="flex items-center gap-3 text-gray-700">
-                        <div className="size-6 rounded-full bg-green-100 flex items-center justify-center">
-                          <benefit.icon className="size-3.5 text-green-600" />
+                      <li key={i} className="flex items-center gap-2 sm:gap-3 text-gray-700 text-sm sm:text-base">
+                        <div className="size-5 sm:size-6 rounded-full bg-green-100 flex items-center justify-center">
+                          <benefit.icon className="size-3 sm:size-3.5 text-green-600" />
                         </div>
                         {benefit.text}
                       </li>
@@ -369,14 +383,14 @@ export default function HomePage() {
                   <Button
                     size="lg"
                     onClick={() => router.push("/apply/expert")}
-                    className="w-full bg-gradient-to-r from-accent-peach to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white font-semibold py-6 rounded-xl group/btn shadow-lg"
+                    className="w-full bg-gradient-to-r from-accent-peach to-orange-600 hover:from-orange-500 hover:to-orange-700 active:scale-[0.98] text-white font-semibold py-4 sm:py-5 text-sm sm:text-base rounded-lg sm:rounded-xl transition-all duration-150 group/btn shadow-lg active:shadow-md"
                   >
                     <span className="flex items-center justify-center gap-2">
                       Start Earning Today
-                      <ArrowRight className="size-5 group-hover/btn:translate-x-1 transition-transform" />
+                      <ArrowRight className="size-4 sm:size-5 group-hover/btn:translate-x-1 group-active/btn:translate-x-0.5 transition-transform" />
                     </span>
                   </Button>
-                  <p className="text-sm text-gray-500 text-center mt-4">Join 200+ experts earning on Critvue</p>
+                  <p className="text-xs sm:text-sm text-gray-500 text-center mt-2 sm:mt-3">Join 200+ experts</p>
                 </div>
               </div>
             </motion.div>
@@ -386,54 +400,55 @@ export default function HomePage() {
 
       {/* ============================================
           CONTENT TYPES SECTION
-          What you can get reviewed - Visually stronger
+          Compact cards on mobile
           ============================================ */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-6xl mx-auto px-6">
+      <section className="py-10 sm:py-14 md:py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-10"
             {...getMobileAnimation()}
           >
-            <Badge variant="info" size="lg" className="mb-4">
-              <Sparkles className="size-3 mr-1" />
+            <Badge variant="info" size="lg" className="mb-2 sm:mb-4 text-xs sm:text-sm">
+              <Sparkles className="size-2.5 sm:size-3 mr-1" />
               All Creative Fields
             </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
               Experts across every creative field
             </h2>
-            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-              Whatever you create, we have vetted experts ready to help you improve
+            <p className="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
+              Whatever you create, we have vetted experts ready to help
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-5">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 sm:gap-4">
             {[
-              { icon: Camera, label: "Photography", color: "blue", gradient: "from-blue-50 to-cyan-50", borderColor: "border-blue-200" },
+              { icon: Camera, label: "Photo", color: "blue", gradient: "from-blue-50 to-cyan-50", borderColor: "border-blue-200" },
               { icon: Palette, label: "Design", color: "purple", gradient: "from-purple-50 to-violet-50", borderColor: "border-purple-200" },
               { icon: Video, label: "Video", color: "red", gradient: "from-red-50 to-rose-50", borderColor: "border-red-200" },
               { icon: PenTool, label: "Writing", color: "green", gradient: "from-green-50 to-emerald-50", borderColor: "border-green-200" },
               { icon: Mic, label: "Audio", color: "orange", gradient: "from-orange-50 to-amber-50", borderColor: "border-orange-200" },
               { icon: ImageIcon, label: "Art", color: "pink", gradient: "from-pink-50 to-rose-50", borderColor: "border-pink-200" },
-              { icon: Play, label: "Streaming", color: "violet", gradient: "from-violet-50 to-purple-50", borderColor: "border-violet-200" },
+              { icon: Play, label: "Stream", color: "violet", gradient: "from-violet-50 to-purple-50", borderColor: "border-violet-200" },
             ].map((type, index) => (
               <motion.div
                 key={type.label}
-                className="group"
+                className="group cursor-pointer"
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05, y: -6 }}
+                transition={{ delay: index * 0.03 }}
+                whileHover={{ scale: 1.03, y: -3 }}
+                whileTap={{ scale: 0.97 }}
               >
                 <div className={cn(
-                  "p-4 sm:p-6 lg:p-5 rounded-2xl bg-gradient-to-br border-2 hover:shadow-xl transition-all duration-300 text-center h-full",
+                  "p-2.5 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br border hover:shadow-lg active:shadow-md transition-all duration-150 text-center h-full",
                   type.gradient,
                   type.borderColor,
                   "hover:border-accent-blue/40"
                 )}>
                   <div
                     className={cn(
-                      "size-12 sm:size-14 lg:size-12 mx-auto mb-3 rounded-xl flex items-center justify-center shadow-sm",
+                      "size-9 sm:size-12 lg:size-12 mx-auto mb-1.5 sm:mb-3 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-active:scale-95",
                       type.color === "blue" && "bg-blue-100 text-blue-600",
                       type.color === "purple" && "bg-purple-100 text-purple-600",
                       type.color === "red" && "bg-red-100 text-red-600",
@@ -443,27 +458,26 @@ export default function HomePage() {
                       type.color === "violet" && "bg-violet-100 text-violet-600"
                     )}
                   >
-                    <type.icon className="size-6 sm:size-7 lg:size-6" />
+                    <type.icon className="size-4 sm:size-6" />
                   </div>
-                  <h3 className="font-bold text-gray-900 text-sm lg:text-base leading-tight">{type.label}</h3>
-                  <p className="text-xs text-gray-500 mt-1 hidden sm:block">Expert reviewers</p>
+                  <h3 className="font-semibold text-gray-900 text-xs sm:text-sm leading-tight">{type.label}</h3>
                 </div>
               </motion.div>
             ))}
           </div>
 
           <motion.div
-            className="text-center mt-12"
+            className="text-center mt-6 sm:mt-10"
             {...getMobileAnimation(0.3)}
           >
             <Button
               variant="outline"
               size="lg"
               onClick={() => router.push("/how-it-works")}
-              className="font-semibold"
+              className="font-semibold text-sm sm:text-base py-2.5 sm:py-3"
             >
               See How It Works
-              <ArrowRight className="size-4 ml-2" />
+              <ArrowRight className="size-3.5 sm:size-4 ml-2" />
             </Button>
           </motion.div>
         </div>
@@ -471,46 +485,45 @@ export default function HomePage() {
 
       {/* ============================================
           PRICING SECTION
-          Clear pricing with emotional punch
+          Tighter on mobile, better contrast
           ============================================ */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="py-10 sm:py-14 md:py-20 bg-gray-100">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-10"
             {...getMobileAnimation()}
           >
-            <Badge variant="success" size="lg" className="mb-4">
+            <Badge variant="success" size="lg" className="mb-2 sm:mb-3 text-xs sm:text-sm">
               Simple Pricing
             </Badge>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
               Invest in your craft
             </h2>
-            <p className="text-gray-600 text-lg">
-              Start free, upgrade when you're ready for more
+            <p className="text-gray-600 text-sm sm:text-base">
+              Start free, upgrade when ready
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-3 sm:gap-5">
             {/* Free */}
             <motion.div
-              className="p-8 rounded-3xl bg-gray-50 border-2 border-gray-200"
+              className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 shadow-sm"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Free</h3>
-                <div className="text-4xl font-black text-gray-900">$0</div>
-                <p className="text-sm text-gray-500 mt-1">Forever free</p>
+              <div className="mb-4 sm:mb-5">
+                <h3 className="text-sm sm:text-base font-bold text-gray-500 uppercase tracking-wide mb-1">Free</h3>
+                <div className="text-3xl sm:text-4xl font-black text-gray-900">$0</div>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-2 sm:space-y-3 mb-5 sm:mb-6">
                 {[
                   "3 community reviews/month",
-                  "All content types supported",
+                  "All content types",
                   "48-hour turnaround"
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-gray-600 text-sm">
-                    <CheckCircle className="size-4 text-green-500" />
+                  <li key={i} className="flex items-center gap-2 text-gray-600 text-xs sm:text-sm">
+                    <CheckCircle className="size-3.5 sm:size-4 text-green-500 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -518,40 +531,43 @@ export default function HomePage() {
               <Button
                 onClick={() => router.push("/register")}
                 variant="outline"
-                className="w-full py-5 rounded-xl"
+                className="w-full py-3 sm:py-4 text-sm rounded-lg sm:rounded-xl active:scale-[0.98] transition-all duration-150"
               >
                 Get Started
               </Button>
             </motion.div>
 
-            {/* Pro - with clearer benefits */}
+            {/* Pro - highlighted */}
             <motion.div
-              className="p-8 rounded-3xl bg-gradient-to-br from-accent-blue/10 to-blue-50 border-2 border-accent-blue/40 md:scale-105 shadow-xl relative"
+              className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-accent-blue/10 to-blue-50 border-2 border-accent-blue shadow-lg relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <div className="absolute -top-3 right-6">
-                <Badge className="bg-accent-blue text-white shadow-lg">Most Popular</Badge>
+              <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-accent-blue text-white text-[10px] sm:text-xs shadow-lg">Most Popular</Badge>
               </div>
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Pro</h3>
-                <div className="text-4xl font-black text-gray-900">
-                  $9<span className="text-lg font-normal text-gray-500">/mo</span>
+              <div className="mb-4 sm:mb-5 pt-1">
+                <h3 className="text-sm sm:text-base font-bold text-accent-blue uppercase tracking-wide mb-1">Pro</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-gray-900">$9</span>
+                  <span className="text-sm text-gray-500">/mo</span>
                 </div>
-                <p className="text-sm text-green-600 font-medium mt-1">Save $50+/month</p>
+                <p className="text-xs text-green-600 font-medium">Save $50+/month</p>
               </div>
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-2 sm:space-y-2.5 mb-5 sm:mb-6">
                 {[
-                  { text: "Unlimited community reviews", icon: Sparkles },
-                  { text: "24-hour faster turnaround", icon: Zap },
-                  { text: "Priority queue placement", icon: TrendingUp },
-                  { text: "15% off all expert reviews", icon: BadgeCheck },
+                  { text: "Unlimited reviews", icon: Sparkles },
+                  { text: "24h faster turnaround", icon: Zap },
+                  { text: "Priority queue", icon: TrendingUp },
+                  { text: "15% off experts", icon: BadgeCheck },
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-gray-700 text-sm">
-                    <div className="size-5 rounded-full bg-accent-blue/10 flex items-center justify-center">
-                      <f.icon className="size-3 text-accent-blue" />
+                  <li key={i} className="flex items-center gap-2 text-gray-700 text-xs sm:text-sm">
+                    <div className="size-4 sm:size-5 rounded-full bg-accent-blue/10 flex items-center justify-center shrink-0">
+                      <f.icon className="size-2.5 sm:size-3 text-accent-blue" />
                     </div>
                     {f.text}
                   </li>
@@ -559,50 +575,53 @@ export default function HomePage() {
               </ul>
               <Button
                 onClick={() => router.push("/pricing")}
-                className="w-full py-5 rounded-xl bg-accent-blue hover:bg-blue-600 shadow-lg"
+                className="w-full py-3 sm:py-4 text-sm rounded-lg sm:rounded-xl bg-accent-blue hover:bg-blue-600 active:scale-[0.98] active:bg-blue-700 shadow-md transition-all duration-150"
               >
                 Upgrade to Pro
               </Button>
             </motion.div>
 
-            {/* Expert Reviews - connected to creator flow */}
+            {/* Expert Reviews */}
             <motion.div
-              className="p-8 rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-accent-peach/40 relative"
+              className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 shadow-sm relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.99 }}
             >
-              <div className="absolute -top-3 right-6">
-                <Badge variant="outline" className="bg-white border-accent-peach/40 text-accent-peach">
-                  <Award className="size-3 mr-1" />
+              <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2">
+                <Badge variant="outline" className="bg-white border-accent-peach text-accent-peach text-[10px] sm:text-xs">
+                  <Award className="size-2.5 sm:size-3 mr-0.5" />
                   Premium
                 </Badge>
               </div>
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Expert Reviews</h3>
-                <div className="text-4xl font-black text-gray-900">
-                  $50<span className="text-lg font-normal text-gray-500">-150</span>
+              <div className="mb-4 sm:mb-5 pt-1">
+                <h3 className="text-sm sm:text-base font-bold text-gray-500 uppercase tracking-wide mb-1">Expert Reviews</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black text-gray-900">$50</span>
+                  <span className="text-sm text-gray-500">-150</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Per review, pay as you go</p>
+                <p className="text-xs text-gray-500">Per review</p>
               </div>
 
-              {/* Why upgrade callout */}
-              <div className="bg-white/80 rounded-lg p-3 mb-4 border border-accent-peach/20">
-                <p className="text-xs text-gray-600">
-                  <strong className="text-accent-peach">Pro members save 15%</strong> on every expert review
+              {/* Pro savings callout */}
+              <div className="bg-accent-peach/10 rounded-lg p-2 sm:p-2.5 mb-3 sm:mb-4">
+                <p className="text-[10px] sm:text-xs text-gray-600">
+                  <strong className="text-accent-peach">Pro saves 15%</strong> on all experts
                 </p>
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-2 sm:space-y-2.5 mb-5 sm:mb-6">
                 {[
-                  { text: "Hand-picked industry experts", icon: Award },
-                  { text: "Deep, actionable feedback", icon: MessageSquare },
-                  { text: "Guaranteed 24h turnaround", icon: Clock },
+                  { text: "Industry experts", icon: Award },
+                  { text: "Deep feedback", icon: MessageSquare },
+                  { text: "24h guaranteed", icon: Clock },
                 ].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-gray-700 text-sm">
-                    <div className="size-5 rounded-full bg-accent-peach/10 flex items-center justify-center">
-                      <f.icon className="size-3 text-accent-peach" />
+                  <li key={i} className="flex items-center gap-2 text-gray-700 text-xs sm:text-sm">
+                    <div className="size-4 sm:size-5 rounded-full bg-accent-peach/10 flex items-center justify-center shrink-0">
+                      <f.icon className="size-2.5 sm:size-3 text-accent-peach" />
                     </div>
                     {f.text}
                   </li>
@@ -610,7 +629,7 @@ export default function HomePage() {
               </ul>
               <Button
                 onClick={() => router.push("/browse")}
-                className="w-full py-5 rounded-xl bg-gradient-to-r from-accent-peach to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white"
+                className="w-full py-3 sm:py-4 text-sm rounded-lg sm:rounded-xl bg-gradient-to-r from-accent-peach to-orange-500 hover:from-orange-500 hover:to-orange-600 active:scale-[0.98] text-white transition-all duration-150"
               >
                 Find Your Expert
               </Button>
@@ -620,20 +639,20 @@ export default function HomePage() {
       </section>
 
       {/* ============================================
-          TESTIMONIALS SECTION
+          TESTIMONIALS SECTION - Compact on mobile
           ============================================ */}
-      <section className="py-16 md:py-24 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-6">
+      <section className="py-10 sm:py-14 md:py-20 bg-slate-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-6 sm:mb-10"
             {...getMobileAnimation()}
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900">
               Loved by creators
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-3 sm:gap-5">
             {[
               {
                 quote: "The expert caught issues I never would have seen—and explained exactly how to fix them.",
@@ -650,25 +669,25 @@ export default function HomePage() {
             ].map((t, i) => (
               <motion.div
                 key={i}
-                className="p-8 rounded-2xl bg-white border border-gray-200 shadow-sm"
+                className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-200 shadow-sm"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-0.5 mb-2 sm:mb-3">
                   {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="size-4 fill-amber-400 text-amber-400" />
+                    <Star key={j} className="size-3 sm:size-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-gray-700 mb-6 text-lg leading-relaxed">"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-full bg-accent-blue flex items-center justify-center text-white font-bold">
+                <p className="text-gray-700 mb-4 sm:mb-5 text-sm sm:text-base leading-relaxed">"{t.quote}"</p>
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="size-9 sm:size-11 rounded-full bg-accent-blue flex items-center justify-center text-white text-xs sm:text-sm font-bold">
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">{t.author}</div>
-                    <div className="text-sm text-gray-500">{t.role}</div>
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">{t.author}</div>
+                    <div className="text-xs sm:text-sm text-gray-500">{t.role}</div>
                   </div>
                 </div>
               </motion.div>
@@ -678,34 +697,34 @@ export default function HomePage() {
       </section>
 
       {/* ============================================
-          FINAL CTA SECTION
+          FINAL CTA SECTION - Compact on mobile
           ============================================ */}
-      <section className="py-20 md:py-32 bg-gradient-to-br from-accent-blue via-accent-blue/90 to-accent-peach">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <motion.div {...getMobileAnimation()} className="space-y-8">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">
+      <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-accent-blue via-accent-blue/90 to-accent-peach">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <motion.div {...getMobileAnimation()} className="space-y-4 sm:space-y-6">
+            <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">
               Ready to level up?
             </h2>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
               Join 2,500+ creators getting real feedback
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-4 justify-center pt-2">
               <Button
                 size="lg"
                 onClick={() => router.push("/register")}
-                className="w-full sm:w-auto bg-white text-accent-blue hover:bg-gray-50 font-semibold px-8 py-6 text-lg rounded-2xl shadow-2xl"
+                className="w-full sm:w-auto bg-white text-accent-blue hover:bg-gray-50 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-2xl"
               >
                 Get Started Free
-                <ArrowRight className="size-5 ml-2" />
+                <ArrowRight className="size-4 sm:size-5 ml-2" />
               </Button>
               <Button
                 size="lg"
                 onClick={() => router.push("/how-it-works")}
                 variant="outline"
-                className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-8 py-6 text-lg rounded-2xl"
+                className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl"
               >
-                See How It Works
+                How It Works
               </Button>
             </div>
           </motion.div>
@@ -715,7 +734,7 @@ export default function HomePage() {
       {/* Footer */}
       <Footer router={router} />
 
-      {/* Sticky Bottom CTA - Mobile */}
+      {/* Sticky Bottom CTA - Mobile - Compact */}
       <AnimatePresence>
         {showBottomCTA && (
           <motion.div
@@ -723,17 +742,17 @@ export default function HomePage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl lg:hidden"
-            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+            className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl lg:hidden"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <Button
               size="lg"
               onClick={() => router.push("/register")}
-              className="w-full bg-accent-blue text-white font-semibold text-lg rounded-2xl min-h-[56px] shadow-lg group"
+              className="w-full bg-accent-blue text-white font-semibold text-base rounded-xl min-h-[48px] shadow-lg group"
             >
               <span className="flex items-center justify-center gap-2">
                 Get Started Free
-                <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
               </span>
             </Button>
           </motion.div>
