@@ -43,10 +43,12 @@ interface NavItemWithIcon extends NavItem {
 const getNavItems = (isAuthenticated: boolean): NavItemWithIcon[] => [
   { label: "Browse", href: "/browse", showOn: "tablet", icon: Search },
   { label: "Challenges", href: "/challenges", showOn: "tablet", icon: Sparkles },
-  { label: "Dashboard", href: "/dashboard", showOn: "tablet" },
   { label: "Leaderboard", href: "/leaderboard", showOn: "desktop", icon: Trophy },
-  // Show "My Reviews" for all authenticated users - everyone can give reviews
-  ...(isAuthenticated ? [{ label: "My Reviews", href: "/reviewer/hub", showOn: "desktop" as const }] : []),
+  // Only show Dashboard and My Reviews for authenticated users
+  ...(isAuthenticated ? [
+    { label: "Dashboard", href: "/dashboard", showOn: "tablet" as const },
+    { label: "My Reviews", href: "/reviewer/hub", showOn: "desktop" as const },
+  ] : []),
   { label: "How It Works", href: "/how-it-works", showOn: "desktop" },
 ];
 
