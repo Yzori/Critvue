@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 class ContentType(str, enum.Enum):
     """Types of content that can be reviewed"""
     DESIGN = "design"
-    CODE = "code"
+    PHOTOGRAPHY = "photography"
     VIDEO = "video"
     STREAM = "stream"
     AUDIO = "audio"

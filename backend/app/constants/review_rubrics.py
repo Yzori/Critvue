@@ -1,7 +1,7 @@
 """
 Content-Type Specific Review Rubrics
 
-Defines structured rubrics for different content types (code, design, writing).
+Defines structured rubrics for different content types (photography, design, writing, etc.).
 Each rubric includes:
 - Focus areas (for Phase 1 quick assessment)
 - Rating dimensions (for Phase 2 structured rubric)
@@ -44,92 +44,94 @@ class ContentRubric(TypedDict):
     section_prompts: Dict[str, SectionPrompt]
 
 
-# ===== CODE REVIEW RUBRIC =====
+# ===== PHOTOGRAPHY REVIEW RUBRIC =====
 
-CODE_FOCUS_AREAS: List[FocusArea] = [
+PHOTOGRAPHY_FOCUS_AREAS: List[FocusArea] = [
     {
-        "id": "functionality",
-        "label": "Functionality",
-        "description": "Does the code work as intended?"
+        "id": "composition",
+        "label": "Composition",
+        "description": "Is the framing and arrangement effective?"
     },
     {
-        "id": "code_quality",
-        "label": "Code Quality",
-        "description": "Is the code clean and maintainable?"
+        "id": "lighting",
+        "label": "Lighting",
+        "description": "Is the lighting well-executed?"
     },
     {
-        "id": "security",
-        "label": "Security",
-        "description": "Are there security vulnerabilities?"
+        "id": "exposure",
+        "label": "Exposure",
+        "description": "Is the exposure technically correct?"
     },
     {
-        "id": "performance",
-        "label": "Performance",
-        "description": "Is the code efficient?"
+        "id": "color",
+        "label": "Color & Tone",
+        "description": "Are colors and tones appealing?"
     },
     {
-        "id": "testing",
-        "label": "Testing",
-        "description": "Is test coverage adequate?"
+        "id": "focus",
+        "label": "Focus & Sharpness",
+        "description": "Is the subject in focus?"
     },
     {
-        "id": "documentation",
-        "label": "Documentation",
-        "description": "Is the code well-documented?"
+        "id": "storytelling",
+        "label": "Storytelling",
+        "description": "Does the image convey emotion or narrative?"
     },
 ]
 
-CODE_RATING_DIMENSIONS: List[RatingDimension] = [
+PHOTOGRAPHY_RATING_DIMENSIONS: List[RatingDimension] = [
     {
-        "id": "functionality",
-        "label": "Functionality",
-        "description": "Does the code work correctly and meet requirements?",
+        "id": "composition",
+        "label": "Composition",
+        "description": "Is the image well-composed with effective framing?",
         "criteria": [
-            "All features implemented correctly",
-            "Edge cases handled properly",
-            "No obvious bugs or errors"
+            "Rule of thirds or intentional framing",
+            "Leading lines or visual flow",
+            "Balanced elements and negative space",
+            "Subject placement is effective"
         ]
     },
     {
-        "id": "code_quality",
-        "label": "Code Quality",
-        "description": "Is the code clean, readable, and maintainable?",
+        "id": "lighting",
+        "label": "Lighting",
+        "description": "Is the lighting appropriate and well-executed?",
         "criteria": [
-            "Clear naming conventions",
-            "Proper separation of concerns",
-            "DRY principle followed",
-            "Consistent formatting and style"
+            "Light quality suits the subject",
+            "Shadows add depth, not distraction",
+            "Highlights aren't blown out",
+            "Mood created by lighting"
         ]
     },
     {
-        "id": "security",
-        "label": "Security",
-        "description": "Are there any security concerns or vulnerabilities?",
+        "id": "technical_quality",
+        "label": "Technical Quality",
+        "description": "Is the image technically sound?",
         "criteria": [
-            "Input validation present",
-            "No SQL injection risks",
-            "No XSS vulnerabilities",
-            "Secrets properly managed"
+            "Proper exposure (not over/underexposed)",
+            "Sharp where intended",
+            "Appropriate depth of field",
+            "No unwanted noise or artifacts"
         ]
     },
     {
-        "id": "test_coverage",
-        "label": "Test Coverage",
-        "description": "Are there adequate tests for the code?",
+        "id": "color_editing",
+        "label": "Color & Editing",
+        "description": "Are colors and post-processing effective?",
         "criteria": [
-            "Unit tests for key functions",
-            "Edge cases tested",
-            "Integration tests where needed"
+            "Color grading suits the mood",
+            "White balance is appropriate",
+            "Editing enhances, doesn't distract",
+            "Consistent style if part of a series"
         ]
     },
 ]
 
-CODE_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
+PHOTOGRAPHY_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
     "strengths": {
         "id": "strengths",
         "label": "✅ Strengths",
-        "prompt": "What works well in this code?",
-        "placeholder": "List specific strengths (e.g., 'Clear function names', 'Good error handling'...)",
+        "prompt": "What works well in this photo?",
+        "placeholder": "List specific strengths (e.g., 'Beautiful golden hour lighting', 'Strong leading lines'...)",
         "required": True,
         "min_items": 2
     },
@@ -137,7 +139,7 @@ CODE_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
         "id": "improvements",
         "label": "🔧 Areas for Improvement",
         "prompt": "What could be improved?",
-        "placeholder": "List specific improvements (e.g., 'Add input validation', 'Refactor for DRY'...)",
+        "placeholder": "List specific improvements (e.g., 'Crop tighter on subject', 'Reduce highlights in sky'...)",
         "required": True,
         "min_items": 2
     },
@@ -151,11 +153,11 @@ CODE_SECTION_PROMPTS: Dict[str, SectionPrompt] = {
     }
 }
 
-CODE_RUBRIC: ContentRubric = {
-    "content_type": "code",
-    "focus_areas": CODE_FOCUS_AREAS,
-    "rating_dimensions": CODE_RATING_DIMENSIONS,
-    "section_prompts": CODE_SECTION_PROMPTS
+PHOTOGRAPHY_RUBRIC: ContentRubric = {
+    "content_type": "photography",
+    "focus_areas": PHOTOGRAPHY_FOCUS_AREAS,
+    "rating_dimensions": PHOTOGRAPHY_RATING_DIMENSIONS,
+    "section_prompts": PHOTOGRAPHY_SECTION_PROMPTS
 }
 
 
@@ -841,7 +843,7 @@ STREAM_RUBRIC: ContentRubric = {
 # ===== RUBRIC REGISTRY =====
 
 RUBRICS: Dict[str, ContentRubric] = {
-    "code": CODE_RUBRIC,
+    "photography": PHOTOGRAPHY_RUBRIC,
     "design": DESIGN_RUBRIC,
     "writing": WRITING_RUBRIC,
     "art": ART_RUBRIC,
@@ -857,136 +859,136 @@ RUBRICS: Dict[str, ContentRubric] = {
 # Format: {content_type: {subcategory_id: [additional_rating_dimensions]}}
 
 SUBCATEGORY_RATING_OVERRIDES: Dict[str, Dict[str, List[RatingDimension]]] = {
-    "code": {
-        "frontend": [
+    "photography": {
+        "portrait": [
             {
-                "id": "component_architecture",
-                "label": "Component Architecture",
-                "description": "Are components well-structured and reusable?",
+                "id": "subject_connection",
+                "label": "Subject Connection",
+                "description": "Does the portrait capture personality and emotion?",
                 "criteria": [
-                    "Single responsibility principle",
-                    "Props interface is clean",
-                    "Reusability considered"
+                    "Eye contact or intentional gaze",
+                    "Natural or appropriate expression",
+                    "Personality comes through"
                 ]
             },
             {
-                "id": "accessibility",
-                "label": "Accessibility (a11y)",
-                "description": "Is the UI accessible to all users?",
+                "id": "posing",
+                "label": "Posing & Direction",
+                "description": "Is the subject posed effectively?",
                 "criteria": [
-                    "Semantic HTML used",
-                    "ARIA labels where needed",
-                    "Keyboard navigation works"
-                ]
-            },
-        ],
-        "backend": [
-            {
-                "id": "api_design",
-                "label": "API Design",
-                "description": "Is the API well-designed and RESTful?",
-                "criteria": [
-                    "Consistent endpoint naming",
-                    "Proper HTTP methods used",
-                    "Error responses are clear"
-                ]
-            },
-            {
-                "id": "data_validation",
-                "label": "Data Validation",
-                "description": "Is input validation comprehensive?",
-                "criteria": [
-                    "All inputs validated",
-                    "Type checking present",
-                    "Edge cases handled"
+                    "Flattering angles used",
+                    "Body language is natural",
+                    "Hands positioned well"
                 ]
             },
         ],
-        "database": [
+        "landscape": [
             {
-                "id": "schema_design",
-                "label": "Schema Design",
-                "description": "Is the database schema well-designed?",
+                "id": "timing",
+                "label": "Timing & Light",
+                "description": "Was the photo taken at an optimal time?",
                 "criteria": [
-                    "Normalization appropriate",
-                    "Relationships defined correctly",
-                    "Indexes on key columns"
+                    "Golden/blue hour utilized",
+                    "Weather adds to mood",
+                    "Dynamic sky if relevant"
                 ]
             },
             {
-                "id": "query_efficiency",
-                "label": "Query Efficiency",
-                "description": "Are queries optimized for performance?",
+                "id": "depth",
+                "label": "Depth & Layers",
+                "description": "Does the image have visual depth?",
                 "criteria": [
-                    "N+1 queries avoided",
-                    "Proper use of indexes",
-                    "Joins used efficiently"
-                ]
-            },
-        ],
-        "devops": [
-            {
-                "id": "infrastructure_as_code",
-                "label": "Infrastructure as Code",
-                "description": "Is infrastructure properly defined in code?",
-                "criteria": [
-                    "Declarative config used",
-                    "Version controlled",
-                    "Environment parity maintained"
-                ]
-            },
-            {
-                "id": "deployment_strategy",
-                "label": "Deployment Strategy",
-                "description": "Is the deployment process reliable?",
-                "criteria": [
-                    "Zero-downtime deployment",
-                    "Rollback plan exists",
-                    "Health checks implemented"
+                    "Foreground interest",
+                    "Middle ground elements",
+                    "Background context"
                 ]
             },
         ],
-        "mobile": [
+        "street": [
             {
-                "id": "platform_guidelines",
-                "label": "Platform Guidelines",
-                "description": "Does it follow iOS/Android platform guidelines?",
+                "id": "moment",
+                "label": "Decisive Moment",
+                "description": "Was a compelling moment captured?",
                 "criteria": [
-                    "Native patterns followed",
-                    "Platform-specific UI conventions",
-                    "System integration appropriate"
+                    "Peak action or expression",
+                    "Story is evident",
+                    "Timing is precise"
                 ]
             },
             {
-                "id": "responsive_design",
-                "label": "Responsive Design",
-                "description": "Does it work across different screen sizes?",
+                "id": "context",
+                "label": "Environmental Context",
+                "description": "Does the environment add to the story?",
                 "criteria": [
-                    "Adaptive layouts",
-                    "Orientation changes handled",
-                    "Safe area insets respected"
+                    "Location is recognizable or evocative",
+                    "Background complements subject",
+                    "Urban/street elements integrated"
                 ]
             },
         ],
-        "algorithm": [
+        "product": [
             {
-                "id": "time_complexity",
-                "label": "Time Complexity",
-                "description": "Is the algorithm time-efficient?",
+                "id": "presentation",
+                "label": "Product Presentation",
+                "description": "Is the product shown attractively?",
                 "criteria": [
-                    "Big-O analysis correct",
-                    "Optimal algorithm chosen",
-                    "No unnecessary loops"
+                    "Product is hero of image",
+                    "Details are visible",
+                    "Styling enhances appeal"
                 ]
             },
             {
-                "id": "space_complexity",
-                "label": "Space Complexity",
-                "description": "Is memory usage efficient?",
+                "id": "commercial_quality",
+                "label": "Commercial Quality",
+                "description": "Is the image suitable for commercial use?",
                 "criteria": [
-                    "Space complexity analyzed",
-                    "In-place operations used where possible",
-                    "No memory leaks"
+                    "Clean, distraction-free",
+                    "Consistent lighting",
+                    "Color accuracy maintained"
+                ]
+            },
+        ],
+        "event": [
+            {
+                "id": "storytelling",
+                "label": "Event Storytelling",
+                "description": "Does the image tell the story of the event?",
+                "criteria": [
+                    "Key moments captured",
+                    "Emotion is evident",
+                    "Context is clear"
+                ]
+            },
+            {
+                "id": "candid_vs_posed",
+                "label": "Candid vs Posed Balance",
+                "description": "Is there a good mix of candid and posed shots?",
+                "criteria": [
+                    "Natural interactions captured",
+                    "Posed shots are flattering",
+                    "Mix tells complete story"
+                ]
+            },
+        ],
+        "editing": [
+            {
+                "id": "color_grading",
+                "label": "Color Grading",
+                "description": "Is the color grading effective and consistent?",
+                "criteria": [
+                    "Color palette is cohesive",
+                    "Skin tones are natural",
+                    "Style matches intent"
+                ]
+            },
+            {
+                "id": "retouching",
+                "label": "Retouching Quality",
+                "description": "Is retouching skillfully done?",
+                "criteria": [
+                    "Edits are invisible",
+                    "Not over-processed",
+                    "Details preserved"
                 ]
             },
         ],
@@ -1653,7 +1655,7 @@ def get_rubric(content_type: str, subcategory: str = None) -> ContentRubric:
     Falls back to code rubric if content type not found.
     """
     # Get base rubric for content type
-    base_rubric = RUBRICS.get(content_type, CODE_RUBRIC).copy()
+    base_rubric = RUBRICS.get(content_type, DESIGN_RUBRIC).copy()
 
     # If no subcategory, return base rubric
     if not subcategory:

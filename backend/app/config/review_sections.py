@@ -165,14 +165,14 @@ DESIGN_COMPREHENSIVE_DEEP = [
     )
 ]
 
-# ===== CODE REVIEW TEMPLATES =====
+# ===== PHOTOGRAPHY REVIEW TEMPLATES =====
 
-CODE_VALIDATION_QUICK = [
+PHOTOGRAPHY_VALIDATION_QUICK = [
     SectionTemplate(
         id="quick_assessment",
-        label="Quick Code Assessment",
-        prompt="Does this code accomplish its intended purpose?",
-        placeholder="Provide a quick validation of the code's functionality...",
+        label="Quick Photo Assessment",
+        prompt="Is this a strong photograph that achieves its intent?",
+        placeholder="Provide a quick validation of the photo's composition and impact...",
         required=True,
         min_words=100,
         order=1
@@ -180,29 +180,29 @@ CODE_VALIDATION_QUICK = [
     SectionTemplate(
         id="immediate_concerns",
         label="Immediate Concerns",
-        prompt="Are there any critical issues or bugs?",
-        placeholder="Flag any bugs, security issues, or major problems...",
+        prompt="Are there any technical issues that need addressing?",
+        placeholder="Flag any exposure, focus, or composition problems...",
         required=True,
         min_words=75,
         order=2
     )
 ]
 
-CODE_SPECIFIC_FIXES_STANDARD = [
+PHOTOGRAPHY_SPECIFIC_FIXES_STANDARD = [
     SectionTemplate(
-        id="code_quality",
-        label="Code Quality",
-        prompt="Assess readability, maintainability, and adherence to best practices",
-        placeholder="Evaluate code structure, naming, comments, and style...",
+        id="composition_lighting",
+        label="Composition & Lighting",
+        prompt="Assess the framing, composition, and lighting choices",
+        placeholder="Evaluate rule of thirds, leading lines, light quality, shadows...",
         required=True,
         min_words=150,
         order=1
     ),
     SectionTemplate(
-        id="bugs_and_issues",
-        label="Bugs & Potential Issues",
-        prompt="Identify bugs, edge cases, and security concerns",
-        placeholder="List specific bugs, vulnerabilities, or edge cases...",
+        id="technical_quality",
+        label="Technical Quality",
+        prompt="Identify exposure, focus, and color issues",
+        placeholder="List specific technical issues: exposure, sharpness, white balance...",
         required=True,
         min_words=150,
         order=2
@@ -210,56 +210,56 @@ CODE_SPECIFIC_FIXES_STANDARD = [
     SectionTemplate(
         id="improvement_suggestions",
         label="Improvement Suggestions",
-        prompt="How can this code be improved?",
-        placeholder="Suggest refactoring, optimizations, or alternative approaches...",
+        prompt="How can this photo be improved?",
+        placeholder="Suggest cropping, editing adjustments, or shooting techniques...",
         required=True,
         min_words=100,
         order=3
     )
 ]
 
-CODE_COMPREHENSIVE_DEEP = [
+PHOTOGRAPHY_COMPREHENSIVE_DEEP = [
     SectionTemplate(
-        id="architecture",
-        label="Architecture & Structure",
-        prompt="Evaluate the overall code organization and design patterns",
-        placeholder="Analyze architecture, modularity, and design decisions...",
+        id="composition_analysis",
+        label="Composition Analysis",
+        prompt="Deep dive into the composition and visual flow",
+        placeholder="Analyze framing, subject placement, negative space, visual balance...",
         required=True,
         min_words=200,
         order=1
     ),
     SectionTemplate(
-        id="code_quality_deep",
-        label="Code Quality Analysis",
-        prompt="Deep dive into code quality, readability, and maintainability",
-        placeholder="Assess naming conventions, complexity, documentation...",
+        id="lighting_mood",
+        label="Lighting & Mood",
+        prompt="Evaluate the lighting quality and emotional impact",
+        placeholder="Assess light direction, quality, shadows, and how they create mood...",
         required=True,
         min_words=200,
         order=2
     ),
     SectionTemplate(
-        id="security_performance",
-        label="Security & Performance",
-        prompt="Identify security vulnerabilities and performance bottlenecks",
-        placeholder="Review security practices, performance issues, and optimizations...",
+        id="technical_mastery",
+        label="Technical Mastery",
+        prompt="Assess technical execution and camera craft",
+        placeholder="Review exposure, focus accuracy, depth of field choices, noise...",
         required=True,
         min_words=150,
         order=3
     ),
     SectionTemplate(
-        id="testing",
-        label="Testing & Error Handling",
-        prompt="Evaluate test coverage and error handling strategies",
-        placeholder="Assess testing approach, edge cases, and error management...",
+        id="editing_post",
+        label="Editing & Post-Processing",
+        prompt="Evaluate the editing choices and color grading",
+        placeholder="Assess color grading, retouching, cropping decisions...",
         required=True,
         min_words=150,
         order=4
     ),
     SectionTemplate(
-        id="best_practices",
-        label="Best Practices & Patterns",
-        prompt="How well does the code follow language/framework best practices?",
-        placeholder="Evaluate adherence to best practices and design patterns...",
+        id="storytelling_impact",
+        label="Storytelling & Impact",
+        prompt="How well does the image tell a story or evoke emotion?",
+        placeholder="Evaluate emotional resonance, narrative elements, viewer connection...",
         required=True,
         min_words=150,
         order=5
@@ -523,10 +523,10 @@ SECTION_TEMPLATES: Dict[Tuple[str, str, str], List[SectionTemplate]] = {
     (ContentType.DESIGN.value, FeedbackPriority.SPECIFIC_FIXES.value, ReviewTier.STANDARD.value): DESIGN_SPECIFIC_FIXES_STANDARD,
     (ContentType.DESIGN.value, FeedbackPriority.COMPREHENSIVE.value, ReviewTier.DEEP.value): DESIGN_COMPREHENSIVE_DEEP,
 
-    # CODE reviews
-    (ContentType.CODE.value, FeedbackPriority.VALIDATION.value, ReviewTier.QUICK.value): CODE_VALIDATION_QUICK,
-    (ContentType.CODE.value, FeedbackPriority.SPECIFIC_FIXES.value, ReviewTier.STANDARD.value): CODE_SPECIFIC_FIXES_STANDARD,
-    (ContentType.CODE.value, FeedbackPriority.COMPREHENSIVE.value, ReviewTier.DEEP.value): CODE_COMPREHENSIVE_DEEP,
+    # PHOTOGRAPHY reviews
+    (ContentType.PHOTOGRAPHY.value, FeedbackPriority.VALIDATION.value, ReviewTier.QUICK.value): PHOTOGRAPHY_VALIDATION_QUICK,
+    (ContentType.PHOTOGRAPHY.value, FeedbackPriority.SPECIFIC_FIXES.value, ReviewTier.STANDARD.value): PHOTOGRAPHY_SPECIFIC_FIXES_STANDARD,
+    (ContentType.PHOTOGRAPHY.value, FeedbackPriority.COMPREHENSIVE.value, ReviewTier.DEEP.value): PHOTOGRAPHY_COMPREHENSIVE_DEEP,
 
     # WRITING reviews
     (ContentType.WRITING.value, FeedbackPriority.VALIDATION.value, ReviewTier.QUICK.value): WRITING_VALIDATION_QUICK,
@@ -558,7 +558,7 @@ def get_sections(
     Falls back to sensible defaults if exact match not found.
 
     Args:
-        content_type: Type of content (design, code, writing, etc.)
+        content_type: Type of content (design, photography, writing, etc.)
         feedback_priority: Feedback focus (validation, specific_fixes, etc.)
         review_tier: Review depth (quick, standard, deep)
 

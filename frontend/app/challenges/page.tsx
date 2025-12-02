@@ -175,7 +175,7 @@ export default function ChallengesPage() {
 
           {/* Content Type Filter Pills */}
           <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {(["design", "code", "video", "audio", "writing", "art"] as ContentType[]).map((type) => {
+            {(["design", "photography", "video", "audio", "writing", "art"] as ContentType[]).map((type) => {
               const Icon = contentTypeIcons[type];
               const info = getContentTypeInfo(type);
               const isSelected = selectedContentType === type;
