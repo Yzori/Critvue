@@ -23,6 +23,7 @@ interface RoleToggleProps {
   role: Role;
   onRoleChange: (role: Role) => void;
   disabled?: boolean;
+  variant?: 'default' | 'compact' | 'prominent';
   className?: string;
 }
 
@@ -30,6 +31,7 @@ export function AnimatedRoleToggle({
   role,
   onRoleChange,
   disabled = false,
+  variant = 'default',
   className,
 }: RoleToggleProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -45,6 +47,96 @@ export function AnimatedRoleToggle({
     }, 150);
   };
 
+  // Prominent variant - like Notion's workspace selector
+  if (variant === 'prominent') {
+    return (
+      <LayoutGroup>
+        <motion.div
+          layout
+          className={cn(
+            'relative flex items-center p-1.5 rounded-2xl',
+            'bg-white/80 backdrop-blur-sm border border-slate-200/80',
+            'shadow-sm',
+            isTransitioning && 'pointer-events-none',
+            className
+          )}
+        >
+          {/* Sliding background indicator with glow */}
+          <motion.div
+            layout
+            className={cn(
+              'absolute inset-y-1.5 rounded-xl',
+              role === 'creator'
+                ? 'bg-gradient-to-r from-accent-blue via-blue-500 to-indigo-500 shadow-lg shadow-accent-blue/30'
+                : 'bg-gradient-to-r from-accent-peach via-orange-500 to-rose-500 shadow-lg shadow-accent-peach/30'
+            )}
+            initial={false}
+            animate={{
+              left: role === 'creator' ? 6 : '50%',
+              right: role === 'creator' ? '50%' : 6,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 400,
+              damping: 30,
+            }}
+          />
+
+          {/* Creator button */}
+          <button
+            onClick={() => handleRoleChange('creator')}
+            disabled={disabled}
+            className={cn(
+              'relative z-10 flex items-center gap-2 px-5 py-3 rounded-xl',
+              'text-sm font-semibold transition-all duration-200',
+              'min-w-[130px] justify-center',
+              role === 'creator'
+                ? 'text-white'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <motion.div
+              animate={{
+                rotate: role === 'creator' ? [0, -10, 0] : 0,
+                scale: role === 'creator' ? 1 : 0.9,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <Palette className="w-4 h-4" />
+            </motion.div>
+            <span>Creator</span>
+          </button>
+
+          {/* Reviewer button */}
+          <button
+            onClick={() => handleRoleChange('reviewer')}
+            disabled={disabled}
+            className={cn(
+              'relative z-10 flex items-center gap-2 px-5 py-3 rounded-xl',
+              'text-sm font-semibold transition-all duration-200',
+              'min-w-[130px] justify-center',
+              role === 'reviewer'
+                ? 'text-white'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <motion.div
+              animate={{
+                rotate: role === 'reviewer' ? [0, 10, 0] : 0,
+                scale: role === 'reviewer' ? 1 : 0.9,
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <Briefcase className="w-4 h-4" />
+            </motion.div>
+            <span>Reviewer</span>
+          </button>
+        </motion.div>
+      </LayoutGroup>
+    );
+  }
+
+  // Default and compact variants
   return (
     <LayoutGroup>
       <motion.div
@@ -82,9 +174,10 @@ export function AnimatedRoleToggle({
           onClick={() => handleRoleChange('creator')}
           disabled={disabled}
           className={cn(
-            'relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-lg',
-            'text-sm font-medium transition-colors duration-200',
-            'min-w-[120px] justify-center',
+            'relative z-10 flex items-center gap-2 rounded-lg',
+            'font-medium transition-colors duration-200',
+            variant === 'compact' ? 'px-3 py-2 text-xs min-w-[100px]' : 'px-4 py-2.5 text-sm min-w-[120px]',
+            'justify-center',
             role === 'creator'
               ? 'text-white'
               : 'text-muted-foreground hover:text-foreground'
@@ -94,7 +187,7 @@ export function AnimatedRoleToggle({
             animate={{ rotate: role === 'creator' ? [0, -10, 0] : 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Palette className="w-4 h-4" />
+            <Palette className={variant === 'compact' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
           </motion.div>
           <span>Creator</span>
         </button>
@@ -104,9 +197,10 @@ export function AnimatedRoleToggle({
           onClick={() => handleRoleChange('reviewer')}
           disabled={disabled}
           className={cn(
-            'relative z-10 flex items-center gap-2 px-4 py-2.5 rounded-lg',
-            'text-sm font-medium transition-colors duration-200',
-            'min-w-[120px] justify-center',
+            'relative z-10 flex items-center gap-2 rounded-lg',
+            'font-medium transition-colors duration-200',
+            variant === 'compact' ? 'px-3 py-2 text-xs min-w-[100px]' : 'px-4 py-2.5 text-sm min-w-[120px]',
+            'justify-center',
             role === 'reviewer'
               ? 'text-white'
               : 'text-muted-foreground hover:text-foreground'
@@ -116,7 +210,7 @@ export function AnimatedRoleToggle({
             animate={{ rotate: role === 'reviewer' ? [0, 10, 0] : 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Briefcase className="w-4 h-4" />
+            <Briefcase className={variant === 'compact' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
           </motion.div>
           <span>Reviewer</span>
         </button>
