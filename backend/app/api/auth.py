@@ -3,10 +3,13 @@
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from authlib.integrations.starlette_client import OAuth
+from starlette.config import Config
 
 from app.db.session import get_db
 from app.models.user import User
@@ -26,6 +29,16 @@ from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
+
+# OAuth setup
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id=settings.GOOGLE_CLIENT_ID,
+    client_secret=settings.GOOGLE_CLIENT_SECRET,
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
+)
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -394,3 +407,126 @@ async def logout(
         "message": "Successfully logged out",
         "detail": "Your session has been terminated. Please log in again to continue."
     }
+
+
+# =============================================================================
+# GOOGLE OAUTH ENDPOINTS
+# =============================================================================
+
+@router.get("/google")
+async def google_login(request: Request):
+    """
+    Initiate Google OAuth flow.
+    Redirects user to Google's consent screen.
+    """
+    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/google/callback")
+async def google_callback(
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Handle Google OAuth callback.
+    Creates or logs in user, sets JWT cookies, redirects to frontend.
+    """
+    try:
+        # Exchange authorization code for tokens
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get('userinfo')
+
+        if not user_info or not user_info.get('email'):
+            security_logger.log_auth_failure(
+                "unknown",
+                request,
+                reason="google_oauth_no_email",
+                event_type="oauth"
+            )
+            return RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/login?error=google_auth_failed",
+                status_code=302
+            )
+
+        email = user_info['email']
+        full_name = user_info.get('name', email.split('@')[0])
+
+        # Find or create user
+        result = await db.execute(select(User).where(User.email == email))
+        user = result.scalar_one_or_none()
+
+        if not user:
+            # Create new user (OAuth users have no password)
+            user = User(
+                email=email,
+                full_name=full_name,
+                hashed_password=None,
+                oauth_provider='google',
+                is_verified=True,  # Google emails are pre-verified
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+            security_logger.log_auth_success(email, request, event_type="oauth_register")
+        else:
+            # Update existing user if they haven't set oauth_provider
+            if not user.oauth_provider:
+                user.oauth_provider = 'google'
+            user.last_login = datetime.utcnow()
+            await db.commit()
+            security_logger.log_auth_success(email, request, event_type="oauth_login")
+
+        # Check if user is active
+        if not user.is_active:
+            return RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/login?error=account_inactive",
+                status_code=302
+            )
+
+        # Create JWT tokens
+        token_data = {"user_id": user.id, "email": user.email}
+        access_token = create_access_token(data=token_data)
+        refresh_token = create_refresh_token(data=token_data)
+
+        # Create redirect response to frontend dashboard
+        response = RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/dashboard",
+            status_code=302
+        )
+
+        # Set access token cookie
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax",
+            max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            path="/",
+        )
+
+        # Set refresh token cookie
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax",
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+            path="/api/v1/auth",
+        )
+
+        return response
+
+    except Exception as e:
+        security_logger.log_auth_failure(
+            "unknown",
+            request,
+            reason=f"google_oauth_error: {str(e)}",
+            event_type="oauth"
+        )
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/login?error=google_auth_failed",
+            status_code=302
+        )

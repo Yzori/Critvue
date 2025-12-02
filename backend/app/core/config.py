@@ -71,6 +71,12 @@ class Settings(BaseSettings):
     EMAIL_FROM: str = "noreply@critvue.com"
     EMAIL_API_KEY: str = ""
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/google/callback"
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Rate Limiting
     ENABLE_RATE_LIMITING: bool = True  # Set to False to disable rate limiting entirely
     RATE_LIMIT_REGISTRATION: str = "3/hour"  # Registrations per IP (dev: 1000/hour, prod: 3/hour)

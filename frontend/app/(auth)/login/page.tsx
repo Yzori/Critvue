@@ -6,7 +6,8 @@
  * Includes "Remember me" and "Forgot password" options
  */
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/auth/FormField";
@@ -17,6 +18,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const searchParams = useSearchParams();
 
   // Form state
   const [email, setEmail] = useState("");
@@ -33,6 +35,18 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
+
+  // Handle OAuth error redirects
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      const errorMessages: Record<string, string> = {
+        google_auth_failed: "Google sign-in failed. Please try again.",
+        account_inactive: "Your account is inactive. Please contact support.",
+      };
+      setError(errorMessages[errorParam] || "Sign-in failed. Please try again.");
+    }
+  }, [searchParams]);
 
   /**
    * Validate form fields

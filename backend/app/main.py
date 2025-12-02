@@ -6,6 +6,7 @@ Main entry point for the backend API
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -65,6 +66,9 @@ app.include_router(admin_applications.router, prefix="/api/v1")  # Admin expert 
 app.include_router(nda.router, prefix="/api/v1")  # NDA signing for confidential reviews
 app.include_router(activity.router, prefix="/api/v1")  # User activity heatmap and timeline
 app.include_router(challenges.router, prefix="/api/v1")  # Platform-curated creative challenges
+
+# Session middleware for OAuth state management
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
 # Configure CORS
 app.add_middleware(
