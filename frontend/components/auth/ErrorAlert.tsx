@@ -1,6 +1,6 @@
 /**
  * Error Alert Component
- * Displays error messages with proper styling and accessibility
+ * Compact inline error display with dismiss option
  * Uses Critvue's destructive color scheme
  */
 
@@ -21,21 +21,21 @@ export function ErrorAlert({ message, onDismiss, className }: ErrorAlertProps) {
       role="alert"
       aria-live="polite"
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4",
+        "flex items-center gap-2 rounded-md bg-destructive/10 px-3 py-2",
         className
       )}
     >
-      <AlertCircle className="size-5 shrink-0 text-destructive mt-0.5" aria-hidden="true" />
-      <div className="flex-1 text-sm text-foreground">
+      <AlertCircle className="size-4 shrink-0 text-destructive" aria-hidden="true" />
+      <span className="flex-1 text-sm text-destructive font-medium">
         {message}
-      </div>
+      </span>
       {onDismiss && (
         <button
           onClick={onDismiss}
-          className="shrink-0 p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors rounded-md touch-manipulation"
+          className="shrink-0 p-1 -mr-1 text-destructive/60 hover:text-destructive transition-colors rounded touch-manipulation"
           aria-label="Dismiss error"
         >
-          <X className="size-5" />
+          <X className="size-4" />
         </button>
       )}
     </div>

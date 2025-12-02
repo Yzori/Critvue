@@ -66,8 +66,13 @@ export async function apiClient<T = any>(
     throw new ApiClientError(0, { detail: "Unable to connect to server. Please check your internet connection." }, endpoint);
   }
 
-  // Handle 401 errors - try to refresh token
-  if (response.status === 401 && !endpoint.includes('/auth/refresh')) {
+  // Handle 401 errors - try to refresh token (but not for auth endpoints)
+  // Auth endpoints should pass through their own error messages (e.g., "Incorrect email or password")
+  const isAuthEndpoint = endpoint.includes('/auth/login') ||
+                         endpoint.includes('/auth/register') ||
+                         endpoint.includes('/auth/refresh');
+
+  if (response.status === 401 && !isAuthEndpoint) {
     // Try to refresh token
     const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -82,7 +87,7 @@ export async function apiClient<T = any>(
       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
         window.location.href = '/login';
       }
-      throw new Error('Session expired');
+      throw new Error('Session expired. Please log in again.');
     }
   }
 
