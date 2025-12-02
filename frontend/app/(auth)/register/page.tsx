@@ -22,10 +22,8 @@ export default function RegisterPage() {
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // UI state
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +33,6 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
     terms: "",
   });
 
@@ -46,7 +43,6 @@ export default function RegisterPage() {
     const newErrors = {
       email: "",
       password: "",
-      confirmPassword: "",
       terms: "",
     };
 
@@ -62,13 +58,6 @@ export default function RegisterPage() {
       newErrors.password = "Password is required";
     } else if (password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
-    }
-
-    // Confirm password validation
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
     }
 
     // Terms acceptance validation
@@ -179,38 +168,6 @@ export default function RegisterPage() {
 
         {/* Password Strength Indicator */}
         {password && <PasswordStrength password={password} />}
-
-        {/* Confirm Password Field */}
-        <div className="relative">
-          <FormField
-            label="Confirm Password"
-            type={showConfirmPassword ? "text" : "password"}
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" });
-            }}
-            error={errors.confirmPassword}
-            placeholder="Re-enter your password"
-            autoComplete="new-password"
-            required
-            disabled={isLoading}
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-0 top-[2.125rem] p-3 text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-            tabIndex={-1}
-          >
-            {showConfirmPassword ? (
-              <EyeOff className="size-5" />
-            ) : (
-              <Eye className="size-5" />
-            )}
-          </button>
-        </div>
 
         {/* Terms of Service */}
         <div className="space-y-2">
