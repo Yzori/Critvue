@@ -454,13 +454,13 @@ export function ElevatedDashboard({
             {/* Main Column */}
             <div className="space-y-3">
 
-              {/* Unified Header Row - aligned with grid */}
+              {/* Header Row - Single baseline, two clusters */}
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between gap-4"
+                className="flex items-center justify-between"
               >
-                {/* LEFT: Role + Identity */}
+                {/* LEFT: "Who am I right now?" */}
                 <div className="flex items-center gap-3">
                   {/* Role Toggle */}
                   <AnimatedRoleToggle
@@ -471,9 +471,9 @@ export function ElevatedDashboard({
                   />
 
                   {/* Divider */}
-                  <div className="w-px h-7 bg-slate-200/60" />
+                  <div className="w-px h-6 bg-slate-200/60" />
 
-                  {/* User + Tier */}
+                  {/* Identity: Tier + Greeting + Progress */}
                   <div className="flex items-center gap-2">
                     {karmaSummary && (
                       <TierProgressRing
@@ -483,31 +483,19 @@ export function ElevatedDashboard({
                       />
                     )}
                     <div className="leading-tight">
-                      <p className="text-[10px] text-muted-foreground/50">{getGreeting()}</p>
                       <p className="text-sm font-medium text-foreground">
-                        {user?.full_name || user?.email?.split('@')[0] || 'there'}
+                        {getGreeting()}, {user?.full_name || user?.email?.split('@')[0] || 'there'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {karmaSummary ? `${karmaSummary.total_karma} karma · ${karmaSummary.user_tier}` : 'Building momentum...'}
                       </p>
                     </div>
                   </div>
-
-                  {/* Become Expert badge */}
-                  {user?.role !== 'reviewer' && user?.role !== 'admin' && (
-                    <Link
-                      href="/apply/expert"
-                      className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium text-orange-600 bg-orange-50/80 hover:bg-orange-100 transition-colors"
-                    >
-                      <Briefcase className="w-3 h-3" />
-                      <span>Expert</span>
-                    </Link>
-                  )}
                 </div>
 
-                {/* RIGHT: Actions */}
+                {/* RIGHT: "What can I do now?" */}
                 <div className="flex items-center gap-2">
-                  {/* Online counter */}
                   <OnlineCounter count={platformStats?.reviewers_online ?? 15} size="sm" />
-
-                  {/* Primary CTA */}
                   {role === 'creator' ? (
                     <Link
                       href="/review/new"
@@ -524,11 +512,6 @@ export function ElevatedDashboard({
                       <Plus className="w-3.5 h-3.5" />
                       <span>Find Reviews</span>
                     </Link>
-                  )}
-
-                  {/* Mode switcher */}
-                  {!shouldMinimizeChrome && (
-                    <ModeSwitcher variant="compact" />
                   )}
                 </div>
               </motion.div>
