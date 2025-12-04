@@ -163,8 +163,8 @@ export function ReviewerCardStack({
               className={cn(
                 "absolute inset-4 rounded-3xl border-2 transition-all duration-300",
                 isCreator
-                  ? "bg-blue-50/50 border-accent-blue/10"
-                  : "bg-orange-50/50 border-accent-peach/10"
+                  ? "bg-blue-50/50 dark:bg-accent-blue/5 border-accent-blue/10 dark:border-accent-blue/20"
+                  : "bg-orange-50/50 dark:bg-accent-peach/5 border-accent-peach/10 dark:border-accent-peach/20"
               )}
               style={{
                 transform: `translateY(${offset * 8}px) scale(${1 - offset * 0.05})`,
@@ -190,10 +190,10 @@ export function ReviewerCardStack({
             onDragEnd={handleDragEnd}
             className={cn(
               "absolute inset-0 p-6 sm:p-8 rounded-3xl border-2 shadow-xl cursor-grab active:cursor-grabbing",
-              "bg-white/90 backdrop-blur-sm",
+              "bg-white/90 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm",
               isCreator
-                ? "border-accent-blue/20"
-                : "border-accent-peach/20"
+                ? "border-accent-blue/20 dark:border-accent-blue/30"
+                : "border-accent-peach/20 dark:border-accent-peach/30"
             )}
             style={{ zIndex: 20 }}
           >
@@ -213,10 +213,10 @@ export function ReviewerCardStack({
                   {currentCard.avatar}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-foreground">
                     {currentCard.name}
                   </h3>
-                  <p className="text-gray-600 flex items-center gap-2 mt-1">
+                  <p className="text-gray-600 dark:text-muted-foreground flex items-center gap-2 mt-1">
                     <Icon className="size-4" />
                     {currentCard.specialty}
                   </p>
@@ -228,21 +228,21 @@ export function ReviewerCardStack({
                 <div>
                   <div className="flex items-center gap-1">
                     <Star className="size-4 fill-amber-400 text-amber-400" />
-                    <span className="font-bold text-gray-900">
+                    <span className="font-bold text-gray-900 dark:text-foreground">
                       {isCreator
                         ? currentCard.rating.toFixed(1)
                         : `$${currentCard.rating}`}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
                     {isCreator ? "Rating" : "Budget"}
                   </p>
                 </div>
                 <div>
-                  <span className="font-bold text-gray-900">
+                  <span className="font-bold text-gray-900 dark:text-foreground">
                     {currentCard.reviews}
                   </span>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-muted-foreground mt-0.5">
                     {isCreator ? "Reviews" : "Slots"}
                   </p>
                 </div>
@@ -297,7 +297,7 @@ export function ReviewerCardStack({
                   ? isCreator
                     ? "bg-accent-blue w-6"
                     : "bg-accent-peach w-6"
-                  : "bg-gray-300 hover:bg-gray-400"
+                  : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
               )}
               aria-label={`Go to card ${index + 1}`}
             />
@@ -320,7 +320,7 @@ export function ReviewerCardStack({
       </div>
 
       {/* Swipe hint on mobile */}
-      <p className="text-center text-xs text-gray-400 mt-4 sm:hidden">
+      <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4 sm:hidden">
         Swipe to browse
       </p>
     </div>

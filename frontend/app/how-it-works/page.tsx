@@ -187,7 +187,7 @@ export default function HowItWorksPage() {
     : [...reviewerFAQs, ...creatorFAQs.slice(0, 1)];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[var(--dark-tier-1)] dark:via-[var(--dark-tier-1)] dark:to-[var(--dark-tier-1)]">
       {/* Sticky Progress Bar - appears after scrolling past hero */}
       <AnimatePresence>
         {!heroInView && (
@@ -252,7 +252,7 @@ export default function HowItWorksPage() {
             </motion.div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-foreground mb-4 md:mb-6 leading-tight">
               Your journey to{" "}
               <motion.span
                 className={cn(
@@ -279,7 +279,7 @@ export default function HowItWorksPage() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-muted-foreground max-w-3xl mx-auto mb-8 md:mb-10 leading-relaxed">
               {isCreator
                 ? "See exactly how to get expert eyes on your work in under 5 minutes"
                 : "Discover how to earn while helping creators grow their skills"}
@@ -319,7 +319,7 @@ export default function HowItWorksPage() {
 
             {/* Scroll indicator */}
             <motion.div
-              className="mt-12 flex flex-col items-center gap-2 text-gray-400"
+              className="mt-12 flex flex-col items-center gap-2 text-gray-400 dark:text-muted-foreground"
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
@@ -350,10 +350,10 @@ export default function HowItWorksPage() {
               <motion.div
                 key={type.label}
                 className={cn(
-                  "group relative p-6 rounded-2xl border-2 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300",
+                  "group relative p-6 rounded-2xl border-2 bg-white/80 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300",
                   isCreator
-                    ? "border-accent-blue/10 hover:border-accent-blue/30"
-                    : "border-accent-peach/10 hover:border-accent-peach/30"
+                    ? "border-accent-blue/10 hover:border-accent-blue/30 dark:border-accent-blue/20 dark:hover:border-accent-blue/40"
+                    : "border-accent-peach/10 hover:border-accent-peach/30 dark:border-accent-peach/20 dark:hover:border-accent-peach/40"
                 )}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -373,7 +373,7 @@ export default function HowItWorksPage() {
                 >
                   <type.icon className="size-7" />
                 </motion.div>
-                <h3 className="font-semibold text-gray-900">{type.label}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-foreground">{type.label}</h3>
               </motion.div>
             ))}
           </div>
@@ -385,10 +385,10 @@ export default function HowItWorksPage() {
                 key={index}
                 className={cn(
                   "group relative p-6 sm:p-8 rounded-3xl border-2 transition-all duration-500 overflow-hidden",
-                  "bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl",
+                  "bg-white/80 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm shadow-lg hover:shadow-2xl",
                   isCreator
-                    ? "border-accent-blue/20 hover:border-accent-blue/50"
-                    : "border-accent-peach/20 hover:border-accent-peach/50"
+                    ? "border-accent-blue/20 hover:border-accent-blue/50 dark:border-accent-blue/30 dark:hover:border-accent-blue/60"
+                    : "border-accent-peach/20 hover:border-accent-peach/50 dark:border-accent-peach/30 dark:hover:border-accent-peach/60"
                 )}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -401,8 +401,8 @@ export default function HowItWorksPage() {
                   className={cn(
                     "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
                     isCreator
-                      ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50"
-                      : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50"
+                      ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50 dark:from-accent-blue/10 dark:to-accent-blue/5"
+                      : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50 dark:from-accent-peach/10 dark:to-accent-peach/5"
                   )}
                 />
 
@@ -434,10 +434,10 @@ export default function HowItWorksPage() {
 
                 {/* Content */}
                 <div className="relative z-10">
-                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-foreground mb-3">
                     {step.headline}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                  <p className="text-gray-600 dark:text-muted-foreground leading-relaxed">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -524,8 +524,8 @@ export default function HowItWorksPage() {
                     )}
                   />
                 </div>
-                <h4 className="font-semibold text-gray-900 mb-2">{item.title}</h4>
-                <p className="text-sm text-gray-600">{item.desc}</p>
+                <h4 className="font-semibold text-gray-900 dark:text-foreground mb-2">{item.title}</h4>
+                <p className="text-sm text-gray-600 dark:text-muted-foreground">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -552,10 +552,10 @@ export default function HowItWorksPage() {
                 key={index}
                 className={cn(
                   "group relative p-6 sm:p-8 rounded-3xl border-2 transition-all duration-500 overflow-hidden",
-                  "bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl",
+                  "bg-white/80 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm shadow-lg hover:shadow-2xl",
                   isCreator
-                    ? "border-accent-blue/20 hover:border-accent-blue/50"
-                    : "border-accent-peach/20 hover:border-accent-peach/50"
+                    ? "border-accent-blue/20 hover:border-accent-blue/50 dark:border-accent-blue/30 dark:hover:border-accent-blue/60"
+                    : "border-accent-peach/20 hover:border-accent-peach/50 dark:border-accent-peach/30 dark:hover:border-accent-peach/60"
                 )}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -567,8 +567,8 @@ export default function HowItWorksPage() {
                   className={cn(
                     "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
                     isCreator
-                      ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50"
-                      : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50"
+                      ? "bg-gradient-to-br from-accent-blue/5 to-blue-50/50 dark:from-accent-blue/10 dark:to-accent-blue/5"
+                      : "bg-gradient-to-br from-accent-peach/5 to-orange-50/50 dark:from-accent-peach/10 dark:to-accent-peach/5"
                   )}
                 />
 
@@ -597,10 +597,10 @@ export default function HowItWorksPage() {
                 </motion.div>
 
                 <div className="relative z-10">
-                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-foreground mb-3">
                     {step.headline}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                  <p className="text-gray-600 dark:text-muted-foreground leading-relaxed">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -609,16 +609,16 @@ export default function HowItWorksPage() {
           {/* Satisfaction guarantee */}
           {isCreator && (
             <motion.div
-              className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 text-center"
+              className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-500/10 dark:to-emerald-500/10 border border-green-200 dark:border-green-500/30 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Shield className="size-8 text-green-600 mx-auto mb-3" />
-              <h4 className="font-bold text-gray-900 mb-2">
+              <Shield className="size-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
+              <h4 className="font-bold text-gray-900 dark:text-foreground mb-2">
                 100% Satisfaction Guarantee
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-muted-foreground">
                 Not happy with your expert review? Full refund, no questions asked.
               </p>
             </motion.div>
@@ -695,7 +695,7 @@ export default function HowItWorksPage() {
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                className="group relative p-6 sm:p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+                className="group relative p-6 sm:p-8 rounded-2xl bg-white/80 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm border border-gray-200 dark:border-border shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -715,7 +715,7 @@ export default function HowItWorksPage() {
                   ))}
                 </div>
 
-                <p className="text-gray-700 leading-relaxed mb-6 text-sm sm:text-base relative z-10">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-6 text-sm sm:text-base relative z-10">
                   "{testimonial.quote}"
                 </p>
 
@@ -734,10 +734,10 @@ export default function HowItWorksPage() {
                       .join("")}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">
+                    <div className="font-semibold text-gray-900 dark:text-foreground">
                       {testimonial.author}
                     </div>
-                    <div className="text-sm text-gray-600">{testimonial.role}</div>
+                    <div className="text-sm text-gray-600 dark:text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
               </motion.div>
@@ -777,7 +777,7 @@ export default function HowItWorksPage() {
             {allFAQs.map((faq, index) => (
               <motion.div
                 key={index}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                className="bg-white dark:bg-[var(--dark-tier-2)] rounded-2xl border border-gray-200 dark:border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -785,16 +785,16 @@ export default function HowItWorksPage() {
               >
                 <button
                   onClick={() => setExpandedFAQ(expandedFAQ === index ? null : index)}
-                  className="w-full flex items-center justify-between p-6 text-left min-h-[64px] touch-manipulation hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center justify-between p-6 text-left min-h-[64px] touch-manipulation hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
                   aria-expanded={expandedFAQ === index}
                   aria-controls={`faq-answer-${index}`}
                 >
-                  <span className="text-base sm:text-lg font-semibold text-gray-900 pr-4">
+                  <span className="text-base sm:text-lg font-semibold text-gray-900 dark:text-foreground pr-4">
                     {faq.question}
                   </span>
                   <ChevronDown
                     className={cn(
-                      "size-5 text-gray-500 transition-transform duration-300 shrink-0",
+                      "size-5 text-gray-500 dark:text-muted-foreground transition-transform duration-300 shrink-0",
                       expandedFAQ === index && "rotate-180"
                     )}
                     aria-hidden="true"
@@ -810,7 +810,7 @@ export default function HowItWorksPage() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 text-sm sm:text-base text-gray-600 leading-relaxed">
+                      <div className="px-6 pb-6 text-sm sm:text-base text-gray-600 dark:text-muted-foreground leading-relaxed">
                         {faq.answer}
                       </div>
                     </motion.div>

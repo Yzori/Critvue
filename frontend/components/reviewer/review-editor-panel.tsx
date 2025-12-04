@@ -101,7 +101,7 @@ export function ReviewEditorPanel({
   return (
     <div className="min-h-full">
       {/* Compact Header Bar - Full Width */}
-      <div className="sticky top-0 z-20 bg-gradient-to-r from-accent-blue/5 via-white to-accent-peach/5 border-b border-border/50 backdrop-blur-sm">
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-accent-blue/5 via-white to-accent-peach/5 dark:from-accent-blue/10 dark:via-[var(--dark-tier-2)] dark:to-accent-peach/10 border-b border-border/50 backdrop-blur-sm">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
             <div className={cn("size-10 rounded-xl flex items-center justify-center flex-shrink-0", config.bg)}>
@@ -156,7 +156,7 @@ export function ReviewEditorPanel({
       {slot.status === "submitted" ? (
         /* Submitted Confirmation View */
         <div className="p-4 sm:p-6">
-          <div className="max-w-2xl mx-auto rounded-xl border-2 border-green-500/30 bg-green-50 p-6 space-y-4">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-green-500/30 bg-green-50 dark:bg-[var(--dark-tier-3)] dark:border-green-500/40 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="size-12 rounded-full bg-green-500 flex items-center justify-center">
                 <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,31 +164,31 @@ export function ReviewEditorPanel({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-green-900">Review Submitted Successfully!</h3>
-                <p className="text-sm text-green-700">
+                <h3 className="text-xl font-bold text-green-900 dark:text-green-400">Review Submitted Successfully!</h3>
+                <p className="text-sm text-green-700 dark:text-green-300/80">
                   Waiting for requester acceptance
                 </p>
               </div>
             </div>
 
             {slot.auto_accept_at && (
-              <div className="p-4 bg-white/50 rounded-lg">
-                <p className="text-sm font-medium text-green-900 mb-1">
+              <div className="p-4 bg-white/50 dark:bg-[var(--dark-tier-2)] rounded-lg">
+                <p className="text-sm font-medium text-green-900 dark:text-green-400 mb-1">
                   Auto-accept Countdown
                 </p>
-                <p className="text-xs text-green-700">
+                <p className="text-xs text-green-700 dark:text-green-300/70">
                   If the requester doesn't respond, your review will be automatically accepted on{" "}
-                  <strong>{new Date(slot.auto_accept_at).toLocaleDateString()}</strong>
+                  <strong className="dark:text-green-300">{new Date(slot.auto_accept_at).toLocaleDateString()}</strong>
                 </p>
               </div>
             )}
 
-            <div className="p-4 bg-white/50 rounded-lg">
-              <p className="text-sm font-medium text-green-900 mb-2">
+            <div className="p-4 bg-white/50 dark:bg-[var(--dark-tier-2)] rounded-lg">
+              <p className="text-sm font-medium text-green-900 dark:text-green-400 mb-2">
                 Payment Status
               </p>
-              <p className="text-xs text-green-700">
-                Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
+              <p className="text-xs text-green-700 dark:text-green-300/70">
+                Your payment of <strong className="dark:text-green-300">{formatPayment(slot.payment_amount)}</strong> will be released once the requester accepts your review or after auto-accept.
               </p>
             </div>
 
@@ -206,7 +206,7 @@ export function ReviewEditorPanel({
       ) : slot.status === "accepted" ? (
         /* Accepted Confirmation View */
         <div className="p-4 sm:p-6">
-          <div className="max-w-2xl mx-auto rounded-xl border-2 border-emerald-500/30 bg-emerald-50 p-6 space-y-4">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-emerald-500/30 bg-emerald-50 dark:bg-[var(--dark-tier-3)] dark:border-emerald-500/40 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="size-12 rounded-full bg-emerald-500 flex items-center justify-center">
                 <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,19 +214,19 @@ export function ReviewEditorPanel({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-emerald-900">Review Accepted!</h3>
-                <p className="text-sm text-emerald-700">
+                <h3 className="text-xl font-bold text-emerald-900 dark:text-emerald-400">Review Accepted!</h3>
+                <p className="text-sm text-emerald-700 dark:text-emerald-300/80">
                   The requester has approved your review
                 </p>
               </div>
             </div>
 
-            <div className="p-4 bg-white/50 rounded-lg">
-              <p className="text-sm font-medium text-emerald-900 mb-2">
+            <div className="p-4 bg-white/50 dark:bg-[var(--dark-tier-2)] rounded-lg">
+              <p className="text-sm font-medium text-emerald-900 dark:text-emerald-400 mb-2">
                 Payment Complete
               </p>
-              <p className="text-xs text-emerald-700">
-                Your payment of <strong>{formatPayment(slot.payment_amount)}</strong> has been processed and added to your account.
+              <p className="text-xs text-emerald-700 dark:text-emerald-300/70">
+                Your payment of <strong className="dark:text-emerald-300">{formatPayment(slot.payment_amount)}</strong> has been processed and added to your account.
               </p>
             </div>
 
@@ -244,7 +244,7 @@ export function ReviewEditorPanel({
       ) : slot.status === "rejected" ? (
         /* Rejected View */
         <div className="p-4 sm:p-6">
-          <div className="max-w-2xl mx-auto rounded-xl border-2 border-red-500/30 bg-red-50 p-6 space-y-4">
+          <div className="max-w-2xl mx-auto rounded-xl border-2 border-red-500/30 bg-red-50 dark:bg-[var(--dark-tier-3)] dark:border-red-500/40 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="size-12 rounded-full bg-red-500 flex items-center justify-center">
                 <svg className="size-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,29 +252,29 @@ export function ReviewEditorPanel({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-red-900">Review Rejected</h3>
-                <p className="text-sm text-red-700">
+                <h3 className="text-xl font-bold text-red-900 dark:text-red-400">Review Rejected</h3>
+                <p className="text-sm text-red-700 dark:text-red-300/80">
                   The requester has declined your review
                 </p>
               </div>
             </div>
 
             {(slot as { rejection_reason?: string }).rejection_reason && (
-              <div className="p-4 bg-white/50 rounded-lg">
-                <p className="text-sm font-medium text-red-900 mb-2">
+              <div className="p-4 bg-white/50 dark:bg-[var(--dark-tier-2)] rounded-lg">
+                <p className="text-sm font-medium text-red-900 dark:text-red-400 mb-2">
                   Rejection Reason
                 </p>
-                <p className="text-xs text-red-700">
+                <p className="text-xs text-red-700 dark:text-red-300/70">
                   {(slot as { rejection_reason?: string }).rejection_reason}
                 </p>
               </div>
             )}
 
-            <div className="p-4 bg-white/50 rounded-lg">
-              <p className="text-sm font-medium text-red-900 mb-2">
+            <div className="p-4 bg-white/50 dark:bg-[var(--dark-tier-2)] rounded-lg">
+              <p className="text-sm font-medium text-red-900 dark:text-red-400 mb-2">
                 What Happens Next
               </p>
-              <p className="text-xs text-red-700">
+              <p className="text-xs text-red-700 dark:text-red-300/70">
                 This review will not count towards your completion stats. You can find new review opportunities in the dashboard.
               </p>
             </div>

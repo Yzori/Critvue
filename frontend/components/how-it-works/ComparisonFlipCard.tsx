@@ -51,7 +51,7 @@ export function ComparisonFlipCard({
       <div className="hidden md:grid md:grid-cols-2 gap-6 lg:gap-8">
         {/* Community Card */}
         <motion.div
-          className="relative p-8 rounded-3xl border-2 border-green-200 bg-gradient-to-br from-white to-green-50/30 shadow-xl overflow-hidden group"
+          className="relative p-8 rounded-3xl border-2 border-green-200 dark:border-green-500/30 bg-gradient-to-br from-white to-green-50/30 dark:from-[var(--dark-tier-2)] dark:to-green-500/5 shadow-xl overflow-hidden group"
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
@@ -64,20 +64,20 @@ export function ComparisonFlipCard({
             <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium mb-4">
               Community
             </span>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">
               Peer Feedback
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-muted-foreground mb-6">
               Get thoughtful critique from fellow creators
             </p>
 
             <div className="space-y-4 mb-8">
               {features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-3">
-                  <Check className="size-5 text-green-600 mt-0.5 shrink-0" />
+                  <Check className="size-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-gray-900">{feature.label}</p>
-                    <p className="text-sm text-gray-600">{feature.community}</p>
+                    <p className="font-medium text-gray-900 dark:text-foreground">{feature.label}</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground">{feature.community}</p>
                   </div>
                 </div>
               ))}
@@ -95,7 +95,7 @@ export function ComparisonFlipCard({
 
         {/* Expert Card */}
         <motion.div
-          className="relative p-8 rounded-3xl border-2 border-accent-peach/20 bg-gradient-to-br from-white to-orange-50/30 shadow-xl overflow-hidden group"
+          className="relative p-8 rounded-3xl border-2 border-accent-peach/20 dark:border-accent-peach/30 bg-gradient-to-br from-white to-orange-50/30 dark:from-[var(--dark-tier-2)] dark:to-accent-peach/5 shadow-xl overflow-hidden group"
           initial={{ opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
@@ -115,10 +115,10 @@ export function ComparisonFlipCard({
             <span className="inline-block px-3 py-1 rounded-full bg-accent-peach/10 text-accent-peach text-sm font-medium mb-4">
               Expert
             </span>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">
               Professional Critique
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-muted-foreground mb-6">
               Industry veterans with 5+ years experience
             </p>
 
@@ -127,8 +127,8 @@ export function ComparisonFlipCard({
                 <div key={index} className="flex items-start gap-3">
                   <Check className="size-5 text-accent-peach mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-medium text-gray-900">{feature.label}</p>
-                    <p className="text-sm text-gray-600">{feature.expert}</p>
+                    <p className="font-medium text-gray-900 dark:text-foreground">{feature.label}</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground">{feature.expert}</p>
                   </div>
                 </div>
               ))}
@@ -167,28 +167,28 @@ export function ComparisonFlipCard({
               {/* Front - Community */}
               <div
                 className={cn(
-                  "absolute inset-0 p-4 rounded-2xl border-2 border-green-200 bg-gradient-to-br from-white to-green-50/50 shadow-md",
+                  "absolute inset-0 p-4 rounded-2xl border-2 border-green-200 dark:border-green-500/30 bg-gradient-to-br from-white to-green-50/50 dark:from-[var(--dark-tier-2)] dark:to-green-500/5 shadow-md",
                   "[backface-visibility:hidden]"
                 )}
               >
                 <div className="flex items-center justify-between h-full">
                   <div>
-                    <p className="text-xs text-green-600 font-medium mb-1">
+                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mb-1">
                       Community
                     </p>
-                    <p className="font-bold text-gray-900">{feature.label}</p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="font-bold text-gray-900 dark:text-foreground">{feature.label}</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground mt-1">
                       {feature.community}
                     </p>
                   </div>
-                  <div className="text-xs text-gray-400">Tap to flip</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500">Tap to flip</div>
                 </div>
               </div>
 
               {/* Back - Expert */}
               <div
                 className={cn(
-                  "absolute inset-0 p-4 rounded-2xl border-2 border-accent-peach/20 bg-gradient-to-br from-white to-orange-50/50 shadow-md",
+                  "absolute inset-0 p-4 rounded-2xl border-2 border-accent-peach/20 dark:border-accent-peach/30 bg-gradient-to-br from-white to-orange-50/50 dark:from-[var(--dark-tier-2)] dark:to-accent-peach/5 shadow-md",
                   "[backface-visibility:hidden]"
                 )}
                 style={{ transform: "rotateY(180deg)" }}
@@ -198,12 +198,12 @@ export function ComparisonFlipCard({
                     <p className="text-xs text-accent-peach font-medium mb-1">
                       Expert
                     </p>
-                    <p className="font-bold text-gray-900">{feature.label}</p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="font-bold text-gray-900 dark:text-foreground">{feature.label}</p>
+                    <p className="text-sm text-gray-600 dark:text-muted-foreground mt-1">
                       {feature.expert}
                     </p>
                   </div>
-                  <div className="text-xs text-gray-400">Tap to flip</div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500">Tap to flip</div>
                 </div>
               </div>
             </motion.div>

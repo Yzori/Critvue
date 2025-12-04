@@ -274,7 +274,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 to-white border-2 border-blue-100 hover:border-accent-blue/50 transition-all duration-300 hover:shadow-2xl h-full">
+              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 to-white dark:from-[var(--dark-tier-2)] dark:to-[var(--dark-tier-2)] border-2 border-blue-100 dark:border-accent-blue/30 hover:border-accent-blue/50 dark:hover:border-accent-blue/60 transition-all duration-300 hover:shadow-2xl h-full">
                 <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                   <div className="size-11 sm:size-14 rounded-xl sm:rounded-2xl bg-accent-blue flex items-center justify-center">
                     <Palette className="size-5 sm:size-7 text-white" />
@@ -320,7 +320,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
             >
-              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 border-2 border-accent-peach/40 hover:border-accent-peach transition-all duration-300 hover:shadow-2xl shadow-lg h-full">
+              <div className="relative p-5 sm:p-7 md:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-orange-100 via-orange-50 to-amber-50 dark:from-[var(--dark-tier-2)] dark:via-[var(--dark-tier-2)] dark:to-[var(--dark-tier-2)] border-2 border-accent-peach/40 dark:border-accent-peach/30 hover:border-accent-peach dark:hover:border-accent-peach/60 transition-all duration-300 hover:shadow-2xl shadow-lg h-full">
                 {/* Decorative gradient glow */}
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-accent-peach/20 to-amber-400/20 rounded-2xl sm:rounded-3xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -353,10 +353,10 @@ export default function HomePage() {
                   </p>
 
                   {/* Earnings highlight - compact on mobile */}
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-5">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-500/10 dark:to-emerald-500/10 border border-green-200 dark:border-green-500/30 rounded-lg sm:rounded-xl p-3 sm:p-4 mb-4 sm:mb-5">
                     <div className="flex items-center gap-2.5 sm:gap-3">
-                      <div className="size-8 sm:size-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <DollarSign className="size-4 sm:size-5 text-green-600" />
+                      <div className="size-8 sm:size-10 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+                        <DollarSign className="size-4 sm:size-5 text-green-600 dark:text-green-400" />
                       </div>
                       <div>
                         <div className="text-xs sm:text-sm text-muted-foreground">Avg monthly earnings</div>
@@ -372,8 +372,8 @@ export default function HomePage() {
                       { text: "Build your reputation", icon: TrendingUp },
                     ].map((benefit, i) => (
                       <li key={i} className="flex items-center gap-2 sm:gap-3 text-foreground text-sm sm:text-base">
-                        <div className="size-5 sm:size-6 rounded-full bg-green-100 flex items-center justify-center">
-                          <benefit.icon className="size-3 sm:size-3.5 text-green-600" />
+                        <div className="size-5 sm:size-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+                          <benefit.icon className="size-3 sm:size-3.5 text-green-600 dark:text-green-400" />
                         </div>
                         {benefit.text}
                       </li>
@@ -402,7 +402,7 @@ export default function HomePage() {
           CONTENT TYPES SECTION
           Compact cards on mobile
           ============================================ */}
-      <section className="py-10 sm:py-14 md:py-20 bg-gradient-to-b from-slate-50 to-white">
+      <section className="py-10 sm:py-14 md:py-20 bg-gradient-to-b from-slate-50 to-white dark:from-[var(--dark-tier-1)] dark:to-[var(--dark-tier-1)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <motion.div
             className="text-center mb-6 sm:mb-10"
@@ -444,18 +444,19 @@ export default function HomePage() {
                   "p-2.5 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br border hover:shadow-lg active:shadow-md transition-all duration-150 text-center h-full",
                   type.gradient,
                   type.borderColor,
-                  "hover:border-accent-blue/40"
+                  "hover:border-accent-blue/40",
+                  "dark:from-[var(--dark-tier-2)] dark:to-[var(--dark-tier-2)] dark:border-border dark:hover:border-accent-blue/40"
                 )}>
                   <div
                     className={cn(
                       "size-9 sm:size-12 lg:size-12 mx-auto mb-1.5 sm:mb-3 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-active:scale-95",
-                      type.color === "blue" && "bg-blue-100 text-blue-600",
-                      type.color === "purple" && "bg-purple-100 text-purple-600",
-                      type.color === "red" && "bg-red-100 text-red-600",
-                      type.color === "green" && "bg-green-100 text-green-600",
-                      type.color === "orange" && "bg-orange-100 text-orange-600",
-                      type.color === "pink" && "bg-pink-100 text-pink-600",
-                      type.color === "violet" && "bg-violet-100 text-violet-600"
+                      type.color === "blue" && "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400",
+                      type.color === "purple" && "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400",
+                      type.color === "red" && "bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400",
+                      type.color === "green" && "bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400",
+                      type.color === "orange" && "bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400",
+                      type.color === "pink" && "bg-pink-100 text-pink-600 dark:bg-pink-500/20 dark:text-pink-400",
+                      type.color === "violet" && "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400"
                     )}
                   >
                     <type.icon className="size-4 sm:size-6" />
@@ -539,7 +540,7 @@ export default function HomePage() {
 
             {/* Pro - highlighted */}
             <motion.div
-              className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-accent-blue/10 to-blue-50 border-2 border-accent-blue shadow-lg relative"
+              className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-accent-blue/10 to-blue-50 dark:from-accent-blue/10 dark:to-[var(--dark-tier-2)] border-2 border-accent-blue dark:border-accent-blue/60 shadow-lg relative"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -699,8 +700,8 @@ export default function HomePage() {
       {/* ============================================
           FINAL CTA SECTION - Compact on mobile
           ============================================ */}
-      <section className="py-12 sm:py-16 md:py-24 bg-gradient-to-br from-accent-blue via-accent-blue/90 to-accent-peach">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+      <section className="py-12 sm:py-16 md:py-24 bg-accent-blue dark:bg-accent-blue relative overflow-hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center relative z-10">
           <motion.div {...getMobileAnimation()} className="space-y-4 sm:space-y-6">
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white">
               Ready to level up?
@@ -713,7 +714,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 onClick={() => router.push("/register")}
-                className="w-full sm:w-auto bg-background text-accent-blue hover:bg-muted font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-2xl"
+                className="w-full sm:w-auto bg-white dark:bg-white text-accent-blue hover:bg-gray-100 dark:hover:bg-gray-100 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl shadow-2xl"
               >
                 Get Started Free
                 <ArrowRight className="size-4 sm:size-5 ml-2" />
@@ -722,7 +723,7 @@ export default function HomePage() {
                 size="lg"
                 onClick={() => router.push("/how-it-works")}
                 variant="outline"
-                className="w-full sm:w-auto border-2 border-white text-white hover:bg-background/10 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl"
+                className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 dark:hover:bg-white/20 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl"
               >
                 How It Works
               </Button>
@@ -849,13 +850,13 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
   };
 
   return (
-    <footer className="bg-primary text-white">
+    <footer className="bg-gray-900 dark:bg-[var(--dark-tier-1)] text-white">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid md:grid-cols-5 gap-8 mb-12">
           {/* Brand */}
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold text-accent-blue mb-3">Critvue</h3>
-            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+            <p className="text-gray-400 dark:text-gray-400 text-sm mb-6 max-w-xs">
               Real feedback from real experts. Level up your creative work.
             </p>
 
@@ -873,7 +874,7 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your email"
                   required
-                  className="flex-1 px-4 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue"
+                  className="flex-1 px-4 py-2 bg-gray-800 dark:bg-[var(--dark-tier-2)] border border-gray-700 dark:border-border rounded-lg text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-accent-blue"
                 />
                 <Button type="submit" size="sm" className="bg-accent-blue hover:bg-accent-blue/90">
                   Subscribe
@@ -885,13 +886,13 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
           {/* Links */}
           {footerSections.map((section) => (
             <div key={section.title} className="hidden md:block">
-              <h4 className="font-semibold mb-4 text-sm">{section.title}</h4>
+              <h4 className="font-semibold mb-4 text-sm text-white">{section.title}</h4>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.label}>
                     <button
                       onClick={() => router.push(link.href)}
-                      className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                      className="text-gray-400 hover:text-white transition-colors text-sm"
                     >
                       {link.label}
                     </button>
@@ -904,13 +905,13 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
           {/* Mobile Accordion */}
           <div className="md:hidden col-span-full space-y-4">
             {footerSections.map((section) => (
-              <div key={section.title} className="border-b border-border pb-4">
+              <div key={section.title} className="border-b border-gray-700 dark:border-gray-800 pb-4">
                 <button
                   onClick={() => setExpandedSection(expandedSection === section.title ? null : section.title)}
-                  className="w-full flex items-center justify-between font-semibold min-h-[44px]"
+                  className="w-full flex items-center justify-between font-semibold min-h-[44px] text-white"
                 >
                   {section.title}
-                  <ChevronDown className={cn("size-5 transition-transform", expandedSection === section.title && "rotate-180")} />
+                  <ChevronDown className={cn("size-5 transition-transform text-gray-400", expandedSection === section.title && "rotate-180")} />
                 </button>
                 <AnimatePresence>
                   {expandedSection === section.title && (
@@ -924,7 +925,7 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
                         <li key={link.label}>
                           <button
                             onClick={() => router.push(link.href)}
-                            className="text-muted-foreground hover:text-foreground text-sm py-2"
+                            className="text-gray-400 hover:text-white text-sm py-2"
                           >
                             {link.label}
                           </button>
@@ -939,14 +940,14 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
         </div>
 
         {/* Social Links */}
-        <div className="flex justify-center gap-4 mb-8 pb-8 border-b border-border">
+        <div className="flex justify-center gap-4 mb-8 pb-8 border-b border-gray-700 dark:border-gray-800">
           {socialLinks.map((social) => (
             <a
               key={social.name}
               href={social.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="size-10 flex items-center justify-center bg-card hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all"
+              className="size-10 flex items-center justify-center bg-gray-800 dark:bg-[var(--dark-tier-2)] hover:bg-gray-700 dark:hover:bg-[var(--dark-tier-3)] text-gray-400 hover:text-white rounded-lg transition-all"
             >
               <social.icon className="size-5" />
             </a>
@@ -954,11 +955,11 @@ function Footer({ router }: { router: ReturnType<typeof useRouter> }) {
         </div>
 
         {/* Bottom */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
           <p>&copy; 2025 Critvue. All rights reserved.</p>
           <div className="flex gap-6">
-            <button onClick={() => router.push("/privacy")} className="hover:text-foreground">Privacy</button>
-            <button onClick={() => router.push("/terms")} className="hover:text-foreground">Terms</button>
+            <button onClick={() => router.push("/privacy")} className="hover:text-white">Privacy</button>
+            <button onClick={() => router.push("/terms")} className="hover:text-white">Terms</button>
           </div>
         </div>
       </div>

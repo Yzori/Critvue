@@ -48,12 +48,12 @@ export function JourneyChapter({
   };
 
   const backgroundClasses = {
-    default: "bg-white",
-    alt: "bg-gradient-to-br from-gray-50 via-white to-gray-50",
+    default: "bg-white dark:bg-[var(--dark-tier-1)]",
+    alt: "bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-[var(--dark-tier-2)] dark:via-[var(--dark-tier-1)] dark:to-[var(--dark-tier-2)]",
     gradient:
       perspective === "creator"
-        ? "bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30"
-        : "bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30",
+        ? "bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 dark:from-accent-blue/10 dark:via-[var(--dark-tier-1)] dark:to-accent-blue/5"
+        : "bg-gradient-to-br from-orange-50/50 via-white to-orange-50/30 dark:from-accent-peach/10 dark:via-[var(--dark-tier-1)] dark:to-accent-peach/5",
   };
 
   return (
@@ -152,11 +152,11 @@ export function ChapterHeader({
           {badge}
         </span>
       )}
-      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-foreground mb-4">
         {title}
       </h2>
       {subtitle && (
-        <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+        <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-muted-foreground max-w-2xl mx-auto">
           {subtitle}
         </p>
       )}

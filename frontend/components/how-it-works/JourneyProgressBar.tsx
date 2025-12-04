@@ -40,7 +40,7 @@ export function JourneyProgressBar({
   return (
     <motion.div
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/50 shadow-sm",
+        "fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[var(--dark-tier-2)]/95 backdrop-blur-md border-b border-gray-200/50 dark:border-border shadow-sm",
         className
       )}
       initial={{ y: -100, opacity: 0 }}
@@ -52,7 +52,7 @@ export function JourneyProgressBar({
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Progress bar fill */}
-        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
           <motion.div
             className={cn(
               "h-full rounded-full",
@@ -84,7 +84,7 @@ export function JourneyProgressBar({
                     ? isCreator
                       ? "bg-accent-blue/10"
                       : "bg-accent-peach/10"
-                    : "hover:bg-gray-100"
+                    : "hover:bg-gray-100 dark:hover:bg-white/10"
                 )}
                 aria-label={`Go to ${chapter.label}`}
                 aria-current={index === activeChapter ? "step" : undefined}
@@ -122,7 +122,7 @@ export function JourneyProgressBar({
                       ? isCreator
                         ? "text-accent-blue"
                         : "text-accent-peach"
-                      : "text-gray-500 group-hover:text-gray-700"
+                      : "text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-200"
                   )}
                 >
                   {chapter.shortLabel || chapter.label}
@@ -164,7 +164,7 @@ export function JourneyProgressBar({
             transition={{ duration: 0.3 }}
             className="flex items-center gap-2"
           >
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {activeChapter + 1}/{chapters.length}
             </span>
             <span

@@ -43,7 +43,7 @@ export function PerspectiveToggle({
   return (
     <motion.div
       className={cn(
-        "inline-flex items-center gap-1 bg-gradient-to-r from-white via-gray-50 to-white border-2 border-gray-200/50 shadow-xl backdrop-blur-sm",
+        "inline-flex items-center gap-1 bg-gradient-to-r from-white via-gray-50 to-white dark:from-[var(--dark-tier-2)] dark:via-[var(--dark-tier-3)] dark:to-[var(--dark-tier-2)] border-2 border-gray-200/50 dark:border-border shadow-xl backdrop-blur-sm",
         sizes.container,
         className
       )}
@@ -62,7 +62,7 @@ export function PerspectiveToggle({
           sizes.button,
           isCreator
             ? "text-white shadow-xl"
-            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/10"
         )}
         whileHover={!isCreator ? { scale: 1.02 } : {}}
         whileTap={{ scale: 0.98 }}
@@ -91,7 +91,7 @@ export function PerspectiveToggle({
           sizes.button,
           !isCreator
             ? "text-white shadow-xl"
-            : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/10"
         )}
         whileHover={isCreator ? { scale: 1.02 } : {}}
         whileTap={{ scale: 0.98 }}

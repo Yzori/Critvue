@@ -105,7 +105,7 @@ export function AnimatedStatCard({
   return (
     <motion.div
       className={cn(
-        "flex flex-col items-center p-6 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-lg",
+        "flex flex-col items-center p-6 rounded-2xl bg-white/80 dark:bg-[var(--dark-tier-2)] backdrop-blur-sm border border-gray-200 dark:border-border shadow-lg",
         className
       )}
       initial={{ opacity: 0, y: 20 }}
@@ -134,7 +134,7 @@ export function AnimatedStatCard({
           isCreator ? "text-accent-blue" : "text-accent-peach"
         )}
       />
-      <p className="text-sm sm:text-base text-gray-600 mt-2 text-center">
+      <p className="text-sm sm:text-base text-gray-600 dark:text-muted-foreground mt-2 text-center">
         {label}
       </p>
     </motion.div>
