@@ -109,10 +109,10 @@ export function CategoryCards({ onCategorySelect, selectedCategory }: CategoryCa
     <section className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground">
             Browse by Category
           </h2>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Find reviews in your area of expertise
           </p>
         </div>

@@ -78,8 +78,8 @@ export function CompactFilterBar({
     <div
       className={cn(
         "sticky top-[72px] z-20",
-        "bg-white/80 backdrop-blur-xl",
-        "border-b border-gray-200/50",
+        "bg-card/80 backdrop-blur-xl",
+        "border-b border-border/50",
         className
       )}
     >
@@ -130,17 +130,17 @@ export function CompactFilterBar({
               "md:hidden",
               "inline-flex items-center gap-2",
               "h-[40px] px-4 rounded-full",
-              "bg-white/70 backdrop-blur-[12px]",
-              "border border-black/10",
-              "text-sm font-medium text-gray-700",
-              "hover:bg-white/90 hover:shadow-lg",
+              "bg-card/70 backdrop-blur-[12px]",
+              "border border-border/50",
+              "text-sm font-medium text-foreground",
+              "hover:bg-card/90 hover:shadow-lg",
               "transition-all duration-200",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
               "active:scale-95",
               totalActiveFilters > 0 && [
-                "bg-gradient-to-br from-blue-50/90 to-orange-50/90",
+                "bg-gradient-to-br from-blue-500/10 to-orange-500/10",
                 "border-accent-blue/30",
-                "text-blue-700",
+                "text-blue-600 dark:text-blue-400",
               ]
             )}
             aria-label={`Open filters${totalActiveFilters > 0 ? ` (${totalActiveFilters} active)` : ""}`}
@@ -164,7 +164,7 @@ export function CompactFilterBar({
           <div className="flex-1 md:hidden" />
 
           {/* Results count or additional info (optional) */}
-          <div className="hidden lg:flex items-center ml-auto text-sm text-gray-600">
+          <div className="hidden lg:flex items-center ml-auto text-sm text-muted-foreground">
             {/* Placeholder for future enhancements like result count */}
           </div>
         </div>

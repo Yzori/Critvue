@@ -41,12 +41,12 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, color, bgColo
   const isNegative = change !== undefined && change < 0;
 
   return (
-    <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="bg-background border-border shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{value}</p>
             {change !== undefined && changeLabel && (
               <div className="flex items-center gap-1 mt-2">
                 {isPositive ? (
@@ -54,15 +54,15 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, color, bgColo
                 ) : isNegative ? (
                   <ArrowDown className="h-3 w-3 text-red-500" />
                 ) : (
-                  <Minus className="h-3 w-3 text-gray-400" />
+                  <Minus className="h-3 w-3 text-muted-foreground" />
                 )}
                 <span className={cn(
                   "text-xs font-medium",
-                  isPositive ? "text-green-600" : isNegative ? "text-red-600" : "text-gray-500"
+                  isPositive ? "text-green-600" : isNegative ? "text-red-600" : "text-muted-foreground"
                 )}>
                   {isPositive && "+"}{change}
                 </span>
-                <span className="text-xs text-gray-400">{changeLabel}</span>
+                <span className="text-xs text-muted-foreground">{changeLabel}</span>
               </div>
             )}
           </div>
@@ -87,8 +87,8 @@ function ChartBar({ label, value, maxValue, color }: ChartBarProps) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-500 w-16 shrink-0">{label}</span>
-      <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
+      <span className="text-sm text-muted-foreground w-16 shrink-0">{label}</span>
+      <div className="flex-1 h-8 bg-muted rounded-full overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
@@ -96,7 +96,7 @@ function ChartBar({ label, value, maxValue, color }: ChartBarProps) {
           className={cn("h-full rounded-full", color)}
         />
       </div>
-      <span className="text-sm font-medium text-gray-700 w-12 text-right">{value}</span>
+      <span className="text-sm font-medium text-foreground w-12 text-right">{value}</span>
     </div>
   );
 }
@@ -150,8 +150,8 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-500 mt-1">Platform metrics and insights</p>
+        <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+        <p className="text-muted-foreground mt-1">Platform metrics and insights</p>
       </div>
 
       {/* Top Stats */}
@@ -200,7 +200,7 @@ export default function AdminAnalyticsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-gray-100">
+        <TabsList className="bg-muted">
           <TabsTrigger value="overview" className="data-[state=active]:bg-[#4CC9F0] data-[state=active]:text-white">
             Overview
           </TabsTrigger>
@@ -216,7 +216,7 @@ export default function AdminAnalyticsPage() {
         <TabsContent value="overview" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Weekly Activity Chart */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Weekly Activity</CardTitle>
                 <CardDescription>New users and reviews this week</CardDescription>
@@ -225,7 +225,7 @@ export default function AdminAnalyticsPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">New Users</span>
+                      <span className="text-sm font-medium text-foreground">New Users</span>
                       <Badge className="bg-blue-100 text-blue-700">
                         {weeklyData.users.reduce((a, b) => a + b, 0)} total
                       </Badge>
@@ -242,16 +242,16 @@ export default function AdminAnalyticsPage() {
                               transition={{ delay: index * 0.05, duration: 0.3 }}
                               className="w-full bg-blue-500 rounded-t"
                             />
-                            <span className="text-xs text-gray-400">{dayLabels[index]}</span>
+                            <span className="text-xs text-muted-foreground">{dayLabels[index]}</span>
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-100">
+                  <div className="pt-4 border-t border-border">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">Reviews Completed</span>
+                      <span className="text-sm font-medium text-foreground">Reviews Completed</span>
                       <Badge className="bg-purple-100 text-purple-700">
                         {weeklyData.reviews.reduce((a, b) => a + b, 0)} total
                       </Badge>
@@ -268,7 +268,7 @@ export default function AdminAnalyticsPage() {
                               transition={{ delay: index * 0.05, duration: 0.3 }}
                               className="w-full bg-purple-500 rounded-t"
                             />
-                            <span className="text-xs text-gray-400">{dayLabels[index]}</span>
+                            <span className="text-xs text-muted-foreground">{dayLabels[index]}</span>
                           </div>
                         );
                       })}
@@ -279,7 +279,7 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Application Stats */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Applications This Month</CardTitle>
                 <CardDescription>Expert reviewer application status</CardDescription>
@@ -332,7 +332,7 @@ export default function AdminAnalyticsPage() {
         <TabsContent value="users" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Role Distribution */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">User Roles</CardTitle>
                 <CardDescription>Distribution of user roles</CardDescription>
@@ -360,7 +360,7 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Tier Distribution */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">User Tiers</CardTitle>
                 <CardDescription>Distribution by tier level</CardDescription>
@@ -406,20 +406,20 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Moderation Stats */}
-            <Card className="bg-white border-gray-200 shadow-sm lg:col-span-2">
+            <Card className="bg-background border-border shadow-sm lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-lg">Moderation Overview</CardTitle>
                 <CardDescription>User status and moderation metrics</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 rounded-xl bg-gray-50">
-                    <p className="text-3xl font-bold text-gray-900">{stats?.total_reviewers || 0}</p>
-                    <p className="text-sm text-gray-500 mt-1">Active Reviewers</p>
+                  <div className="text-center p-4 rounded-xl bg-muted">
+                    <p className="text-3xl font-bold text-foreground">{stats?.total_reviewers || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Active Reviewers</p>
                   </div>
-                  <div className="text-center p-4 rounded-xl bg-gray-50">
-                    <p className="text-3xl font-bold text-gray-900">{stats?.total_admins || 0}</p>
-                    <p className="text-sm text-gray-500 mt-1">Admins</p>
+                  <div className="text-center p-4 rounded-xl bg-muted">
+                    <p className="text-3xl font-bold text-foreground">{stats?.total_admins || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Admins</p>
                   </div>
                   <div className="text-center p-4 rounded-xl bg-red-50">
                     <p className="text-3xl font-bold text-red-600">{stats?.banned_users || 0}</p>
@@ -439,7 +439,7 @@ export default function AdminAnalyticsPage() {
         <TabsContent value="activity" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Challenge Stats */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Challenge Activity</CardTitle>
                 <CardDescription>Weekly challenge creation</CardDescription>
@@ -457,13 +457,13 @@ export default function AdminAnalyticsPage() {
                           transition={{ delay: index * 0.05, duration: 0.3 }}
                           className="w-full bg-amber-500 rounded-t"
                         />
-                        <span className="text-xs text-gray-400">{dayLabels[index]}</span>
+                        <span className="text-xs text-muted-foreground">{dayLabels[index]}</span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-sm text-gray-500">Total this week</span>
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                  <span className="text-sm text-muted-foreground">Total this week</span>
                   <Badge className="bg-amber-100 text-amber-700">
                     {weeklyData.challenges.reduce((a, b) => a + b, 0)} challenges
                   </Badge>
@@ -472,39 +472,39 @@ export default function AdminAnalyticsPage() {
             </Card>
 
             {/* Quick Stats */}
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Quick Stats</CardTitle>
                 <CardDescription>Key metrics at a glance</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <div className="flex items-center gap-3">
                     <UserPlus className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm text-gray-700">New users this week</span>
+                    <span className="text-sm text-foreground">New users this week</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats?.new_users_this_week || 0}</span>
+                  <span className="font-semibold text-foreground">{stats?.new_users_this_week || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <div className="flex items-center gap-3">
                     <Activity className="h-5 w-5 text-green-500" />
-                    <span className="text-sm text-gray-700">Active users today</span>
+                    <span className="text-sm text-foreground">Active users today</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats?.active_users_today || 0}</span>
+                  <span className="font-semibold text-foreground">{stats?.active_users_today || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <div className="flex items-center gap-3">
                     <Award className="h-5 w-5 text-purple-500" />
-                    <span className="text-sm text-gray-700">Total reviews completed</span>
+                    <span className="text-sm text-foreground">Total reviews completed</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats?.total_reviews || 0}</span>
+                  <span className="font-semibold text-foreground">{stats?.total_reviews || 0}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
                   <div className="flex items-center gap-3">
                     <Swords className="h-5 w-5 text-amber-500" />
-                    <span className="text-sm text-gray-700">Active challenges</span>
+                    <span className="text-sm text-foreground">Active challenges</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{stats?.active_challenges || 0}</span>
+                  <span className="font-semibold text-foreground">{stats?.active_challenges || 0}</span>
                 </div>
               </CardContent>
             </Card>

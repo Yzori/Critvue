@@ -39,7 +39,7 @@ export function MobileDiscoveryCarousel({
       <div className="flex items-center justify-between px-4 mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="size-4 text-amber-500" />
-          <h2 className="text-base font-bold text-gray-900">Featured</h2>
+          <h2 className="text-base font-bold text-foreground">Featured</h2>
         </div>
         <Link
           href="#premium-marketplace"
@@ -82,7 +82,7 @@ function FeaturedCard({ review, index }: FeaturedCardProps) {
       className={cn(
         "flex-shrink-0 snap-start",
         "w-[200px] rounded-xl overflow-hidden",
-        "bg-gray-100 shadow-md",
+        "bg-muted shadow-md",
         "active:scale-[0.98] transition-transform"
       )}
       style={{
@@ -99,7 +99,7 @@ function FeaturedCard({ review, index }: FeaturedCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-blue-100 via-purple-50 to-pink-100" />
+          <div className="w-full h-full bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-pink-500/20" />
         )}
 
         {/* Price Badge */}
@@ -124,10 +124,10 @@ function FeaturedCard({ review, index }: FeaturedCardProps) {
 
       {/* Content */}
       <div className="p-3">
-        <p className="text-[10px] uppercase tracking-wide text-gray-500 font-medium">
+        <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
           {review.content_type}
         </p>
-        <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mt-0.5 leading-tight">
+        <h3 className="text-sm font-semibold text-foreground line-clamp-2 mt-0.5 leading-tight">
           {review.title}
         </h3>
 
@@ -135,7 +135,7 @@ function FeaturedCard({ review, index }: FeaturedCardProps) {
         {review.creator_rating && (
           <div className="flex items-center gap-1 mt-2">
             <Star className="size-3 fill-amber-400 text-amber-400" />
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-muted-foreground">
               {review.creator_rating.toFixed(1)}
             </span>
           </div>

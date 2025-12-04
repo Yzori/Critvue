@@ -81,15 +81,15 @@ export function ActiveFilterChips({
   return (
     <div
       className={cn(
-        "border-t border-gray-200/50",
-        "bg-gradient-to-r from-blue-50/30 to-orange-50/30",
+        "border-t border-border/50",
+        "bg-gradient-to-r from-blue-500/5 to-orange-500/5",
         "animate-in slide-in-from-top-4 fade-in duration-200"
       )}
     >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           {/* Label */}
-          <span className="text-xs font-medium text-gray-600 mr-1">
+          <span className="text-xs font-medium text-muted-foreground mr-1">
             Active:
           </span>
 
@@ -102,10 +102,10 @@ export function ActiveFilterChips({
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5",
                 "rounded-full",
-                "bg-gradient-to-br from-blue-100/80 to-blue-50/80",
+                "bg-gradient-to-br from-blue-500/15 to-blue-500/10",
                 "border border-accent-blue/20",
-                "text-xs font-medium text-blue-700",
-                "hover:bg-gradient-to-br hover:from-blue-200/80 hover:to-blue-100/80",
+                "text-xs font-medium text-blue-600 dark:text-blue-400",
+                "hover:bg-gradient-to-br hover:from-blue-500/20 hover:to-blue-500/15",
                 "transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
                 "active:scale-95",

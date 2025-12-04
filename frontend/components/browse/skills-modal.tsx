@@ -122,13 +122,13 @@ export function SkillsModal({
           {selectedSkills.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-foreground">
                   Your Skills ({selectedSkills.length}/10)
                 </span>
                 {selectedSkills.length > 0 && (
                   <button
                     onClick={() => setSelectedSkills([])}
-                    className="text-xs text-gray-500 hover:text-gray-700"
+                    className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Clear all
                   </button>
@@ -157,8 +157,8 @@ export function SkillsModal({
 
           {/* Empty state prompt */}
           {selectedSkills.length === 0 && (
-            <div className="text-center py-3 px-4 rounded-lg bg-gray-50 border border-dashed border-gray-200">
-              <p className="text-sm text-gray-600">
+            <div className="text-center py-3 px-4 rounded-lg bg-muted/50 border border-dashed border-border">
+              <p className="text-sm text-muted-foreground">
                 Select skills below to get better recommendations
               </p>
             </div>
@@ -172,7 +172,7 @@ export function SkillsModal({
                 "rounded-full border px-3 py-1.5 text-sm transition-colors",
                 !selectedCategory
                   ? "border-accent-blue bg-accent-blue/10 text-accent-blue"
-                  : "border-gray-200 hover:border-accent-blue/50"
+                  : "border-border hover:border-accent-blue/50"
               )}
             >
               All
@@ -185,7 +185,7 @@ export function SkillsModal({
                   "rounded-full border px-3 py-1.5 text-sm transition-colors",
                   selectedCategory === category.id
                     ? "border-accent-blue bg-accent-blue/10 text-accent-blue"
-                    : "border-gray-200 hover:border-accent-blue/50"
+                    : "border-border hover:border-accent-blue/50"
                 )}
               >
                 <span className="mr-1">{category.icon}</span>
@@ -196,7 +196,7 @@ export function SkillsModal({
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search skills..."
@@ -207,7 +207,7 @@ export function SkillsModal({
           </div>
 
           {/* Available Skills Grid */}
-          <div className="flex-1 overflow-y-auto min-h-0 rounded-lg border border-gray-200 p-3">
+          <div className="flex-1 overflow-y-auto min-h-0 rounded-lg border border-border p-3">
             <div className="grid gap-2 sm:grid-cols-2">
               {filteredSkills.map(({ skill, icon }) => {
                 const isSelected = selectedSkills.includes(skill);
@@ -223,8 +223,8 @@ export function SkillsModal({
                       isSelected
                         ? "border-accent-blue bg-accent-blue/5 text-accent-blue"
                         : canAdd
-                          ? "border-gray-200 hover:border-accent-blue/50 hover:bg-gray-50"
-                          : "cursor-not-allowed opacity-50 border-gray-200"
+                          ? "border-border hover:border-accent-blue/50 hover:bg-muted/50"
+                          : "cursor-not-allowed opacity-50 border-border"
                     )}
                   >
                     <span>
@@ -240,7 +240,7 @@ export function SkillsModal({
             </div>
 
             {filteredSkills.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 No skills found matching "{searchQuery}"
               </div>
             )}

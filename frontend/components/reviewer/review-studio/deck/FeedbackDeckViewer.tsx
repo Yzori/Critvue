@@ -92,7 +92,7 @@ export function FeedbackDeckViewer({ className }: FeedbackDeckViewerProps) {
             className={cn(
               "text-xs px-1.5 py-0.5 rounded-full",
               activeTab === "issues"
-                ? "bg-white/20 text-white"
+                ? "bg-background/20 text-white"
                 : "bg-orange-100 text-orange-700"
             )}
           >
@@ -112,7 +112,7 @@ export function FeedbackDeckViewer({ className }: FeedbackDeckViewerProps) {
             className={cn(
               "text-xs px-1.5 py-0.5 rounded-full",
               activeTab === "strengths"
-                ? "bg-white/20 text-white"
+                ? "bg-background/20 text-white"
                 : "bg-green-100 text-green-700"
             )}
           >

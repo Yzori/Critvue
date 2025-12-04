@@ -108,7 +108,7 @@ export function StrengthCardEditor({
     return (
       <div
         className={cn(
-          "group rounded-lg border-2 border-green-300 bg-white p-3 transition-all cursor-pointer hover:shadow-md",
+          "group rounded-lg border-2 border-green-300 bg-background p-3 transition-all cursor-pointer hover:shadow-md",
           isDragging && "shadow-lg opacity-90"
         )}
         onClick={toggleExpanded}
@@ -158,7 +158,7 @@ export function StrengthCardEditor({
   return (
     <div
       className={cn(
-        "rounded-lg border-2 border-green-300 bg-white p-4 space-y-4 transition-all",
+        "rounded-lg border-2 border-green-300 bg-background p-4 space-y-4 transition-all",
         isDragging && "shadow-lg opacity-90"
       )}
     >

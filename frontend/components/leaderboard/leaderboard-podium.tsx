@@ -22,9 +22,9 @@ const RANK_CONFIG = {
     ringSize: 'h-24 w-24',
     label: '1st',
     gradient: 'from-amber-400 via-yellow-300 to-amber-500',
-    borderColor: 'border-amber-400',
+    borderColor: 'border-amber-400/50',
     glowColor: 'shadow-amber-300/50',
-    bgColor: 'bg-gradient-to-b from-amber-100 to-amber-50',
+    bgColor: 'bg-amber-500/20 dark:bg-amber-500/30',
     icon: Crown,
     iconColor: 'text-amber-500',
     order: 1,
@@ -35,9 +35,9 @@ const RANK_CONFIG = {
     ringSize: 'h-20 w-20',
     label: '2nd',
     gradient: 'from-slate-300 via-gray-200 to-slate-400',
-    borderColor: 'border-slate-300',
+    borderColor: 'border-slate-400/50',
     glowColor: 'shadow-slate-300/40',
-    bgColor: 'bg-gradient-to-b from-slate-100 to-slate-50',
+    bgColor: 'bg-slate-400/20 dark:bg-slate-400/30',
     icon: Medal,
     iconColor: 'text-slate-400',
     order: 0,
@@ -48,9 +48,9 @@ const RANK_CONFIG = {
     ringSize: 'h-18 w-18',
     label: '3rd',
     gradient: 'from-orange-400 via-amber-300 to-orange-500',
-    borderColor: 'border-orange-300',
+    borderColor: 'border-orange-400/50',
     glowColor: 'shadow-orange-300/40',
-    bgColor: 'bg-gradient-to-b from-orange-50 to-amber-50',
+    bgColor: 'bg-orange-500/20 dark:bg-orange-500/30',
     icon: Trophy,
     iconColor: 'text-orange-400',
     order: 2,
@@ -111,7 +111,7 @@ function PodiumUser({ user, rank, onClick }: PodiumUserProps) {
           <Avatar
             className={cn(
               config.avatarSize,
-              'border-2 border-white transition-transform group-hover:scale-105'
+              'border-2 border-background transition-transform group-hover:scale-105'
             )}
           >
             <AvatarImage src={user.avatarUrl} alt={user.displayName} />
@@ -142,10 +142,10 @@ function PodiumUser({ user, rank, onClick }: PodiumUserProps) {
 
       {/* User Info */}
       <div className="text-center space-y-1">
-        <p className="font-semibold text-sm text-gray-900 truncate max-w-[100px]">
+        <p className="font-semibold text-sm text-foreground truncate max-w-[100px]">
           {user.displayName}
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {user.scoreLabel}
         </p>
 
@@ -228,13 +228,13 @@ export function LeaderboardPodium({
               >
                 <div
                   className={cn(
-                    'rounded-full bg-gray-200',
+                    'rounded-full bg-muted',
                     RANK_CONFIG[rank].avatarSize
                   )}
                 />
                 <div
                   className={cn(
-                    'w-24 rounded-t-lg mt-3 bg-gray-100',
+                    'w-24 rounded-t-lg mt-3 bg-muted',
                     RANK_CONFIG[rank].height
                   )}
                 />

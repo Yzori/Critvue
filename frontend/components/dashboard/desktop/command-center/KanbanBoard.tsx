@@ -126,12 +126,12 @@ export function KanbanBoard({
 
 // Header color mapping for distinct column identity - thicker bars with tinted bg
 const columnHeaderColors: Record<string, { bar: string; badge: string; iconBg: string }> = {
-  pending: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-100" },
-  in_progress: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-100" },
-  completed: { bar: "bg-green-500", badge: "bg-green-500/10 text-green-600", iconBg: "bg-green-100" },
-  available: { bar: "bg-purple-500", badge: "bg-purple-500/10 text-purple-600", iconBg: "bg-purple-100" },
-  working_on: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-100" },
-  submitted: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-100" },
+  pending: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-500/10" },
+  in_progress: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-500/10" },
+  completed: { bar: "bg-green-500", badge: "bg-green-500/10 text-green-600", iconBg: "bg-green-500/10" },
+  available: { bar: "bg-purple-500", badge: "bg-purple-500/10 text-purple-600", iconBg: "bg-purple-500/10" },
+  working_on: { bar: "bg-blue-500", badge: "bg-blue-500/10 text-blue-600", iconBg: "bg-blue-500/10" },
+  submitted: { bar: "bg-amber-500", badge: "bg-amber-500/10 text-amber-600", iconBg: "bg-amber-500/10" },
 };
 
 /**
@@ -166,7 +166,7 @@ function KanbanColumn({
         "flex flex-col",
         "rounded-xl",
         "border border-border/60",
-        "bg-white",
+        "bg-background",
         "overflow-hidden",
         "min-h-[240px]"
       )}
@@ -338,7 +338,7 @@ function EmptyState({
         <div className="mt-3">
           {action.href ? (
             <Link href={action.href}>
-              <Button size="sm" variant="ghost" className="flex items-center gap-1 h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+              <Button size="sm" variant="ghost" className="flex items-center gap-1 h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-500/10">
                 {action.label}
                 <ArrowRight className="size-3" />
               </Button>
@@ -364,7 +364,7 @@ function KanbanSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="rounded-2xl border border-border bg-white overflow-hidden min-h-[320px]"
+          className="rounded-2xl border border-border bg-background overflow-hidden min-h-[320px]"
         >
           {/* Colored bar skeleton */}
           <div className="h-1.5 bg-muted animate-pulse" />

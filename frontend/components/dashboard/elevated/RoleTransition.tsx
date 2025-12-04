@@ -55,7 +55,7 @@ export function AnimatedRoleToggle({
           layout
           className={cn(
             'relative flex items-center p-1.5 rounded-2xl',
-            'bg-white/80 backdrop-blur-sm border border-slate-200/80',
+            'bg-background/80 backdrop-blur-sm border border-border/80',
             'shadow-sm',
             isTransitioning && 'pointer-events-none',
             className
@@ -92,7 +92,7 @@ export function AnimatedRoleToggle({
               'min-w-[130px] justify-center',
               role === 'creator'
                 ? 'text-white'
-                : 'text-slate-500 hover:text-slate-700'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <motion.div
@@ -381,8 +381,8 @@ export function RoleBadge({
         'inline-flex items-center rounded-full font-medium',
         sizeClasses[size],
         role === 'creator'
-          ? 'bg-blue-100 text-blue-700 border border-blue-200'
-          : 'bg-orange-100 text-orange-700 border border-orange-200',
+          ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+          : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
         className
       )}
     >

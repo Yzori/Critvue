@@ -54,7 +54,7 @@ export function DiscoveryCard({
         whileTap={{ scale: 0.98 }}
         className={cn(
           'flex items-center gap-2 p-2 rounded-lg cursor-pointer',
-          'bg-gray-50 hover:bg-gray-100 transition-colors',
+          'bg-muted hover:bg-muted/80 transition-colors',
           className
         )}
         onClick={() => onClick?.(user)}
@@ -69,11 +69,11 @@ export function DiscoveryCard({
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium text-foreground truncate">
             {user.displayName}
           </p>
         </div>
-        <div className="flex items-center gap-1 text-xs text-gray-500">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <HighlightIcon className="h-3 w-3" />
           <span>{user.highlight.value}</span>
         </div>
@@ -86,8 +86,8 @@ export function DiscoveryCard({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       className={cn(
-        'relative rounded-xl border border-gray-100 p-4 cursor-pointer',
-        'bg-white hover:shadow-md transition-all',
+        'relative rounded-xl border border-border p-4 cursor-pointer',
+        'bg-background hover:shadow-md transition-all',
         className
       )}
       onClick={() => onClick?.(user)}
@@ -100,7 +100,7 @@ export function DiscoveryCard({
             background: `linear-gradient(135deg, ${tierInfo.color}, ${tierInfo.color}80)`,
           }}
         >
-          <Avatar className="h-10 w-10 border-2 border-white">
+          <Avatar className="h-10 w-10 border-2 border-background">
             <AvatarImage src={user.avatarUrl} alt={user.displayName} />
             <AvatarFallback
               className="text-sm font-semibold text-white"
@@ -111,7 +111,7 @@ export function DiscoveryCard({
           </Avatar>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 truncate">
+          <p className="font-semibold text-foreground truncate">
             {user.displayName}
           </p>
           <span
@@ -127,22 +127,22 @@ export function DiscoveryCard({
       </div>
 
       {/* Highlight Stat */}
-      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-2 mb-3">
+      <div className="flex items-center justify-between bg-muted rounded-lg p-2 mb-3">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-md bg-accent-peach/10">
             <HighlightIcon className="h-4 w-4 text-accent-peach" />
           </div>
           <div>
-            <p className="text-xs text-gray-500">{user.highlight.label}</p>
-            <p className="font-semibold text-gray-900">{user.highlight.value}</p>
+            <p className="text-xs text-muted-foreground">{user.highlight.label}</p>
+            <p className="font-semibold text-foreground">{user.highlight.value}</p>
           </div>
         </div>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
       </div>
 
       {/* Bottom Row: Stats + Badge */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Star className="h-3 w-3 text-amber-400" />
             {user.rating.toFixed(1)}
@@ -166,7 +166,7 @@ export function DiscoveryCard({
           {user.skills.slice(0, 3).map((skill) => (
             <span
               key={skill}
-              className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600"
+              className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500"
             >
               {skill}
             </span>

@@ -38,7 +38,7 @@ const roleColors: Record<UserRole, { bg: string; text: string }> = {
 };
 
 const tierColors: Record<UserTier, string> = {
-  novice: "text-gray-600",
+  novice: "text-muted-foreground",
   contributor: "text-green-600",
   skilled: "text-blue-600",
   trusted_advisor: "text-purple-600",
@@ -96,10 +96,10 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-background shadow-xl z-50 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">User Details</h2>
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">User Details</h2>
           <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
             <X className="h-5 w-5" />
           </Button>
@@ -122,10 +122,10 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-foreground">
                     {user.full_name || "No name"}
                   </h3>
-                  <p className="text-gray-500">{user.email}</p>
+                  <p className="text-muted-foreground">{user.email}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className={cn("capitalize", roleColors[user.role].bg, roleColors[user.role].text)}>
                       {user.role}
@@ -168,7 +168,7 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
 
               {/* Stats */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Statistics</h4>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Statistics</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <StatItem
                     icon={Star}
@@ -199,19 +199,19 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
 
               {/* Challenges */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Challenges</h4>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Challenges</h4>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <Swords className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-600">{user.challenges_won} won</span>
+                    <span className="text-muted-foreground">{user.challenges_won} won</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Swords className="h-4 w-4 text-red-500" />
-                    <span className="text-gray-600">{user.challenges_lost} lost</span>
+                    <span className="text-muted-foreground">{user.challenges_lost} lost</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Swords className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-600">{user.challenges_drawn} drawn</span>
+                    <Swords className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">{user.challenges_drawn} drawn</span>
                   </div>
                 </div>
               </div>
@@ -220,10 +220,10 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
 
               {/* Account Info */}
               <div>
-                <h4 className="text-sm font-medium text-gray-500 mb-3">Account</h4>
+                <h4 className="text-sm font-medium text-muted-foreground mb-3">Account</h4>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Verified</span>
+                    <span className="text-muted-foreground">Verified</span>
                     {user.is_verified ? (
                       <Badge className="bg-green-100 text-green-700 gap-1">
                         <CheckCircle className="h-3 w-3" />
@@ -237,22 +237,22 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Subscription</span>
-                    <span className="text-gray-900 capitalize">{user.subscription_tier}</span>
+                    <span className="text-muted-foreground">Subscription</span>
+                    <span className="text-foreground capitalize">{user.subscription_tier}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Joined</span>
-                    <span className="text-gray-900">{formatDate(user.created_at)}</span>
+                    <span className="text-muted-foreground">Joined</span>
+                    <span className="text-foreground">{formatDate(user.created_at)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Last Login</span>
-                    <span className="text-gray-900">{formatDate(user.last_login)}</span>
+                    <span className="text-muted-foreground">Last Login</span>
+                    <span className="text-foreground">{formatDate(user.last_login)}</span>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
+            <div className="flex items-center justify-center h-64 text-muted-foreground">
               User not found
             </div>
           )}
@@ -260,7 +260,7 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
 
         {/* Actions */}
         {user && !user.is_banned && (
-          <div className="border-t border-gray-200 p-4 space-y-2">
+          <div className="border-t border-border p-4 space-y-2">
             <Button
               variant="outline"
               className="w-full justify-start"
@@ -306,11 +306,11 @@ function StatItem({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted">
       <Icon className={cn("h-5 w-5", color)} />
       <div>
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="font-semibold text-gray-900">{value}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );

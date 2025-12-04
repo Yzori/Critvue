@@ -63,7 +63,7 @@ export function RequestElaborationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MessageSquarePlus className="size-6 text-blue-600" />
@@ -163,7 +163,7 @@ export function RequestElaborationModal({
                   key={i}
                   type="button"
                   onClick={() => setRequest(example)}
-                  className="text-left text-sm text-muted-foreground hover:text-foreground p-3 rounded-lg border border-border hover:border-blue-500/50 hover:bg-blue-500/5 transition-all"
+                  className="text-left text-sm text-muted-foreground hover:text-foreground p-3 rounded-lg border border-border hover:border-blue-500/50 hover:bg-muted transition-all"
                 >
                   "{example}"
                 </button>

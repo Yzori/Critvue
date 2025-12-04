@@ -53,17 +53,17 @@ export function FilterButton({
             // Active state (with filters applied)
             isActive
               ? [
-                  "bg-gradient-to-br from-blue-50/90 to-orange-50/90",
+                  "bg-gradient-to-br from-blue-500/10 to-orange-500/10",
                   "border border-accent-blue/30",
-                  "text-blue-700",
-                  "shadow-md shadow-blue-100/50",
+                  "text-blue-600 dark:text-blue-400",
+                  "shadow-md shadow-blue-500/10",
                 ]
               : [
                   // Default state
-                  "bg-white/70",
-                  "border border-black/10",
-                  "text-gray-700",
-                  "hover:bg-white/90",
+                  "bg-card/70",
+                  "border border-border/50",
+                  "text-foreground",
+                  "hover:bg-card/90",
                   "hover:shadow-lg shadow-black/5",
                   "hover:-translate-y-[1px]",
                 ],
@@ -107,8 +107,8 @@ export function FilterButton({
             "z-50 min-w-[240px] max-w-[320px]",
             "rounded-xl p-3",
             // Glassmorphism
-            "bg-white/90 backdrop-blur-[24px]",
-            "border border-white/30",
+            "bg-card/95 backdrop-blur-[24px]",
+            "border border-border/30",
             "shadow-2xl shadow-blue-900/20",
             // Animation
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
@@ -126,7 +126,7 @@ export function FilterButton({
           {children}
 
           {/* Optional arrow */}
-          <Popover.Arrow className="fill-white/90" />
+          <Popover.Arrow className="fill-card/95" />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

@@ -142,20 +142,20 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-background border-r border-border transition-all duration-300 flex flex-col",
         isCollapsed ? "w-[70px]" : "w-[260px]"
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-border">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#4CC9F0] to-[#4361EE]">
               <Shield className="h-4 w-4 text-white" />
             </div>
             <div>
-              <span className="font-semibold text-gray-900">Critvue</span>
-              <span className="ml-1 text-xs text-gray-500">Admin</span>
+              <span className="font-semibold text-foreground">Critvue</span>
+              <span className="ml-1 text-xs text-muted-foreground">Admin</span>
             </div>
           </div>
         )}
@@ -167,7 +167,7 @@ export function AdminSidebar({
         <Button
           variant="ghost"
           size="sm"
-          className={cn("h-8 w-8 p-0", isCollapsed && "absolute -right-3 top-6 bg-white border shadow-sm rounded-full")}
+          className={cn("h-8 w-8 p-0", isCollapsed && "absolute -right-3 top-6 bg-background border shadow-sm rounded-full")}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -183,7 +183,7 @@ export function AdminSidebar({
         {navSections.map((section, sectionIndex) => (
           <div key={section.title} className={cn(sectionIndex > 0 && "mt-6")}>
             {!isCollapsed && (
-              <h3 className="mb-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <h3 className="mb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {section.title}
               </h3>
             )}
@@ -203,7 +203,7 @@ export function AdminSidebar({
                         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                         active
                           ? "bg-[#4CC9F0]/10 text-[#4CC9F0]"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         isCollapsed && "justify-center px-2"
                       )}
                       title={isCollapsed ? item.label : undefined}
@@ -235,11 +235,11 @@ export function AdminSidebar({
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-border p-3">
         <Link
           href="/admin/settings"
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors",
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
             isCollapsed && "justify-center px-2",
             pathname === "/admin/settings" && "bg-[#4CC9F0]/10 text-[#4CC9F0]"
           )}
@@ -251,7 +251,7 @@ export function AdminSidebar({
         <button
           onClick={() => logout()}
           className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full",
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors w-full",
             isCollapsed && "justify-center px-2"
           )}
           title={isCollapsed ? "Exit Admin" : undefined}

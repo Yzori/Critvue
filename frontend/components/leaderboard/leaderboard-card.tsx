@@ -44,17 +44,17 @@ export function LeaderboardCard({
       icon: Trophy,
       iconColor: 'text-amber-900',
       border: 'border-amber-400',
-      shadow: 'shadow-lg shadow-amber-200',
+      shadow: 'shadow-lg shadow-amber-200/50 dark:shadow-amber-600/30',
       scale: 'md:scale-105',
     },
     2: {
-      gradient: 'from-gray-200 to-gray-300',
-      bgColor: 'bg-gradient-to-br from-gray-200 to-gray-300',
-      textColor: 'text-gray-800',
+      gradient: 'from-slate-300 to-slate-400 dark:from-slate-500 dark:to-slate-600',
+      bgColor: 'bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-500 dark:to-slate-600',
+      textColor: 'text-slate-800 dark:text-slate-100',
       icon: Medal,
-      iconColor: 'text-gray-600',
-      border: 'border-gray-400',
-      shadow: 'shadow-md shadow-gray-200',
+      iconColor: 'text-slate-600 dark:text-slate-200',
+      border: 'border-slate-400 dark:border-slate-500',
+      shadow: 'shadow-md shadow-slate-200/50 dark:shadow-slate-700/50',
       scale: 'md:scale-102',
     },
     3: {
@@ -64,7 +64,7 @@ export function LeaderboardCard({
       icon: Medal,
       iconColor: 'text-orange-800',
       border: 'border-orange-400',
-      shadow: 'shadow-md shadow-orange-200',
+      shadow: 'shadow-md shadow-orange-200/50 dark:shadow-orange-600/30',
       scale: '',
     },
   };
@@ -90,13 +90,13 @@ export function LeaderboardCard({
   const getRankChangeColor = () => {
     switch (entry.rankChangeDirection) {
       case RankChangeDirection.UP:
-        return 'text-green-600 bg-green-50 border-green-200';
+        return 'text-green-600 bg-green-500/10 border-green-500/30';
       case RankChangeDirection.DOWN:
-        return 'text-red-600 bg-red-50 border-red-200';
+        return 'text-red-600 bg-red-500/10 border-red-500/30';
       case RankChangeDirection.NEW:
-        return 'text-blue-600 bg-blue-50 border-blue-200';
+        return 'text-blue-600 bg-blue-500/10 border-blue-500/30';
       default:
-        return 'text-gray-500 bg-gray-50 border-gray-200';
+        return 'text-muted-foreground bg-muted border-border';
     }
   };
 

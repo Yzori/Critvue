@@ -69,7 +69,7 @@ export function OnlineCounter({
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full',
-        'bg-emerald-50/80 text-emerald-700 border border-emerald-200/60',
+        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
         sizeClasses[size],
         className
       )}
@@ -167,9 +167,9 @@ export function ViewersIndicator({
             initial={{ scale: 0, x: -10 }}
             animate={{ scale: 1, x: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 border-2 border-white flex items-center justify-center"
+            className="w-6 h-6 rounded-full bg-gradient-to-br from-muted to-muted border-2 border-background flex items-center justify-center"
           >
-            <Eye className="w-3 h-3 text-slate-500" />
+            <Eye className="w-3 h-3 text-muted-foreground" />
           </motion.div>
         ))}
         {overflow > 0 && (
@@ -177,9 +177,9 @@ export function ViewersIndicator({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: displayCount * 0.1 }}
-            className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center"
+            className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center"
           >
-            <span className="text-[10px] font-medium text-slate-600">
+            <span className="text-[10px] font-medium text-muted-foreground">
               +{overflow}
             </span>
           </motion.div>
@@ -348,7 +348,7 @@ export function RecentActivityIndicator({
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
         'inline-flex items-center gap-1.5 px-2 py-1 rounded-md',
-        'bg-blue-50 text-blue-700 text-xs font-medium',
+        'bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-medium',
         className
       )}
     >
@@ -419,7 +419,7 @@ export function GlobalActivityStream({
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-full',
-            'bg-white/90 backdrop-blur-sm border border-border/50',
+            'bg-background/90 backdrop-blur-sm border border-border/50',
             'shadow-lg text-sm'
           )}
         >

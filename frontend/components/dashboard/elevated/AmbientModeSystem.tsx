@@ -13,6 +13,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   Sun,
   Moon,
@@ -144,56 +145,47 @@ export function AmbientModeProvider({
   defaultMode = 'system',
 }: AmbientModeProviderProps) {
   const [mode, setModeState] = useState<AmbientMode>(defaultMode);
-  const [systemPreference, setSystemPreference] = useState<'light' | 'dark'>('light');
 
-  // Detect system preference
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
+  // Get the resolved theme from the main ThemeContext
+  // This ensures we respect the user's theme preference from Settings > Appearance
+  const { resolvedTheme } = useTheme();
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setSystemPreference(mediaQuery.matches ? 'dark' : 'light');
-
-    const handler = (e: MediaQueryListEvent) => {
-      setSystemPreference(e.matches ? 'dark' : 'light');
-    };
-
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
-
-  // Load saved preference
+  // Load saved ambient mode preference (focus/zen only, NOT light/dark)
   useEffect(() => {
     const saved = localStorage.getItem('ambientMode') as AmbientMode | null;
-    if (saved && modeConfigs[saved]) {
+    // Only restore focus/zen modes - light/dark/system are handled by ThemeContext
+    if (saved && (saved === 'focus' || saved === 'zen')) {
       setModeState(saved);
     }
   }, []);
 
   const setMode = useCallback((newMode: AmbientMode) => {
     setModeState(newMode);
-    localStorage.setItem('ambientMode', newMode);
 
-    // Apply theme to document
-    const resolvedMode = newMode === 'system' ? systemPreference :
-      (newMode === 'dark' ? 'dark' : 'light');
+    // Only save focus/zen modes - theme is handled by ThemeContext
+    if (newMode === 'focus' || newMode === 'zen') {
+      localStorage.setItem('ambientMode', newMode);
+    } else {
+      // Clear ambient mode if switching to light/dark/system
+      localStorage.removeItem('ambientMode');
+    }
 
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(resolvedMode);
-
-    // Apply focus/zen classes
+    // DO NOT modify light/dark classes - that's ThemeContext's job
+    // Only apply focus/zen classes for feature flags
     document.documentElement.classList.remove('focus-mode', 'zen-mode');
     if (newMode === 'focus') {
       document.documentElement.classList.add('focus-mode');
     } else if (newMode === 'zen') {
       document.documentElement.classList.add('zen-mode');
     }
-  }, [systemPreference]);
+  }, []);
 
-  // Resolve actual theme
-  const resolvedMode: 'light' | 'dark' = mode === 'system' ? systemPreference :
-    (mode === 'dark' ? 'dark' : 'light');
+  // Use the resolved theme from ThemeContext (respects user's theme preference)
+  const resolvedMode: 'light' | 'dark' = resolvedTheme;
 
-  const config = modeConfigs[mode];
+  // Map ambient mode to config (for focus/zen use their config, otherwise use light/dark based on theme)
+  const effectiveMode: AmbientMode = (mode === 'focus' || mode === 'zen') ? mode : resolvedTheme;
+  const config = modeConfigs[effectiveMode] || modeConfigs[resolvedTheme];
 
   // Feature flags
   const shouldReduceMotion = config.features.reducedMotion;
@@ -202,10 +194,15 @@ export function AmbientModeProvider({
   const shouldMinimizeChrome = config.features.minimalChrome;
   const shouldDimColors = config.features.dimmedColors;
 
-  // Apply theme on mount and mode change
+  // Apply focus/zen classes on mount and mode change (but NOT light/dark)
   useEffect(() => {
-    setMode(mode);
-  }, [mode, setMode]);
+    document.documentElement.classList.remove('focus-mode', 'zen-mode');
+    if (mode === 'focus') {
+      document.documentElement.classList.add('focus-mode');
+    } else if (mode === 'zen') {
+      document.documentElement.classList.add('zen-mode');
+    }
+  }, [mode]);
 
   return (
     <AmbientModeContext.Provider

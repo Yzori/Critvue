@@ -39,7 +39,7 @@ export function StrengthCardViewer({
   if (!isExpanded) {
     return (
       <div
-        className="rounded-xl border-2 border-green-300 bg-white p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md"
+        className="rounded-xl border-2 border-green-300 bg-background p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md"
         onClick={() => setIsExpanded(true)}
       >
         <div className="flex items-start gap-3">
@@ -74,14 +74,14 @@ export function StrengthCardViewer({
 
   // ===== Expanded View =====
   return (
-    <div className="rounded-xl border-2 border-green-300 bg-white overflow-hidden">
+    <div className="rounded-xl border-2 border-green-300 bg-background overflow-hidden">
       {/* Header */}
       <div
         className="px-4 py-3 bg-green-100 cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(false)}
       >
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-white flex items-center justify-center">
+          <div className="size-8 rounded-full bg-background flex items-center justify-center">
             <ThumbsUp className="size-4 text-green-600" />
           </div>
           <span className="text-sm font-semibold text-green-800">

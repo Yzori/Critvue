@@ -33,11 +33,11 @@ const SECTION_ICONS: Record<string, React.ComponentType<{ className?: string }>>
 };
 
 const SECTION_COLORS: Record<string, string> = {
-  rising_stars: 'text-green-500 bg-green-50',
-  skill_specialists: 'text-purple-500 bg-purple-50',
-  quick_responders: 'text-blue-500 bg-blue-50',
-  recommended: 'text-amber-500 bg-amber-50',
-  newcomers: 'text-pink-500 bg-pink-50',
+  rising_stars: 'text-green-500 bg-green-500/10',
+  skill_specialists: 'text-purple-500 bg-purple-500/10',
+  quick_responders: 'text-blue-500 bg-blue-500/10',
+  recommended: 'text-amber-500 bg-amber-500/10',
+  newcomers: 'text-pink-500 bg-pink-500/10',
 };
 
 function DiscoverySectionCard({
@@ -50,7 +50,7 @@ function DiscoverySectionCard({
   onSeeAll?: (section: DiscoverySection) => void;
 }) {
   const Icon = SECTION_ICONS[section.type] || Users;
-  const colors = SECTION_COLORS[section.type] || 'text-gray-500 bg-gray-50';
+  const colors = SECTION_COLORS[section.type] || 'text-muted-foreground bg-muted';
   const [iconBg, iconColor] = colors.split(' ');
 
   return (
@@ -66,11 +66,11 @@ function DiscoverySectionCard({
             <Icon className={cn('h-4 w-4', iconColor)} />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-gray-900">
+            <h3 className="font-semibold text-sm text-foreground">
               {section.title}
             </h3>
             {section.subtitle && (
-              <p className="text-xs text-gray-500">{section.subtitle}</p>
+              <p className="text-xs text-muted-foreground">{section.subtitle}</p>
             )}
           </div>
         </div>
@@ -106,19 +106,19 @@ function SkeletonSection() {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
         <div className="space-y-1">
-          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-          <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-3 w-32 bg-muted rounded animate-pulse" />
         </div>
       </div>
       {[1, 2, 3].map((i) => (
-        <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50">
-          <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+        <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+          <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
           <div className="flex-1">
-            <div className="h-4 w-20 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
           </div>
-          <div className="h-4 w-12 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-12 bg-muted rounded animate-pulse" />
         </div>
       ))}
     </div>
@@ -159,7 +159,7 @@ export function DiscoverySidebar({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-6 text-gray-500">
+          <div className="text-center py-6 text-muted-foreground">
             <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
             <p className="text-sm">No discoveries yet</p>
             <p className="text-xs">Check back as the community grows!</p>

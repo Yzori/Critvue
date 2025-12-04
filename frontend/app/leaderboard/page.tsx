@@ -294,7 +294,7 @@ export default function LeaderboardPage() {
   const listUsers = leaderboardData?.entries.slice(3) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Pull to refresh indicator */}
       <AnimatePresence>
         {isPulling && (
@@ -339,14 +339,14 @@ export default function LeaderboardPage() {
 
         {/* Mode Toggle - Reviews vs Challenges */}
         <div className="flex justify-center">
-          <div className="inline-flex bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
+          <div className="inline-flex bg-background rounded-xl border border-border p-1 shadow-sm">
             <button
               onClick={() => setMode('reviews')}
               className={cn(
                 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all',
                 mode === 'reviews'
                   ? 'bg-accent-peach text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
               <Star className="h-4 w-4" />
@@ -358,7 +358,7 @@ export default function LeaderboardPage() {
                 'flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all',
                 mode === 'challenges'
                   ? 'bg-accent-peach text-white shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
               <Sparkles className="h-4 w-4" />
@@ -369,7 +369,7 @@ export default function LeaderboardPage() {
 
         {/* Category Tabs & Filters - Only for Reviews mode */}
         {mode === 'reviews' && (
-          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+          <div className="bg-background rounded-xl border border-border p-4 shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <StatCategoryTabs
                 category={category}
@@ -380,7 +380,7 @@ export default function LeaderboardPage() {
 
               {/* Tier Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Tier:</span>
+                <span className="text-sm text-muted-foreground">Tier:</span>
                 <Select
                   value={tierFilter}
                   onValueChange={(value) =>
@@ -418,7 +418,7 @@ export default function LeaderboardPage() {
               {isLoading ? (
               <div className="space-y-4">
                 {/* Podium Skeleton */}
-                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="bg-background rounded-xl border border-border p-6">
                   <div className="flex items-end justify-center gap-4">
                     {[2, 1, 3].map((rank) => (
                       <div
@@ -430,14 +430,14 @@ export default function LeaderboardPage() {
                       >
                         <div
                           className={cn(
-                            'rounded-full bg-gray-200 animate-pulse mb-2',
+                            'rounded-full bg-muted animate-pulse mb-2',
                             rank === 1 ? 'h-20 w-20' : 'h-14 w-14'
                           )}
                         />
-                        <div className="h-4 w-16 bg-gray-200 rounded animate-pulse mb-1" />
+                        <div className="h-4 w-16 bg-muted rounded animate-pulse mb-1" />
                         <div
                           className={cn(
-                            'w-20 bg-gray-100 rounded-t-lg mt-2 animate-pulse',
+                            'w-20 bg-muted rounded-t-lg mt-2 animate-pulse',
                             rank === 1 ? 'h-28' : rank === 2 ? 'h-20' : 'h-16'
                           )}
                         />
@@ -454,10 +454,10 @@ export default function LeaderboardPage() {
                 className="flex flex-col items-center justify-center rounded-xl border border-red-200 bg-red-50 p-12 text-center"
               >
                 <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
-                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                <h3 className="mb-2 font-semibold text-lg text-foreground">
                   Unable to Load Leaderboard
                 </h3>
-                <p className="mb-6 text-gray-600 text-sm">{error}</p>
+                <p className="mb-6 text-muted-foreground text-sm">{error}</p>
                 <Button
                   onClick={() => fetchLeaderboard(1, false)}
                   variant="outline"
@@ -470,13 +470,13 @@ export default function LeaderboardPage() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center rounded-xl border border-gray-200 bg-white p-12 text-center"
+                className="flex flex-col items-center justify-center rounded-xl border border-border bg-background p-12 text-center"
               >
                 <Trophy className="mb-4 h-16 w-16 text-gray-300" />
-                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                <h3 className="mb-2 font-semibold text-lg text-foreground">
                   No Rankings Yet
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Be the first to earn karma and climb the leaderboard!
                 </p>
               </motion.div>
@@ -484,7 +484,7 @@ export default function LeaderboardPage() {
               <>
                 {/* Podium - Top 3 */}
                 {podiumUsers.length > 0 && (
-                  <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-4">
+                  <div className="bg-background rounded-xl border border-border shadow-sm mb-4">
                     <LeaderboardPodium
                       users={podiumUsers}
                       onUserClick={handleUserClick}
@@ -493,7 +493,7 @@ export default function LeaderboardPage() {
                 )}
 
                 {/* User List - 4+ */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 space-y-2">
+                <div className="bg-background rounded-xl border border-border shadow-sm p-3 space-y-2">
                   {listUsers.map((user, index) => (
                     <div
                       key={user.id}
@@ -508,7 +508,7 @@ export default function LeaderboardPage() {
                   ))}
 
                   {listUsers.length === 0 && podiumUsers.length > 0 && (
-                    <p className="text-center text-gray-500 text-sm py-4">
+                    <p className="text-center text-muted-foreground text-sm py-4">
                       Only top 3 users in this category
                     </p>
                   )}
@@ -526,7 +526,7 @@ export default function LeaderboardPage() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-6 text-center text-gray-500 text-sm"
+                    className="mt-6 text-center text-muted-foreground text-sm"
                   >
                     You've reached the end of the leaderboard
                   </motion.div>
@@ -543,10 +543,10 @@ export default function LeaderboardPage() {
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
+                  className="bg-background rounded-xl border border-border shadow-sm p-4"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-900">Your Position</h3>
+                    <h3 className="font-semibold text-foreground">Your Position</h3>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -562,15 +562,15 @@ export default function LeaderboardPage() {
                       <p className="text-3xl font-bold text-accent-peach">
                         #{leaderboardData.currentUser.rank}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         of {leaderboardData.total}
                       </p>
                     </div>
                     <div className="flex-1 text-right">
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-foreground">
                         {leaderboardData.currentUser.scoreLabel}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Top{' '}
                         {Math.round(
                           (leaderboardData.currentUser.rank /
@@ -595,7 +595,7 @@ export default function LeaderboardPage() {
         </div>
         ) : (
           /* Challenges Leaderboard */
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div className="bg-background rounded-xl border border-border shadow-sm">
             {isChallengesLoading ? (
               <div className="p-6 space-y-4">
                 <LeaderboardSkeleton count={10} />
@@ -603,10 +603,10 @@ export default function LeaderboardPage() {
             ) : challengesError ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <AlertCircle className="mb-4 h-12 w-12 text-red-500" />
-                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                <h3 className="mb-2 font-semibold text-lg text-foreground">
                   Unable to Load Challenge Rankings
                 </h3>
-                <p className="mb-6 text-gray-600 text-sm">{challengesError}</p>
+                <p className="mb-6 text-muted-foreground text-sm">{challengesError}</p>
                 <Button onClick={fetchChallengesLeaderboard} variant="outline">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Try Again
@@ -615,17 +615,17 @@ export default function LeaderboardPage() {
             ) : !challengesData || challengesData.entries.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-12 text-center">
                 <Sparkles className="mb-4 h-16 w-16 text-gray-300" />
-                <h3 className="mb-2 font-semibold text-lg text-gray-900">
+                <h3 className="mb-2 font-semibold text-lg text-foreground">
                   No Challenge Champions Yet
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Win challenges to climb the leaderboard!
                 </p>
               </div>
             ) : (
               <>
                 {/* Challenges Podium - Top 3 */}
-                <div className="p-6 bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+                <div className="p-6 bg-gradient-to-b from-muted to-background border-b border-border">
                   <div className="flex items-end justify-center gap-6">
                     {challengesData.entries.slice(0, 3).map((entry, index) => {
                       const rank = index + 1;
@@ -644,7 +644,7 @@ export default function LeaderboardPage() {
                         >
                           <div className="relative mb-2">
                             <div className={cn(
-                              'rounded-full bg-gray-200 overflow-hidden ring-4',
+                              'rounded-full bg-muted overflow-hidden ring-4',
                               rank === 1 ? 'ring-yellow-400' : rank === 2 ? 'ring-gray-300' : 'ring-amber-500',
                               size
                             )}>
@@ -655,27 +655,27 @@ export default function LeaderboardPage() {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-600 font-bold text-xl">
+                                <div className="h-full w-full flex items-center justify-center bg-muted text-muted-foreground font-bold text-xl">
                                   {entry.userName.charAt(0).toUpperCase()}
                                 </div>
                               )}
                             </div>
-                            <div className={cn('absolute -bottom-1 -right-1 rounded-full bg-white p-1', medal)}>
+                            <div className={cn('absolute -bottom-1 -right-1 rounded-full bg-background p-1', medal)}>
                               <Medal className="h-4 w-4" />
                             </div>
                           </div>
-                          <p className="font-semibold text-gray-900 text-sm truncate max-w-[100px]">
+                          <p className="font-semibold text-foreground text-sm truncate max-w-[100px]">
                             {entry.userName}
                           </p>
-                          <p className="text-xs text-gray-500">{entry.challengesWon} wins</p>
+                          <p className="text-xs text-muted-foreground">{entry.challengesWon} wins</p>
                           <div className={cn(
                             'w-20 rounded-t-lg mt-3 flex flex-col items-center justify-end pb-2',
-                            rank === 1 ? 'bg-yellow-100' : rank === 2 ? 'bg-gray-100' : 'bg-amber-100',
+                            rank === 1 ? 'bg-yellow-500/20' : rank === 2 ? 'bg-slate-500/20' : 'bg-amber-500/20',
                             podiumHeight
                           )}>
                             <span className={cn(
                               'text-2xl font-bold',
-                              rank === 1 ? 'text-yellow-600' : rank === 2 ? 'text-gray-500' : 'text-amber-600'
+                              rank === 1 ? 'text-yellow-500' : rank === 2 ? 'text-slate-400' : 'text-amber-500'
                             )}>
                               {rank}
                             </span>
@@ -695,28 +695,28 @@ export default function LeaderboardPage() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
                       onClick={() => window.location.href = `/profile/${entry.userId}`}
-                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                     >
                       <div className="w-8 text-center">
-                        <span className="text-sm font-medium text-gray-500">#{entry.rank}</span>
+                        <span className="text-sm font-medium text-muted-foreground">#{entry.rank}</span>
                       </div>
-                      <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
                         {entry.userAvatar ? (
                           <img src={entry.userAvatar} alt={entry.userName} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-gray-300 text-gray-600 font-semibold">
+                          <div className="h-full w-full flex items-center justify-center bg-muted text-muted-foreground font-semibold">
                             {entry.userName.charAt(0).toUpperCase()}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{entry.userName}</p>
-                        <p className="text-xs text-gray-500">{entry.winRate}% win rate</p>
+                        <p className="font-medium text-foreground truncate">{entry.userName}</p>
+                        <p className="text-xs text-muted-foreground">{entry.winRate}% win rate</p>
                       </div>
                       <div className="flex items-center gap-4 text-sm">
                         <div className="text-center">
-                          <p className="font-semibold text-gray-900">{entry.challengesWon}</p>
-                          <p className="text-xs text-gray-500">Wins</p>
+                          <p className="font-semibold text-foreground">{entry.challengesWon}</p>
+                          <p className="text-xs text-muted-foreground">Wins</p>
                         </div>
                         {entry.bestStreak > 0 && (
                           <div className="flex items-center gap-1 text-orange-500">
@@ -731,9 +731,9 @@ export default function LeaderboardPage() {
 
                 {/* Current User Rank */}
                 {challengesData.currentUserRank && (
-                  <div className="border-t border-gray-100 p-4 bg-gray-50">
+                  <div className="border-t border-border p-4 bg-muted">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Your Rank</span>
+                      <span className="text-sm text-muted-foreground">Your Rank</span>
                       <span className="font-bold text-accent-peach">#{challengesData.currentUserRank}</span>
                     </div>
                   </div>
@@ -749,7 +749,7 @@ export default function LeaderboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-gray-200 shadow-lg p-3 safe-area-inset-bottom"
+          className="fixed bottom-0 left-0 right-0 lg:hidden bg-background border-t border-border shadow-lg p-3 safe-area-inset-bottom"
         >
           <div className="flex items-center justify-between max-w-lg mx-auto">
             <div className="flex items-center gap-3">
@@ -759,8 +759,8 @@ export default function LeaderboardPage() {
                 </p>
               </div>
               <div>
-                <p className="font-medium text-gray-900 text-sm">Your Position</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-medium text-foreground text-sm">Your Position</p>
+                <p className="text-xs text-muted-foreground">
                   {leaderboardData.currentUser.scoreLabel}
                 </p>
               </div>

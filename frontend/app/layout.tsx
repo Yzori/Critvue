@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/contexts/QueryProvider";
+import { ThemeProvider, themeInitScript } from "@/contexts/ThemeContext";
 import { Navigation } from "@/components/navigation/navigation";
 import { MainWrapper } from "@/components/layout/main-wrapper";
 import { Toaster } from "sonner";
@@ -31,21 +32,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        {/* Inline script to prevent theme flash on page load */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
         className={`${inter.variable} ${ibmPlexMono.variable} antialiased`}
       >
-        <QueryProvider>
-          <AuthProvider>
-            <Navigation />
-            <MainWrapper>
-              {children}
-            </MainWrapper>
-          </AuthProvider>
-          <Toaster
+        <ThemeProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <Navigation />
+              <MainWrapper>
+                {children}
+              </MainWrapper>
+            </AuthProvider>
+            <Toaster
             position="bottom-right"
             richColors
             closeButton
@@ -62,7 +66,8 @@ export default function RootLayout({
               duration: 4000,
             }}
           />
-        </QueryProvider>
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

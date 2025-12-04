@@ -181,8 +181,8 @@ export default function AdminApplicationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Expert Applications</h1>
-          <p className="text-gray-500 mt-1">Review and approve expert reviewer applications</p>
+          <h1 className="text-2xl font-bold text-foreground">Expert Applications</h1>
+          <p className="text-muted-foreground mt-1">Review and approve expert reviewer applications</p>
         </div>
         <Button
           variant="outline"
@@ -219,7 +219,7 @@ export default function AdminApplicationsPage() {
           <Users className="mr-2 h-4 w-4" />
           Queue
           {queue.length > 0 && (
-            <Badge variant="secondary" className="ml-2 bg-white/20">
+            <Badge variant="secondary" className="ml-2 bg-background/20">
               {queue.length}
             </Badge>
           )}
@@ -231,7 +231,7 @@ export default function AdminApplicationsPage() {
           <ClipboardCheck className="mr-2 h-4 w-4" />
           My Reviews
           {stats?.my_claimed_count ? (
-            <Badge variant="secondary" className="ml-2 bg-white/20">
+            <Badge variant="secondary" className="ml-2 bg-background/20">
               {stats.my_claimed_count}
             </Badge>
           ) : null}
@@ -252,24 +252,24 @@ export default function AdminApplicationsPage() {
       {activeTab === "my-reviews" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-foreground">
               My Claimed Applications
-              <span className="ml-2 text-sm font-normal text-gray-500">
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
                 ({claimedApplications.length} claimed)
               </span>
             </h2>
           </div>
 
           {claimedApplications.length === 0 ? (
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-background border-border">
               <CardContent className="flex flex-col items-center justify-center py-16">
-                <div className="rounded-full bg-gray-100 p-4">
+                <div className="rounded-full bg-muted p-4">
                   <ClipboardCheck className="h-8 w-8 text-gray-400" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-gray-900">
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
                   No claimed applications
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
                   Claim an application from the queue to start reviewing.
                 </p>
               </CardContent>
@@ -281,7 +281,7 @@ export default function AdminApplicationsPage() {
                   key={app.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="group relative overflow-hidden rounded-xl border border-[#4CC9F0]/20 bg-white p-5 shadow-sm transition-all hover:shadow-md"
+                  className="group relative overflow-hidden rounded-xl border border-[#4CC9F0]/20 bg-background p-5 shadow-sm transition-all hover:shadow-md"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 space-y-3">
@@ -290,10 +290,10 @@ export default function AdminApplicationsPage() {
                           <Users className="h-5 w-5 text-[#4CC9F0]" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-foreground">
                             {app.full_name}
                           </h3>
-                          <p className="text-sm text-gray-500">{app.email}</p>
+                          <p className="text-sm text-muted-foreground">{app.email}</p>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-sm">

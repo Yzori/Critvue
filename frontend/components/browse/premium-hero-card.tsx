@@ -58,9 +58,9 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
     if (review.review_type !== "expert" || !review.tier) return null;
 
     const tierConfig = {
-      quick: { label: "Quick", icon: Zap, color: "text-green-700", bg: "bg-green-50", border: "border-green-200" },
-      standard: { label: "Standard", icon: Target, color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200" },
-      deep: { label: "Deep Dive", icon: Star, color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-200" },
+      quick: { label: "Quick", icon: Zap, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10", border: "border-green-500/20" },
+      standard: { label: "Standard", icon: Target, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+      deep: { label: "Deep Dive", icon: Star, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
     };
 
     const config = tierConfig[review.tier];
@@ -83,7 +83,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
       <div
         className={cn(
           "group relative overflow-hidden rounded-xl w-full",
-          "bg-white border border-gray-200",
+          "bg-card border border-border",
           "transition-all duration-300",
           "hover:shadow-lg hover:-translate-y-0.5",
           "hover:border-accent-blue/30",
@@ -94,7 +94,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
         }}
       >
         {/* LEFT: Image Thumbnail */}
-        <div className="relative w-[50%] min-w-[200px] max-w-[450px] flex-shrink-0 bg-gray-100">
+        <div className="relative w-[50%] min-w-[200px] max-w-[450px] flex-shrink-0 bg-muted">
           {review.preview_image && !review.requires_nda ? (
             <img
               src={getFileUrl(review.preview_image)}
@@ -105,13 +105,13 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
             <div className={cn(
               "w-full h-full flex flex-col items-center justify-center p-4",
               review.requires_nda
-                ? "bg-gradient-to-br from-purple-100 to-purple-200"
-                : "bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50"
+                ? "bg-gradient-to-br from-purple-500/20 to-purple-500/30"
+                : "bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10"
             )}>
               {review.requires_nda ? (
                 <>
                   <Shield className="size-10 text-purple-400 mb-2" />
-                  <p className="text-xs text-purple-600 font-medium text-center">Sign NDA to view</p>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 font-medium text-center">Sign NDA to view</p>
                 </>
               ) : (
                 <Award className="size-10 text-accent-blue/40" />
@@ -123,7 +123,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
           <div className="absolute top-2 left-2">
             <Badge
               className={cn(
-                "bg-white/95 backdrop-blur-sm text-accent-blue border-accent-blue/20 shadow-sm",
+                "bg-background/95 backdrop-blur-sm text-accent-blue border-accent-blue/20 shadow-sm",
                 "px-2 py-0.5 text-xs font-semibold flex items-center gap-1"
               )}
             >
@@ -142,7 +142,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
             </Badge>
             {getTierBadge()}
             {review.requires_nda && (
-              <Badge className="flex items-center gap-1 bg-purple-50 border-purple-200 text-purple-700 font-semibold border text-xs">
+              <Badge className="flex items-center gap-1 bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold border text-xs">
                 <Shield className="size-2.5" />
                 <span>NDA</span>
               </Badge>
@@ -150,17 +150,17 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="font-bold text-base text-gray-900 group-hover:text-accent-blue transition-colors line-clamp-1 leading-tight mb-1">
+          <h3 className="font-bold text-base text-foreground group-hover:text-accent-blue transition-colors line-clamp-1 leading-tight mb-1">
             {review.title}
           </h3>
 
           {/* Description - single line */}
           {review.requires_nda ? (
-            <p className="text-xs text-purple-600 italic line-clamp-1 mb-2">
+            <p className="text-xs text-purple-600 dark:text-purple-400 italic line-clamp-1 mb-2">
               Sign NDA to view project details
             </p>
           ) : (
-            <p className="text-xs text-gray-500 line-clamp-1 mb-2">
+            <p className="text-xs text-muted-foreground line-clamp-1 mb-2">
               {review.description}
             </p>
           )}
@@ -169,16 +169,16 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
           <div className="mt-auto flex items-center gap-3 flex-wrap">
             {/* Earnings - Compact */}
             {isPaidReview && review.price && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-50 border border-green-200">
-                <TrendingUp className="size-3.5 text-green-600" />
-                <span className="text-sm font-bold text-green-700">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20">
+                <TrendingUp className="size-3.5 text-green-600 dark:text-green-400" />
+                <span className="text-sm font-bold text-green-600 dark:text-green-400">
                   {formatPrice(review.price, review.currency)}
                 </span>
               </div>
             )}
 
             {/* Metadata - Compact */}
-            <div className="flex items-center gap-3 text-xs text-gray-500">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="size-3" />
                 <span>{formatDeadline(review.deadline)}</span>

@@ -274,7 +274,7 @@ export function ContentViewerReadOnly({
                   {annotation.number || "?"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-72 bg-white shadow-lg" align="center" side="top" sideOffset={8} showArrow>
+              <PopoverContent className="w-72 bg-background shadow-lg" align="center" side="top" sideOffset={8} showArrow>
                 <div className="space-y-2">
                   <h4 className="font-semibold text-sm">
                     Annotation #{annotation.number}

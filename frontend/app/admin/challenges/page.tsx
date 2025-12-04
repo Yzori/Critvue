@@ -306,8 +306,8 @@ export default function AdminChallengesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Challenge Management</h1>
-          <p className="text-gray-500 mt-1">Create and manage platform challenges</p>
+          <h1 className="text-2xl font-bold text-foreground">Challenge Management</h1>
+          <p className="text-muted-foreground mt-1">Create and manage platform challenges</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
@@ -351,7 +351,7 @@ export default function AdminChallengesPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-gray-100">
+        <TabsList className="bg-muted">
           <TabsTrigger value="challenges" className="data-[state=active]:bg-[#4CC9F0] data-[state=active]:text-white">
             Challenges ({challenges.length})
           </TabsTrigger>
@@ -369,17 +369,17 @@ export default function AdminChallengesPage() {
               ))}
             </div>
           ) : (
-            <Card className="bg-white border-gray-200 shadow-sm">
+            <Card className="bg-background border-border shadow-sm">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-gray-200">
-                    <TableHead className="text-gray-600">Challenge</TableHead>
-                    <TableHead className="text-gray-600">Type</TableHead>
-                    <TableHead className="text-gray-600">Status</TableHead>
-                    <TableHead className="text-gray-600">Mode</TableHead>
-                    <TableHead className="text-gray-600">Entries</TableHead>
-                    <TableHead className="text-gray-600">Created</TableHead>
-                    <TableHead className="text-gray-600 text-right">Actions</TableHead>
+                  <TableRow className="border-border">
+                    <TableHead className="text-muted-foreground">Challenge</TableHead>
+                    <TableHead className="text-muted-foreground">Type</TableHead>
+                    <TableHead className="text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-muted-foreground">Mode</TableHead>
+                    <TableHead className="text-muted-foreground">Entries</TableHead>
+                    <TableHead className="text-muted-foreground">Created</TableHead>
+                    <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -390,15 +390,15 @@ export default function AdminChallengesPage() {
                     const Icon = contentTypeIcons[challenge.contentType];
 
                     return (
-                      <TableRow key={challenge.id} className="border-gray-100">
+                      <TableRow key={challenge.id} className="border-border">
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className={cn("p-2 rounded-lg bg-gray-100")}>
+                            <div className={cn("p-2 rounded-lg bg-muted")}>
                               <Icon className={cn("w-4 h-4", contentInfo.color)} />
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900">{challenge.title}</div>
-                              <div className="text-xs text-gray-500">{contentInfo.label}</div>
+                              <div className="font-medium text-foreground">{challenge.title}</div>
+                              <div className="text-xs text-muted-foreground">{contentInfo.label}</div>
                             </div>
                           </div>
                         </TableCell>
@@ -417,16 +417,16 @@ export default function AdminChallengesPage() {
                             <Badge variant="outline" className={cn(
                               challenge.invitationMode === "open_slots"
                                 ? "border-[#4ADE80] text-[#4ADE80]"
-                                : "border-gray-300 text-gray-500"
+                                : "border-border text-muted-foreground"
                             )}>
                               {challenge.invitationMode === "open_slots" ? "Open Slots" : "Curated"}
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-gray-600">
+                        <TableCell className="text-muted-foreground">
                           {challenge.totalEntries}
                         </TableCell>
-                        <TableCell className="text-gray-600">
+                        <TableCell className="text-muted-foreground">
                           {new Date(challenge.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
@@ -434,7 +434,7 @@ export default function AdminChallengesPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-gray-600 hover:text-gray-900"
+                              className="text-muted-foreground hover:text-foreground"
                               onClick={() => router.push(`/challenges/${challenge.id}`)}
                             >
                               <Eye className="w-4 h-4" />
@@ -543,21 +543,21 @@ export default function AdminChallengesPage() {
                 const Icon = contentTypeIcons[prompt.contentType];
 
                 return (
-                  <Card key={prompt.id} className="bg-white border-gray-200 shadow-sm">
+                  <Card key={prompt.id} className="bg-background border-border shadow-sm">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
-                        <div className={cn("p-2 rounded-lg bg-gray-100")}>
+                        <div className={cn("p-2 rounded-lg bg-muted")}>
                           <Icon className={cn("w-5 h-5", contentInfo.color)} />
                         </div>
                         <Badge variant="secondary" className={cn(
-                          prompt.isActive ? "bg-[#4ADE80]/10 text-[#4ADE80]" : "bg-gray-100 text-gray-500"
+                          prompt.isActive ? "bg-[#4ADE80]/10 text-[#4ADE80]" : "bg-muted text-muted-foreground"
                         )}>
                           {prompt.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </div>
-                      <h4 className="font-medium text-gray-900 mb-1">{prompt.title}</h4>
-                      <p className="text-sm text-gray-500 line-clamp-2 mb-3">{prompt.description}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-400">
+                      <h4 className="font-medium text-foreground mb-1">{prompt.title}</h4>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{prompt.description}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span className="capitalize">{prompt.difficulty}</span>
                         <span>{prompt.timesUsed} uses</span>
                       </div>
@@ -572,19 +572,19 @@ export default function AdminChallengesPage() {
 
       {/* Create Challenge Dialog */}
       <Dialog open={showCreateChallenge} onOpenChange={setShowCreateChallenge}>
-        <DialogContent className="bg-white border-gray-200 max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-background border-border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Create New Challenge</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Create New Challenge</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Set up a new platform challenge for creators
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <Label className="text-gray-700">Challenge Type</Label>
+              <Label className="text-foreground">Challenge Type</Label>
               <Select value={challengeType} onValueChange={(v) => setChallengeType(v as ChallengeType)}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -596,9 +596,9 @@ export default function AdminChallengesPage() {
 
             {challengeType === "one_on_one" && (
               <div>
-                <Label className="text-gray-700">Participant Selection</Label>
+                <Label className="text-foreground">Participant Selection</Label>
                 <Select value={invitationMode} onValueChange={(v) => setInvitationMode(v as InvitationMode)}>
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                  <SelectTrigger className="bg-background border-border text-foreground mt-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -610,30 +610,30 @@ export default function AdminChallengesPage() {
             )}
 
             <div>
-              <Label className="text-gray-700">Title</Label>
+              <Label className="text-foreground">Title</Label>
               <Input
                 value={challengeTitle}
                 onChange={(e) => setChallengeTitle(e.target.value)}
                 placeholder="Enter challenge title"
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-gray-700">Description (optional)</Label>
+              <Label className="text-foreground">Description (optional)</Label>
               <Textarea
                 value={challengeDescription}
                 onChange={(e) => setChallengeDescription(e.target.value)}
                 placeholder="Describe the challenge..."
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
                 rows={3}
               />
             </div>
 
             <div>
-              <Label className="text-gray-700">Content Type</Label>
+              <Label className="text-foreground">Content Type</Label>
               <Select value={contentType} onValueChange={(v) => setContentType(v as ContentType)}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -648,12 +648,12 @@ export default function AdminChallengesPage() {
             </div>
 
             <div>
-              <Label className="text-gray-700">Prompt (optional)</Label>
+              <Label className="text-foreground">Prompt (optional)</Label>
               <Select
                 value={selectedPromptId?.toString() || ""}
                 onValueChange={(v) => setSelectedPromptId(v ? Number(v) : null)}
               >
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue placeholder="Select a prompt" />
                 </SelectTrigger>
                 <SelectContent>
@@ -670,45 +670,45 @@ export default function AdminChallengesPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-gray-700">Submission Time (hours)</Label>
+                <Label className="text-foreground">Submission Time (hours)</Label>
                 <Input
                   type="number"
                   value={submissionHours}
                   onChange={(e) => setSubmissionHours(e.target.value)}
-                  className="bg-white border-gray-300 text-gray-900 mt-1"
+                  className="bg-background border-border text-foreground mt-1"
                 />
               </div>
               <div>
-                <Label className="text-gray-700">Voting Time (hours)</Label>
+                <Label className="text-foreground">Voting Time (hours)</Label>
                 <Input
                   type="number"
                   value={votingHours}
                   onChange={(e) => setVotingHours(e.target.value)}
-                  className="bg-white border-gray-300 text-gray-900 mt-1"
+                  className="bg-background border-border text-foreground mt-1"
                 />
               </div>
             </div>
 
             {challengeType === "category" && (
               <div>
-                <Label className="text-gray-700">Number of Winners</Label>
+                <Label className="text-foreground">Number of Winners</Label>
                 <Input
                   type="number"
                   value={maxWinners}
                   onChange={(e) => setMaxWinners(e.target.value)}
                   min="1"
-                  className="bg-white border-gray-300 text-gray-900 mt-1"
+                  className="bg-background border-border text-foreground mt-1"
                 />
               </div>
             )}
 
             <div>
-              <Label className="text-gray-700">Prize Description (optional)</Label>
+              <Label className="text-foreground">Prize Description (optional)</Label>
               <Input
                 value={prizeDescription}
                 onChange={(e) => setPrizeDescription(e.target.value)}
                 placeholder="e.g., 500 karma points"
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
               />
             </div>
           </div>
@@ -730,40 +730,40 @@ export default function AdminChallengesPage() {
 
       {/* Create Prompt Dialog */}
       <Dialog open={showCreatePrompt} onOpenChange={setShowCreatePrompt}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Create New Prompt</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Create New Prompt</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Add a new challenge prompt for creators
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <Label className="text-gray-700">Title</Label>
+              <Label className="text-foreground">Title</Label>
               <Input
                 value={promptTitle}
                 onChange={(e) => setPromptTitle(e.target.value)}
                 placeholder="Enter prompt title"
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-gray-700">Description</Label>
+              <Label className="text-foreground">Description</Label>
               <Textarea
                 value={promptDescription}
                 onChange={(e) => setPromptDescription(e.target.value)}
                 placeholder="Describe what creators should create..."
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
                 rows={4}
               />
             </div>
 
             <div>
-              <Label className="text-gray-700">Content Type</Label>
+              <Label className="text-foreground">Content Type</Label>
               <Select value={promptContentType} onValueChange={(v) => setPromptContentType(v as ContentType)}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -778,9 +778,9 @@ export default function AdminChallengesPage() {
             </div>
 
             <div>
-              <Label className="text-gray-700">Difficulty</Label>
+              <Label className="text-foreground">Difficulty</Label>
               <Select value={promptDifficulty} onValueChange={(v) => setPromptDifficulty(v as typeof promptDifficulty)}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -809,30 +809,30 @@ export default function AdminChallengesPage() {
 
       {/* Invite Creator Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Invite Creator</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Invite Creator</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Send an invitation to a creator for this 1v1 challenge
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <Label className="text-gray-700">User ID</Label>
+              <Label className="text-foreground">User ID</Label>
               <Input
                 type="number"
                 value={inviteUserId}
                 onChange={(e) => setInviteUserId(e.target.value)}
                 placeholder="Enter user ID"
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
               />
             </div>
 
             <div>
-              <Label className="text-gray-700">Participant Slot</Label>
+              <Label className="text-foreground">Participant Slot</Label>
               <Select value={inviteSlot.toString()} onValueChange={(v) => setInviteSlot(Number(v) as 1 | 2)}>
-                <SelectTrigger className="bg-white border-gray-300 text-gray-900 mt-1">
+                <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -843,12 +843,12 @@ export default function AdminChallengesPage() {
             </div>
 
             <div>
-              <Label className="text-gray-700">Personal Message (optional)</Label>
+              <Label className="text-foreground">Personal Message (optional)</Label>
               <Textarea
                 value={inviteMessage}
                 onChange={(e) => setInviteMessage(e.target.value)}
                 placeholder="Add a personal message to the invitation..."
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
                 rows={3}
               />
             </div>
@@ -871,19 +871,19 @@ export default function AdminChallengesPage() {
 
       {/* Open Slots Dialog */}
       <Dialog open={showOpenSlotsDialog} onOpenChange={setShowOpenSlotsDialog}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Open Challenge Slots</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Open Challenge Slots</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Allow users to claim slots on a first-come, first-served basis
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {selectedChallenge && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <p className="font-medium text-gray-900">{selectedChallenge.title}</p>
-                <p className="text-sm text-gray-500 mt-1">
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="font-medium text-foreground">{selectedChallenge.title}</p>
+                <p className="text-sm text-muted-foreground mt-1">
                   Once opened, anyone can claim a slot. The challenge will automatically
                   activate when both slots are filled.
                 </p>
@@ -891,16 +891,16 @@ export default function AdminChallengesPage() {
             )}
 
             <div>
-              <Label className="text-gray-700">Slot Claiming Duration (hours)</Label>
+              <Label className="text-foreground">Slot Claiming Duration (hours)</Label>
               <Input
                 type="number"
                 value={openSlotsDuration}
                 onChange={(e) => setOpenSlotsDuration(e.target.value)}
                 min="1"
                 max="168"
-                className="bg-white border-gray-300 text-gray-900 mt-1"
+                className="bg-background border-border text-foreground mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 How long users have to claim slots (1-168 hours)
               </p>
             </div>

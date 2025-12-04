@@ -32,49 +32,49 @@ export function ReviewCardSkeleton({
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl",
-        "bg-white/60 backdrop-blur-sm border border-gray-200/50",
+        "bg-card/60 backdrop-blur-sm border border-border/50",
         cardSize,
         className
       )}
     >
       {/* Shimmer effect */}
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-foreground/5 to-transparent" />
 
       {/* Content skeleton */}
       <div className="flex flex-col h-full p-4 md:p-6 gap-3">
         {/* Preview image placeholder */}
         {size !== "small" && (
-          <div className="w-full aspect-video rounded-xl bg-gray-200/50 mb-2" />
+          <div className="w-full aspect-video rounded-xl bg-muted/50 mb-2" />
         )}
 
         {/* Badges */}
         <div className="flex gap-2">
-          <div className="h-6 w-16 rounded-full bg-gray-200/50" />
-          <div className="h-6 w-12 rounded-full bg-gray-200/50" />
+          <div className="h-6 w-16 rounded-full bg-muted/50" />
+          <div className="h-6 w-12 rounded-full bg-muted/50" />
         </div>
 
         {/* Title */}
         <div className="space-y-2">
           <div
             className={cn(
-              "h-6 bg-gray-200/50 rounded",
+              "h-6 bg-muted/50 rounded",
               size === "large" ? "w-3/4" : "w-full"
             )}
           />
-          {size !== "small" && <div className="h-6 w-1/2 bg-gray-200/50 rounded" />}
+          {size !== "small" && <div className="h-6 w-1/2 bg-muted/50 rounded" />}
         </div>
 
         {/* Description */}
         {size !== "small" && (
           <div className="space-y-2">
-            <div className="h-4 bg-gray-200/50 rounded w-full" />
-            <div className="h-4 bg-gray-200/50 rounded w-5/6" />
+            <div className="h-4 bg-muted/50 rounded w-full" />
+            <div className="h-4 bg-muted/50 rounded w-5/6" />
           </div>
         )}
 
         {/* Skills */}
         {size !== "small" && (
-          <div className="h-4 w-3/4 bg-gray-200/50 rounded" />
+          <div className="h-4 w-3/4 bg-muted/50 rounded" />
         )}
 
         {/* Spacer */}
@@ -82,15 +82,15 @@ export function ReviewCardSkeleton({
 
         {/* Metadata */}
         <div className="flex gap-3">
-          <div className="h-4 w-16 bg-gray-200/50 rounded" />
-          <div className="h-4 w-20 bg-gray-200/50 rounded" />
-          <div className="h-4 w-12 bg-gray-200/50 rounded" />
+          <div className="h-4 w-16 bg-muted/50 rounded" />
+          <div className="h-4 w-20 bg-muted/50 rounded" />
+          <div className="h-4 w-12 bg-muted/50 rounded" />
         </div>
 
         {/* Buttons */}
         <div className="flex gap-2 mt-2">
-          <div className="h-9 flex-1 bg-gray-200/50 rounded-lg" />
-          <div className="h-9 flex-1 bg-gray-200/50 rounded-lg" />
+          <div className="h-9 flex-1 bg-muted/50 rounded-lg" />
+          <div className="h-9 flex-1 bg-muted/50 rounded-lg" />
         </div>
       </div>
     </div>

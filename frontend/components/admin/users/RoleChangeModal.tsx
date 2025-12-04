@@ -68,15 +68,15 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white border-gray-200 max-w-md">
+      <DialogContent className="bg-background border-border max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-full bg-purple-100">
               <UserCog className="h-5 w-5 text-purple-600" />
             </div>
-            <DialogTitle className="text-gray-900">Change User Role</DialogTitle>
+            <DialogTitle className="text-foreground">Change User Role</DialogTitle>
           </div>
-          <DialogDescription className="text-gray-500">
+          <DialogDescription className="text-muted-foreground">
             Change the user's role to grant or restrict platform capabilities.
           </DialogDescription>
         </DialogHeader>
@@ -84,9 +84,9 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
         {user && (
           <div className="py-4 space-y-4">
             {/* User info */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
-              <div className="text-sm text-gray-600">
-                <p className="font-medium text-gray-900">{user.full_name || "No name"}</p>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted border border-border">
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">{user.full_name || "No name"}</p>
                 <p>{user.email}</p>
                 <p className="mt-1">
                   Current role: <span className="font-medium capitalize">{user.role}</span>
@@ -96,11 +96,11 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
 
             {/* New Role */}
             <div>
-              <Label htmlFor="new-role" className="text-gray-700">
+              <Label htmlFor="new-role" className="text-foreground">
                 New Role
               </Label>
               <Select value={newRole} onValueChange={(v) => setNewRole(v as UserRole)}>
-                <SelectTrigger className="mt-2 bg-white border-gray-300">
+                <SelectTrigger className="mt-2 bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -109,7 +109,7 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {roleDescriptions[newRole]}
               </p>
             </div>
@@ -129,7 +129,7 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
 
             {/* Reason (required for admin promotion) */}
             <div>
-              <Label htmlFor="role-reason" className="text-gray-700">
+              <Label htmlFor="role-reason" className="text-foreground">
                 Reason {isPromotingToAdmin && <span className="text-red-500">*</span>}
               </Label>
               <Textarea
@@ -137,7 +137,7 @@ export function RoleChangeModal({ user, isOpen, onClose, onSuccess }: RoleChange
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Optional: Explain reason for role change..."
-                className="mt-2 bg-white border-gray-300"
+                className="mt-2 bg-background border-border"
                 rows={2}
               />
             </div>

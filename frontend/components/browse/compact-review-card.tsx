@@ -24,35 +24,35 @@ export interface CompactReviewCardProps {
   className?: string;
 }
 
-// Category-specific placeholder config
+// Category-specific placeholder config - using translucent colors for dark mode support
 const categoryPlaceholders: Record<string, { gradient: string; icon: React.ReactNode }> = {
   design: {
-    gradient: "from-violet-200 via-purple-100 to-fuchsia-200",
-    icon: <Palette className="size-8 text-violet-400/60" />,
+    gradient: "from-violet-500/30 via-purple-500/20 to-fuchsia-500/30",
+    icon: <Palette className="size-8 text-violet-500/60" />,
   },
   code: {
-    gradient: "from-blue-200 via-cyan-100 to-sky-200",
-    icon: <Code2 className="size-8 text-blue-400/60" />,
+    gradient: "from-blue-500/30 via-cyan-500/20 to-sky-500/30",
+    icon: <Code2 className="size-8 text-blue-500/60" />,
   },
   writing: {
-    gradient: "from-amber-200 via-orange-100 to-yellow-200",
+    gradient: "from-amber-500/30 via-orange-500/20 to-yellow-500/30",
     icon: <PenTool className="size-8 text-amber-500/60" />,
   },
   video: {
-    gradient: "from-rose-200 via-pink-100 to-red-200",
-    icon: <Video className="size-8 text-rose-400/60" />,
+    gradient: "from-rose-500/30 via-pink-500/20 to-red-500/30",
+    icon: <Video className="size-8 text-rose-500/60" />,
   },
   audio: {
-    gradient: "from-emerald-200 via-teal-100 to-green-200",
-    icon: <Music className="size-8 text-emerald-400/60" />,
+    gradient: "from-emerald-500/30 via-teal-500/20 to-green-500/30",
+    icon: <Music className="size-8 text-emerald-500/60" />,
   },
   document: {
-    gradient: "from-slate-200 via-gray-100 to-zinc-200",
-    icon: <FileText className="size-8 text-slate-400/60" />,
+    gradient: "from-slate-500/30 via-gray-500/20 to-zinc-500/30",
+    icon: <FileText className="size-8 text-slate-500/60" />,
   },
   other: {
-    gradient: "from-indigo-200 via-blue-100 to-purple-200",
-    icon: <Sparkles className="size-8 text-indigo-400/60" />,
+    gradient: "from-indigo-500/30 via-blue-500/20 to-purple-500/30",
+    icon: <Sparkles className="size-8 text-indigo-500/60" />,
   },
 };
 
@@ -90,7 +90,7 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
       href={`/review/${review.id}`}
       className={cn(
         "block relative overflow-hidden rounded-xl",
-        "bg-gray-100",
+        "bg-muted",
         "active:scale-[0.98] transition-transform duration-150",
         className
       )}
@@ -126,7 +126,7 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
               {review.price}
             </Badge>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-white/90 backdrop-blur-sm text-gray-700 rounded-md shadow-sm">
+            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-background/90 backdrop-blur-sm text-foreground rounded-md shadow-sm">
               Free
             </span>
           )}
@@ -138,7 +138,7 @@ export function CompactReviewCard({ review, className }: CompactReviewCardProps)
                 "text-xs font-medium px-2 py-0.5 shadow-lg",
                 deadline === "Today" || deadline === "1d"
                   ? "bg-red-500 text-white"
-                  : "bg-white/90 text-gray-700"
+                  : "bg-background/90 text-foreground"
               )}
             >
               <Clock className="size-3 mr-0.5" />

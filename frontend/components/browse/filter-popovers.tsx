@@ -51,7 +51,7 @@ export function ContentTypePopover({
   return (
     <div className="space-y-1" role="menu">
       <div className="px-2 py-1.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Content Type
         </p>
       </div>
@@ -72,8 +72,8 @@ export function ContentTypePopover({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
               "min-h-[44px]",
               isSelected
-                ? "bg-blue-50 text-blue-700 font-medium"
-                : "text-gray-700 hover:bg-black/5"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                : "text-foreground hover:bg-muted/50"
             )}
           >
             <span className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export function ContentTypePopover({
                   "flex items-center justify-center size-5 rounded-md border-2 transition-all duration-150",
                   isSelected
                     ? "bg-accent-blue border-accent-blue"
-                    : "border-gray-300"
+                    : "border-border"
                 )}
               >
                 {isSelected && <Check className="size-3 text-white" strokeWidth={3} />}
@@ -93,7 +93,7 @@ export function ContentTypePopover({
 
             {/* Result count */}
             {option.count !== undefined && (
-              <span className="text-xs text-gray-500 font-medium">
+              <span className="text-xs text-muted-foreground font-medium">
                 {option.count}
               </span>
             )}
@@ -133,7 +133,7 @@ export function ReviewTypePopover({
   return (
     <div className="space-y-1" role="menu">
       <div className="px-2 py-1.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Review Type
         </p>
       </div>
@@ -154,8 +154,8 @@ export function ReviewTypePopover({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
               "min-h-[44px]",
               isSelected
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-black/5"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                : "text-foreground hover:bg-muted/50"
             )}
           >
             {/* Radio indicator */}
@@ -164,7 +164,7 @@ export function ReviewTypePopover({
                 "flex items-center justify-center size-5 rounded-full border-2 transition-all duration-150 mt-0.5",
                 isSelected
                   ? "border-accent-blue"
-                  : "border-gray-300"
+                  : "border-border"
               )}
             >
               {isSelected && (
@@ -177,7 +177,7 @@ export function ReviewTypePopover({
                 {option.label}
               </p>
               {option.description && (
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {option.description}
                 </p>
               )}
@@ -217,7 +217,7 @@ export function SortPopover({ selected, onChange, onClose }: SortPopoverProps) {
   return (
     <div className="space-y-1" role="menu">
       <div className="px-2 py-1.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
           Sort By
         </p>
       </div>
@@ -238,8 +238,8 @@ export function SortPopover({ selected, onChange, onClose }: SortPopoverProps) {
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50",
               "min-h-[44px]",
               isSelected
-                ? "bg-blue-50 text-blue-700 font-medium"
-                : "text-gray-700 hover:bg-black/5"
+                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                : "text-foreground hover:bg-muted/50"
             )}
           >
             {/* Radio indicator */}
@@ -248,7 +248,7 @@ export function SortPopover({ selected, onChange, onClose }: SortPopoverProps) {
                 "flex items-center justify-center size-5 rounded-full border-2 transition-all duration-150",
                 isSelected
                   ? "border-accent-blue"
-                  : "border-gray-300"
+                  : "border-border"
               )}
             >
               {isSelected && (

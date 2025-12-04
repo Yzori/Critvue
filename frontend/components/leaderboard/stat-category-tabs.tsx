@@ -32,25 +32,25 @@ const CATEGORY_ICONS = {
 
 const CATEGORY_COLORS = {
   [LeaderboardCategory.OVERALL]: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    text: 'text-amber-700',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    text: 'text-amber-600 dark:text-amber-400',
     icon: 'text-amber-500',
-    glow: 'shadow-amber-200/50',
+    glow: 'shadow-amber-500/20',
   },
   [LeaderboardCategory.QUALITY]: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-700',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/30',
+    text: 'text-blue-600 dark:text-blue-400',
     icon: 'text-blue-500',
-    glow: 'shadow-blue-200/50',
+    glow: 'shadow-blue-500/20',
   },
   [LeaderboardCategory.ACTIVITY]: {
-    bg: 'bg-orange-50',
-    border: 'border-orange-200',
-    text: 'text-orange-700',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/30',
+    text: 'text-orange-600 dark:text-orange-400',
     icon: 'text-orange-500',
-    glow: 'shadow-orange-200/50',
+    glow: 'shadow-orange-500/20',
   },
 };
 
@@ -65,7 +65,7 @@ export function StatCategoryTabs({
     <div className={cn('space-y-4', className)}>
       {/* Category Tabs */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+        <div className="flex gap-2 p-1 bg-muted rounded-xl">
           {Object.values(LeaderboardCategory).map((cat) => {
             const config = CATEGORY_CONFIG[cat];
             const Icon = CATEGORY_ICONS[cat];
@@ -81,13 +81,13 @@ export function StatCategoryTabs({
                   'flex items-center gap-2',
                   isActive
                     ? cn(colors.bg, colors.border, colors.text, 'border shadow-sm', colors.glow)
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 )}
               >
                 <Icon
                   className={cn(
                     'h-4 w-4 transition-colors',
-                    isActive ? colors.icon : 'text-gray-400'
+                    isActive ? colors.icon : 'text-muted-foreground'
                   )}
                 />
                 <span>{config.label}</span>
@@ -107,7 +107,7 @@ export function StatCategoryTabs({
         </div>
 
         {/* Period Selector */}
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+        <div className="flex gap-1 p-1 bg-muted rounded-lg">
           {PERIOD_OPTIONS.map(({ value, label, icon: Icon }) => {
             const isActive = period === value;
             return (
@@ -118,16 +118,16 @@ export function StatCategoryTabs({
                   'relative px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200',
                   'flex items-center gap-1.5',
                   isActive
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <Icon className={cn('h-3 w-3', isActive ? 'text-gray-700' : 'text-gray-400')} />
+                <Icon className={cn('h-3 w-3', isActive ? 'text-foreground' : 'text-muted-foreground')} />
                 <span className="hidden sm:inline">{label}</span>
                 {isActive && (
                   <motion.div
                     layoutId="period-indicator"
-                    className="absolute inset-0 bg-white rounded-md shadow-sm -z-10"
+                    className="absolute inset-0 bg-background rounded-md shadow-sm -z-10"
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.3 }}
                   />
                 )}
@@ -142,7 +142,7 @@ export function StatCategoryTabs({
         key={category}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-sm text-gray-500"
+        className="text-sm text-muted-foreground"
       >
         {CATEGORY_CONFIG[category].description}
       </motion.p>

@@ -376,7 +376,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
                                 "size-6 rounded-full border-2 flex items-center justify-center transition-all",
                                 isSelected
                                   ? "bg-accent-blue border-accent-blue"
-                                  : "bg-white border-gray-300"
+                                  : "bg-background border-border"
                               )}
                             >
                               {isSelected && <CheckCircle2 className="size-4 text-white" />}

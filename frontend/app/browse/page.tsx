@@ -227,7 +227,7 @@ export default function BrowsePage() {
     (sortBy !== "recent" ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500/5 via-background to-orange-500/5">
       {/* Mobile Header - Compact single row */}
       <MobileBrowseHeader
         searchQuery={searchQuery}
@@ -237,22 +237,22 @@ export default function BrowsePage() {
       />
 
       {/* Desktop Header - Hidden on mobile */}
-      <header className="hidden md:block sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200/50">
+      <header className="hidden md:block sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex flex-col gap-3">
             {/* Title */}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Browse Reviews
               </h1>
-              <p className="text-sm text-gray-600 mt-0.5">
+              <p className="text-sm text-muted-foreground mt-0.5">
                 Discover and claim open review requests
               </p>
             </div>
 
             {/* Search bar */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
               <input
                 type="search"
                 placeholder="Search reviews..."
@@ -260,10 +260,10 @@ export default function BrowsePage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={cn(
                   "w-full pl-12 pr-4 py-2.5 rounded-xl",
-                  "bg-white/60 backdrop-blur-sm border border-gray-200/50",
+                  "bg-background/60 backdrop-blur-sm border border-border/50",
                   "focus:outline-none focus:ring-2 focus:ring-accent-blue/50 focus:border-accent-blue/50",
                   "transition-all duration-200",
-                  "placeholder:text-gray-400 text-sm"
+                  "placeholder:text-muted-foreground text-sm"
                 )}
               />
             </div>
@@ -291,7 +291,7 @@ export default function BrowsePage() {
       )}>
         {/* Error state */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700">
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400">
             <p className="font-medium">Error</p>
             <p className="text-sm mt-1">{error}</p>
             <Button
@@ -356,14 +356,14 @@ export default function BrowsePage() {
               <section id="premium-marketplace">
                 <div className="flex items-center justify-between mb-3 md:mb-4">
                   <div>
-                    <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                    <h2 className="text-lg md:text-2xl font-bold text-foreground">
                       Premium
                     </h2>
-                    <p className="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                       Paid opportunities
                     </p>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">
+                  <div className="text-xs md:text-sm text-muted-foreground">
                     {splitReviews.featuredPaid.length} {splitReviews.featuredPaid.length === 1 ? "review" : "reviews"}
                   </div>
                 </div>
@@ -389,8 +389,8 @@ export default function BrowsePage() {
                   className={cn(
                     "hidden md:block",
                     "relative overflow-hidden rounded-2xl p-4",
-                    "bg-gray-50/50",
-                    "border border-gray-200",
+                    "bg-muted/50",
+                    "border border-border",
                     "shadow-sm"
                   )}
                 >
@@ -423,7 +423,7 @@ export default function BrowsePage() {
 
                   {/* Show remaining paid reviews in standard grid if more than 4 */}
                   {splitReviews.featuredPaid.length > 4 && (
-                    <div className="mt-6 pt-6 border-t border-gray-200/50">
+                    <div className="mt-6 pt-6 border-t border-border/50">
                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
                         {splitReviews.featuredPaid.slice(4).map((review, index) => (
                           <ReviewCard
@@ -450,14 +450,14 @@ export default function BrowsePage() {
               <section>
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <div>
-                    <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+                    <h2 className="text-lg md:text-2xl font-bold text-foreground">
                       Community Gallery
                     </h2>
-                    <p className="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">
                       Free reviews from the community
                     </p>
                   </div>
-                  <div className="text-xs md:text-sm text-gray-500">
+                  <div className="text-xs md:text-sm text-muted-foreground">
                     {splitReviews.others.length} {splitReviews.others.length === 1 ? "review" : "reviews"}
                   </div>
                 </div>
@@ -521,7 +521,7 @@ export default function BrowsePage() {
             <Button
               variant="outline"
               size="lg"
-              className="bg-white/60 backdrop-blur-sm"
+              className="bg-background/60 backdrop-blur-sm"
             >
               Load More Reviews
             </Button>

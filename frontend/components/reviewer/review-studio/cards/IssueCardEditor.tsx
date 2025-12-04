@@ -293,7 +293,7 @@ export function IssueCardEditor({
     return (
       <div
         className={cn(
-          "group rounded-lg border-2 p-2 sm:p-3 transition-all cursor-pointer hover:shadow-md bg-white",
+          "group rounded-lg border-2 p-2 sm:p-3 transition-all cursor-pointer hover:shadow-md bg-background",
           PRIORITY_CONFIG[card.priority].border,
           isDragging && "shadow-lg opacity-90"
         )}
@@ -382,7 +382,7 @@ export function IssueCardEditor({
   return (
     <div
       className={cn(
-        "rounded-lg border-2 p-3 sm:p-4 space-y-3 sm:space-y-4 transition-all bg-white",
+        "rounded-lg border-2 p-3 sm:p-4 space-y-3 sm:space-y-4 transition-all bg-background",
         PRIORITY_CONFIG[card.priority].border,
         isDragging && "shadow-lg opacity-90"
       )}
@@ -456,7 +456,7 @@ export function IssueCardEditor({
                   "flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-xs font-medium transition-all touch-manipulation",
                   isSelected
                     ? cn(config.bg, config.border, config.color)
-                    : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    : "bg-background border-border text-muted-foreground hover:border-border hover:text-foreground"
                 )}
               >
                 <Icon className={cn("size-3.5", isSelected && config.color)} />
@@ -543,7 +543,7 @@ export function IssueCardEditor({
                   "hover:scale-105 active:scale-95",
                   isSelected
                     ? cn(config.bg, config.border, config.color)
-                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                    : "bg-background border-border text-muted-foreground hover:border-border"
                 )}
               >
                 <Icon className="size-4" />
@@ -607,7 +607,7 @@ export function IssueCardEditor({
                     (e.target.value as PrincipleCategory) || undefined
                   )
                 }
-                className="w-full text-sm border rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500/50"
+                className="w-full text-sm border rounded-lg px-3 py-2 bg-background focus:ring-2 focus:ring-indigo-500/50"
               >
                 <option value="">Select category...</option>
                 {(Object.keys(PRINCIPLE_CATEGORY_CONFIG) as PrincipleCategory[]).map(
@@ -624,7 +624,7 @@ export function IssueCardEditor({
                 onChange={(e) =>
                   updateField("principle", e.target.value || undefined)
                 }
-                className="text-sm bg-white"
+                className="text-sm bg-background"
               />
             </div>
 
@@ -658,7 +658,7 @@ export function IssueCardEditor({
                       "text-xs px-2.5 py-1 rounded-full border transition-all touch-manipulation",
                       card.impactType === impact
                         ? "bg-indigo-100 border-indigo-400 text-indigo-800"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-indigo-300"
+                        : "bg-background border-border text-muted-foreground hover:border-indigo-300"
                     )}
                   >
                     {IMPACT_TYPE_CONFIG[impact].label}
@@ -671,7 +671,7 @@ export function IssueCardEditor({
                 onChange={(value) =>
                   updateField("whyItMatters", value || undefined)
                 }
-                className="text-sm bg-white"
+                className="text-sm bg-background"
                 minRows={2}
               />
             </div>
@@ -690,7 +690,7 @@ export function IssueCardEditor({
                 onChange={(value) =>
                   updateField("afterState", value || undefined)
                 }
-                className="text-sm bg-white"
+                className="text-sm bg-background"
                 minRows={2}
               />
             </div>
@@ -706,7 +706,7 @@ export function IssueCardEditor({
                 "text-sm font-medium touch-manipulation",
                 card.isQuickWin
                   ? "bg-green-100 border-green-400 text-green-700"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-green-300"
+                  : "bg-background border-border text-muted-foreground hover:border-green-300"
               )}
             >
               <Zap className={cn("size-4", card.isQuickWin && "fill-green-500")} />
@@ -720,7 +720,7 @@ export function IssueCardEditor({
                 onChange={(e) =>
                   updateField("severity", e.target.value as CardSeverity)
                 }
-                className="text-sm border rounded-lg px-2 py-1.5 bg-white focus:ring-2 focus:ring-accent-blue/50"
+                className="text-sm border rounded-lg px-2 py-1.5 bg-background focus:ring-2 focus:ring-accent-blue/50"
               >
                 {(Object.keys(SEVERITY_CONFIG) as CardSeverity[]).map((sev) => (
                   <option key={sev} value={sev}>
@@ -754,7 +754,7 @@ export function IssueCardEditor({
                       "text-sm font-medium touch-manipulation",
                       isSelected
                         ? cn(config.bg, "border-current", config.color)
-                        : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                        : "bg-background border-border text-muted-foreground hover:border-border"
                     )}
                   >
                     <Icon className="size-4" />
@@ -787,7 +787,7 @@ export function IssueCardEditor({
                         "text-sm font-medium touch-manipulation text-left",
                         isSelected
                           ? cn(config.bg, "border-current", config.color)
-                          : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                          : "bg-background border-border text-muted-foreground hover:border-border"
                       )}
                     >
                       <span>{config.label}</span>

@@ -347,9 +347,9 @@ export default function ProfilePage() {
   if (!profileData) return <ProfileLoadError onRetry={loadProfileData} />;
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-muted/50">
       {/* Hero Section - Compact & Modern */}
-      <section className="relative bg-white border-b border-gray-200/60">
+      <section className="relative bg-background border-b border-border/60">
         {/* Subtle gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30" />
 
@@ -380,10 +380,10 @@ export default function ProfilePage() {
                         <img
                           src={profileData.avatar_url}
                           alt={profileData.full_name}
-                          className="size-20 sm:size-24 rounded-2xl border-2 border-white shadow-lg object-cover"
+                          className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg object-cover"
                         />
                       ) : (
-                        <div className="size-20 sm:size-24 rounded-2xl border-2 border-white shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <div className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                           <User className="size-10 sm:size-12 text-white" />
                         </div>
                       )}
@@ -392,7 +392,7 @@ export default function ProfilePage() {
 
                   {profileData.verified && (
                     <motion.div
-                      className="absolute -bottom-1 -right-1 size-7 rounded-full bg-blue-500 border-2 border-white shadow flex items-center justify-center"
+                      className="absolute -bottom-1 -right-1 size-7 rounded-full bg-blue-500 border-2 border-background shadow flex items-center justify-center"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.3, type: "spring", bounce: 0.5 }}
@@ -406,7 +406,7 @@ export default function ProfilePage() {
               {/* Name & Title */}
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                     {profileData.full_name}
                   </h1>
                   <TierBadge
@@ -445,7 +445,7 @@ export default function ProfilePage() {
                     </motion.div>
                   )}
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{profileData.title}</p>
+                <p className="text-sm text-muted-foreground mb-2">{profileData.title}</p>
 
                 {/* Quick stats row */}
                 <div className="flex items-center gap-4 text-sm">
@@ -458,20 +458,20 @@ export default function ProfilePage() {
                             "size-3.5",
                             i <= Math.floor(profileData.rating)
                               ? "fill-amber-400 text-amber-400"
-                              : "text-gray-300"
+                              : "text-muted-foreground"
                           )}
                         />
                       ))}
                     </div>
-                    <span className="font-semibold text-gray-900">{profileData.rating.toFixed(1)}</span>
+                    <span className="font-semibold text-foreground">{profileData.rating.toFixed(1)}</span>
                   </div>
-                  <span className="text-gray-300">|</span>
-                  <span className="text-gray-600">
-                    <span className="font-semibold text-gray-900">{profileData.total_reviews_given}</span> reviews
+                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{profileData.total_reviews_given}</span> reviews
                   </span>
-                  <span className="text-gray-300">|</span>
-                  <span className="text-gray-600">
-                    <span className="font-semibold text-gray-900">{profileData.karma_points}</span> karma
+                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{profileData.karma_points}</span> karma
                   </span>
                 </div>
               </div>
@@ -512,15 +512,15 @@ export default function ProfilePage() {
           {/* Row 1: Reviewer DNA (Hero) + Stats */}
           {/* Reviewer DNA - Large Card */}
           <motion.div
-            className="col-span-12 lg:col-span-5 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-5 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Reviewer DNA</h2>
-                <p className="text-sm text-gray-500">Your unique review fingerprint</p>
+                <h2 className="text-lg font-bold text-foreground">Reviewer DNA</h2>
+                <p className="text-sm text-muted-foreground">Your unique review fingerprint</p>
               </div>
               <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 <Sparkles className="size-4 mr-1" />
@@ -531,7 +531,7 @@ export default function ProfilePage() {
               <ReviewerDNA data={reviewerDNA} size="md" />
             </div>
             {!dnaMetadata.hasSufficientData && (
-              <p className="text-xs text-gray-400 text-center mt-2">
+              <p className="text-xs text-muted-foreground text-center mt-2">
                 Complete {3 - dnaMetadata.reviewsAnalyzed} more review{3 - dnaMetadata.reviewsAnalyzed !== 1 ? 's' : ''} to unlock your full DNA profile
               </p>
             )}
@@ -613,15 +613,15 @@ export default function ProfilePage() {
           {/* Row 2: Badges + Bio */}
           {/* Badges Section */}
           <motion.div
-            className="col-span-12 lg:col-span-8 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-8 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Achievements</h2>
-                <p className="text-sm text-gray-500">Your journey and progress</p>
+                <h2 className="text-lg font-bold text-foreground">Achievements</h2>
+                <p className="text-sm text-muted-foreground">Your journey and progress</p>
               </div>
               <Link href="/dashboard/karma">
                 <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
@@ -635,21 +635,21 @@ export default function ProfilePage() {
 
           {/* Bio & Skills Card */}
           <motion.div
-            className="col-span-12 lg:col-span-4 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-4 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
-            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+            <h2 className="text-lg font-bold text-foreground mb-3">About</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               {profileData.bio || "No bio yet. Tell the world about yourself!"}
             </p>
 
             {/* Skills */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Code className="size-4 text-gray-400" />
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <Code className="size-4 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Skills & Expertise
                 </span>
               </div>
@@ -668,18 +668,18 @@ export default function ProfilePage() {
                 </div>
               ) : isOwnProfile ? (
                 <Link href="/browse">
-                  <Button variant="outline" size="sm" className="w-full text-gray-600">
+                  <Button variant="outline" size="sm" className="w-full text-muted-foreground">
                     Add your skills
                   </Button>
                 </Link>
               ) : (
-                <p className="text-sm text-gray-400">No skills listed</p>
+                <p className="text-sm text-muted-foreground">No skills listed</p>
               )}
             </div>
 
             {/* Member since */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
                 Member since {new Date(profileData.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </p>
             </div>
@@ -687,15 +687,15 @@ export default function ProfilePage() {
 
           {/* Row 3: Activity Heatmap */}
           <motion.div
-            className="col-span-12 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Activity</h2>
-                <p className="text-sm text-gray-500">Your contribution history</p>
+                <h2 className="text-lg font-bold text-foreground">Activity</h2>
+                <p className="text-sm text-muted-foreground">Your contribution history</p>
               </div>
             </div>
             <ActivityHeatmap
@@ -709,7 +709,7 @@ export default function ProfilePage() {
           {/* Row 4: Timeline + Portfolio Preview */}
           {/* Timeline */}
           <motion.div
-            className="col-span-12 lg:col-span-5 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-5 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -719,15 +719,15 @@ export default function ProfilePage() {
 
           {/* Portfolio Preview */}
           <motion.div
-            className="col-span-12 lg:col-span-7 bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Portfolio</h2>
-                <p className="text-sm text-gray-500">Recent work and projects</p>
+                <h2 className="text-lg font-bold text-foreground">Portfolio</h2>
+                <p className="text-sm text-muted-foreground">Recent work and projects</p>
               </div>
               {isOwnProfile && (
                 <Button variant="outline" size="sm" className="gap-2">
@@ -744,7 +744,7 @@ export default function ProfilePage() {
                 {portfolioItems.slice(0, 6).map((item, index) => (
                   <motion.div
                     key={item.id}
-                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-gray-100"
+                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.6 + index * 0.05 }}
@@ -758,8 +758,8 @@ export default function ProfilePage() {
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        <Code className="size-8 text-gray-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted flex items-center justify-center">
+                        <Code className="size-8 text-muted-foreground" />
                       </div>
                     )}
 

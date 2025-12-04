@@ -96,7 +96,7 @@ export function QuickFilterChips({
                 "active:scale-95",
                 chip.isActive
                   ? chip.activeColor
-                  : "bg-white/95 backdrop-blur-md text-gray-700 border-gray-200/80"
+                  : "bg-card/95 backdrop-blur-md text-foreground border-border/80"
               )}
             >
               <Icon className="size-4" />

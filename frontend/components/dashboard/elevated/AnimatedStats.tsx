@@ -275,20 +275,20 @@ export function AnimatedStatCard({
 
   const colorClasses = {
     blue: {
-      icon: 'text-blue-600 bg-blue-50',
-      highlight: 'ring-2 ring-blue-200',
+      icon: 'text-blue-600 bg-blue-500/10',
+      highlight: 'ring-2 ring-blue-500/30',
     },
     green: {
-      icon: 'text-emerald-600 bg-emerald-50',
-      highlight: 'ring-2 ring-emerald-200',
+      icon: 'text-emerald-600 bg-emerald-500/10',
+      highlight: 'ring-2 ring-emerald-500/30',
     },
     orange: {
-      icon: 'text-orange-600 bg-orange-50',
-      highlight: 'ring-2 ring-orange-200',
+      icon: 'text-orange-600 bg-orange-500/10',
+      highlight: 'ring-2 ring-orange-500/30',
     },
     purple: {
-      icon: 'text-violet-600 bg-violet-50',
-      highlight: 'ring-2 ring-violet-200',
+      icon: 'text-violet-600 bg-violet-500/10',
+      highlight: 'ring-2 ring-violet-500/30',
     },
     default: {
       icon: 'text-muted-foreground bg-muted',
@@ -396,13 +396,13 @@ export function EarningsDisplay({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50',
-        'border border-emerald-200/60',
+        'p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5',
+        'border border-emerald-500/20',
         className
       )}
     >
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2.5 rounded-xl bg-emerald-100">
+        <div className="p-2.5 rounded-xl bg-emerald-500/10">
           <DollarSign className="w-5 h-5 text-emerald-600" />
         </div>
         <h3 className="font-semibold text-foreground">Your Earnings</h3>

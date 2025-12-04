@@ -201,10 +201,10 @@ function StatPill({
   color?: 'blue' | 'green' | 'orange' | 'purple';
 }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-200/60',
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
-    orange: 'bg-orange-50 text-orange-700 border-orange-200/60',
-    purple: 'bg-violet-50 text-violet-700 border-violet-200/60',
+    blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    green: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+    orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+    purple: 'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/20',
   };
 
   return (
@@ -243,8 +243,8 @@ export function StoryModeStats({
       <div className="p-4">
         {/* Compact header */}
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100">
-            <BookOpen className="w-4 h-4 text-slate-600" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted">
+            <BookOpen className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -300,7 +300,7 @@ export function StoryModeStats({
             </div>
             <div className="h-1 bg-muted rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-slate-400 rounded-full"
+                className="h-full bg-muted-foreground rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${getProgressToNextChapter(stats.totalReviews).percentage}%` }}
                 transition={{ duration: 0.8 }}
@@ -358,8 +358,8 @@ export function StoryModeCompact({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        'p-4 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900',
-        'border border-slate-700/50',
+        'p-4 rounded-xl bg-gradient-to-br from-muted to-muted',
+        'border border-border/50',
         className
       )}
     >
@@ -369,16 +369,16 @@ export function StoryModeCompact({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/50">Ch. {chapter.number}</span>
-            <span className="text-sm font-medium text-white truncate">
+            <span className="text-xs text-muted-foreground">Ch. {chapter.number}</span>
+            <span className="text-sm font-medium text-foreground truncate">
               {chapter.name}
             </span>
           </div>
-          <p className="text-xs text-white/60 truncate mt-0.5">
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
             {narrative.primary}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-white/40" />
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
       </div>
     </motion.div>
   );

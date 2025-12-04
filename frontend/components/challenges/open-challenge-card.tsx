@@ -41,18 +41,18 @@ export interface OpenChallengeCardProps {
 const contentTypeConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
   design: { icon: Palette, color: "text-accent-blue", bg: "bg-accent-blue/10" },
   code: { icon: Code, color: "text-accent-sage", bg: "bg-accent-sage/10" },
-  video: { icon: Video, color: "text-red-500", bg: "bg-red-50" },
+  video: { icon: Video, color: "text-red-500", bg: "bg-red-500/10" },
   audio: { icon: Headphones, color: "text-accent-peach", bg: "bg-accent-peach/10" },
-  writing: { icon: FileText, color: "text-blue-500", bg: "bg-blue-50" },
-  art: { icon: Brush, color: "text-purple-500", bg: "bg-purple-50" },
-  stream: { icon: Radio, color: "text-pink-500", bg: "bg-pink-50" },
+  writing: { icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" },
+  art: { icon: Brush, color: "text-purple-500", bg: "bg-purple-500/10" },
+  stream: { icon: Radio, color: "text-pink-500", bg: "bg-pink-500/10" },
 };
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   open: { label: "Open for Entries", color: "text-accent-sage", bg: "bg-accent-sage/10" },
   active: { label: "Submissions Open", color: "text-accent-blue", bg: "bg-accent-blue/10" },
   voting: { label: "Voting", color: "text-accent-peach", bg: "bg-accent-peach/10" },
-  completed: { label: "Completed", color: "text-gray-500", bg: "bg-gray-100" },
+  completed: { label: "Completed", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
 export function OpenChallengeCard({
@@ -82,7 +82,7 @@ export function OpenChallengeCard({
     <motion.div
       className={cn(
         "relative rounded-2xl overflow-hidden cursor-pointer",
-        "bg-white border border-gray-100",
+        "bg-background border border-border",
         "shadow-sm hover:shadow-lg transition-all duration-300",
         isFeatured && "ring-2 ring-accent-peach/30"
       )}
@@ -119,13 +119,13 @@ export function OpenChallengeCard({
         </div>
 
         {/* Title & Description */}
-        <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-2">{title}</h3>
+        <h3 className="font-semibold text-foreground text-lg mb-1 line-clamp-2">{title}</h3>
         {description && (
-          <p className="text-sm text-gray-500 mb-4 line-clamp-2">{description}</p>
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{description}</p>
         )}
 
         {/* Stats Row */}
-        <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+        <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Users className="w-4 h-4" />
             {totalEntries} entries
@@ -144,9 +144,9 @@ export function OpenChallengeCard({
         {/* Time Progress */}
         {timeLeft && canJoin && (
           <div className="mb-4">
-            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
               <span>Time remaining</span>
-              <span className="font-medium text-gray-700">{timeLeft}</span>
+              <span className="font-medium text-foreground">{timeLeft}</span>
             </div>
             <Progress value={timeProgress} className="h-1.5" />
           </div>
@@ -154,8 +154,8 @@ export function OpenChallengeCard({
 
         {/* Prize Description */}
         {prizeDescription && (
-          <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-100">
-            <p className="text-sm text-gray-600">{prizeDescription}</p>
+          <div className="mb-4 p-3 rounded-lg bg-muted border border-border">
+            <p className="text-sm text-muted-foreground">{prizeDescription}</p>
           </div>
         )}
 
@@ -222,7 +222,7 @@ export function OpenChallengeCardCompact({
 
   return (
     <motion.div
-      className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border cursor-pointer hover:bg-muted transition-colors"
       onClick={onClick}
       whileHover={{ x: 2 }}
     >
@@ -233,8 +233,8 @@ export function OpenChallengeCardCompact({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900 text-sm truncate">{title}</p>
-        <p className="text-xs text-gray-500">{totalEntries} entries</p>
+        <p className="font-medium text-foreground text-sm truncate">{title}</p>
+        <p className="text-xs text-muted-foreground">{totalEntries} entries</p>
       </div>
 
       {/* Time/Status */}

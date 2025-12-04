@@ -71,7 +71,7 @@ const roleColors: Record<UserRole, { bg: string; text: string }> = {
 };
 
 const tierColors: Record<UserTier, { bg: string; text: string }> = {
-  novice: { bg: "bg-gray-100", text: "text-gray-600" },
+  novice: { bg: "bg-gray-100", text: "text-muted-foreground" },
   contributor: { bg: "bg-green-100", text: "text-green-700" },
   skilled: { bg: "bg-blue-100", text: "text-blue-700" },
   trusted_advisor: { bg: "bg-purple-100", text: "text-purple-700" },
@@ -210,8 +210,8 @@ export default function AdminUsersPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+          <p className="text-muted-foreground mt-1">
             {total} total users
           </p>
         </div>
@@ -228,12 +228,12 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Filters */}
-      <Card className="bg-white border-gray-200 shadow-sm">
+      <Card className="bg-background border-border shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by email or name..."
                 value={searchQuery}
@@ -273,7 +273,7 @@ export default function AdminUsersPage() {
       </Card>
 
       {/* Users Table */}
-      <Card className="bg-white border-gray-200 shadow-sm">
+      <Card className="bg-background border-border shadow-sm">
         {loading ? (
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -285,19 +285,19 @@ export default function AdminUsersPage() {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-gray-200">
-                <TableHead className="text-gray-600">User</TableHead>
-                <TableHead className="text-gray-600">Role</TableHead>
-                <TableHead className="text-gray-600">Tier</TableHead>
-                <TableHead className="text-gray-600">Karma</TableHead>
-                <TableHead className="text-gray-600">Status</TableHead>
-                <TableHead className="text-gray-600">Joined</TableHead>
-                <TableHead className="text-gray-600 text-right">Actions</TableHead>
+              <TableRow className="border-border">
+                <TableHead className="text-muted-foreground">User</TableHead>
+                <TableHead className="text-muted-foreground">Role</TableHead>
+                <TableHead className="text-muted-foreground">Tier</TableHead>
+                <TableHead className="text-muted-foreground">Karma</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Joined</TableHead>
+                <TableHead className="text-muted-foreground text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id} className="border-gray-100">
+                <TableRow key={user.id} className="border-border">
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
@@ -307,10 +307,10 @@ export default function AdminUsersPage() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {user.full_name || "No name"}
                         </div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
+                        <div className="text-sm text-muted-foreground">{user.email}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -324,7 +324,7 @@ export default function AdminUsersPage() {
                       {user.user_tier.replace("_", " ")}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-gray-600">
+                  <TableCell className="text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-amber-500" />
                       {user.karma_points.toLocaleString()}
@@ -355,7 +355,7 @@ export default function AdminUsersPage() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-gray-600">
+                  <TableCell className="text-muted-foreground">
                     {formatDate(user.created_at)}
                   </TableCell>
                   <TableCell>
@@ -415,8 +415,8 @@ export default function AdminUsersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
-            <div className="text-sm text-gray-500">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border">
+            <div className="text-sm text-muted-foreground">
               Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total}
             </div>
             <div className="flex items-center gap-2">
@@ -428,7 +428,7 @@ export default function AdminUsersPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
               </span>
               <Button

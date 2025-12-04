@@ -258,14 +258,14 @@ export function MomentumDashboard({
   };
 
   return (
-    <div className={cn('min-h-screen bg-[#FAFAFC]', className)}>
+    <div className={cn('min-h-screen bg-[var(--background-subtle)]', className)}>
       <div className="max-w-[1400px] mx-auto px-6 py-4">
 
         {/* Hero Section - Compact horizontal layout */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-4 rounded-2xl bg-white border border-border/60 shadow-sm"
+          className="mb-4 p-4 rounded-2xl bg-background border border-border/60 shadow-sm"
         >
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             {/* Left: Ring + Greeting */}
@@ -308,7 +308,7 @@ export function MomentumDashboard({
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
                     role === 'creator'
                       ? 'bg-blue-500 text-white shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                   )}
                 >
                   <Palette className="size-3.5" />
@@ -320,7 +320,7 @@ export function MomentumDashboard({
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all',
                     role === 'reviewer'
                       ? 'bg-blue-500 text-white shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-white/50'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                   )}
                 >
                   <Briefcase className="size-3.5" />
@@ -335,7 +335,7 @@ export function MomentumDashboard({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200/60"
+                    className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30"
                   >
                     <Star className="size-3.5 text-orange-500 fill-orange-500" />
                     <span className="text-xs text-orange-700 font-medium whitespace-nowrap">
@@ -374,10 +374,10 @@ export function MomentumDashboard({
           transition={{ delay: 0.1 }}
           className="mb-4"
         >
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 via-indigo-50/60 to-violet-50/40 border border-blue-100/80 shadow-sm">
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-violet-500/5 border border-blue-500/20 shadow-sm">
             <div className="flex items-center gap-4">
               {/* Larger Icon - 44px */}
-              <div className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-white shadow-md border border-blue-100/50">
+              <div className="flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl bg-background shadow-md border border-blue-500/20">
                 {role === 'reviewer' ? (
                   <Search className="h-5 w-5 text-blue-600" />
                 ) : (

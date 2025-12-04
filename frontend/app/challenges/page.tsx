@@ -420,7 +420,7 @@ export default function ChallengesPage() {
   return (
     <div className="min-h-screen bg-[var(--background-subtle)]">
       {/* Hero Section */}
-      <section className="bg-white border-b border-gray-100">
+      <section className="bg-background border-b border-border">
         <div className="container mx-auto px-4 py-12 max-w-7xl">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
@@ -441,7 +441,7 @@ export default function ChallengesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-3xl md:text-4xl font-bold text-gray-900 mb-2"
+                className="text-3xl md:text-4xl font-bold text-foreground mb-2"
               >
                 Creative{" "}
                 <span className="bg-gradient-to-r from-accent-blue via-purple-500 to-accent-peach bg-clip-text text-transparent">
@@ -453,7 +453,7 @@ export default function ChallengesPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-gray-500 max-w-xl"
+                className="text-muted-foreground max-w-xl"
               >
                 Compete in 1v1 battles selected by the platform or join open community challenges.
                 Prove your skills and climb the leaderboard.
@@ -466,7 +466,7 @@ export default function ChallengesPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="flex items-center gap-6 p-4 rounded-2xl bg-gray-50 border border-gray-100"
+                className="flex items-center gap-6 p-4 rounded-2xl bg-muted border border-border"
               >
                 <StatItem
                   icon={Trophy}
@@ -474,14 +474,14 @@ export default function ChallengesPage() {
                   label="Wins"
                   color="text-accent-peach"
                 />
-                <div className="w-px h-10 bg-gray-200" />
+                <div className="w-px h-10 bg-muted" />
                 <StatItem
                   icon={Target}
                   value={`${myStats.winRate}%`}
                   label="Win Rate"
                   color="text-accent-sage"
                 />
-                <div className="w-px h-10 bg-gray-200" />
+                <div className="w-px h-10 bg-muted" />
                 <StatItem
                   icon={Flame}
                   value={myStats.currentStreak}
@@ -511,10 +511,10 @@ export default function ChallengesPage() {
                     <Bell className="w-5 h-5 text-accent-peach" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-foreground">
                       You have {pendingInvitations.length} battle invitation{pendingInvitations.length > 1 ? "s" : ""}!
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       You've been selected for a 1v1 showdown
                     </p>
                   </div>
@@ -545,8 +545,8 @@ export default function ChallengesPage() {
                     <Swords className="w-5 h-5 text-accent-blue" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Live 1v1 Battles</h2>
-                    <p className="text-sm text-gray-500">Platform-selected matchups</p>
+                    <h2 className="text-xl font-bold text-foreground">Live 1v1 Battles</h2>
+                    <p className="text-sm text-muted-foreground">Platform-selected matchups</p>
                   </div>
                 </div>
                 <Badge className="bg-accent-sage/10 text-accent-sage border-0">
@@ -558,7 +558,7 @@ export default function ChallengesPage() {
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2].map((i) => (
-                    <div key={i} className="h-64 rounded-2xl bg-white animate-pulse" />
+                    <div key={i} className="h-64 rounded-2xl bg-background animate-pulse" />
                   ))}
                 </div>
               ) : battles.length > 0 ? (
@@ -593,10 +593,10 @@ export default function ChallengesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-                  <Swords className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="font-semibold text-gray-900 mb-2">No Active Battles</h3>
-                  <p className="text-gray-500">Check back soon for new 1v1 matchups!</p>
+                <div className="text-center py-12 bg-background rounded-2xl border border-border">
+                  <Swords className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold text-foreground mb-2">No Active Battles</h3>
+                  <p className="text-muted-foreground">Check back soon for new 1v1 matchups!</p>
                 </div>
               )}
             </section>
@@ -610,8 +610,8 @@ export default function ChallengesPage() {
                       <Unlock className="w-5 h-5 text-accent-sage" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">Looking for Opponents</h2>
-                      <p className="text-sm text-gray-500">Claim a spot in these 1v1 battles</p>
+                      <h2 className="text-xl font-bold text-foreground">Looking for Opponents</h2>
+                      <p className="text-sm text-muted-foreground">Claim a spot in these 1v1 battles</p>
                     </div>
                   </div>
                   <Badge className="bg-accent-sage/10 text-accent-sage border-0">
@@ -637,12 +637,12 @@ export default function ChallengesPage() {
                         key={challenge.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow"
+                        className="bg-background rounded-2xl border border-border p-4 shadow-sm hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline" className="text-xs border-gray-200">
+                              <Badge variant="outline" className="text-xs border-border">
                                 {contentTypeLabels[challenge.contentType] || challenge.contentType}
                               </Badge>
                               {challenge.isFeatured && (
@@ -652,10 +652,10 @@ export default function ChallengesPage() {
                                 </Badge>
                               )}
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-1">{challenge.title}</h3>
-                            <p className="text-sm text-gray-500 line-clamp-1">{challenge.description}</p>
+                            <h3 className="font-semibold text-foreground mb-1">{challenge.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-1">{challenge.description}</p>
 
-                            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                            <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                               {timeLeft && (
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-3.5 h-3.5" />
@@ -682,13 +682,13 @@ export default function ChallengesPage() {
                                   </AvatarFallback>
                                 </Avatar>
                               ) : (
-                                <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
-                                  <UserPlus className="w-4 h-4 text-gray-400" />
+                                <div className="w-8 h-8 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+                                  <UserPlus className="w-4 h-4 text-muted-foreground" />
                                 </div>
                               )}
-                              <span className="text-xs text-gray-400 mx-1">vs</span>
-                              <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
-                                <UserPlus className="w-4 h-4 text-gray-400" />
+                              <span className="text-xs text-muted-foreground mx-1">vs</span>
+                              <div className="w-8 h-8 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+                                <UserPlus className="w-4 h-4 text-muted-foreground" />
                               </div>
                             </div>
 
@@ -733,11 +733,11 @@ export default function ChallengesPage() {
                     <Users className="w-5 h-5 text-accent-peach" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Open Challenges</h2>
-                    <p className="text-sm text-gray-500">Community competitions - join now!</p>
+                    <h2 className="text-xl font-bold text-foreground">Open Challenges</h2>
+                    <p className="text-sm text-muted-foreground">Community competitions - join now!</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="text-gray-500">
+                <Button variant="outline" size="sm" className="text-muted-foreground">
                   <Filter className="w-4 h-4 mr-2" />
                   Filter
                 </Button>
@@ -746,7 +746,7 @@ export default function ChallengesPage() {
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-72 rounded-2xl bg-white animate-pulse" />
+                    <div key={i} className="h-72 rounded-2xl bg-background animate-pulse" />
                   ))}
                 </div>
               ) : openChallenges.length > 0 ? (
@@ -772,10 +772,10 @@ export default function ChallengesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <h3 className="font-semibold text-gray-900 mb-2">No Open Challenges</h3>
-                  <p className="text-gray-500">New challenges will be announced soon!</p>
+                <div className="text-center py-12 bg-background rounded-2xl border border-border">
+                  <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold text-foreground mb-2">No Open Challenges</h3>
+                  <p className="text-muted-foreground">New challenges will be announced soon!</p>
                 </div>
               )}
             </section>
@@ -784,16 +784,16 @@ export default function ChallengesPage() {
           {/* Sidebar */}
           <aside className="space-y-6">
             {/* Leaderboard Card */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <div className="bg-background rounded-2xl border border-border p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-accent-peach" />
-                  <h3 className="font-bold text-gray-900">Top Challengers</h3>
+                  <h3 className="font-bold text-foreground">Top Challengers</h3>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 text-xs"
+                  className="text-muted-foreground text-xs"
                   onClick={() => router.push("/leaderboard?mode=challenges")}
                 >
                   View All
@@ -803,7 +803,7 @@ export default function ChallengesPage() {
               {loading ? (
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="h-12 rounded-lg bg-gray-100 animate-pulse" />
+                    <div key={i} className="h-12 rounded-lg bg-muted animate-pulse" />
                   ))}
                 </div>
               ) : (
@@ -816,8 +816,8 @@ export default function ChallengesPage() {
             </div>
 
             {/* How It Works Card */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="font-bold text-gray-900 mb-4">How It Works</h3>
+            <div className="bg-background rounded-2xl border border-border p-5 shadow-sm">
+              <h3 className="font-bold text-foreground mb-4">How It Works</h3>
               <div className="space-y-4">
                 <HowItWorksItem
                   icon={Swords}
@@ -852,7 +852,7 @@ export default function ChallengesPage() {
               </p>
               <Button
                 variant="secondary"
-                className="w-full bg-white text-accent-blue hover:bg-white/90"
+                className="w-full bg-background text-accent-blue hover:bg-background/90"
                 onClick={() => router.push("/challenges")}
               >
                 Browse All Challenges
@@ -882,25 +882,25 @@ function StatItem({
   return (
     <div className="text-center">
       <Icon className={cn("w-5 h-5 mx-auto mb-1", color)} />
-      <div className="text-xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xl font-bold text-foreground">{value}</div>
+      <div className="text-xs text-muted-foreground">{label}</div>
     </div>
   );
 }
 
 function LeaderboardRow({ entry, rank }: { entry: ChallengeLeaderboardEntry; rank: number }) {
   const getRankStyle = (rank: number) => {
-    if (rank === 1) return { icon: Crown, color: "text-yellow-500", bg: "bg-yellow-50" };
-    if (rank === 2) return { icon: Medal, color: "text-gray-400", bg: "bg-gray-50" };
-    if (rank === 3) return { icon: Medal, color: "text-orange-400", bg: "bg-orange-50" };
-    return { icon: null, color: "text-gray-400", bg: "bg-gray-50" };
+    if (rank === 1) return { icon: Crown, color: "text-yellow-500", bg: "bg-yellow-500/10" };
+    if (rank === 2) return { icon: Medal, color: "text-muted-foreground", bg: "bg-muted" };
+    if (rank === 3) return { icon: Medal, color: "text-orange-400", bg: "bg-orange-500/10" };
+    return { icon: null, color: "text-muted-foreground", bg: "bg-muted" };
   };
 
   const style = getRankStyle(rank);
   const RankIcon = style.icon;
 
   return (
-    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
       <div className={cn("w-7 h-7 rounded-full flex items-center justify-center", style.bg)}>
         {RankIcon ? (
           <RankIcon className={cn("w-4 h-4", style.color)} />
@@ -908,14 +908,14 @@ function LeaderboardRow({ entry, rank }: { entry: ChallengeLeaderboardEntry; ran
           <span className={cn("text-xs font-bold", style.color)}>{rank}</span>
         )}
       </div>
-      <Avatar className="w-8 h-8 border border-gray-100">
+      <Avatar className="w-8 h-8 border border-border">
         <AvatarImage src={entry.userAvatar} />
-        <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+        <AvatarFallback className="bg-muted text-muted-foreground text-xs">
           {entry.userName[0]?.toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900 text-sm truncate">{entry.userName}</p>
+        <p className="font-medium text-foreground text-sm truncate">{entry.userName}</p>
       </div>
       <div className="text-xs font-medium text-accent-sage">{entry.winRate}%</div>
     </div>
@@ -941,8 +941,8 @@ function HowItWorksItem({
         <Icon className={cn("w-4 h-4", color)} />
       </div>
       <div>
-        <p className="font-medium text-gray-900 text-sm">{title}</p>
-        <p className="text-xs text-gray-500">{description}</p>
+        <p className="font-medium text-foreground text-sm">{title}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     </div>
   );

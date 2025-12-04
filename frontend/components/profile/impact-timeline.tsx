@@ -168,7 +168,7 @@ export function ImpactTimeline({
               onClick={() => setShowFilterMenu(!showFilterMenu)}
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                'bg-muted hover:bg-muted text-foreground'
               )}
             >
               <Filter className="size-4" />
@@ -182,7 +182,7 @@ export function ImpactTimeline({
                   initial={{ opacity: 0, y: -10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-10"
+                  className="absolute right-0 mt-2 w-40 bg-background rounded-xl shadow-lg border border-border overflow-hidden z-10"
                 >
                   {filterOptions.map((option) => (
                     <button
@@ -195,7 +195,7 @@ export function ImpactTimeline({
                         'w-full px-4 py-2 text-left text-sm transition-colors',
                         filter === option.value
                           ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          : 'text-foreground hover:bg-muted'
                       )}
                     >
                       {option.label}
@@ -224,8 +224,8 @@ export function ImpactTimeline({
                 transition={{ delay: groupIndex * 0.1 }}
                 className="flex items-center gap-3 mb-3"
               >
-                <div className="size-10 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center z-10">
-                  <Clock className="size-4 text-gray-400" />
+                <div className="size-10 rounded-full bg-background border-2 border-border flex items-center justify-center z-10">
+                  <Clock className="size-4 text-muted-foreground" />
                 </div>
                 <span className="text-sm font-medium text-gray-500">{date}</span>
               </motion.div>
@@ -255,8 +255,8 @@ export function ImpactTimeline({
             <div className="size-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-4">
               <FileText className="size-8 text-gray-400" />
             </div>
-            <p className="text-gray-600 font-medium">No activity yet</p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-foreground font-medium">No activity yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
               Start reviewing to build your timeline
             </p>
           </motion.div>
@@ -267,7 +267,7 @@ export function ImpactTimeline({
       {hasMore && !expanded && (
         <motion.button
           onClick={() => setExpanded(true)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 px-4 rounded-xl border border-border bg-muted hover:bg-muted text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >
@@ -421,7 +421,7 @@ export function CompactTimeline({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <div className={cn(
               'size-8 rounded-lg flex items-center justify-center flex-shrink-0',

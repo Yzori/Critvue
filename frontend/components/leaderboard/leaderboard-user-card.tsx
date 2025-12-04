@@ -45,11 +45,11 @@ export function LeaderboardUserCard({
       className={cn(
         'relative flex items-center gap-4 p-3 sm:p-4 rounded-xl',
         'transition-all duration-200 cursor-pointer',
-        'hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5',
+        'hover:bg-muted hover:shadow-md hover:-translate-y-0.5',
         'border',
         isCurrentUser
           ? 'bg-accent-peach/5 border-accent-peach/30'
-          : 'bg-white border-gray-100',
+          : 'bg-background border-border',
         className
       )}
       onClick={() => onUserClick?.(user)}
@@ -61,7 +61,7 @@ export function LeaderboardUserCard({
         <span
           className={cn(
             'font-bold text-lg',
-            user.rank <= 3 ? 'text-amber-600' : 'text-gray-400'
+            user.rank <= 3 ? 'text-amber-600' : 'text-muted-foreground'
           )}
         >
           {user.rank}
@@ -76,7 +76,7 @@ export function LeaderboardUserCard({
             background: `linear-gradient(135deg, ${tierInfo.color}, ${tierInfo.color}80)`,
           }}
         >
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-white">
+          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-background">
             <AvatarImage src={user.avatarUrl} alt={user.displayName} />
             <AvatarFallback
               className="text-sm font-semibold text-white"
@@ -98,7 +98,7 @@ export function LeaderboardUserCard({
       {/* User Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold text-gray-900 truncate">
+          <p className="font-semibold text-foreground truncate">
             {user.displayName}
           </p>
 
@@ -122,7 +122,7 @@ export function LeaderboardUserCard({
         </div>
 
         {/* Stats Row */}
-        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
             <Star className="h-3 w-3 text-amber-400" />
             {user.stats.helpfulRating.toFixed(1)}
@@ -159,10 +159,10 @@ export function LeaderboardUserCard({
 
         {/* Score */}
         <div className="text-right">
-          <p className="font-bold text-gray-900">
+          <p className="font-bold text-foreground">
             {user.score.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {user.scoreLabel.split(' ').pop()}
           </p>
         </div>

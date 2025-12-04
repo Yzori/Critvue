@@ -19,7 +19,7 @@ export function AdminShell({
   suspendedCount = 0,
 }: AdminShellProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Sidebar */}
       <AdminSidebar
         pendingApplications={pendingApplications}

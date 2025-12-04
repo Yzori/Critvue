@@ -87,7 +87,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 backdrop-blur-sm px-6",
+        "sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6",
         className
       )}
     >
@@ -95,7 +95,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
       <nav className="flex items-center gap-1 text-sm">
         <Link
           href="/"
-          className="text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-muted-foreground hover:text-muted-foreground transition-colors"
           title="Back to main site"
         >
           <Home className="h-4 w-4" />
@@ -106,12 +106,12 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             {crumb.href ? (
               <Link
                 href={crumb.href}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {crumb.label}
               </Link>
             ) : (
-              <span className="text-gray-900 font-medium">{crumb.label}</span>
+              <span className="text-foreground font-medium">{crumb.label}</span>
             )}
           </React.Fragment>
         ))}
@@ -121,19 +121,19 @@ export function AdminHeader({ className }: AdminHeaderProps) {
       <div className="flex items-center gap-4">
         {/* Search */}
         <div className="relative hidden md:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search users, applications..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64 pl-9 h-9 bg-gray-50 border-gray-200 focus:bg-white"
+            className="w-64 pl-9 h-9 bg-muted border-border focus:bg-background"
           />
         </div>
 
         {/* Notifications */}
         <Button variant="ghost" size="sm" className="h-9 w-9 p-0 relative">
-          <Bell className="h-5 w-5 text-gray-500" />
+          <Bell className="h-5 w-5 text-muted-foreground" />
           <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
         </Button>
 
@@ -147,7 +147,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
                   {getInitials(user?.full_name)}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+              <span className="text-sm font-medium text-foreground hidden sm:inline">
                 {user?.full_name || "Admin"}
               </span>
             </Button>
@@ -156,7 +156,7 @@ export function AdminHeader({ className }: AdminHeaderProps) {
             <DropdownMenuLabel>
               <div className="flex flex-col">
                 <span className="font-medium">{user?.full_name}</span>
-                <span className="text-xs text-gray-500">{user?.email}</span>
+                <span className="text-xs text-muted-foreground">{user?.email}</span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

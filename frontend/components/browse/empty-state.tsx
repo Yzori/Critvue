@@ -23,7 +23,7 @@ export function EmptyState({ onClearFilters, className }: EmptyStateProps) {
     <div
       className={cn(
         "col-span-full flex flex-col items-center justify-center py-16 px-6",
-        "rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200/50",
+        "rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50",
         "min-h-[400px]",
         className
       )}
@@ -37,10 +37,10 @@ export function EmptyState({ onClearFilters, className }: EmptyStateProps) {
       </div>
 
       {/* Text */}
-      <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+      <h3 className="text-2xl font-semibold text-foreground mb-2">
         No reviews found
       </h3>
-      <p className="text-gray-600 text-center max-w-md mb-8">
+      <p className="text-muted-foreground text-center max-w-md mb-8">
         We couldn't find any review requests matching your filters. Try adjusting your search criteria to see more results.
       </p>
 
@@ -55,8 +55,8 @@ export function EmptyState({ onClearFilters, className }: EmptyStateProps) {
 
       {/* Helpful tips */}
       <div className="mt-12 p-6 rounded-xl bg-accent-blue/5 border border-accent-blue/10 max-w-md">
-        <p className="text-sm text-gray-700 text-center">
-          <span className="font-semibold">Tip:</span> New review requests are posted daily. Check back soon or broaden your filters to discover more opportunities.
+        <p className="text-sm text-muted-foreground text-center">
+          <span className="font-semibold text-foreground">Tip:</span> New review requests are posted daily. Check back soon or broaden your filters to discover more opportunities.
         </p>
       </div>
     </div>

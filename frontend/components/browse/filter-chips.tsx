@@ -63,7 +63,7 @@ export function FilterChips({
     <div className={cn("flex flex-col gap-4", className)}>
       {/* Content Type Filters */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-700">Content Type</label>
+        <label className="text-sm font-medium text-foreground">Content Type</label>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
           {contentTypes.map((type) => (
             <FilterChip
@@ -78,7 +78,7 @@ export function FilterChips({
 
       {/* Review Type Filters */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-700">Review Type</label>
+        <label className="text-sm font-medium text-foreground">Review Type</label>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
           {reviewTypes.map((type) => (
             <FilterChip
@@ -93,7 +93,7 @@ export function FilterChips({
 
       {/* Sort Options */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-700">Sort By</label>
+        <label className="text-sm font-medium text-foreground">Sort By</label>
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
           {sortOptions.map((option) => (
             <FilterChip
@@ -128,7 +128,7 @@ function FilterChip({ label, selected, onClick }: FilterChipProps) {
         "active:scale-[0.98]",
         selected
           ? "bg-accent-blue text-white shadow-lg shadow-accent-blue/30"
-          : "bg-white/50 backdrop-blur-sm border border-black/10 text-gray-700 hover:bg-white/80 hover:shadow-md"
+          : "bg-card/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-card/80 hover:shadow-md"
       )}
     >
       {selected && (

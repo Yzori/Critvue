@@ -78,7 +78,7 @@ function StarRating({ value, onChange, size = "md" }: StarRatingProps) {
                   "transition-colors",
                   isActive
                     ? "fill-yellow-400 text-yellow-400"
-                    : "fill-transparent text-gray-300"
+                    : "fill-transparent text-muted-foreground"
                 )}
               />
             </button>
@@ -111,7 +111,7 @@ function TakeawayItem({ index, takeaway, onChange }: TakeawayItemProps) {
         "p-3 sm:p-4 rounded-lg border-2 transition-all",
         isComplete
           ? "border-green-200 bg-green-50/50"
-          : "border-gray-200 bg-white"
+          : "border-border bg-background"
       )}
     >
       <div className="flex items-start gap-2 sm:gap-3">
@@ -120,7 +120,7 @@ function TakeawayItem({ index, takeaway, onChange }: TakeawayItemProps) {
             "size-7 rounded-full flex items-center justify-center shrink-0 font-bold text-sm",
             isComplete
               ? "bg-green-500 text-white"
-              : "bg-gray-200 text-gray-600"
+              : "bg-muted text-muted-foreground"
           )}
         >
           {index + 1}

@@ -444,7 +444,7 @@ export function ElevatedDashboard({
   };
 
   return (
-    <div className={cn('min-h-screen bg-[#FAFAFC]', className)}>
+    <div className={cn('min-h-screen bg-[var(--background-subtle)]', className)}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3">
 
         {/* Main Content with Role Transition */}
@@ -471,7 +471,7 @@ export function ElevatedDashboard({
                   />
 
                   {/* Divider */}
-                  <div className="w-px h-6 bg-slate-200/60" />
+                  <div className="w-px h-6 bg-border/60" />
 
                   {/* Identity: Tier + Greeting + Progress */}
                   <div className="flex items-center gap-2">
@@ -573,10 +573,10 @@ export function ElevatedDashboard({
             </div>
 
             {/* Sidebar - Unified Insights Rail */}
-            <div className="rounded-xl border border-slate-200/60 bg-white/50 backdrop-blur-sm overflow-hidden">
+            <div className="rounded-xl border border-border/60 bg-background/50 backdrop-blur-sm overflow-hidden">
               {/* Rail Header with Streak */}
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Insights
                 </p>
                 <HideInZenMode>
@@ -590,7 +590,7 @@ export function ElevatedDashboard({
               </div>
 
               {/* Rail Content */}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border">
                 {/* Story Stats */}
                 <div className="p-3">
                   <StoryModeStats

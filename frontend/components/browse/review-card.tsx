@@ -146,22 +146,22 @@ export function ReviewCard({
         label: "Quick",
         icon: Zap,
         variant: "success" as const,
-        bgClass: "bg-green-50 border-green-200/60 text-green-700",
-        iconClass: "text-green-600",
+        bgClass: "bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400",
+        iconClass: "text-green-600 dark:text-green-400",
       },
       standard: {
         label: "Standard",
         icon: Target,
         variant: "primary" as const,
-        bgClass: "bg-blue-50 border-blue-200/60 text-blue-700",
-        iconClass: "text-blue-600",
+        bgClass: "bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400",
+        iconClass: "text-blue-600 dark:text-blue-400",
       },
       deep: {
         label: "Deep",
         icon: Star,
         variant: "secondary" as const,
-        bgClass: "bg-purple-50 border-purple-200/60 text-purple-700",
-        iconClass: "text-purple-600",
+        bgClass: "bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400",
+        iconClass: "text-purple-600 dark:text-purple-400",
       },
     };
 
@@ -194,7 +194,7 @@ export function ReviewCard({
     return (
       <Badge
         size="sm"
-        className="flex items-center gap-1 bg-purple-50 border-purple-200/60 text-purple-700 font-semibold border"
+        className="flex items-center gap-1 bg-purple-500/10 border-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold border"
       >
         <Shield className="size-3" />
         <span>NDA</span>
@@ -264,18 +264,18 @@ export function ReviewCard({
 
         // IMPROVED: Professional glassmorphism following 2025 trends
         // Premium featured cards: Maximum glass effect
-        isPremiumFeatured && "bg-white/90 backdrop-blur-xl border-2",
+        isPremiumFeatured && "bg-card/95 backdrop-blur-xl border-2",
         // High importance: Strong glass effect
-        isHighImportance && !isPremiumFeatured && "bg-white/85 backdrop-blur-lg border-2",
+        isHighImportance && !isPremiumFeatured && "bg-card/90 backdrop-blur-lg border-2",
         // Medium importance: Standard glass effect
-        isMediumImportance && !isHighImportance && "bg-white/80 backdrop-blur-md border",
+        isMediumImportance && !isHighImportance && "bg-card/85 backdrop-blur-md border",
         // Standard cards: Subtle glass effect
-        !isMediumImportance && "bg-white/75 backdrop-blur-md border",
+        !isMediumImportance && "bg-card/80 backdrop-blur-md border",
 
         // Border styling with gradient accent for premium cards
         isPremiumFeatured && "border-transparent",
-        isHighImportance && !isPremiumFeatured && "border-white/40",
-        !isHighImportance && "border-white/20",
+        isHighImportance && !isPremiumFeatured && "border-border/40",
+        !isHighImportance && "border-border/20",
 
         // Shadow depth hierarchy (2025 refined shadows with paid/free distinction)
         // Premium featured: Enhanced shadow for maximum prominence
@@ -312,7 +312,7 @@ export function ReviewCard({
         // Refined gradient border for premium cards only
         ...(isPremiumFeatured && {
           backgroundImage:
-            "linear-gradient(white, white), linear-gradient(135deg, var(--accent-blue), var(--accent-peach))",
+            "linear-gradient(hsl(var(--card)), hsl(var(--card))), linear-gradient(135deg, var(--accent-blue), var(--accent-peach))",
           backgroundOrigin: "border-box",
           backgroundClip: "padding-box, border-box",
         }),
@@ -360,7 +360,7 @@ export function ReviewCard({
               isPremiumFeatured && "shadow-lg"
             )}
           >
-            <div className="relative w-full h-full bg-gradient-to-br from-gray-100 to-gray-200">
+            <div className="relative w-full h-full bg-gradient-to-br from-muted to-muted/80">
               <img
                 src={getFileUrl(review.preview_image)}
                 alt={review.title}
@@ -410,7 +410,7 @@ export function ReviewCard({
             size === "large" && "text-lg md:text-xl line-clamp-2 leading-tight",
             size === "tall" && "text-base md:text-lg line-clamp-2 leading-tight",
             // Text color hierarchy
-            isPremiumFeatured ? "text-gray-900" : "text-gray-800"
+            isPremiumFeatured ? "text-foreground" : "text-foreground/90"
           )}
         >
           {review.title}
@@ -419,14 +419,14 @@ export function ReviewCard({
         {/* Description - adaptive based on size, confidential for NDA requests */}
         {size !== "small" && (
           review.requires_nda ? (
-            <div className="flex items-center gap-2 text-sm text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-800 flex-shrink">
+            <div className="flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 bg-purple-500/10 px-3 py-2 rounded-lg border border-purple-500/20 flex-shrink">
               <Shield className="size-4 flex-shrink-0" />
               <span className="italic">Sign NDA to view project details</span>
             </div>
           ) : (
             <p
               className={cn(
-                "text-gray-600 text-sm leading-snug flex-shrink min-h-0 overflow-hidden",
+                "text-muted-foreground text-sm leading-snug flex-shrink min-h-0 overflow-hidden",
                 // Tight line-clamping for compact vertical rhythm
                 "line-clamp-2"
               )}
@@ -438,7 +438,7 @@ export function ReviewCard({
 
         {/* Skills - only show on large cards to save space, hidden for NDA */}
         {review.skills && review.skills.length > 0 && size === "large" && !review.requires_nda && (
-          <div className="flex flex-wrap gap-1.5 text-xs text-gray-500">
+          <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
             <span className="font-medium">Skills:</span>
             <span className="line-clamp-1">
               {review.skills.slice(0, 3).join(" • ")}
@@ -478,7 +478,7 @@ export function ReviewCard({
           )}
 
           {/* Metadata footer - compact spacing */}
-          <div className="flex items-center gap-2 text-xs text-gray-600 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             {/* Price - highlighted for expert reviews */}
             {review.review_type === "expert" && review.price ? (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-accent-blue/10 border border-accent-blue/20">
@@ -490,7 +490,7 @@ export function ReviewCard({
             ) : (
               <div className="flex items-center gap-1">
                 <DollarSign className="size-3.5 text-accent-blue" />
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-foreground">
                   {formatPrice(review.price, review.currency)}
                 </span>
               </div>

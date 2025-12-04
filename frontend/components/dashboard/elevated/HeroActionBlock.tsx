@@ -97,28 +97,28 @@ const actionGradients: Record<HeroActionType, string> = {
   earnings_milestone: 'from-emerald-500 via-teal-500 to-cyan-500',
 };
 
-// Background pattern for different action types
+// Background pattern for different action types (dark mode compatible)
 const actionBackgrounds: Record<HeroActionType, string> = {
-  continue_review: 'bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-violet-50/50',
-  accept_feedback: 'bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-cyan-50/50',
-  urgent_deadline: 'bg-gradient-to-br from-red-50/90 via-rose-50/70 to-orange-50/50',
-  complete_review: 'bg-gradient-to-br from-violet-50/90 via-purple-50/70 to-fuchsia-50/50',
-  start_fresh: 'bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-violet-50/50',
-  celebrate: 'bg-gradient-to-br from-amber-50/90 via-orange-50/70 to-rose-50/50',
-  streak_risk: 'bg-gradient-to-br from-amber-50/90 via-orange-50/70 to-red-50/50',
-  earnings_milestone: 'bg-gradient-to-br from-emerald-50/90 via-teal-50/70 to-cyan-50/50',
+  continue_review: 'bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-violet-500/5',
+  accept_feedback: 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/5',
+  urgent_deadline: 'bg-gradient-to-br from-red-500/10 via-rose-500/5 to-orange-500/5',
+  complete_review: 'bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-fuchsia-500/5',
+  start_fresh: 'bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-violet-500/5',
+  celebrate: 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-rose-500/5',
+  streak_risk: 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/5',
+  earnings_milestone: 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-cyan-500/5',
 };
 
-// Border colors for action types
+// Border colors for action types (dark mode compatible)
 const actionBorders: Record<HeroActionType, string> = {
-  continue_review: 'border-blue-200/80',
-  accept_feedback: 'border-emerald-200/80',
-  urgent_deadline: 'border-red-200/80',
-  complete_review: 'border-violet-200/80',
-  start_fresh: 'border-blue-200/80',
-  celebrate: 'border-amber-200/80',
-  streak_risk: 'border-amber-200/80',
-  earnings_milestone: 'border-emerald-200/80',
+  continue_review: 'border-blue-500/20',
+  accept_feedback: 'border-emerald-500/20',
+  urgent_deadline: 'border-red-500/20',
+  complete_review: 'border-violet-500/20',
+  start_fresh: 'border-blue-500/20',
+  celebrate: 'border-amber-500/20',
+  streak_risk: 'border-amber-500/20',
+  earnings_milestone: 'border-emerald-500/20',
 };
 
 export function HeroActionBlock({
@@ -141,14 +141,14 @@ export function HeroActionBlock({
         animate={{ opacity: 1, y: 0 }}
         className={cn(
           'relative overflow-hidden rounded-2xl p-6',
-          'bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50',
-          'border border-slate-200/80 shadow-sm',
+          'bg-gradient-to-br from-muted via-muted to-muted',
+          'border border-border/80 shadow-sm',
           className
         )}
       >
         <div className="flex items-center gap-5">
-          <div className="flex-shrink-0 flex items-center justify-center w-14 h-14 rounded-xl bg-slate-100 border border-slate-200/50">
-            <Sparkles className="h-6 w-6 text-slate-400" />
+          <div className="flex-shrink-0 flex items-center justify-center w-14 h-14 rounded-xl bg-muted border border-border/50">
+            <Sparkles className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground text-lg">You're all caught up!</h3>
@@ -195,8 +195,8 @@ export function HeroActionBlock({
     >
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/40 rounded-full blur-3xl" />
-        <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-white/30 rounded-full blur-2xl" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-background/40 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-background/30 rounded-full blur-2xl" />
       </div>
 
       {/* Urgency indicator bar */}
@@ -264,7 +264,7 @@ export function HeroActionBlock({
                     {Math.round((action.progress.current / action.progress.total) * 100)}%
                   </span>
                 </div>
-                <div className="h-2 bg-white/60 rounded-full overflow-hidden border border-white/80">
+                <div className="h-2 bg-background/60 rounded-full overflow-hidden border border-background/80">
                   <motion.div
                     className={cn('h-full rounded-full bg-gradient-to-r', gradient)}
                     initial={{ width: 0 }}
@@ -356,15 +356,15 @@ export function HeroActionBlock({
 // Loading skeleton
 function HeroActionSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 border border-slate-200/80 shadow-sm p-6">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted via-muted to-muted border border-border/80 shadow-sm p-6">
       <div className="flex items-center gap-5">
-        <div className="w-14 h-14 rounded-xl bg-slate-200 animate-pulse" />
+        <div className="w-14 h-14 rounded-xl bg-muted animate-pulse" />
         <div className="flex-1 space-y-3">
-          <div className="h-3 w-24 bg-slate-200 rounded animate-pulse" />
-          <div className="h-5 w-64 bg-slate-200 rounded animate-pulse" />
-          <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
+          <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-5 w-64 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-48 bg-muted rounded animate-pulse" />
         </div>
-        <div className="w-32 h-12 rounded-xl bg-slate-200 animate-pulse" />
+        <div className="w-32 h-12 rounded-xl bg-muted animate-pulse" />
       </div>
     </div>
   );

@@ -26,6 +26,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTheme, type Theme } from "@/contexts/ThemeContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -33,18 +34,12 @@ import { toast } from "sonner";
  * Appearance Settings Page
  *
  * Allows users to customize the visual appearance:
- * - Theme (light/dark/system)
+ * - Theme (light/dark/system) - uses centralized ThemeProvider
  * - Font size
  * - Color accent (future)
  */
 
-type Theme = "light" | "dark" | "system";
 type FontSize = "small" | "default" | "large";
-
-interface AppearanceSettings {
-  theme: Theme;
-  font_size: FontSize;
-}
 
 const themeOptions: { value: Theme; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { value: "light", label: "Light", icon: Sun },
@@ -53,69 +48,36 @@ const themeOptions: { value: Theme; label: string; icon: React.ComponentType<{ c
 ];
 
 export default function AppearanceSettingsPage() {
-  const [settings, setSettings] = React.useState<AppearanceSettings>({
-    theme: "system",
-    font_size: "default",
-  });
+  const { theme, setTheme } = useTheme();
+  const [fontSize, setFontSize] = React.useState<FontSize>("default");
+  const [originalFontSize, setOriginalFontSize] = React.useState<FontSize>("default");
   const [isSaving, setIsSaving] = React.useState(false);
   const [hasChanges, setHasChanges] = React.useState(false);
-  const [originalSettings, setOriginalSettings] = React.useState<AppearanceSettings>({
-    theme: "system",
-    font_size: "default",
-  });
 
-  // Load saved settings from localStorage
+  // Load font size from localStorage on mount
   React.useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as Theme | null;
-    const savedFontSize = localStorage.getItem("fontSize") as FontSize | null;
-
-    const loadedSettings: AppearanceSettings = {
-      theme: savedTheme || "system",
-      font_size: savedFontSize || "default",
-    };
-
-    setSettings(loadedSettings);
-    setOriginalSettings(loadedSettings);
-
-    // Apply theme immediately
-    applyTheme(loadedSettings.theme);
+    const savedFontSize = localStorage.getItem("critvue-font-size") as FontSize | null;
+    if (savedFontSize) {
+      setFontSize(savedFontSize);
+      setOriginalFontSize(savedFontSize);
+    }
   }, []);
 
-  const applyTheme = (theme: Theme) => {
-    const root = document.documentElement;
-
-    if (theme === "system") {
-      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", systemPrefersDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
-    }
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
+    toast.success(`Theme changed to ${newTheme}`);
   };
 
-  const handleThemeChange = (theme: Theme) => {
-    setSettings((prev) => ({ ...prev, theme }));
-    setHasChanges(true);
-    // Apply theme preview immediately
-    applyTheme(theme);
-  };
-
-  const handleFontSizeChange = (font_size: FontSize) => {
-    setSettings((prev) => ({ ...prev, font_size }));
-    setHasChanges(true);
+  const handleFontSizeChange = (newFontSize: FontSize) => {
+    setFontSize(newFontSize);
+    setHasChanges(newFontSize !== originalFontSize);
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
-
-      // Save to localStorage
-      localStorage.setItem("theme", settings.theme);
-      localStorage.setItem("fontSize", settings.font_size);
-
-      // Apply settings
-      applyTheme(settings.theme);
-
-      setOriginalSettings(settings);
+      localStorage.setItem("critvue-font-size", fontSize);
+      setOriginalFontSize(fontSize);
       setHasChanges(false);
       toast.success("Appearance settings saved");
     } catch (error) {
@@ -127,10 +89,8 @@ export default function AppearanceSettingsPage() {
   };
 
   const handleCancel = () => {
-    setSettings(originalSettings);
+    setFontSize(originalFontSize);
     setHasChanges(false);
-    // Revert theme preview
-    applyTheme(originalSettings.theme);
   };
 
   return (
@@ -156,13 +116,13 @@ export default function AppearanceSettingsPage() {
         </CardHeader>
         <CardContent>
           <RadioGroup
-            value={settings.theme}
+            value={theme}
             onValueChange={(value) => handleThemeChange(value as Theme)}
             className="grid grid-cols-1 sm:grid-cols-3 gap-4"
           >
             {themeOptions.map((option) => {
               const Icon = option.icon;
-              const isSelected = settings.theme === option.value;
+              const isSelected = theme === option.value;
 
               return (
                 <Label
@@ -184,8 +144,8 @@ export default function AppearanceSettingsPage() {
                   <div
                     className={cn(
                       "size-12 rounded-full flex items-center justify-center",
-                      option.value === "light" && "bg-amber-100",
-                      option.value === "dark" && "bg-slate-800",
+                      option.value === "light" && "bg-amber-100 dark:bg-amber-100",
+                      option.value === "dark" && "bg-slate-800 dark:bg-slate-700",
                       option.value === "system" && "bg-gradient-to-br from-amber-100 to-slate-800"
                     )}
                   >
@@ -194,7 +154,7 @@ export default function AppearanceSettingsPage() {
                         "size-6",
                         option.value === "light" && "text-amber-600",
                         option.value === "dark" && "text-slate-200",
-                        option.value === "system" && "text-slate-600"
+                        option.value === "system" && "text-slate-600 dark:text-slate-300"
                       )}
                     />
                   </div>
@@ -222,7 +182,7 @@ export default function AppearanceSettingsPage() {
         <CardContent>
           <div className="space-y-4">
             <Select
-              value={settings.font_size}
+              value={fontSize}
               onValueChange={(value) => handleFontSizeChange(value as FontSize)}
             >
               <SelectTrigger>
@@ -246,9 +206,9 @@ export default function AppearanceSettingsPage() {
               <p className="text-muted-foreground text-xs mb-2">Preview</p>
               <p
                 className={cn(
-                  settings.font_size === "small" && "text-sm",
-                  settings.font_size === "default" && "text-base",
-                  settings.font_size === "large" && "text-lg"
+                  fontSize === "small" && "text-sm",
+                  fontSize === "default" && "text-base",
+                  fontSize === "large" && "text-lg"
                 )}
               >
                 This is how text will appear across the application. Adjust the
@@ -289,7 +249,7 @@ export default function AppearanceSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Save Bar */}
+      {/* Save Bar - only for font size changes */}
       {hasChanges && (
         <div className="sticky bottom-4 flex items-center justify-end gap-3 p-4 bg-background/95 backdrop-blur-lg border border-border rounded-lg shadow-lg">
           <Button

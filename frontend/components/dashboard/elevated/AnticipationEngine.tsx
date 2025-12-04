@@ -160,13 +160,13 @@ export function PredictionCard({
       exit={{ opacity: 0, height: 0 }}
       className={cn(
         'p-3 rounded-lg',
-        'bg-slate-50/80 border border-border/60',
+        'bg-muted/80 border border-border/60',
         className
       )}
     >
       <div className="flex items-start gap-2.5">
-        <div className="p-1.5 rounded-md bg-slate-100">
-          <Icon className="w-3.5 h-3.5 text-slate-500" />
+        <div className="p-1.5 rounded-md bg-muted">
+          <Icon className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -286,11 +286,11 @@ export function CountdownCard({ moment, className }: CountdownCardProps) {
   const Icon = moment.icon || Sparkles;
 
   const iconColors: Record<CountdownMoment['type'], string> = {
-    streak: 'bg-orange-50 text-orange-500',
-    badge: 'bg-violet-50 text-violet-500',
-    earnings: 'bg-emerald-50 text-emerald-500',
-    tier: 'bg-amber-50 text-amber-500',
-    deadline: 'bg-blue-50 text-blue-500',
+    streak: 'bg-orange-500/10 text-orange-500',
+    badge: 'bg-violet-500/10 text-violet-500',
+    earnings: 'bg-emerald-500/10 text-emerald-500',
+    tier: 'bg-amber-500/10 text-amber-500',
+    deadline: 'bg-blue-500/10 text-blue-500',
   };
 
   return (
@@ -318,7 +318,7 @@ export function CountdownCard({ moment, className }: CountdownCardProps) {
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-slate-400 rounded-full"
+                  className="h-full bg-muted-foreground rounded-full"
                   style={{ width: `${(moment.currentValue / moment.targetValue) * 100}%` }}
                 />
               </div>

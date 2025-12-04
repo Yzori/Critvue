@@ -97,7 +97,7 @@ export function FeaturedHero({ featuredReviews }: FeaturedHeroProps) {
           >
             {/* Background Image */}
             {review.preview_image ? (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/80">
                 <img
                   src={getFileUrl(review.preview_image)}
                   alt={review.title}
@@ -105,7 +105,7 @@ export function FeaturedHero({ featuredReviews }: FeaturedHeroProps) {
                 />
               </div>
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 to-zinc-900" />
             )}
 
             {/* Stronger Gradient Overlays for Text Readability */}

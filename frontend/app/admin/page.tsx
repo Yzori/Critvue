@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
       case "user_banned":
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-500" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -191,8 +191,8 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-gray-500 mt-1">Overview of platform activity and quick actions</p>
+        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Overview of platform activity and quick actions</p>
       </div>
 
       {/* Stats Grid */}
@@ -213,17 +213,17 @@ export default function AdminDashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <Card className="bg-background border-border shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-500">{stat.title}</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                        <p className="text-3xl font-bold text-foreground mt-2">{stat.value}</p>
                         {stat.change !== undefined && stat.changeLabel && (
                           <div className="flex items-center gap-1 mt-2">
                             <TrendingUp className="h-3 w-3 text-green-500" />
                             <span className="text-xs text-green-600">+{stat.change}</span>
-                            <span className="text-xs text-gray-400">{stat.changeLabel}</span>
+                            <span className="text-xs text-muted-foreground">{stat.changeLabel}</span>
                           </div>
                         )}
                       </div>
@@ -243,7 +243,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <div className="lg:col-span-2">
-          <Card className="bg-white border-gray-200 shadow-sm">
+          <Card className="bg-background border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">Quick Actions</CardTitle>
               <CardDescription>Common administrative tasks</CardDescription>
@@ -256,14 +256,14 @@ export default function AdminDashboardPage() {
                     <Link
                       key={action.href}
                       href={action.href}
-                      className="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 hover:border-[#4CC9F0] hover:bg-[#4CC9F0]/5 transition-all"
+                      className="group flex items-start gap-4 p-4 rounded-xl border border-border hover:border-[#4CC9F0] hover:bg-[#4CC9F0]/5 transition-all"
                     >
-                      <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-[#4CC9F0]/10 transition-colors">
-                        <Icon className="h-5 w-5 text-gray-600 group-hover:text-[#4CC9F0]" />
+                      <div className="p-2 rounded-lg bg-muted group-hover:bg-[#4CC9F0]/10 transition-colors">
+                        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-[#4CC9F0]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-gray-900 group-hover:text-[#4CC9F0]">
+                          <h3 className="font-medium text-foreground group-hover:text-[#4CC9F0]">
                             {action.label}
                           </h3>
                           {action.badge && (
@@ -272,9 +272,9 @@ export default function AdminDashboardPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 mt-0.5">{action.description}</p>
+                        <p className="text-sm text-muted-foreground mt-0.5">{action.description}</p>
                       </div>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-[#4CC9F0] transition-colors" />
+                      <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-[#4CC9F0] transition-colors" />
                     </Link>
                   );
                 })}
@@ -285,7 +285,7 @@ export default function AdminDashboardPage() {
 
         {/* Recent Activity */}
         <div>
-          <Card className="bg-white border-gray-200 shadow-sm">
+          <Card className="bg-background border-border shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">Recent Activity</CardTitle>
               <CardDescription>Latest platform events</CardDescription>
@@ -304,12 +304,12 @@ export default function AdminDashboardPage() {
                       key={activity.id}
                       className="flex items-start gap-3 text-sm"
                     >
-                      <div className="p-1.5 rounded-full bg-gray-100">
+                      <div className="p-1.5 rounded-full bg-muted">
                         {getActivityIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-gray-700 line-clamp-2">{activity.message}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{activity.timestamp}</p>
+                        <p className="text-foreground line-clamp-2">{activity.message}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{activity.timestamp}</p>
                       </div>
                     </div>
                   ))}
@@ -328,43 +328,43 @@ export default function AdminDashboardPage() {
 
       {/* Monthly Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border-gray-200 shadow-sm">
+        <Card className="bg-background border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-green-100">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Approved This Month</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.approvedThisMonth || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">Approved This Month</p>
+                <p className="text-2xl font-bold text-foreground">{stats?.approvedThisMonth || 0}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200 shadow-sm">
+        <Card className="bg-background border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-red-100">
                 <XCircle className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Rejected This Month</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.rejectedThisMonth || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">Rejected This Month</p>
+                <p className="text-2xl font-bold text-foreground">{stats?.rejectedThisMonth || 0}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-gray-200 shadow-sm">
+        <Card className="bg-background border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-xl bg-[#4CC9F0]/10">
                 <Star className="h-6 w-6 text-[#4CC9F0]" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-500">Total Reviews</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalReviews || 0}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total Reviews</p>
+                <p className="text-2xl font-bold text-foreground">{stats?.totalReviews || 0}</p>
               </div>
             </div>
           </CardContent>

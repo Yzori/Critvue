@@ -46,15 +46,15 @@ export function BanUserModal({ user, isOpen, onClose, onSuccess }: BanUserModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white border-gray-200 max-w-md">
+      <DialogContent className="bg-background border-border max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-full bg-red-100">
               <Ban className="h-5 w-5 text-red-600" />
             </div>
-            <DialogTitle className="text-gray-900">Ban User</DialogTitle>
+            <DialogTitle className="text-foreground">Ban User</DialogTitle>
           </div>
-          <DialogDescription className="text-gray-500">
+          <DialogDescription className="text-muted-foreground">
             This will permanently ban the user from the platform. They will not be able to log in or access any features.
           </DialogDescription>
         </DialogHeader>
@@ -72,7 +72,7 @@ export function BanUserModal({ user, isOpen, onClose, onSuccess }: BanUserModalP
 
             {/* Reason */}
             <div>
-              <Label htmlFor="ban-reason" className="text-gray-700">
+              <Label htmlFor="ban-reason" className="text-foreground">
                 Reason for ban <span className="text-red-500">*</span>
               </Label>
               <Textarea
@@ -80,10 +80,10 @@ export function BanUserModal({ user, isOpen, onClose, onSuccess }: BanUserModalP
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain why this user is being banned (min 10 characters)..."
-                className="mt-2 bg-white border-gray-300"
+                className="mt-2 bg-background border-border"
                 rows={4}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {reason.length}/10 characters minimum
               </p>
             </div>

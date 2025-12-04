@@ -209,8 +209,8 @@ const TopNav = React.forwardRef<HTMLElement, TopNavProps>(
                           "transition-all duration-300",
                           "[transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
                           active
-                            ? "text-accent-blue bg-white shadow-sm"
-                            : "text-foreground/70 hover:text-foreground hover:bg-white/50",
+                            ? "text-accent-blue bg-background shadow-sm"
+                            : "text-foreground/70 hover:text-foreground hover:bg-background/50",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2"
                         )}
                         aria-current={active ? "page" : undefined}

@@ -71,15 +71,15 @@ export function SuspendUserModal({ user, isOpen, onClose, onSuccess }: SuspendUs
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white border-gray-200 max-w-md">
+      <DialogContent className="bg-background border-border max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-full bg-amber-100">
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
-            <DialogTitle className="text-gray-900">Suspend User</DialogTitle>
+            <DialogTitle className="text-foreground">Suspend User</DialogTitle>
           </div>
-          <DialogDescription className="text-gray-500">
+          <DialogDescription className="text-muted-foreground">
             Temporarily suspend the user. They will not be able to access the platform until the suspension expires.
           </DialogDescription>
         </DialogHeader>
@@ -87,20 +87,20 @@ export function SuspendUserModal({ user, isOpen, onClose, onSuccess }: SuspendUs
         {user && (
           <div className="py-4 space-y-4">
             {/* User info */}
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
-              <div className="text-sm text-gray-600">
-                <p className="font-medium text-gray-900">{user.full_name || "No name"}</p>
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted border border-border">
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">{user.full_name || "No name"}</p>
                 <p>{user.email}</p>
               </div>
             </div>
 
             {/* Duration */}
             <div>
-              <Label htmlFor="duration" className="text-gray-700">
+              <Label htmlFor="duration" className="text-foreground">
                 Suspension Duration
               </Label>
               <Select value={duration} onValueChange={setDuration}>
-                <SelectTrigger className="mt-2 bg-white border-gray-300">
+                <SelectTrigger className="mt-2 bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,14 +111,14 @@ export function SuspendUserModal({ user, isOpen, onClose, onSuccess }: SuspendUs
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Suspension will expire: {getExpiryDate()}
               </p>
             </div>
 
             {/* Reason */}
             <div>
-              <Label htmlFor="suspend-reason" className="text-gray-700">
+              <Label htmlFor="suspend-reason" className="text-foreground">
                 Reason for suspension <span className="text-red-500">*</span>
               </Label>
               <Textarea
@@ -126,10 +126,10 @@ export function SuspendUserModal({ user, isOpen, onClose, onSuccess }: SuspendUs
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain why this user is being suspended (min 10 characters)..."
-                className="mt-2 bg-white border-gray-300"
+                className="mt-2 bg-background border-border"
                 rows={3}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {reason.length}/10 characters minimum
               </p>
             </div>

@@ -84,8 +84,8 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
   open: { label: "Open for Entries", color: "text-accent-sage", bg: "bg-accent-sage/10" },
   active: { label: "Submissions Open", color: "text-accent-blue", bg: "bg-accent-blue/10" },
   voting: { label: "Voting", color: "text-accent-peach", bg: "bg-accent-peach/10" },
-  completed: { label: "Completed", color: "text-gray-500", bg: "bg-gray-100" },
-  draw: { label: "Draw", color: "text-gray-500", bg: "bg-gray-100" },
+  completed: { label: "Completed", color: "text-gray-500", bg: "bg-muted" },
+  draw: { label: "Draw", color: "text-gray-500", bg: "bg-muted" },
 };
 
 // Mock data flag - should match the main challenges page
@@ -542,11 +542,11 @@ export default function ChallengeDetailPage() {
     return (
       <div className="min-h-screen bg-[var(--background-subtle)]">
         <div className="container mx-auto max-w-6xl p-4 md:p-8">
-          <Skeleton className="h-8 w-32 mb-8 bg-gray-200" />
-          <Skeleton className="h-64 w-full mb-8 bg-gray-200 rounded-2xl" />
+          <Skeleton className="h-8 w-32 mb-8 bg-muted" />
+          <Skeleton className="h-64 w-full mb-8 bg-muted rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Skeleton className="h-96 w-full bg-gray-200 rounded-2xl" />
-            <Skeleton className="h-96 w-full bg-gray-200 rounded-2xl" />
+            <Skeleton className="h-96 w-full bg-muted rounded-2xl" />
+            <Skeleton className="h-96 w-full bg-muted rounded-2xl" />
           </div>
         </div>
       </div>
@@ -557,13 +557,13 @@ export default function ChallengeDetailPage() {
   if (error || !challenge) {
     return (
       <div className="min-h-screen bg-[var(--background-subtle)] flex items-center justify-center p-4">
-        <Card className="bg-white border-gray-100 shadow-sm max-w-md w-full">
+        <Card className="bg-background border-border shadow-sm max-w-md w-full">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
               <AlertCircle className="w-6 h-6 text-red-500" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Challenge Not Found</h2>
-            <p className="text-gray-500 mb-6">{error || "This challenge doesn't exist or has been removed."}</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Challenge Not Found</h2>
+            <p className="text-muted-foreground mb-6">{error || "This challenge doesn't exist or has been removed."}</p>
             <Button
               className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={() => router.push("/challenges")}
@@ -605,7 +605,7 @@ export default function ChallengeDetailPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 mb-6"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted mb-6"
           onClick={() => router.push("/challenges")}
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
@@ -619,7 +619,7 @@ export default function ChallengeDetailPage() {
           transition={{ duration: 0.4 }}
         >
           <Card className={cn(
-            "bg-white border-gray-100 shadow-sm mb-6 overflow-hidden",
+            "bg-background border-border shadow-sm mb-6 overflow-hidden",
             challenge.isFeatured && "ring-2 ring-accent-peach/30"
           )}>
             {/* Featured Banner */}
@@ -661,10 +661,10 @@ export default function ChallengeDetailPage() {
                 )}
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{challenge.title}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{challenge.title}</h1>
 
               {challenge.description && (
-                <p className="text-gray-500 max-w-2xl mb-4">{challenge.description}</p>
+                <p className="text-muted-foreground max-w-2xl mb-4">{challenge.description}</p>
               )}
 
               {challenge.prompt && (
@@ -672,8 +672,8 @@ export default function ChallengeDetailPage() {
                   <div className="flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-purple-500 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 mb-1">Challenge Prompt</h4>
-                      <p className="text-sm text-gray-600">{challenge.prompt.description}</p>
+                      <h4 className="text-sm font-medium text-foreground mb-1">Challenge Prompt</h4>
+                      <p className="text-sm text-muted-foreground">{challenge.prompt.description}</p>
                     </div>
                   </div>
                 </div>
@@ -691,7 +691,7 @@ export default function ChallengeDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <Card className="bg-white border-gray-100 shadow-sm mb-6">
+              <Card className="bg-background border-border shadow-sm mb-6">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     {/* Participant 1 */}
@@ -713,9 +713,9 @@ export default function ChallengeDetailPage() {
                         )}
                       </div>
                       <div>
-                        <div className="text-lg font-semibold text-gray-900">{challenge.participant1Name || "TBD"}</div>
+                        <div className="text-lg font-semibold text-foreground">{challenge.participant1Name || "TBD"}</div>
                         {["voting", "completed", "draw"].includes(challenge.status) && (
-                          <div className="text-sm text-gray-500">{challenge.participant1Votes || 0} votes</div>
+                          <div className="text-sm text-muted-foreground">{challenge.participant1Votes || 0} votes</div>
                         )}
                       </div>
                     </div>
@@ -730,9 +730,9 @@ export default function ChallengeDetailPage() {
                     {/* Participant 2 */}
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <div className="text-lg font-semibold text-gray-900">{challenge.participant2Name || "TBD"}</div>
+                        <div className="text-lg font-semibold text-foreground">{challenge.participant2Name || "TBD"}</div>
                         {["voting", "completed", "draw"].includes(challenge.status) && (
-                          <div className="text-sm text-gray-500">{challenge.participant2Votes || 0} votes</div>
+                          <div className="text-sm text-muted-foreground">{challenge.participant2Votes || 0} votes</div>
                         )}
                       </div>
                       <div className={cn(
@@ -756,7 +756,7 @@ export default function ChallengeDetailPage() {
 
                   {/* Vote Progress Bar */}
                   {["voting", "completed", "draw"].includes(challenge.status) && totalVotes > 0 && (
-                    <div className="mt-6 pt-6 border-t border-gray-100">
+                    <div className="mt-6 pt-6 border-t border-border">
                       <div className="flex items-center justify-between mb-2 text-sm">
                         <span className={cn(
                           "font-semibold",
@@ -764,7 +764,7 @@ export default function ChallengeDetailPage() {
                         )}>
                           {p1Percentage}%
                         </span>
-                        <span className="text-gray-500">{totalVotes} total votes</span>
+                        <span className="text-muted-foreground">{totalVotes} total votes</span>
                         <span className={cn(
                           "font-semibold",
                           challenge.winnerId === challenge.participant2Id ? "text-accent-sage" : "text-purple-500"
@@ -772,7 +772,7 @@ export default function ChallengeDetailPage() {
                           {p2Percentage}%
                         </span>
                       </div>
-                      <div className="h-3 rounded-full overflow-hidden bg-gray-100">
+                      <div className="h-3 rounded-full overflow-hidden bg-muted">
                         <div className="h-full flex">
                           <motion.div
                             className={cn(
@@ -858,26 +858,26 @@ export default function ChallengeDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <Card className="bg-white border-gray-100 shadow-sm mb-6">
+              <Card className="bg-background border-border shadow-sm mb-6">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-8">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{challenge.totalEntries}</div>
-                        <div className="text-sm text-gray-500">Entries</div>
+                        <div className="text-2xl font-bold text-foreground">{challenge.totalEntries}</div>
+                        <div className="text-sm text-muted-foreground">Entries</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-900">{challenge.totalVotes}</div>
-                        <div className="text-sm text-gray-500">Votes</div>
+                        <div className="text-2xl font-bold text-foreground">{challenge.totalVotes}</div>
+                        <div className="text-sm text-muted-foreground">Votes</div>
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-accent-peach">{challenge.maxWinners}</div>
-                        <div className="text-sm text-gray-500">Winners</div>
+                        <div className="text-sm text-muted-foreground">Winners</div>
                       </div>
                       {challenge.winnerKarmaReward && (
                         <div className="text-center">
                           <div className="text-2xl font-bold text-accent-sage">+{challenge.winnerKarmaReward}</div>
-                          <div className="text-sm text-gray-500">Karma</div>
+                          <div className="text-sm text-muted-foreground">Karma</div>
                         </div>
                       )}
                     </div>
@@ -932,7 +932,7 @@ export default function ChallengeDetailPage() {
 
             {/* Entries Grid for Category */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 {challenge.status === "voting" ? "Vote for Your Favorite" : "Entries"}
               </h2>
 
@@ -950,7 +950,7 @@ export default function ChallengeDetailPage() {
                       >
                         <Card
                           className={cn(
-                            "bg-white border-gray-100 shadow-sm transition-all hover:shadow-md",
+                            "bg-background border-border shadow-sm transition-all hover:shadow-md",
                             canVote && "cursor-pointer hover:border-accent-blue/50",
                             selectedEntry === entry.id && "ring-2 ring-accent-blue",
                             challenge.currentUserVoteEntryId === entry.id && "ring-2 ring-accent-sage"
@@ -960,14 +960,14 @@ export default function ChallengeDetailPage() {
                           <CardContent className="p-4">
                             {/* User Info */}
                             <div className="flex items-center gap-3 mb-3">
-                              <Avatar className="w-8 h-8 border border-gray-200">
+                              <Avatar className="w-8 h-8 border border-border">
                                 <AvatarImage src={entry.userAvatar} />
-                                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                                   {entry.userName?.[0]?.toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-gray-900 truncate">{entry.userName}</div>
+                                <div className="text-sm font-medium text-foreground truncate">{entry.userName}</div>
                               </div>
                               {isTopEntry && (
                                 <Trophy className="w-4 h-4 text-accent-peach" />
@@ -975,19 +975,19 @@ export default function ChallengeDetailPage() {
                             </div>
 
                             {/* Entry Content */}
-                            <h4 className="font-medium text-gray-900 mb-2">{entry.title}</h4>
+                            <h4 className="font-medium text-foreground mb-2">{entry.title}</h4>
                             {entry.description && (
-                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{entry.description}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{entry.description}</p>
                             )}
 
                             {/* Vote Count (if voting) */}
                             {challenge.status === "voting" && (
-                              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                <span className="text-sm text-gray-500">{entry.voteCount} votes</span>
+                              <div className="flex items-center justify-between pt-3 border-t border-border">
+                                <span className="text-sm text-muted-foreground">{entry.voteCount} votes</span>
                                 {canVote && (
                                   <span className={cn(
                                     "text-sm font-medium",
-                                    selectedEntry === entry.id ? "text-accent-blue" : "text-gray-400"
+                                    selectedEntry === entry.id ? "text-accent-blue" : "text-muted-foreground"
                                   )}>
                                     {selectedEntry === entry.id ? "Selected" : "Click to select"}
                                   </span>
@@ -1007,13 +1007,13 @@ export default function ChallengeDetailPage() {
                   })}
                 </div>
               ) : (
-                <Card className="bg-white border-gray-100 shadow-sm">
+                <Card className="bg-background border-border shadow-sm">
                   <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                      <Users className="w-6 h-6 text-gray-400" />
+                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                      <Users className="w-6 h-6 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Entries Yet</h3>
-                    <p className="text-gray-500">Be the first to submit an entry!</p>
+                    <h3 className="text-lg font-medium text-foreground mb-2">No Entries Yet</h3>
+                    <p className="text-muted-foreground">Be the first to submit an entry!</p>
                   </CardContent>
                 </Card>
               )}
@@ -1064,10 +1064,10 @@ export default function ChallengeDetailPage() {
 
       {/* Vote Confirmation Dialog */}
       <Dialog open={showVoteConfirm} onOpenChange={setShowVoteConfirm}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Confirm Your Vote</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Confirm Your Vote</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Your vote is final and cannot be changed. Make sure you've reviewed all entries carefully.
             </DialogDescription>
           </DialogHeader>
@@ -1088,10 +1088,10 @@ export default function ChallengeDetailPage() {
 
       {/* Join Confirmation Dialog */}
       <Dialog open={showJoinConfirm} onOpenChange={setShowJoinConfirm}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Join Challenge</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Join Challenge</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               You're about to join this challenge. Once joined, you'll be able to create and submit your entry.
             </DialogDescription>
           </DialogHeader>
@@ -1112,32 +1112,32 @@ export default function ChallengeDetailPage() {
 
       {/* Entry Form Dialog */}
       <Dialog open={showEntryForm} onOpenChange={setShowEntryForm}>
-        <DialogContent className="bg-white border-gray-200">
+        <DialogContent className="bg-background border-border">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">Create Your Entry</DialogTitle>
-            <DialogDescription className="text-gray-500">
+            <DialogTitle className="text-foreground">Create Your Entry</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Fill in the details for your challenge entry. You can edit this before submitting.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="entryTitle" className="text-gray-700">Title</Label>
+              <Label htmlFor="entryTitle" className="text-foreground">Title</Label>
               <Input
                 id="entryTitle"
                 value={entryTitle}
                 onChange={(e) => setEntryTitle(e.target.value)}
                 placeholder="Give your entry a title"
-                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div>
-              <Label htmlFor="entryDescription" className="text-gray-700">Description (optional)</Label>
+              <Label htmlFor="entryDescription" className="text-foreground">Description (optional)</Label>
               <Textarea
                 id="entryDescription"
                 value={entryDescription}
                 onChange={(e) => setEntryDescription(e.target.value)}
                 placeholder="Describe your entry..."
-                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
+                className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 rows={4}
               />
             </div>
@@ -1209,13 +1209,13 @@ function EntryCard({
   // Blind mode - hide content
   if (isBlind && entry) {
     return (
-      <Card className={cn("bg-white border-gray-100 shadow-sm border-t-4", colors.border)}>
+      <Card className={cn("bg-background border-border shadow-sm border-t-4", colors.border)}>
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-gray-400" />
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Entry Hidden</h3>
-          <p className="text-gray-500 text-sm">
+          <h3 className="text-lg font-medium text-foreground mb-2">Entry Hidden</h3>
+          <p className="text-muted-foreground text-sm">
             Entries are hidden until both participants submit their work.
           </p>
         </CardContent>
@@ -1226,7 +1226,7 @@ function EntryCard({
   // No entry yet
   if (!entry) {
     return (
-      <Card className={cn("bg-white border-gray-100 shadow-sm border-t-4", colors.border)}>
+      <Card className={cn("bg-background border-border shadow-sm border-t-4", colors.border)}>
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
           <Avatar className={cn("w-16 h-16 mb-4 border-4", colors.avatar)}>
             <AvatarImage src={participantAvatar} />
@@ -1234,8 +1234,8 @@ function EntryCard({
               {participant[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">{participant}</h3>
-          <p className="text-gray-500 text-sm">Waiting for submission...</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">{participant}</h3>
+          <p className="text-muted-foreground text-sm">Waiting for submission...</p>
         </CardContent>
       </Card>
     );
@@ -1244,9 +1244,9 @@ function EntryCard({
   return (
     <Card
       className={cn(
-        "bg-white border-gray-100 shadow-sm transition-all relative border-t-4",
+        "bg-background border-border shadow-sm transition-all relative border-t-4",
         colors.border,
-        canVote && "cursor-pointer hover:shadow-lg hover:border-gray-200",
+        canVote && "cursor-pointer hover:shadow-lg hover:border-border",
         isSelected && "ring-2",
         isSelected && colors.ring,
         userVotedFor && "ring-2 ring-accent-sage"
@@ -1282,9 +1282,9 @@ function EntryCard({
             </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-base text-gray-900">{participant}</CardTitle>
+            <CardTitle className="text-base text-foreground">{participant}</CardTitle>
             {entry.submittedAt && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Submitted {new Date(entry.submittedAt).toLocaleDateString()}
               </p>
             )}
@@ -1293,15 +1293,15 @@ function EntryCard({
       </CardHeader>
 
       <CardContent>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{entry.title}</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">{entry.title}</h3>
 
         {entry.description && (
-          <p className="text-gray-500 text-sm mb-4 line-clamp-3">{entry.description}</p>
+          <p className="text-muted-foreground text-sm mb-4 line-clamp-3">{entry.description}</p>
         )}
 
         {/* Thumbnail */}
         {entry.thumbnailUrl && (
-          <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gray-100">
+          <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-muted">
             <Image
               src={getFileUrl(entry.thumbnailUrl)}
               alt={entry.title}
@@ -1314,19 +1314,19 @@ function EntryCard({
         {/* Files */}
         {entry.fileUrls && entry.fileUrls.length > 0 && (
           <div className="space-y-2 mb-4">
-            <h4 className="text-sm font-medium text-gray-600">Files</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">Files</h4>
             {entry.fileUrls.map((file, i) => (
               <a
                 key={i}
                 href={getFileUrl(file.url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm text-gray-700 transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-muted hover:bg-muted text-sm text-foreground transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Eye className="w-4 h-4 text-gray-400" />
+                <Eye className="w-4 h-4 text-muted-foreground" />
                 <span className="truncate flex-1">{file.filename}</span>
-                <ExternalLink className="w-4 h-4 text-gray-400" />
+                <ExternalLink className="w-4 h-4 text-muted-foreground" />
               </a>
             ))}
           </div>
@@ -1335,14 +1335,14 @@ function EntryCard({
         {/* External Links */}
         {entry.externalLinks && entry.externalLinks.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-600">Links</h4>
+            <h4 className="text-sm font-medium text-muted-foreground">Links</h4>
             {entry.externalLinks.map((link, i) => (
               <a
                 key={i}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm text-accent-blue transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-muted hover:bg-muted text-sm text-accent-blue transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLink className="w-4 h-4" />
@@ -1356,8 +1356,8 @@ function EntryCard({
         {canVote && (
           <div className={cn(
             "mt-4 p-3 rounded-xl border-2 border-dashed transition-colors text-center",
-            isSelected ? colors.border.replace("border-t-", "border-") : "border-gray-200",
-            isSelected ? colors.text : "text-gray-400"
+            isSelected ? colors.border.replace("border-t-", "border-") : "border-border",
+            isSelected ? colors.text : "text-muted-foreground"
           )}>
             {isSelected ? (
               <span className="flex items-center justify-center gap-2 font-medium">

@@ -73,7 +73,7 @@ export function Battle1v1Card({
     <motion.div
       className={cn(
         "relative rounded-2xl overflow-hidden cursor-pointer",
-        "bg-white border border-gray-100",
+        "bg-background border border-border",
         "shadow-sm hover:shadow-lg transition-all duration-300",
         isFeatured && "ring-2 ring-accent-blue/30"
       )}
@@ -98,7 +98,7 @@ export function Battle1v1Card({
             "font-medium",
             status === "voting" && "bg-accent-sage/10 text-accent-sage border-accent-sage/30",
             status === "completed" && "bg-accent-blue/10 text-accent-blue border-accent-blue/30",
-            status === "draw" && "bg-gray-100 text-gray-600 border-gray-200"
+            status === "draw" && "bg-muted text-muted-foreground border-border"
           )}
         >
           {status === "voting" && (
@@ -121,7 +121,7 @@ export function Battle1v1Card({
               "relative",
               isP1Winner && "ring-2 ring-accent-sage ring-offset-2 rounded-full"
             )}>
-              <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
+              <Avatar className="w-12 h-12 border-2 border-background shadow-sm">
                 <AvatarImage src={participant1.avatar} />
                 <AvatarFallback className="bg-accent-blue/10 text-accent-blue font-semibold">
                   {participant1.name[0]?.toUpperCase()}
@@ -129,9 +129,9 @@ export function Battle1v1Card({
               </Avatar>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">{participant1.name}</p>
+              <p className="font-semibold text-foreground text-sm">{participant1.name}</p>
               {showVotes && (
-                <p className="text-xs text-gray-500">{participant1.votes} votes</p>
+                <p className="text-xs text-muted-foreground">{participant1.votes} votes</p>
               )}
             </div>
           </div>
@@ -146,16 +146,16 @@ export function Battle1v1Card({
           {/* Participant 2 */}
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-semibold text-gray-900 text-sm">{participant2.name}</p>
+              <p className="font-semibold text-foreground text-sm">{participant2.name}</p>
               {showVotes && (
-                <p className="text-xs text-gray-500">{participant2.votes} votes</p>
+                <p className="text-xs text-muted-foreground">{participant2.votes} votes</p>
               )}
             </div>
             <div className={cn(
               "relative",
               isP2Winner && "ring-2 ring-accent-sage ring-offset-2 rounded-full"
             )}>
-              <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
+              <Avatar className="w-12 h-12 border-2 border-background shadow-sm">
                 <AvatarImage src={participant2.avatar} />
                 <AvatarFallback className="bg-purple-500/10 text-purple-600 font-semibold">
                   {participant2.name[0]?.toUpperCase()}
@@ -167,7 +167,7 @@ export function Battle1v1Card({
 
         {/* Vote Progress Bar (only show during voting or after) */}
         {status === "voting" && (
-          <div className="h-2 rounded-full overflow-hidden bg-gray-100 mb-4">
+          <div className="h-2 rounded-full overflow-hidden bg-muted mb-4">
             <div className="h-full flex">
               <motion.div
                 className="bg-gradient-to-r from-accent-blue to-cyan-400"
@@ -189,17 +189,17 @@ export function Battle1v1Card({
           <div className="mb-4">
             <div className="flex justify-between text-sm font-medium mb-1">
               <span className={cn(
-                isP1Winner ? "text-accent-sage" : "text-gray-600"
+                isP1Winner ? "text-accent-sage" : "text-muted-foreground"
               )}>
                 {p1Percentage}%
               </span>
               <span className={cn(
-                isP2Winner ? "text-accent-sage" : "text-gray-600"
+                isP2Winner ? "text-accent-sage" : "text-muted-foreground"
               )}>
                 {p2Percentage}%
               </span>
             </div>
-            <div className="h-2 rounded-full overflow-hidden bg-gray-100">
+            <div className="h-2 rounded-full overflow-hidden bg-muted">
               <div className="h-full flex">
                 <div
                   className={cn(
@@ -221,12 +221,12 @@ export function Battle1v1Card({
         )}
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">{title}</h3>
+        <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{title}</h3>
 
         {/* Meta Row */}
-        <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-0 text-xs">
+            <Badge variant="secondary" className="bg-muted text-muted-foreground border-0 text-xs">
               {contentTypeLabels[contentType] || contentType}
             </Badge>
             <span className="flex items-center gap-1">
@@ -255,7 +255,7 @@ export function Battle1v1Card({
         )}
 
         {status === "voting" && userHasVoted && (
-          <div className="mt-4 text-center text-sm text-gray-500">
+          <div className="mt-4 text-center text-sm text-muted-foreground">
             You've voted in this battle
           </div>
         )}
@@ -275,22 +275,22 @@ export function Battle1v1CardCompact({
 }: Pick<Battle1v1CardProps, "participant1" | "participant2" | "title" | "status" | "timeLeft" | "onClick">) {
   return (
     <motion.div
-      className="flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors"
+      className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border cursor-pointer hover:bg-muted transition-colors"
       onClick={onClick}
       whileHover={{ x: 2 }}
     >
       {/* Avatars */}
       <div className="flex items-center -space-x-2">
-        <Avatar className="w-8 h-8 border-2 border-white">
+        <Avatar className="w-8 h-8 border-2 border-background">
           <AvatarImage src={participant1.avatar} />
           <AvatarFallback className="bg-accent-blue/10 text-accent-blue text-xs">
             {participant1.name[0]}
           </AvatarFallback>
         </Avatar>
-        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-accent-blue to-purple-500 flex items-center justify-center z-10 border border-white">
+        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-accent-blue to-purple-500 flex items-center justify-center z-10 border border-background">
           <Swords className="w-2.5 h-2.5 text-white" />
         </div>
-        <Avatar className="w-8 h-8 border-2 border-white">
+        <Avatar className="w-8 h-8 border-2 border-background">
           <AvatarImage src={participant2.avatar} />
           <AvatarFallback className="bg-purple-500/10 text-purple-600 text-xs">
             {participant2.name[0]}
@@ -300,8 +300,8 @@ export function Battle1v1CardCompact({
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-900 text-sm truncate">{title}</p>
-        <p className="text-xs text-gray-500">
+        <p className="font-medium text-foreground text-sm truncate">{title}</p>
+        <p className="text-xs text-muted-foreground">
           {participant1.name} vs {participant2.name}
         </p>
       </div>

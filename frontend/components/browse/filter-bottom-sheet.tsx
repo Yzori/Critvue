@@ -112,7 +112,7 @@ export function FilterBottomSheet({
         ref={sheetRef}
         className={cn(
           "fixed left-0 right-0 bottom-0 z-50 h-[85vh] rounded-t-3xl",
-          "bg-white/95 backdrop-blur-xl shadow-2xl",
+          "bg-card/95 backdrop-blur-xl shadow-2xl",
           "transition-transform duration-300 ease-out",
           open ? "translate-y-0" : "translate-y-full"
         )}
@@ -129,19 +129,19 @@ export function FilterBottomSheet({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-muted-foreground/30 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pb-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+        <div className="flex items-center justify-between px-6 pb-4 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">Filters</h2>
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
+            className="p-2 rounded-full hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue/50"
             aria-label="Close filters"
           >
-            <X className="size-5 text-gray-500" />
+            <X className="size-5 text-muted-foreground" />
           </button>
         </div>
 
@@ -158,7 +158,7 @@ export function FilterBottomSheet({
         </div>
 
         {/* Footer actions */}
-        <div className="flex gap-3 p-6 border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="flex gap-3 p-6 border-t border-border bg-card/80 backdrop-blur-sm">
           <Button
             variant="outline"
             size="lg"

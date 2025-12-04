@@ -100,7 +100,7 @@ const CONFIDENCE_CONFIG: Record<
 > = {
   certain: { label: "Certain", color: "text-green-700", bg: "bg-green-100" },
   likely: { label: "Likely", color: "text-blue-700", bg: "bg-blue-100" },
-  suggestion: { label: "Worth Exploring", color: "text-gray-600", bg: "bg-gray-100" },
+  suggestion: { label: "Worth Exploring", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
 const CATEGORY_CONFIG: Record<
@@ -111,10 +111,10 @@ const CATEGORY_CONFIG: Record<
   ux: { label: "User Experience", icon: Target, color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-300" },
   security: { label: "Security", icon: Shield, color: "text-red-700", bg: "bg-red-50", border: "border-red-300" },
   accessibility: { label: "Accessibility", icon: Target, color: "text-teal-700", bg: "bg-teal-50", border: "border-teal-300" },
-  maintainability: { label: "Maintainability", icon: Wrench, color: "text-slate-700", bg: "bg-slate-50", border: "border-slate-300" },
+  maintainability: { label: "Maintainability", icon: Wrench, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
   design: { label: "Design", icon: Sparkles, color: "text-pink-700", bg: "bg-pink-50", border: "border-pink-300" },
   content: { label: "Content", icon: MessageSquare, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-300" },
-  other: { label: "Other", icon: Lightbulb, color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-300" },
+  other: { label: "Other", icon: Lightbulb, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
 };
 
 // ===== Props =====
@@ -146,7 +146,7 @@ export function IssueCardViewer({
     return (
       <div
         className={cn(
-          "rounded-xl border-2 p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md bg-white",
+          "rounded-xl border-2 p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md bg-background",
           priorityConfig.border
         )}
         onClick={() => setIsExpanded(true)}
@@ -204,20 +204,20 @@ export function IssueCardViewer({
 
   // ===== Expanded View =====
   return (
-    <div className={cn("rounded-xl border-2 bg-white overflow-hidden", priorityConfig.border)}>
+    <div className={cn("rounded-xl border-2 bg-background overflow-hidden", priorityConfig.border)}>
       {/* Header */}
       <div
         className={cn("px-4 py-3 cursor-pointer flex items-center justify-between", priorityConfig.bg)}
         onClick={() => setIsExpanded(false)}
       >
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-white/80 flex items-center justify-center">
+          <div className="size-8 rounded-full bg-background/80 flex items-center justify-center">
             <PriorityIcon className={cn("size-4", priorityConfig.color)} />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">Issue #{index + 1}</span>
-              <span className={cn("text-xs px-2 py-0.5 rounded-full bg-white/80", priorityConfig.color)}>
+              <span className={cn("text-xs px-2 py-0.5 rounded-full bg-background/80", priorityConfig.color)}>
                 {priorityConfig.label}
               </span>
               <span className={cn("text-xs px-2 py-0.5 rounded-full", categoryConfig.bg, categoryConfig.color)}>

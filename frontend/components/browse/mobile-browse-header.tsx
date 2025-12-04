@@ -81,8 +81,8 @@ export function MobileBrowseHeader({
       className={cn(
         "md:hidden", // Only show on mobile
         "fixed top-0 left-0 right-0 z-40",
-        "bg-white/95 backdrop-blur-xl",
-        "border-b border-gray-200/50",
+        "bg-card/95 backdrop-blur-xl",
+        "border-b border-border/50",
         "transition-transform duration-300 ease-out",
         !isVisible && "-translate-y-full",
         className
@@ -93,7 +93,7 @@ export function MobileBrowseHeader({
         {isSearchExpanded ? (
           <>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <input
                 ref={searchInputRef}
                 type="search"
@@ -102,8 +102,8 @@ export function MobileBrowseHeader({
                 onChange={(e) => onSearchChange(e.target.value)}
                 className={cn(
                   "w-full h-10 pl-10 pr-4 rounded-full",
-                  "bg-gray-100 border-0",
-                  "text-sm placeholder:text-gray-400",
+                  "bg-muted border-0",
+                  "text-sm placeholder:text-muted-foreground",
                   "focus:outline-none focus:ring-2 focus:ring-accent-blue/50"
                 )}
               />
@@ -112,7 +112,7 @@ export function MobileBrowseHeader({
               onClick={handleSearchToggle}
               className={cn(
                 "size-10 rounded-full flex items-center justify-center",
-                "bg-gray-100 text-gray-600",
+                "bg-muted text-muted-foreground",
                 "active:scale-95 transition-transform"
               )}
               aria-label="Close search"
@@ -123,7 +123,7 @@ export function MobileBrowseHeader({
         ) : (
           <>
             {/* Title */}
-            <h1 className="text-lg font-bold text-gray-900 flex-1">
+            <h1 className="text-lg font-bold text-foreground flex-1">
               Browse
             </h1>
 
@@ -132,8 +132,8 @@ export function MobileBrowseHeader({
               onClick={handleSearchToggle}
               className={cn(
                 "size-10 rounded-full flex items-center justify-center",
-                "bg-gray-100 text-gray-600",
-                "hover:bg-gray-200 active:scale-95 transition-all",
+                "bg-muted text-muted-foreground",
+                "hover:bg-muted/80 active:scale-95 transition-all",
                 searchQuery && "bg-accent-blue/10 text-accent-blue"
               )}
               aria-label="Search reviews"
@@ -146,8 +146,8 @@ export function MobileBrowseHeader({
               onClick={onShowFilters}
               className={cn(
                 "h-10 px-4 rounded-full flex items-center gap-2",
-                "bg-gray-100 text-gray-700 text-sm font-medium",
-                "hover:bg-gray-200 active:scale-95 transition-all",
+                "bg-muted text-foreground text-sm font-medium",
+                "hover:bg-muted/80 active:scale-95 transition-all",
                 activeFilterCount > 0 && [
                   "bg-accent-blue/10 text-accent-blue",
                   "border border-accent-blue/20"

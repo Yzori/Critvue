@@ -69,7 +69,7 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
                     "size-8",
                     rating <= verdict.rating
                       ? "fill-amber-400 text-amber-400"
-                      : "fill-transparent text-gray-300"
+                      : "fill-transparent text-muted-foreground"
                   )}
                 />
               ))}
@@ -130,7 +130,7 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
                   </div>
 
                   {/* Fix */}
-                  <div className="p-2 rounded-lg bg-white/80 border border-blue-100">
+                  <div className="p-2 rounded-lg bg-background/80 border border-blue-100">
                     <p className="text-sm text-foreground font-medium">{takeaway.fix}</p>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
 
           <div className="grid sm:grid-cols-3 gap-3">
             {verdict.executiveSummary.biggestWin && (
-              <div className="p-3 rounded-lg bg-white/80 border border-green-200">
+              <div className="p-3 rounded-lg bg-background/80 border border-green-200">
                 <div className="flex items-center gap-1 text-green-600 mb-1">
                   <Trophy className="size-3.5" />
                   <label className="text-xs font-medium">Biggest Win</label>
@@ -171,7 +171,7 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
             )}
 
             {verdict.executiveSummary.criticalFix && (
-              <div className="p-3 rounded-lg bg-white/80 border border-red-200">
+              <div className="p-3 rounded-lg bg-background/80 border border-red-200">
                 <div className="flex items-center gap-1 text-red-600 mb-1">
                   <Target className="size-3.5" />
                   <label className="text-xs font-medium">Critical Fix</label>
@@ -181,7 +181,7 @@ export function VerdictCardViewer({ verdict, className }: VerdictCardViewerProps
             )}
 
             {verdict.executiveSummary.quickWin && (
-              <div className="p-3 rounded-lg bg-white/80 border border-amber-200">
+              <div className="p-3 rounded-lg bg-background/80 border border-amber-200">
                 <div className="flex items-center gap-1 text-amber-600 mb-1">
                   <Zap className="size-3.5" />
                   <label className="text-xs font-medium">Quick Win</label>

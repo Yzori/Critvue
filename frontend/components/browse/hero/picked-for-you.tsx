@@ -53,25 +53,20 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
       <div
         className={cn(
           "relative overflow-hidden rounded-3xl p-6 md:p-8",
-          // Subtle gradient background
-          "bg-gradient-to-br from-blue-50/30 via-white to-peach-50/30",
+          // Subtle gradient background - theme aware
+          "bg-gradient-to-br from-blue-500/5 via-background to-orange-500/5",
           // Glassmorphic effect
           "backdrop-blur-sm",
           // Gradient border effect
-          "border-2 border-transparent",
+          "border-2 border-border",
           // Shadow for depth
           "shadow-xl"
         )}
-        style={{
-          backgroundImage: "linear-gradient(white, white), linear-gradient(135deg, var(--accent-blue), var(--accent-peach))",
-          backgroundOrigin: "border-box",
-          backgroundClip: "padding-box, border-box",
-        }}
       >
         {/* Subtle shimmer effect */}
         <div className="absolute inset-0 opacity-30 pointer-events-none">
           <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/10 to-transparent -translate-x-full animate-shimmer"
             style={{
               animation: "shimmer 3s infinite",
             }}
@@ -90,7 +85,7 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
                 <h2 className="text-2xl md:text-3xl font-bold text-accent-blue">
                   Picked for You
                 </h2>
-                <p className="text-gray-600 text-sm md:text-base mt-0.5">
+                <p className="text-muted-foreground text-sm md:text-base mt-0.5">
                   {userSkills && userSkills.length > 0
                     ? `Perfect matches for ${userSkills.slice(0, 2).join(" & ")} experts`
                     : isLoggedIn

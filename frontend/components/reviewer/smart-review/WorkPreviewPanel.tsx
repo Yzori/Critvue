@@ -381,7 +381,7 @@ export function WorkPreviewPanel({
         )}
       >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-accent-blue/20 bg-white/60 backdrop-blur-sm">
+      <div className="flex items-center justify-between p-3 border-b border-accent-blue/20 bg-background/60 backdrop-blur-sm">
         <div className="flex items-center gap-2 min-w-0">
           <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
             {videoEmbed ? (
@@ -638,7 +638,7 @@ export function WorkPreviewPanel({
 
       {/* File Navigation */}
       {hasMultipleFiles && (
-        <div className="flex items-center justify-between p-2 border-t border-accent-blue/20 bg-white/40">
+        <div className="flex items-center justify-between p-2 border-t border-accent-blue/20 bg-background/40">
           <Button
             variant="ghost"
             size="sm"
@@ -684,7 +684,7 @@ export function WorkPreviewPanel({
 
       {/* Download Link */}
       {currentFile && (
-        <div className="p-2 border-t border-accent-blue/20 bg-white/40">
+        <div className="p-2 border-t border-accent-blue/20 bg-background/40">
           <a
             href={getFileUrl(currentFile.file_url)}
             download={currentFile.file_name}

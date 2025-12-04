@@ -70,7 +70,7 @@ export default function AdminLayout({
   // Loading state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <Loader2 className="h-8 w-8 animate-spin text-[#4CC9F0]" />
       </div>
     );
