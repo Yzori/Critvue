@@ -256,8 +256,8 @@ export function ReviewEditor({
                 "flex items-center justify-center",
                 "hover:scale-110 active:scale-95",
                 rating && star <= rating
-                  ? "text-amber-400 bg-amber-50 border-2 border-amber-300"
-                  : "text-gray-300 bg-gray-50 border-2 border-gray-200 hover:text-amber-300 hover:bg-amber-50/50"
+                  ? "text-amber-400 bg-amber-50 dark:bg-amber-500/20 border-2 border-amber-300 dark:border-amber-500/40"
+                  : "text-gray-300 dark:text-gray-500 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:text-amber-300 hover:bg-amber-50/50 dark:hover:bg-amber-500/10"
               )}
               aria-label={`Rate ${star} star${star !== 1 ? "s" : ""}`}
             >

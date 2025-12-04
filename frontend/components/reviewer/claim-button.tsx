@@ -244,14 +244,14 @@ export function ClaimButton({
               </div>
 
               {/* Commitment Notice */}
-              <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800">
+              <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="size-5 text-amber-700 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="size-5 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-amber-900 mb-1">
+                    <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-1">
                       Please Note
                     </p>
-                    <ul className="text-xs text-amber-900 space-y-1">
+                    <ul className="text-xs text-amber-900 dark:text-amber-300 space-y-1">
                       <li>• You have 72 hours to submit your review</li>
                       <li>• The slot will be auto-abandoned if you don't submit in time</li>
                       <li>• You can only claim one slot per review request</li>
@@ -263,10 +263,10 @@ export function ClaimButton({
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
+              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="size-4 text-red-700 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
+                  <AlertCircle className="size-4 text-red-700 dark:text-red-300 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
             )}

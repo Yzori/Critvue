@@ -81,7 +81,7 @@ export function DashboardStats({
       trendDirection: "up" as const,
       trendData: completedTrendData,
       comparison: "All time",
-      bgColor: "bg-green-50",
+      bgColor: "bg-green-50 dark:bg-green-500/10",
       sparklineColor: "hsl(142 71% 45%)", // green-600
     },
     {
@@ -122,7 +122,7 @@ export function DashboardStats({
           : ("neutral" as const),
       trendData: ratingTrendData,
       comparison: "From creators",
-      bgColor: "bg-amber-50",
+      bgColor: "bg-amber-50 dark:bg-amber-500/10",
       sparklineColor: "hsl(45 93% 47%)", // amber-500
     },
   ];
