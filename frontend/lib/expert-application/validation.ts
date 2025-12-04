@@ -89,7 +89,7 @@ export type ProfessionalBackgroundFormData = z.infer<typeof professionalBackgrou
 export const skillSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Skill name is required'),
-  category: z.enum(['design', 'code', 'video', 'audio', 'writing', 'art', 'custom']),
+  category: z.enum(['design', 'photography', 'video', 'audio', 'writing', 'art', 'custom']),
   isPrimary: z.boolean()
 })
 

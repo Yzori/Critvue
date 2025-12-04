@@ -22,7 +22,7 @@ export interface ProfessionalBackground {
 export interface Skill {
   id: string
   name: string
-  category: 'design' | 'code' | 'video' | 'audio' | 'writing' | 'art' | 'custom'
+  category: 'design' | 'photography' | 'video' | 'audio' | 'writing' | 'art' | 'custom'
   isPrimary: boolean
 }
 
@@ -239,26 +239,26 @@ export const SKILL_CATEGORIES = [
     ]
   },
   {
-    id: 'code',
-    label: 'Code',
-    icon: '💻',
+    id: 'photography',
+    label: 'Photography',
+    icon: '📷',
     skills: [
-      'Frontend Development',
-      'Backend Development',
-      'Full-Stack Development',
-      'React',
-      'Vue',
-      'Angular',
-      'TypeScript',
-      'JavaScript',
-      'Python',
-      'Node.js',
-      'Go',
-      'Java',
-      'Mobile Development',
-      'iOS',
-      'Android',
-      'React Native'
+      'Portrait Photography',
+      'Landscape Photography',
+      'Product Photography',
+      'Fashion Photography',
+      'Street Photography',
+      'Wildlife Photography',
+      'Event Photography',
+      'Food Photography',
+      'Architectural Photography',
+      'Photo Editing',
+      'Lightroom',
+      'Photoshop',
+      'Color Correction',
+      'Retouching',
+      'Studio Lighting',
+      'Composition'
     ]
   },
   {
