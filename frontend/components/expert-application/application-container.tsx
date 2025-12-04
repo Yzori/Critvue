@@ -81,30 +81,77 @@ export function ApplicationContainer() {
         sampleReview: state.sampleReview
       }
 
-      // Step 1: Create draft application
-      const createResponse = await fetch('http://localhost:8000/api/v1/expert-applications', {
-        method: 'POST',
+      let applicationId: number
+
+      // Step 1: Check if a draft application already exists
+      const statusResponse = await fetch('http://localhost:8000/api/v1/expert-applications/me/status', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          email: state.personalInfo.email || '',
-          full_name: state.personalInfo.fullName || '',
-          application_data: applicationData
-        })
       })
 
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json()
-        console.error('Failed to create draft:', errorData)
-        throw new Error(errorData.detail || 'Failed to create application')
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json()
+
+        if (statusData.has_application && statusData.application?.status === 'draft') {
+          // Use existing draft
+          applicationId = statusData.application.id
+        } else if (statusData.has_application) {
+          // Application exists but not in draft status (already submitted, approved, etc.)
+          throw new Error(`You already have an application with status: ${statusData.application?.status}`)
+        } else {
+          // No existing application, create a new draft
+          const createResponse = await fetch('http://localhost:8000/api/v1/expert-applications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              email: state.personalInfo.email || '',
+              full_name: state.personalInfo.fullName || '',
+              application_data: applicationData
+            })
+          })
+
+          if (!createResponse.ok) {
+            const errorData = await createResponse.json()
+            console.error('Failed to create draft:', errorData)
+            throw new Error(errorData.detail || 'Failed to create application')
+          }
+
+          const createdApp = await createResponse.json()
+          applicationId = createdApp.id
+        }
+      } else {
+        // Status check failed, try creating anyway (fallback)
+        const createResponse = await fetch('http://localhost:8000/api/v1/expert-applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: state.personalInfo.email || '',
+            full_name: state.personalInfo.fullName || '',
+            application_data: applicationData
+          })
+        })
+
+        if (!createResponse.ok) {
+          const errorData = await createResponse.json()
+          console.error('Failed to create draft:', errorData)
+          throw new Error(errorData.detail || 'Failed to create application')
+        }
+
+        const createdApp = await createResponse.json()
+        applicationId = createdApp.id
       }
 
-      const createdApp = await createResponse.json()
-
       // Step 2: Submit the draft
-      const submitResponse = await fetch(`http://localhost:8000/api/v1/expert-applications/${createdApp.id}/submit`, {
+      const submitResponse = await fetch(`http://localhost:8000/api/v1/expert-applications/${applicationId}/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +168,7 @@ export function ApplicationContainer() {
         throw new Error(errorData.detail || 'Failed to submit application')
       }
 
-      const submittedApp = await submitResponse.json()
+      await submitResponse.json()
 
       // Show 100% celebration
       setCelebration('100-percent')

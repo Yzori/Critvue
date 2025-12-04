@@ -1,6 +1,7 @@
 /**
  * Step 2: Personal Information
  * Name, email, location, timezone, LinkedIn
+ * Auto-fills email and name from logged-in user
  */
 
 'use client'
@@ -9,38 +10,57 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { User, Mail, MapPin, Globe, Linkedin } from 'lucide-react'
+import { User, Mail, MapPin, Globe, Linkedin, Lock } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { personalInfoSchema, type PersonalInfoFormData } from '@/lib/expert-application/validation'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import { getAnimationDuration } from '@/lib/expert-application/auto-save'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Step2PersonalInfoProps {
   onValidationChange?: (isValid: boolean) => void
 }
 
 export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps) {
+  const { user } = useAuth()
   const personalInfo = useExpertApplicationStore((state) => state.personalInfo)
   const updatePersonalInfo = useExpertApplicationStore((state) => state.updatePersonalInfo)
   const animDuration = getAnimationDuration(0.3)
 
+  // Pre-fill with user data if available and form is empty
+  const defaultEmail = personalInfo.email || user?.email || ''
+  const defaultFullName = personalInfo.fullName || user?.full_name || ''
+
   const {
     register,
     formState: { errors, isValid },
-    watch
+    watch,
+    setValue
   } = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     mode: 'onBlur',
     defaultValues: {
-      fullName: personalInfo.fullName || '',
-      email: personalInfo.email || '',
+      fullName: defaultFullName,
+      email: defaultEmail,
       location: personalInfo.location || '',
       timezone: personalInfo.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       linkedinUrl: personalInfo.linkedinUrl || ''
     }
   })
+
+  // Update form when user data becomes available
+  useEffect(() => {
+    if (user) {
+      if (!personalInfo.email && user.email) {
+        setValue('email', user.email)
+      }
+      if (!personalInfo.fullName && user.full_name) {
+        setValue('fullName', user.full_name)
+      }
+    }
+  }, [user, personalInfo.email, personalInfo.fullName, setValue])
 
   // Watch all fields and update store
   useEffect(() => {
@@ -85,21 +105,28 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
               />
             </FormField>
 
-            {/* Email */}
+            {/* Email - Read-only, linked to account */}
             <FormField
               icon={Mail}
               label="Email Address"
               error={errors.email?.message}
+              hint={user?.email ? "Linked to your Critvue account" : undefined}
             >
-              <Input
-                {...register('email')}
-                type="email"
-                placeholder="jane@example.com"
-                autoComplete="email"
-                className="h-12"
-                aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? 'email-error' : undefined}
-              />
+              <div className="relative">
+                <Input
+                  {...register('email')}
+                  type="email"
+                  placeholder="jane@example.com"
+                  autoComplete="email"
+                  className={`h-12 ${user?.email ? 'pr-10 bg-muted/50' : ''}`}
+                  readOnly={!!user?.email}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                />
+                {user?.email && (
+                  <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                )}
+              </div>
             </FormField>
 
             {/* Location */}

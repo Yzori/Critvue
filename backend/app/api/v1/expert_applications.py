@@ -7,7 +7,7 @@ Provides endpoints for users to submit and track expert reviewer applications.
 import logging
 from datetime import datetime
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -279,3 +279,115 @@ async def withdraw_application(
     await db.flush()
 
     return None
+
+
+@router.post("/portfolio/upload")
+async def upload_portfolio_file(
+    file: UploadFile,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Upload a portfolio file for expert application.
+
+    Files are validated and stored, returning a permanent URL.
+    Supports images (PNG, JPEG, WebP) and documents (PDF, DOC, DOCX).
+    """
+    import uuid
+    import aiofiles
+    from pathlib import Path
+
+    # Validate file type
+    allowed_types = [
+        "image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ]
+
+    # Read file content
+    file_content = await file.read()
+
+    # Check file size (max 10MB)
+    max_size = 10 * 1024 * 1024
+    if len(file_content) > max_size:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File too large. Maximum size is 10MB."
+        )
+
+    if len(file_content) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File is empty"
+        )
+
+    # Detect file type using magic numbers
+    try:
+        import magic
+        mime = magic.Magic(mime=True)
+        detected_mime = mime.from_buffer(file_content[:2048])
+    except Exception:
+        # Fallback to extension-based detection
+        detected_mime = file.content_type
+
+    if detected_mime not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type '{detected_mime}' not allowed. Allowed types: images (PNG, JPEG, WebP, GIF), PDF, DOC, DOCX"
+        )
+
+    # Generate unique filename
+    original_filename = file.filename or "upload"
+    ext = Path(original_filename).suffix or ".bin"
+    unique_filename = f"{uuid.uuid4()}{ext}"
+
+    # Create upload directory
+    upload_dir = Path("/home/user/Critvue/backend/uploads/portfolio")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save file
+    file_path = upload_dir / unique_filename
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(file_content)
+
+    # Generate thumbnail for images
+    thumbnail_url = None
+    if detected_mime.startswith("image/"):
+        try:
+            from PIL import Image
+            thumb_filename = f"thumb_{unique_filename}"
+            thumb_path = upload_dir / thumb_filename
+
+            with Image.open(file_path) as img:
+                # Convert RGBA to RGB if necessary
+                if img.mode in ('RGBA', 'LA', 'P'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    if img.mode == 'P':
+                        img = img.convert('RGBA')
+                    if img.mode == 'RGBA':
+                        background.paste(img, mask=img.split()[-1])
+                    else:
+                        background.paste(img)
+                    img = background
+
+                img.thumbnail((300, 300), Image.Resampling.LANCZOS)
+                img.save(thumb_path, "JPEG", quality=85, optimize=True)
+
+            thumbnail_url = f"http://localhost:8000/files/portfolio/{thumb_filename}"
+        except Exception as e:
+            logger.warning(f"Failed to create thumbnail: {e}")
+
+    # Return file metadata
+    file_url = f"http://localhost:8000/files/portfolio/{unique_filename}"
+
+    logger.info(f"Portfolio file uploaded: user_id={current_user.id}, file={unique_filename}")
+
+    return {
+        "id": str(uuid.uuid4()),
+        "url": file_url,
+        "thumbnailUrl": thumbnail_url or file_url,
+        "fileName": original_filename,
+        "fileType": detected_mime,
+        "fileSize": len(file_content),
+        "uploadedAt": datetime.utcnow().isoformat()
+    }

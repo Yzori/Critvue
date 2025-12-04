@@ -38,51 +38,78 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
     onValidationChange?.(isValid)
   }, [isValid, onValidationChange])
 
-  // Handle file selection
+  // Handle file selection - upload to server and get permanent URLs
   const handleFilesSelected = async (files: File[]) => {
-    const newUploadedFiles: UploadedFile[] = files.map(file => {
+    for (const file of files) {
       const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-      // Create preview for images
+      // Create local preview for images
       let preview: string | undefined
       if (file.type.startsWith('image/')) {
         preview = URL.createObjectURL(file)
       }
 
-      return {
+      // Add to UI state with uploading status
+      const uploadedFile: UploadedFile = {
         file,
         id: fileId,
         preview,
         progress: 0,
       }
-    })
+      setUploadedFiles(prev => [...prev, uploadedFile])
 
-    setUploadedFiles(prev => [...prev, ...newUploadedFiles])
+      try {
+        // Upload to server
+        const formData = new FormData()
+        formData.append('file', file)
 
-    // Convert to portfolio items
-    // TODO: Actually upload files to a server and get URLs
-    newUploadedFiles.forEach(uploadedFile => {
-      const portfolioItem: PortfolioItem = {
-        id: uploadedFile.id,
-        url: uploadedFile.preview || '', // TODO: Replace with actual uploaded URL
-        fileName: uploadedFile.file.name,
-        fileType: uploadedFile.file.type,
-        fileSize: uploadedFile.file.size,
-        title: '', // User needs to fill this
-        description: '', // User needs to fill this
-        thumbnailUrl: uploadedFile.preview,
-        uploadedAt: new Date(),
-      }
+        const response = await fetch('http://localhost:8000/api/v1/expert-applications/portfolio/upload', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        })
 
-      addPortfolioItem(portfolioItem)
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.detail || 'Upload failed')
+        }
 
-      // Simulate upload progress
-      setTimeout(() => {
+        const uploadResult = await response.json()
+
+        // Create portfolio item with server URLs
+        const portfolioItem: PortfolioItem = {
+          id: uploadResult.id || fileId,
+          url: uploadResult.url,
+          fileName: uploadResult.fileName,
+          fileType: uploadResult.fileType,
+          fileSize: uploadResult.fileSize,
+          title: '',
+          description: '',
+          thumbnailUrl: uploadResult.thumbnailUrl,
+          uploadedAt: new Date(uploadResult.uploadedAt),
+        }
+
+        addPortfolioItem(portfolioItem)
+
+        // Update UI state to show complete
         setUploadedFiles(prev =>
-          prev.map(f => f.id === uploadedFile.id ? { ...f, progress: 100, uploaded: true } : f)
+          prev.map(f => f.id === fileId ? { ...f, progress: 100, uploaded: true } : f)
         )
-      }, 1000)
-    })
+
+        // Clean up local preview URL
+        if (preview) {
+          URL.revokeObjectURL(preview)
+        }
+      } catch (error) {
+        console.error('Failed to upload file:', error)
+        // Remove from UI state on error
+        setUploadedFiles(prev => prev.filter(f => f.id !== fileId))
+        if (preview) {
+          URL.revokeObjectURL(preview)
+        }
+        alert(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
+    }
   }
 
   // Handle file removal
