@@ -351,7 +351,7 @@ export default function ProfilePage() {
       {/* Hero Section - Compact & Modern */}
       <section className="relative bg-background border-b border-border/60">
         {/* Subtle gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 dark:from-blue-950/30 dark:via-transparent dark:to-purple-950/20" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
@@ -522,7 +522,7 @@ export default function ProfilePage() {
                 <h2 className="text-lg font-bold text-foreground">Reviewer DNA</h2>
                 <p className="text-sm text-muted-foreground">Your unique review fingerprint</p>
               </div>
-              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+              <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
                 <Sparkles className="size-4 mr-1" />
                 Share
               </Button>
@@ -624,7 +624,7 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Your journey and progress</p>
               </div>
               <Link href="/dashboard/karma">
-                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
                   View All
                   <ArrowRight className="size-4 ml-1" />
                 </Button>
@@ -660,7 +660,7 @@ export default function ProfilePage() {
                       key={tag}
                       variant="secondary"
                       size="sm"
-                      className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100"
+                      className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50"
                     >
                       {tag}
                     </Badge>
@@ -777,7 +777,7 @@ export default function ProfilePage() {
             )}
 
             {portfolioItems.length > 6 && (
-              <Button variant="ghost" className="w-full mt-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+              <Button variant="ghost" className="w-full mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
                 View all {portfolioItems.length} projects
                 <ArrowRight className="size-4 ml-2" />
               </Button>

@@ -388,12 +388,12 @@ export function ReviewerDNACompact({
           </defs>
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-bold text-gray-900">{avgScore}</span>
+          <span className="text-sm font-bold text-foreground">{avgScore}</span>
         </div>
       </div>
       <div>
-        <div className="text-sm font-semibold text-gray-900">Reviewer DNA</div>
-        <div className="text-xs text-gray-500">Your unique style</div>
+        <div className="text-sm font-semibold text-foreground">Reviewer DNA</div>
+        <div className="text-xs text-muted-foreground">Your unique style</div>
       </div>
     </div>
   );

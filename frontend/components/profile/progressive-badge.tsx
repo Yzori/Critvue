@@ -109,9 +109,9 @@ export function ProgressiveBadge({
       className={cn(
         'relative flex flex-col items-center gap-2 p-3 rounded-xl cursor-pointer',
         'transition-all duration-300',
-        badge.status === 'earned' && 'bg-white/50 hover:bg-white/80',
-        badge.status === 'in_progress' && 'bg-gray-50/50 hover:bg-gray-50/80',
-        badge.status === 'locked' && 'bg-gray-100/30 hover:bg-gray-100/50',
+        badge.status === 'earned' && 'bg-background/50 hover:bg-background/80',
+        badge.status === 'in_progress' && 'bg-muted/50 hover:bg-muted/80',
+        badge.status === 'locked' && 'bg-muted/30 hover:bg-muted/50',
         sizes.container,
         className
       )}
@@ -182,18 +182,18 @@ export function ProgressiveBadge({
             'relative rounded-full flex items-center justify-center',
             sizes.icon,
             badge.status === 'earned' && `bg-gradient-to-br ${colors.bg} shadow-lg`,
-            badge.status === 'in_progress' && 'bg-white border-2 border-gray-200',
-            badge.status === 'locked' && 'bg-gray-200'
+            badge.status === 'in_progress' && 'bg-background border-2 border-border',
+            badge.status === 'locked' && 'bg-muted'
           )}
         >
           {badge.status === 'locked' ? (
-            <Lock className={cn(sizes.iconInner, 'text-gray-400')} />
+            <Lock className={cn(sizes.iconInner, 'text-muted-foreground')} />
           ) : (
             <IconComponent
               className={cn(
                 sizes.iconInner,
                 badge.status === 'earned' && 'text-white',
-                badge.status === 'in_progress' && 'text-gray-600'
+                badge.status === 'in_progress' && 'text-muted-foreground'
               )}
             />
           )}
@@ -234,9 +234,9 @@ export function ProgressiveBadge({
           className={cn(
             'font-semibold leading-tight line-clamp-2',
             sizes.text,
-            badge.status === 'earned' && 'text-gray-900',
-            badge.status === 'in_progress' && 'text-gray-700',
-            badge.status === 'locked' && 'text-gray-400'
+            badge.status === 'earned' && 'text-foreground',
+            badge.status === 'in_progress' && 'text-foreground/80',
+            badge.status === 'locked' && 'text-muted-foreground'
           )}
         >
           {badge.name}
@@ -244,14 +244,14 @@ export function ProgressiveBadge({
 
         {/* Progress indicator for in_progress */}
         {badge.status === 'in_progress' && badge.currentValue !== undefined && badge.targetValue !== undefined && (
-          <p className={cn('text-blue-600 font-medium mt-0.5', sizes.text)}>
+          <p className={cn('text-blue-600 dark:text-blue-400 font-medium mt-0.5', sizes.text)}>
             {badge.currentValue}/{badge.targetValue}
           </p>
         )}
 
         {/* Earned date */}
         {badge.status === 'earned' && badge.earnedAt && showDetails && (
-          <p className={cn('text-gray-400 mt-0.5', sizes.text)}>
+          <p className={cn('text-muted-foreground mt-0.5', sizes.text)}>
             {new Date(badge.earnedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </p>
         )}
@@ -334,14 +334,14 @@ export function BadgeGrid({
       <div className="flex items-center gap-4 text-sm">
         <div className="flex items-center gap-1.5">
           <div className="size-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-600" />
-          <span className="text-gray-600">
-            <span className="font-semibold text-gray-900">{earnedCount}</span> earned
+          <span className="text-muted-foreground">
+            <span className="font-semibold text-foreground">{earnedCount}</span> earned
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="size-2 rounded-full bg-gradient-to-r from-blue-400 to-purple-500" />
-          <span className="text-gray-600">
-            <span className="font-semibold text-gray-900">{inProgressCount}</span> in progress
+          <span className="text-muted-foreground">
+            <span className="font-semibold text-foreground">{inProgressCount}</span> in progress
           </span>
         </div>
       </div>
@@ -367,7 +367,7 @@ export function BadgeGrid({
       {!expanded && hiddenCount > 0 && (
         <motion.button
           onClick={() => onViewAll ? onViewAll() : setExpanded(true)}
-          className="w-full py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-2.5 px-4 rounded-xl border border-border bg-muted hover:bg-muted/80 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
         >

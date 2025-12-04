@@ -55,44 +55,44 @@ const eventConfig: Record<TimelineEventType, {
 }> = {
   review_given: {
     icon: MessageSquare,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/50',
     label: 'Review Given',
   },
   review_received: {
     icon: FileText,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'bg-green-100 dark:bg-green-900/50',
     label: 'Review Received',
   },
   badge_earned: {
     icon: Trophy,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-100 dark:bg-amber-900/50',
     label: 'Badge Earned',
   },
   milestone: {
     icon: TrendingUp,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    color: 'text-purple-600 dark:text-purple-400',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/50',
     label: 'Milestone',
   },
   rating: {
     icon: Star,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-50',
+    color: 'text-amber-500 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
     label: 'Rating',
   },
   streak: {
     icon: Zap,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-100 dark:bg-orange-900/50',
     label: 'Streak',
   },
   karma_change: {
     icon: TrendingUp,
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-100',
+    color: 'text-indigo-600 dark:text-indigo-400',
+    bgColor: 'bg-indigo-100 dark:bg-indigo-900/50',
     label: 'Karma',
   },
 };
@@ -160,7 +160,7 @@ export function ImpactTimeline({
       {/* Header with filters */}
       {showFilters && (
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="font-semibold text-foreground">Recent Activity</h3>
 
           {/* Filter dropdown */}
           <div className="relative">
@@ -194,7 +194,7 @@ export function ImpactTimeline({
                       className={cn(
                         'w-full px-4 py-2 text-left text-sm transition-colors',
                         filter === option.value
-                          ? 'bg-blue-50 text-blue-700 font-medium'
+                          ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-medium'
                           : 'text-foreground hover:bg-muted'
                       )}
                     >
@@ -211,7 +211,7 @@ export function ImpactTimeline({
       {/* Timeline */}
       <div className="relative">
         {/* Vertical line */}
-        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-gray-200" />
+        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-200 via-purple-200 to-gray-200 dark:from-blue-800 dark:via-purple-800 dark:to-gray-700" />
 
         {/* Events grouped by date */}
         <div className="space-y-6">
@@ -227,7 +227,7 @@ export function ImpactTimeline({
                 <div className="size-10 rounded-full bg-background border-2 border-border flex items-center justify-center z-10">
                   <Clock className="size-4 text-muted-foreground" />
                 </div>
-                <span className="text-sm font-medium text-gray-500">{date}</span>
+                <span className="text-sm font-medium text-muted-foreground">{date}</span>
               </motion.div>
 
               {/* Events for this date */}
@@ -252,8 +252,8 @@ export function ImpactTimeline({
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <div className="size-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <FileText className="size-8 text-gray-400" />
+            <div className="size-16 mx-auto rounded-full bg-muted flex items-center justify-center mb-4">
+              <FileText className="size-8 text-muted-foreground" />
             </div>
             <p className="text-foreground font-medium">No activity yet</p>
             <p className="text-sm text-muted-foreground mt-1">
@@ -285,8 +285,8 @@ export function ImpactTimeline({
 // Default config for unknown event types
 const defaultEventConfig = {
   icon: FileText,
-  color: 'text-gray-600',
-  bgColor: 'bg-gray-100',
+  color: 'text-muted-foreground',
+  bgColor: 'bg-muted',
   label: 'Activity',
 };
 
@@ -309,8 +309,8 @@ function TimelineEventCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       className={cn(
-        'relative p-4 rounded-xl bg-white border border-gray-100 shadow-sm',
-        'hover:shadow-md hover:border-gray-200 transition-all cursor-pointer'
+        'relative p-4 rounded-xl bg-background border border-border/60 shadow-sm',
+        'hover:shadow-md hover:border-border transition-all cursor-pointer'
       )}
       onClick={() => setIsExpanded(!isExpanded)}
     >
@@ -332,16 +332,16 @@ function TimelineEventCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h4 className="font-medium text-gray-900 text-sm leading-tight">
+            <h4 className="font-medium text-foreground text-sm leading-tight">
               {event.title}
             </h4>
-            <span className="text-xs text-gray-400 flex-shrink-0">
+            <span className="text-xs text-muted-foreground/70 flex-shrink-0">
               {formatTime(event.timestamp)}
             </span>
           </div>
 
           {event.description && (
-            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
               {event.description}
             </p>
           )}
@@ -349,25 +349,25 @@ function TimelineEventCard({
           {/* Metadata badges */}
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {event.metadata?.projectName && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-600">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
                 <FileText className="size-3" />
                 {event.metadata.projectName}
               </span>
             )}
             {event.metadata?.rating && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-xs text-amber-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-xs text-amber-700 dark:text-amber-400">
                 <Star className="size-3 fill-amber-400" />
                 {event.metadata.rating.toFixed(1)}
               </span>
             )}
             {event.metadata?.milestoneValue && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-xs text-purple-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs text-purple-700 dark:text-purple-400">
                 <TrendingUp className="size-3" />
                 {event.metadata.milestoneValue} achieved
               </span>
             )}
             {event.metadata?.streakDays && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-xs text-orange-700">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-900/30 text-xs text-orange-700 dark:text-orange-400">
                 <Zap className="size-3" />
                 {event.metadata.streakDays} day streak
               </span>
@@ -381,9 +381,9 @@ function TimelineEventCard({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-3 pt-3 border-t border-gray-100"
+                className="mt-3 pt-3 border-t border-border"
               >
-                <p className="text-sm text-gray-600 italic">
+                <p className="text-sm text-muted-foreground italic">
                   "{event.metadata.quote}"
                 </p>
               </motion.div>
@@ -430,10 +430,10 @@ export function CompactTimeline({
               <IconComponent className={cn('size-4', config.color)} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {event.title}
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground/70">
                 {new Date(event.timestamp).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',

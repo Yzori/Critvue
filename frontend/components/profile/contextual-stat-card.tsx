@@ -81,8 +81,8 @@ export function ContextualStatCard({
   return (
     <motion.div
       className={cn(
-        'relative rounded-2xl bg-white border border-gray-200/60 shadow-sm overflow-hidden cursor-pointer',
-        'hover:shadow-lg hover:border-gray-300/60 transition-all duration-300',
+        'relative rounded-2xl bg-background border border-border/60 shadow-sm overflow-hidden cursor-pointer',
+        'hover:shadow-lg hover:border-border transition-all duration-300',
         sizes.container,
         className
       )}
@@ -119,9 +119,9 @@ export function ContextualStatCard({
           {trend && (
             <div className={cn(
               'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium',
-              trend.direction === 'up' && 'bg-green-100 text-green-700',
-              trend.direction === 'down' && 'bg-red-100 text-red-700',
-              trend.direction === 'neutral' && 'bg-gray-100 text-gray-600'
+              trend.direction === 'up' && 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+              trend.direction === 'down' && 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+              trend.direction === 'neutral' && 'bg-muted text-muted-foreground'
             )}>
               {trend.direction === 'up' && <ChevronUp className="size-3" />}
               {trend.direction === 'down' && <ChevronDown className="size-3" />}
@@ -133,7 +133,7 @@ export function ContextualStatCard({
 
         {/* Value */}
         <div className="mb-1">
-          <span className={cn('font-black text-gray-900', sizes.value)}>
+          <span className={cn('font-black text-foreground', sizes.value)}>
             {prefix}
             {displayValue}
             {suffix}
@@ -141,7 +141,7 @@ export function ContextualStatCard({
         </div>
 
         {/* Label */}
-        <p className={cn('font-semibold text-gray-600 uppercase tracking-wide mb-3', sizes.label)}>
+        <p className={cn('font-semibold text-muted-foreground uppercase tracking-wide mb-3', sizes.label)}>
           {label}
         </p>
 
@@ -149,10 +149,10 @@ export function ContextualStatCard({
         {percentile !== undefined && (
           <div className="mb-2">
             <div className="flex items-center justify-between text-xs mb-1">
-              <span className="text-gray-500">Percentile</span>
-              <span className="font-semibold text-blue-600">Top {100 - percentile}%</span>
+              <span className="text-muted-foreground">Percentile</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">Top {100 - percentile}%</span>
             </div>
-            <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div className="relative h-2 bg-muted rounded-full overflow-hidden">
               <motion.div
                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full"
                 initial={{ width: 0 }}
@@ -172,14 +172,14 @@ export function ContextualStatCard({
 
         {/* Comparison text */}
         {comparison && (
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {comparison}
           </p>
         )}
 
         {/* Trend label */}
         {trend?.label && (
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground/70 mt-1">
             {trend.label}
           </p>
         )}
@@ -274,24 +274,24 @@ export function MiniStat({
   return (
     <div className={cn('flex items-center gap-3', className)}>
       {icon && (
-        <div className="size-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+        <div className="size-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
           {icon}
         </div>
       )}
       <div>
         <div className="flex items-center gap-1.5">
-          <span className="text-lg font-bold text-gray-900">
+          <span className="text-lg font-bold text-foreground">
             {value}{suffix}
           </span>
           {trend && (
             <>
               {trend === 'up' && <TrendingUp className="size-3.5 text-green-500" />}
               {trend === 'down' && <TrendingDown className="size-3.5 text-red-500" />}
-              {trend === 'neutral' && <Minus className="size-3.5 text-gray-400" />}
+              {trend === 'neutral' && <Minus className="size-3.5 text-muted-foreground" />}
             </>
           )}
         </div>
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
       </div>
     </div>
   );

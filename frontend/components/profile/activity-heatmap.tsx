@@ -49,25 +49,25 @@ const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
 // Color scales
 const colorScale = {
   combined: [
-    'bg-gray-100',      // 0
-    'bg-blue-200',      // 1-2
-    'bg-blue-400',      // 3-4
-    'bg-blue-600',      // 5-7
-    'bg-blue-800',      // 8+
+    'bg-muted',         // 0
+    'bg-blue-200 dark:bg-blue-900',      // 1-2
+    'bg-blue-400 dark:bg-blue-700',      // 3-4
+    'bg-blue-600 dark:bg-blue-500',      // 5-7
+    'bg-blue-800 dark:bg-blue-400',      // 8+
   ],
   creator: [
-    'bg-gray-100',
-    'bg-green-200',
-    'bg-green-400',
-    'bg-green-600',
-    'bg-green-800',
+    'bg-muted',
+    'bg-green-200 dark:bg-green-900',
+    'bg-green-400 dark:bg-green-700',
+    'bg-green-600 dark:bg-green-500',
+    'bg-green-800 dark:bg-green-400',
   ],
   reviewer: [
-    'bg-gray-100',
-    'bg-purple-200',
-    'bg-purple-400',
-    'bg-purple-600',
-    'bg-purple-800',
+    'bg-muted',
+    'bg-purple-200 dark:bg-purple-900',
+    'bg-purple-400 dark:bg-purple-700',
+    'bg-purple-600 dark:bg-purple-500',
+    'bg-purple-800 dark:bg-purple-400',
   ],
 };
 
@@ -152,8 +152,8 @@ export function ActivityHeatmap({
               <Flame className="size-4 text-white" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">{currentStreak}</p>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">Day Streak</p>
+              <p className="text-lg font-bold text-foreground">{currentStreak}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Day Streak</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -161,8 +161,8 @@ export function ActivityHeatmap({
               <TrendingUp className="size-4 text-white" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">{longestStreak}</p>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">Best Streak</p>
+              <p className="text-lg font-bold text-foreground">{longestStreak}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Best Streak</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -170,21 +170,21 @@ export function ActivityHeatmap({
               <Calendar className="size-4 text-white" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">{totalContributions}</p>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">This Year</p>
+              <p className="text-lg font-bold text-foreground">{totalContributions}</p>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">This Year</p>
             </div>
           </div>
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-gray-100">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
           <button
             onClick={() => setActiveView('combined')}
             className={cn(
               'px-3 py-1.5 rounded-md text-xs font-medium transition-all',
               activeView === 'combined'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             Combined
@@ -194,8 +194,8 @@ export function ActivityHeatmap({
             className={cn(
               'px-3 py-1.5 rounded-md text-xs font-medium transition-all',
               activeView === 'split'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             Split View
@@ -253,7 +253,7 @@ export function ActivityHeatmap({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Less</span>
         <div className="flex items-center gap-1">
           {(activeView === 'combined' ? colorScale.combined : colorScale.reviewer).map((color, i) => (
@@ -322,13 +322,13 @@ function HeatmapGrid({
   return (
     <div>
       {/* Label */}
-      <p className="text-xs font-medium text-gray-600 mb-2">{label}</p>
+      <p className="text-xs font-medium text-muted-foreground mb-2">{label}</p>
 
       <div className="inline-flex gap-1">
         {/* Day labels */}
         <div className="flex flex-col gap-[3px] pr-2">
           {dayLabels.map((label, i) => (
-            <div key={i} className="h-[11px] text-[10px] text-gray-400 leading-[11px]">
+            <div key={i} className="h-[11px] text-[10px] text-muted-foreground/70 leading-[11px]">
               {label}
             </div>
           ))}
@@ -341,7 +341,7 @@ function HeatmapGrid({
             {months.map((month, i) => (
               <div
                 key={i}
-                className="text-[10px] text-gray-400"
+                className="text-[10px] text-muted-foreground/70"
                 style={{ width: `${weeksPerMonth * 14}px` }}
               >
                 {month.label}
@@ -369,7 +369,7 @@ function HeatmapGrid({
                       className={cn(
                         'size-[11px] rounded-sm cursor-pointer transition-all',
                         colorScale[colorIndex],
-                        'hover:ring-2 hover:ring-gray-400 hover:ring-offset-1'
+                        'hover:ring-2 hover:ring-border hover:ring-offset-1 hover:ring-offset-background'
                       )}
                       onMouseEnter={(e) => onDayHover(day, e)}
                       onMouseLeave={() => onDayHover(null, {} as React.MouseEvent)}
@@ -403,17 +403,17 @@ export function StreakDisplay({
       <div className="flex items-center gap-2">
         <Flame className={cn(
           'size-5',
-          currentStreak > 0 ? 'text-orange-500' : 'text-gray-300'
+          currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground/50'
         )} />
         <div>
-          <p className="text-lg font-bold text-gray-900">{currentStreak}</p>
-          <p className="text-[10px] text-gray-500">Current</p>
+          <p className="text-lg font-bold text-foreground">{currentStreak}</p>
+          <p className="text-[10px] text-muted-foreground">Current</p>
         </div>
       </div>
-      <div className="w-px h-8 bg-gray-200" />
+      <div className="w-px h-8 bg-border" />
       <div>
-        <p className="text-lg font-bold text-gray-900">{longestStreak}</p>
-        <p className="text-[10px] text-gray-500">Best</p>
+        <p className="text-lg font-bold text-foreground">{longestStreak}</p>
+        <p className="text-[10px] text-muted-foreground">Best</p>
       </div>
     </div>
   );
