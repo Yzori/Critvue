@@ -191,9 +191,9 @@ function MobileReviewCard({ slot, isActive, onSelect }: MobileReviewCardProps) {
   const Icon = config.icon;
 
   const urgencyColors = {
-    danger: "text-red-700 bg-red-50 border-red-200",
-    warning: "text-amber-700 bg-amber-50 border-amber-200",
-    safe: "text-green-700 bg-green-50 border-green-200",
+    danger: "text-red-700 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-500/20 dark:border-red-500/30",
+    warning: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-500/20 dark:border-amber-500/30",
+    safe: "text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-500/20 dark:border-green-500/30",
   };
 
   const ariaLabel = `Switch to review: ${slot.review_request?.title || 'Untitled Review'}. ${progress}% complete. ${
@@ -216,7 +216,7 @@ function MobileReviewCard({ slot, isActive, onSelect }: MobileReviewCardProps) {
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-3">
-        <div className={cn("mt-0.5", config.color)}>
+        <div className={cn("mt-0.5", config.color, "dark:brightness-125 dark:saturate-150")}>
           <Icon className="size-5" />
         </div>
         <div className="flex-1 min-w-0">

@@ -249,9 +249,9 @@ function ReviewCard({ slot, isActive, statusBadge, onSelect }: ReviewCardProps) 
   const Icon = config.icon;
 
   const urgencyColors = {
-    danger: "text-red-700 bg-red-50 border-red-200",
-    warning: "text-amber-700 bg-amber-50 border-amber-200",
-    safe: "text-green-700 bg-green-50 border-green-200",
+    danger: "text-red-700 bg-red-50 border-red-200 dark:text-red-300 dark:bg-red-500/20 dark:border-red-500/30",
+    warning: "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-300 dark:bg-amber-500/20 dark:border-amber-500/30",
+    safe: "text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-500/20 dark:border-green-500/30",
   };
 
   const ariaLabel = `Switch to review: ${slot.review_request?.title || 'Untitled Review'}. ${progress}% complete. ${
@@ -274,7 +274,11 @@ function ReviewCard({ slot, isActive, statusBadge, onSelect }: ReviewCardProps) 
     >
       {/* Header Row */}
       <div className="w-full flex items-start gap-2">
-        <div className={cn("mt-0.5", config.color)}>
+        <div className={cn(
+          "mt-0.5",
+          config.color,
+          "dark:brightness-125 dark:saturate-150"
+        )}>
           <Icon className="size-4" />
         </div>
         <div className="flex-1 min-w-0 text-left">
@@ -331,25 +335,25 @@ function ReviewCard({ slot, isActive, statusBadge, onSelect }: ReviewCardProps) 
 
       {/* Status Badge */}
       {statusBadge === "submitted" && (
-        <Badge variant="secondary" size="sm" className="bg-amber-50 text-amber-700 border-amber-200">
+        <Badge variant="secondary" size="sm" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
           <Clock className="size-3" />
           Awaiting Response
         </Badge>
       )}
       {statusBadge === "elaboration" && (
-        <Badge variant="secondary" size="sm" className="bg-blue-50 text-blue-700 border-blue-200">
+        <Badge variant="secondary" size="sm" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30">
           <MessageSquarePlus className="size-3" />
           Needs More Detail
         </Badge>
       )}
       {statusBadge === "accepted" && (
-        <Badge variant="secondary" size="sm" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+        <Badge variant="secondary" size="sm" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">
           <Trophy className="size-3" />
           Accepted
         </Badge>
       )}
       {statusBadge === "rejected" && (
-        <Badge variant="secondary" size="sm" className="bg-red-50 text-red-700 border-red-200">
+        <Badge variant="secondary" size="sm" className="bg-red-50 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30">
           <XCircle className="size-3" />
           Rejected
         </Badge>

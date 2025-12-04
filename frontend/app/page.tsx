@@ -723,7 +723,7 @@ export default function HomePage() {
                 size="lg"
                 onClick={() => router.push("/how-it-works")}
                 variant="outline"
-                className="w-full sm:w-auto border-2 border-white text-white hover:bg-white/10 dark:hover:bg-white/20 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl"
+                className="w-full sm:w-auto bg-white/20 border-2 border-white text-white hover:bg-white/30 font-semibold px-6 py-4 sm:px-8 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl backdrop-blur-sm"
               >
                 How It Works
               </Button>
