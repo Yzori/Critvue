@@ -19,6 +19,110 @@ import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import { getAnimationDuration } from '@/lib/expert-application/auto-save'
 import { useAuth } from '@/contexts/AuthContext'
 
+// Map common timezones to city/country locations
+const TIMEZONE_TO_LOCATION: Record<string, string> = {
+  // North America
+  'America/New_York': 'New York, USA',
+  'America/Chicago': 'Chicago, USA',
+  'America/Denver': 'Denver, USA',
+  'America/Los_Angeles': 'Los Angeles, USA',
+  'America/Phoenix': 'Phoenix, USA',
+  'America/Anchorage': 'Anchorage, USA',
+  'America/Detroit': 'Detroit, USA',
+  'America/Indiana/Indianapolis': 'Indianapolis, USA',
+  'America/Toronto': 'Toronto, Canada',
+  'America/Vancouver': 'Vancouver, Canada',
+  'America/Montreal': 'Montreal, Canada',
+  'America/Edmonton': 'Edmonton, Canada',
+  'America/Winnipeg': 'Winnipeg, Canada',
+  'America/Halifax': 'Halifax, Canada',
+  'America/Mexico_City': 'Mexico City, Mexico',
+  'America/Tijuana': 'Tijuana, Mexico',
+
+  // Europe
+  'Europe/London': 'London, UK',
+  'Europe/Paris': 'Paris, France',
+  'Europe/Berlin': 'Berlin, Germany',
+  'Europe/Madrid': 'Madrid, Spain',
+  'Europe/Rome': 'Rome, Italy',
+  'Europe/Amsterdam': 'Amsterdam, Netherlands',
+  'Europe/Brussels': 'Brussels, Belgium',
+  'Europe/Vienna': 'Vienna, Austria',
+  'Europe/Zurich': 'Zurich, Switzerland',
+  'Europe/Stockholm': 'Stockholm, Sweden',
+  'Europe/Oslo': 'Oslo, Norway',
+  'Europe/Copenhagen': 'Copenhagen, Denmark',
+  'Europe/Helsinki': 'Helsinki, Finland',
+  'Europe/Warsaw': 'Warsaw, Poland',
+  'Europe/Prague': 'Prague, Czech Republic',
+  'Europe/Dublin': 'Dublin, Ireland',
+  'Europe/Lisbon': 'Lisbon, Portugal',
+  'Europe/Athens': 'Athens, Greece',
+  'Europe/Istanbul': 'Istanbul, Turkey',
+  'Europe/Moscow': 'Moscow, Russia',
+  'Europe/Kiev': 'Kyiv, Ukraine',
+  'Europe/Bucharest': 'Bucharest, Romania',
+  'Europe/Budapest': 'Budapest, Hungary',
+
+  // Asia
+  'Asia/Tokyo': 'Tokyo, Japan',
+  'Asia/Seoul': 'Seoul, South Korea',
+  'Asia/Shanghai': 'Shanghai, China',
+  'Asia/Hong_Kong': 'Hong Kong',
+  'Asia/Singapore': 'Singapore',
+  'Asia/Taipei': 'Taipei, Taiwan',
+  'Asia/Bangkok': 'Bangkok, Thailand',
+  'Asia/Jakarta': 'Jakarta, Indonesia',
+  'Asia/Manila': 'Manila, Philippines',
+  'Asia/Kuala_Lumpur': 'Kuala Lumpur, Malaysia',
+  'Asia/Ho_Chi_Minh': 'Ho Chi Minh City, Vietnam',
+  'Asia/Kolkata': 'Mumbai, India',
+  'Asia/Dubai': 'Dubai, UAE',
+  'Asia/Riyadh': 'Riyadh, Saudi Arabia',
+  'Asia/Jerusalem': 'Tel Aviv, Israel',
+  'Asia/Beirut': 'Beirut, Lebanon',
+
+  // Oceania
+  'Australia/Sydney': 'Sydney, Australia',
+  'Australia/Melbourne': 'Melbourne, Australia',
+  'Australia/Brisbane': 'Brisbane, Australia',
+  'Australia/Perth': 'Perth, Australia',
+  'Australia/Adelaide': 'Adelaide, Australia',
+  'Pacific/Auckland': 'Auckland, New Zealand',
+  'Pacific/Honolulu': 'Honolulu, USA',
+
+  // South America
+  'America/Sao_Paulo': 'São Paulo, Brazil',
+  'America/Buenos_Aires': 'Buenos Aires, Argentina',
+  'America/Santiago': 'Santiago, Chile',
+  'America/Lima': 'Lima, Peru',
+  'America/Bogota': 'Bogotá, Colombia',
+  'America/Caracas': 'Caracas, Venezuela',
+
+  // Africa
+  'Africa/Cairo': 'Cairo, Egypt',
+  'Africa/Johannesburg': 'Johannesburg, South Africa',
+  'Africa/Lagos': 'Lagos, Nigeria',
+  'Africa/Nairobi': 'Nairobi, Kenya',
+  'Africa/Casablanca': 'Casablanca, Morocco',
+}
+
+function getLocationFromTimezone(timezone: string): string {
+  // Direct match
+  if (TIMEZONE_TO_LOCATION[timezone]) {
+    return TIMEZONE_TO_LOCATION[timezone]
+  }
+
+  // Try to extract city from timezone (e.g., "America/New_York" -> "New York")
+  const parts = timezone.split('/')
+  if (parts.length >= 2) {
+    const city = parts[parts.length - 1].replace(/_/g, ' ')
+    return city
+  }
+
+  return ''
+}
+
 interface Step2PersonalInfoProps {
   onValidationChange?: (isValid: boolean) => void
 }
@@ -28,6 +132,10 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
   const personalInfo = useExpertApplicationStore((state) => state.personalInfo)
   const updatePersonalInfo = useExpertApplicationStore((state) => state.updatePersonalInfo)
   const animDuration = getAnimationDuration(0.3)
+
+  // Auto-detect timezone and location
+  const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const detectedLocation = getLocationFromTimezone(detectedTimezone)
 
   // Pre-fill with user data if available and form is empty
   const defaultEmail = personalInfo.email || user?.email || ''
@@ -44,8 +152,8 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
     defaultValues: {
       fullName: defaultFullName,
       email: defaultEmail,
-      location: personalInfo.location || '',
-      timezone: personalInfo.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      location: personalInfo.location || detectedLocation,
+      timezone: personalInfo.timezone || detectedTimezone,
       linkedinUrl: personalInfo.linkedinUrl || ''
     }
   })
@@ -129,13 +237,13 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
               </div>
             </FormField>
 
-            {/* Location */}
+            {/* Location - Auto-detected but editable */}
             <FormField
               icon={MapPin}
               label="Location"
               error={errors.location?.message}
-              hint="City, Country"
-              tooltip="Helps us match you with creators in similar timezones for scheduling and communication."
+              hint={detectedLocation ? "Auto-detected • Edit if incorrect" : "City, Country"}
+              tooltip="Helps match you with creators in similar regions for scheduling."
             >
               <Input
                 {...register('location')}
