@@ -1,135 +1,360 @@
 "use client";
 
 import * as React from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  getChallenges,
   getActiveChallenges,
-  getChallengePrompts,
-  getMyStats,
+  getChallenges,
   getLeaderboard,
+  getMyStats,
   getMyInvitations,
+  getOpenSlotChallenges,
+  claimChallengeSlot,
   Challenge,
-  ChallengePrompt,
   ChallengeStats,
   ChallengeLeaderboardEntry,
   ChallengeInvitation,
-  ContentType,
-  ChallengeType,
-  getContentTypeInfo,
-  getChallengeTypeInfo,
-  getChallengeStatusInfo,
+  OpenSlotChallenge,
   getTimeRemaining,
 } from "@/lib/api/challenges";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Trophy,
+  Battle1v1Card,
+  Battle1v1CardCompact,
+  OpenChallengeCard,
+  OpenChallengeCardCompact,
+} from "@/components/challenges";
+import {
+  Swords,
   Users,
-  Clock,
-  Flame,
-  Target,
-  ChevronRight,
-  Palette,
-  Code,
-  Video,
-  FileText,
-  Brush,
-  Headphones,
-  Radio,
-  Zap,
+  Trophy,
   Crown,
   Medal,
   Star,
+  Target,
+  Flame,
   Bell,
-  Sparkles,
-  Award,
+  ChevronRight,
+  Zap,
+  TrendingUp,
+  Filter,
+  ArrowRight,
+  Unlock,
+  Clock,
+  UserPlus,
 } from "lucide-react";
 
-// Content type icons mapping
-const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: string }>> = {
-  design: Palette,
-  code: Code,
-  video: Video,
-  stream: Radio,
-  audio: Headphones,
-  writing: FileText,
-  art: Brush,
+// ==================== MOCK DATA ====================
+const USE_MOCK_DATA = true;
+
+const mock1v1Battles: Challenge[] = [
+  {
+    id: 1,
+    title: "Cyberpunk UI Battle",
+    description: "Design a futuristic dashboard interface with neon aesthetics",
+    challengeType: "one_on_one",
+    contentType: "design",
+    status: "voting",
+    submissionHours: 48,
+    votingHours: 24,
+    votingDeadline: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 1,
+    totalEntries: 2,
+    participant1Id: 1,
+    participant2Id: 2,
+    participant1Votes: 127,
+    participant2Votes: 98,
+    participant1Name: "PixelMaster",
+    participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster",
+    participant2Name: "NeonDreamer",
+    participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NeonDreamer",
+    isFeatured: true,
+    totalVotes: 225,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+  {
+    id: 2,
+    title: "Algorithm Showdown",
+    description: "Implement the most elegant sorting visualization",
+    challengeType: "one_on_one",
+    contentType: "code",
+    status: "voting",
+    submissionHours: 24,
+    votingHours: 12,
+    votingDeadline: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 1,
+    totalEntries: 2,
+    participant1Id: 3,
+    participant2Id: 4,
+    participant1Votes: 45,
+    participant2Votes: 52,
+    participant1Name: "CodeNinja",
+    participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CodeNinja",
+    participant2Name: "ByteWizard",
+    participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ByteWizard",
+    isFeatured: false,
+    totalVotes: 97,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+  {
+    id: 3,
+    title: "Motion Magic",
+    description: "Create a mesmerizing loading animation",
+    challengeType: "one_on_one",
+    contentType: "design",
+    status: "voting",
+    submissionHours: 24,
+    votingHours: 12,
+    votingDeadline: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 1,
+    totalEntries: 2,
+    participant1Id: 5,
+    participant2Id: 6,
+    participant1Votes: 78,
+    participant2Votes: 65,
+    participant1Name: "AnimateX",
+    participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AnimateX",
+    participant2Name: "FrameFlow",
+    participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=FrameFlow",
+    isFeatured: false,
+    totalVotes: 143,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+];
+
+const mockOpenChallenges: Challenge[] = [
+  {
+    id: 101,
+    title: "Mobile App Redesign Sprint",
+    description: "Reimagine a popular app's user experience with fresh, modern design principles.",
+    challengeType: "category",
+    contentType: "design",
+    status: "open",
+    submissionHours: 72,
+    votingHours: 48,
+    submissionDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 3,
+    totalEntries: 24,
+    participant1Votes: 0,
+    participant2Votes: 0,
+    isFeatured: true,
+    totalVotes: 0,
+    winnerKarmaReward: 100,
+    prizeDescription: "Top 3 designs will be featured on our homepage",
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+  {
+    id: 102,
+    title: "React Component Challenge",
+    description: "Build an innovative, reusable React component that solves a common problem.",
+    challengeType: "category",
+    contentType: "code",
+    status: "open",
+    submissionHours: 48,
+    votingHours: 24,
+    submissionDeadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 1,
+    totalEntries: 18,
+    participant1Votes: 0,
+    participant2Votes: 0,
+    isFeatured: false,
+    totalVotes: 0,
+    winnerKarmaReward: 75,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+  {
+    id: 103,
+    title: "Short Film Festival",
+    description: "Create a compelling 60-second short film on the theme of 'Connection'.",
+    challengeType: "category",
+    contentType: "video",
+    status: "open",
+    submissionHours: 168,
+    votingHours: 72,
+    submissionDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 5,
+    totalEntries: 12,
+    participant1Votes: 0,
+    participant2Votes: 0,
+    isFeatured: false,
+    totalVotes: 0,
+    winnerKarmaReward: 150,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+  {
+    id: 104,
+    title: "Podcast Intro Battle",
+    description: "Produce a captivating 30-second podcast intro with music and voice.",
+    challengeType: "category",
+    contentType: "audio",
+    status: "voting",
+    submissionHours: 48,
+    votingHours: 24,
+    votingDeadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    maxWinners: 1,
+    totalEntries: 8,
+    participant1Votes: 0,
+    participant2Votes: 0,
+    isFeatured: false,
+    totalVotes: 45,
+    winnerKarmaReward: 50,
+    createdAt: new Date().toISOString(),
+    createdBy: 1,
+    entries: [],
+    invitations: [],
+    currentUserVoted: false,
+    currentUserIsParticipant: false,
+  },
+];
+
+// Mock open slots 1v1 challenges
+const mockOpenSlots: OpenSlotChallenge[] = [
+  {
+    id: 201,
+    title: "Brand Identity Duel",
+    description: "Create a complete brand identity for a fictional startup",
+    contentType: "design",
+    availableSlots: 2,
+    slotsCloseAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+    submissionHours: 48,
+    votingHours: 24,
+    winnerKarmaReward: 75,
+    isFeatured: true,
+  },
+  {
+    id: 202,
+    title: "CLI Tool Showdown",
+    description: "Build a useful CLI tool in any language",
+    contentType: "code",
+    availableSlots: 1,
+    slotsCloseAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    submissionHours: 72,
+    votingHours: 48,
+    winnerKarmaReward: 100,
+    isFeatured: false,
+    participant1Id: 5,
+    participant1Name: "AnimateX",
+    participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AnimateX",
+  },
+];
+
+const mockLeaderboard: ChallengeLeaderboardEntry[] = [
+  { rank: 1, userId: 1, userName: "PixelMaster", userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster", challengesWon: 15, winRate: 78, bestStreak: 7 },
+  { rank: 2, userId: 3, userName: "CodeNinja", userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CodeNinja", challengesWon: 12, winRate: 72, bestStreak: 5 },
+  { rank: 3, userId: 5, userName: "AnimateX", userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AnimateX", challengesWon: 10, winRate: 67, bestStreak: 4 },
+  { rank: 4, userId: 2, userName: "NeonDreamer", userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NeonDreamer", challengesWon: 8, winRate: 62, bestStreak: 3 },
+  { rank: 5, userId: 7, userName: "TypeLord", userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=TypeLord", challengesWon: 6, winRate: 55, bestStreak: 2 },
+];
+
+const mockStats: ChallengeStats = {
+  challengesWon: 8,
+  challengesLost: 4,
+  challengesDrawn: 1,
+  totalChallenges: 13,
+  winRate: 62,
+  currentStreak: 3,
+  bestStreak: 5,
+  totalVotesReceived: 234,
+  totalVotesCast: 47,
+  categoryParticipations: 6,
 };
 
-/**
- * Challenges Hub Page
- *
- * Features:
- * - Pending invitations banner (1v1 challenges)
- * - Active challenges grid (voting phase)
- * - Open category challenges
- * - Featured prompts
- * - User challenge stats
- * - Mini leaderboard
- */
+// ==================== END MOCK DATA ====================
+
 export default function ChallengesPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   // State
-  const [activeChallenges, setActiveChallenges] = React.useState<Challenge[]>([]);
-  const [openChallenges, setOpenChallenges] = React.useState<Challenge[]>([]);
-  const [prompts, setPrompts] = React.useState<ChallengePrompt[]>([]);
-  const [myStats, setMyStats] = React.useState<ChallengeStats | null>(null);
-  const [leaderboard, setLeaderboard] = React.useState<ChallengeLeaderboardEntry[]>([]);
-  const [pendingInvitations, setPendingInvitations] = React.useState<ChallengeInvitation[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [selectedContentType, setSelectedContentType] = React.useState<ContentType | null>(null);
-  const [activeTab, setActiveTab] = React.useState<"all" | "1v1" | "category">("all");
+  const [battles, setBattles] = useState<Challenge[]>([]);
+  const [openChallenges, setOpenChallenges] = useState<Challenge[]>([]);
+  const [openSlotChallenges, setOpenSlotChallenges] = useState<OpenSlotChallenge[]>([]);
+  const [leaderboard, setLeaderboard] = useState<ChallengeLeaderboardEntry[]>([]);
+  const [myStats, setMyStats] = useState<ChallengeStats | null>(null);
+  const [pendingInvitations, setPendingInvitations] = useState<ChallengeInvitation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [claimingSlot, setClaimingSlot] = useState<number | null>(null);
 
   // Fetch data
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch active challenges (voting phase)
-        const active = await getActiveChallenges(selectedContentType || undefined, 6);
-        setActiveChallenges(active);
+        if (USE_MOCK_DATA) {
+          await new Promise((r) => setTimeout(r, 300));
+          setBattles(mock1v1Battles);
+          setOpenChallenges(mockOpenChallenges);
+          setOpenSlotChallenges(mockOpenSlots);
+          setLeaderboard(mockLeaderboard);
+          setMyStats(mockStats);
+          setLoading(false);
+          return;
+        }
 
-        // Fetch open category challenges
-        const openResponse = await getChallenges("open", "category", selectedContentType || undefined, undefined, 0, 6);
+        const [activeBattles, openResponse, openSlots, leaderboardData] = await Promise.all([
+          getActiveChallenges(undefined, 10),
+          getChallenges("open", "category", undefined, undefined, 0, 10),
+          getOpenSlotChallenges(undefined, 10),
+          getLeaderboard(5),
+        ]);
+
+        setBattles(activeBattles.filter((c) => c.challengeType === "one_on_one"));
         setOpenChallenges(openResponse.items);
+        setOpenSlotChallenges(openSlots);
+        setLeaderboard(leaderboardData.entries);
 
-        // Fetch prompts
-        const promptsResponse = await getChallengePrompts(undefined, 8);
-        setPrompts(promptsResponse.items);
-
-        // Fetch leaderboard
-        const leaderboardResponse = await getLeaderboard(5);
-        setLeaderboard(leaderboardResponse.entries);
-
-        // Fetch user-specific data if authenticated
         if (isAuthenticated && !authLoading) {
           try {
-            const stats = await getMyStats();
+            const [stats, invitations] = await Promise.all([
+              getMyStats().catch(() => null),
+              getMyInvitations().catch(() => []),
+            ]);
             setMyStats(stats);
-          } catch {
-            // User might not have challenge stats yet
-          }
-
-          try {
-            const invitations = await getMyInvitations();
             setPendingInvitations(invitations);
           } catch {
-            // No pending invitations
+            // Ignore errors
           }
         }
       } catch (error) {
-        console.error("Error fetching challenges data:", error);
+        console.error("Error fetching challenges:", error);
       } finally {
         setLoading(false);
       }
@@ -138,191 +363,390 @@ export default function ChallengesPage() {
     if (!authLoading) {
       fetchData();
     }
-  }, [isAuthenticated, authLoading, selectedContentType]);
+  }, [isAuthenticated, authLoading]);
 
-  // Handle content type filter
-  const handleContentTypeSelect = (contentType: ContentType) => {
-    setSelectedContentType(contentType === selectedContentType ? null : contentType);
+  // Handle claiming a slot
+  const handleClaimSlot = async (challengeId: number) => {
+    if (!isAuthenticated) {
+      router.push("/login?redirect=/challenges");
+      return;
+    }
+
+    try {
+      setClaimingSlot(challengeId);
+      const result = await claimChallengeSlot(challengeId);
+
+      if (result.challengeActivated) {
+        // Challenge is now active, redirect to it
+        router.push(`/challenges/${challengeId}`);
+      } else {
+        // Refresh the open slots list
+        if (!USE_MOCK_DATA) {
+          const newOpenSlots = await getOpenSlotChallenges(undefined, 10);
+          setOpenSlotChallenges(newOpenSlots);
+        } else {
+          // For mock data, just update the state
+          setOpenSlotChallenges((prev) =>
+            prev.map((c) =>
+              c.id === challengeId
+                ? { ...c, availableSlots: c.availableSlots - 1 }
+                : c
+            ).filter((c) => c.availableSlots > 0)
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error claiming slot:", error);
+    } finally {
+      setClaimingSlot(null);
+    }
   };
 
-  // Filter challenges by type
-  const filteredActiveChallenges = activeTab === "all"
-    ? activeChallenges
-    : activeChallenges.filter((c) => c.challengeType === (activeTab === "1v1" ? "one_on_one" : "category"));
+  const getTimeLeft = (deadline?: string) => {
+    if (!deadline) return undefined;
+    const t = getTimeRemaining(deadline);
+    if (t.isExpired) return undefined;
+    if (t.days > 0) return `${t.days}d ${t.hours}h`;
+    if (t.hours > 0) return `${t.hours}h ${t.minutes}m`;
+    return `${t.minutes}m`;
+  };
+
+  const featured1v1 = battles.find((b) => b.isFeatured) || battles[0];
+  const otherBattles = battles.filter((b) => b.id !== featured1v1?.id);
+
+  const featuredOpen = openChallenges.find((c) => c.isFeatured) || openChallenges[0];
+  const otherOpen = openChallenges.filter((c) => c.id !== featuredOpen?.id);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-black">
+    <div className="min-h-screen bg-[var(--background-subtle)]">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-b from-orange-500/10 to-transparent rounded-full blur-3xl" />
+      <section className="bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-2 mb-3"
+              >
+                <div className="p-2 rounded-xl bg-gradient-to-br from-accent-blue to-purple-500">
+                  <Swords className="w-5 h-5 text-white" />
+                </div>
+                <Badge variant="secondary" className="bg-accent-blue/10 text-accent-blue border-0">
+                  Battle Arena
+                </Badge>
+              </motion.div>
 
-        <div className="container mx-auto px-4 pt-8 pb-12">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
-              <Sparkles className="w-4 h-4 text-purple-400" />
-              <span className="text-sm font-medium text-purple-400">Platform Challenges</span>
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl md:text-4xl font-bold text-gray-900 mb-2"
+              >
+                Creative{" "}
+                <span className="bg-gradient-to-r from-accent-blue via-purple-500 to-accent-peach bg-clip-text text-transparent">
+                  Challenges
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-gray-500 max-w-xl"
+              >
+                Compete in 1v1 battles selected by the platform or join open community challenges.
+                Prove your skills and climb the leaderboard.
+              </motion.p>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Creative <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Challenges</span>
-            </h1>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              Compete in platform-curated challenges. Show off your skills in 1v1 creator challenges or open competitions, and climb the leaderboard.
-            </p>
-          </div>
 
-          {/* Content Type Filter Pills */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {(["design", "photography", "video", "audio", "writing", "art"] as ContentType[]).map((type) => {
-              const Icon = contentTypeIcons[type];
-              const info = getContentTypeInfo(type);
-              const isSelected = selectedContentType === type;
+            {/* Quick Stats */}
+            {(USE_MOCK_DATA || isAuthenticated) && myStats && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-6 p-4 rounded-2xl bg-gray-50 border border-gray-100"
+              >
+                <StatItem
+                  icon={Trophy}
+                  value={myStats.challengesWon}
+                  label="Wins"
+                  color="text-accent-peach"
+                />
+                <div className="w-px h-10 bg-gray-200" />
+                <StatItem
+                  icon={Target}
+                  value={`${myStats.winRate}%`}
+                  label="Win Rate"
+                  color="text-accent-sage"
+                />
+                <div className="w-px h-10 bg-gray-200" />
+                <StatItem
+                  icon={Flame}
+                  value={myStats.currentStreak}
+                  label="Streak"
+                  color="text-accent-blue"
+                />
+              </motion.div>
+            )}
 
-              return (
-                <button
-                  key={type}
-                  onClick={() => handleContentTypeSelect(type)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full transition-all",
-                    isSelected
-                      ? "bg-purple-500 text-white"
-                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{info.label}</span>
-                </button>
-              );
-            })}
           </div>
         </div>
       </section>
 
       {/* Pending Invitations Banner */}
-      {pendingInvitations.length > 0 && (
-        <section className="container mx-auto px-4 mb-8">
-          <Card className="bg-gradient-to-r from-orange-500/10 to-yellow-500/10 border-orange-500/20">
-            <CardContent className="p-6">
+      <AnimatePresence>
+        {pendingInvitations.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className="bg-gradient-to-r from-accent-peach/10 to-orange-500/10 border-b border-accent-peach/20"
+          >
+            <div className="container mx-auto px-4 py-4 max-w-7xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-orange-500/20">
-                    <Bell className="w-6 h-6 text-orange-400" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-accent-peach/20">
+                    <Bell className="w-5 h-5 text-accent-peach" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      You have {pendingInvitations.length} pending challenge invitation{pendingInvitations.length > 1 ? "s" : ""}!
-                    </h3>
-                    <p className="text-sm text-gray-400">
-                      You've been selected to compete in a 1v1 challenge. Respond before the invitation expires.
+                    <p className="font-semibold text-gray-900">
+                      You have {pendingInvitations.length} battle invitation{pendingInvitations.length > 1 ? "s" : ""}!
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      You've been selected for a 1v1 showdown
                     </p>
                   </div>
                 </div>
                 <Button
-                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  className="bg-accent-peach hover:bg-accent-peach/90 text-white"
                   onClick={() => router.push("/challenges/invitations")}
                 >
                   View Invitations
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 pb-16">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Challenges */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Challenge Type Tabs */}
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-              <div className="flex items-center justify-between mb-6">
-                <TabsList className="bg-white/5">
-                  <TabsTrigger value="all" className="data-[state=active]:bg-purple-500">
-                    All
-                  </TabsTrigger>
-                  <TabsTrigger value="1v1" className="data-[state=active]:bg-purple-500">
-                    1v1 Challenges
-                  </TabsTrigger>
-                  <TabsTrigger value="category" className="data-[state=active]:bg-purple-500">
-                    Competitions
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              {/* Active Challenges - Voting Now */}
-              <TabsContent value={activeTab} className="mt-0">
-                <section>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-purple-500/10">
-                        <Zap className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-white">Vote Now</h2>
-                      <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
-                        {filteredActiveChallenges.length} Active
-                      </Badge>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
-                      View All <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-
-                  {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[1, 2, 3, 4].map((i) => (
-                        <Card key={i} className="bg-white/5 border-white/10">
-                          <CardContent className="p-4">
-                            <Skeleton className="h-32 w-full mb-4" />
-                            <Skeleton className="h-4 w-3/4 mb-2" />
-                            <Skeleton className="h-4 w-1/2" />
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : filteredActiveChallenges.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredActiveChallenges.map((challenge) => (
-                        <ChallengeCard
-                          key={challenge.id}
-                          challenge={challenge}
-                          onClick={() => router.push(`/challenges/${challenge.id}`)}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Card className="bg-white/5 border-white/10">
-                      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                        <Zap className="w-12 h-12 text-gray-600 mb-4" />
-                        <h3 className="text-lg font-medium text-white mb-2">No Active Challenges</h3>
-                        <p className="text-gray-400 mb-4">Check back soon for new challenges to vote on!</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </section>
-              </TabsContent>
-            </Tabs>
-
-            {/* Open Category Challenges */}
+          {/* Main Column */}
+          <div className="lg:col-span-2 space-y-10">
+            {/* 1v1 Battles Section */}
             <section>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
-                    <Users className="w-5 h-5 text-blue-400" />
+                  <div className="p-2 rounded-xl bg-accent-blue/10">
+                    <Swords className="w-5 h-5 text-accent-blue" />
                   </div>
-                  <h2 className="text-xl font-semibold text-white">Open Competitions</h2>
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
-                    Join Now
-                  </Badge>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Live 1v1 Battles</h2>
+                    <p className="text-sm text-gray-500">Platform-selected matchups</p>
+                  </div>
                 </div>
+                <Badge className="bg-accent-sage/10 text-accent-sage border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-sage animate-pulse mr-1.5" />
+                  {battles.length} Active
+                </Badge>
               </div>
 
               {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[1, 2].map((i) => (
-                    <Skeleton key={i} className="h-48 w-full" />
+                    <div key={i} className="h-64 rounded-2xl bg-white animate-pulse" />
+                  ))}
+                </div>
+              ) : battles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {battles.slice(0, 4).map((battle) => (
+                    <Battle1v1Card
+                      key={battle.id}
+                      id={battle.id}
+                      title={battle.title}
+                      description={battle.description}
+                      contentType={battle.contentType}
+                      status={battle.status as "voting" | "completed" | "draw"}
+                      participant1={{
+                        id: battle.participant1Id || 0,
+                        name: battle.participant1Name || "Challenger",
+                        avatar: battle.participant1Avatar,
+                        votes: battle.participant1Votes,
+                      }}
+                      participant2={{
+                        id: battle.participant2Id || 0,
+                        name: battle.participant2Name || "Challenger",
+                        avatar: battle.participant2Avatar,
+                        votes: battle.participant2Votes,
+                      }}
+                      totalVotes={battle.totalVotes}
+                      timeLeft={getTimeLeft(battle.votingDeadline)}
+                      winnerId={battle.winnerId}
+                      isFeatured={battle.isFeatured}
+                      userHasVoted={battle.currentUserVoted}
+                      onClick={() => router.push(`/challenges/${battle.id}`)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+                  <Swords className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">No Active Battles</h3>
+                  <p className="text-gray-500">Check back soon for new 1v1 matchups!</p>
+                </div>
+              )}
+            </section>
+
+            {/* Looking for Opponents Section - Open Slots 1v1s */}
+            {openSlotChallenges.length > 0 && (
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-accent-sage/10">
+                      <Unlock className="w-5 h-5 text-accent-sage" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Looking for Opponents</h2>
+                      <p className="text-sm text-gray-500">Claim a spot in these 1v1 battles</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-accent-sage/10 text-accent-sage border-0">
+                    {openSlotChallenges.length} Available
+                  </Badge>
+                </div>
+
+                <div className="space-y-3">
+                  {openSlotChallenges.map((challenge) => {
+                    const timeLeft = getTimeLeft(challenge.slotsCloseAt);
+                    const contentTypeLabels: Record<string, string> = {
+                      design: "Design",
+                      code: "Code",
+                      video: "Video",
+                      audio: "Audio",
+                      writing: "Writing",
+                      art: "Art",
+                      stream: "Stream",
+                    };
+
+                    return (
+                      <motion.div
+                        key={challenge.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="text-xs border-gray-200">
+                                {contentTypeLabels[challenge.contentType] || challenge.contentType}
+                              </Badge>
+                              {challenge.isFeatured && (
+                                <Badge className="bg-accent-peach/10 text-accent-peach border-0 text-xs">
+                                  <Star className="w-3 h-3 mr-1" />
+                                  Featured
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-1">{challenge.title}</h3>
+                            <p className="text-sm text-gray-500 line-clamp-1">{challenge.description}</p>
+
+                            <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                              {timeLeft && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  <span>Closes in {timeLeft}</span>
+                                </div>
+                              )}
+                              {challenge.winnerKarmaReward && (
+                                <div className="flex items-center gap-1 text-accent-peach">
+                                  <Trophy className="w-3.5 h-3.5" />
+                                  <span>{challenge.winnerKarmaReward} karma</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2">
+                            {/* Current participants */}
+                            <div className="flex items-center gap-1">
+                              {challenge.participant1Id ? (
+                                <Avatar className="w-8 h-8 border-2 border-accent-sage">
+                                  <AvatarImage src={challenge.participant1Avatar} />
+                                  <AvatarFallback className="text-xs bg-accent-sage/10 text-accent-sage">
+                                    {challenge.participant1Name?.charAt(0) || "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                  <UserPlus className="w-4 h-4 text-gray-400" />
+                                </div>
+                              )}
+                              <span className="text-xs text-gray-400 mx-1">vs</span>
+                              <div className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                <UserPlus className="w-4 h-4 text-gray-400" />
+                              </div>
+                            </div>
+
+                            <Badge className={cn(
+                              "text-xs",
+                              challenge.availableSlots === 2
+                                ? "bg-accent-sage/10 text-accent-sage"
+                                : "bg-accent-blue/10 text-accent-blue"
+                            )}>
+                              {challenge.availableSlots} slot{challenge.availableSlots !== 1 ? "s" : ""} open
+                            </Badge>
+
+                            <Button
+                              size="sm"
+                              className="bg-accent-sage hover:bg-accent-sage/90 text-white"
+                              onClick={() => handleClaimSlot(challenge.id)}
+                              disabled={claimingSlot === challenge.id}
+                            >
+                              {claimingSlot === challenge.id ? (
+                                "Claiming..."
+                              ) : (
+                                <>
+                                  <UserPlus className="w-4 h-4 mr-1" />
+                                  Claim Spot
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Open Challenges Section */}
+            <section>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-accent-peach/10">
+                    <Users className="w-5 h-5 text-accent-peach" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Open Challenges</h2>
+                    <p className="text-sm text-gray-500">Community competitions - join now!</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="text-gray-500">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
+
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-72 rounded-2xl bg-white animate-pulse" />
                   ))}
                 </div>
               ) : openChallenges.length > 0 ? (
@@ -330,381 +754,195 @@ export default function ChallengesPage() {
                   {openChallenges.map((challenge) => (
                     <OpenChallengeCard
                       key={challenge.id}
-                      challenge={challenge}
+                      id={challenge.id}
+                      title={challenge.title}
+                      description={challenge.description}
+                      contentType={challenge.contentType}
+                      status={challenge.status as "open" | "active" | "voting" | "completed"}
+                      totalEntries={challenge.totalEntries}
+                      maxWinners={challenge.maxWinners || 1}
+                      timeLeft={getTimeLeft(challenge.submissionDeadline || challenge.votingDeadline)}
+                      timeProgress={50} // Calculate from deadline
+                      prizeDescription={challenge.prizeDescription}
+                      winnerKarmaReward={challenge.winnerKarmaReward}
+                      isFeatured={challenge.isFeatured}
+                      userHasJoined={challenge.currentUserIsParticipant}
                       onClick={() => router.push(`/challenges/${challenge.id}`)}
                     />
                   ))}
                 </div>
               ) : (
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <Users className="w-12 h-12 text-gray-600 mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-2">No Open Competitions</h3>
-                    <p className="text-gray-400">New competitions will be announced soon!</p>
-                  </CardContent>
-                </Card>
+                <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+                  <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">No Open Challenges</h3>
+                  <p className="text-gray-500">New challenges will be announced soon!</p>
+                </div>
               )}
             </section>
+          </div>
 
-            {/* Featured Prompts */}
-            <section>
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-pink-500/10">
-                    <Target className="w-5 h-5 text-pink-400" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-white">Challenge Themes</h2>
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            {/* Leaderboard Card */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-accent-peach" />
+                  <h3 className="font-bold text-gray-900">Top Challengers</h3>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-500 text-xs"
+                  onClick={() => router.push("/leaderboard?mode=challenges")}
+                >
+                  View All
+                </Button>
               </div>
 
               {loading ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className="h-32 w-full" />
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="h-12 rounded-lg bg-gray-100 animate-pulse" />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {prompts.slice(0, 8).map((prompt) => (
-                    <PromptCard key={prompt.id} prompt={prompt} />
+                <div className="space-y-2">
+                  {leaderboard.map((entry, index) => (
+                    <LeaderboardRow key={entry.userId} entry={entry} rank={index + 1} />
                   ))}
                 </div>
               )}
-            </section>
-          </div>
+            </div>
 
-          {/* Right Column - Stats & Leaderboard */}
-          <div className="space-y-6">
-            {/* User Stats */}
-            {isAuthenticated && myStats && (
-              <Card className="bg-white/5 border-white/10">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-white flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-yellow-400" />
-                    Your Challenge Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <StatItem label="Wins" value={myStats.challengesWon} icon={Crown} color="text-yellow-400" />
-                    <StatItem label="Win Rate" value={`${myStats.winRate}%`} icon={Target} color="text-green-400" />
-                    <StatItem label="Streak" value={myStats.currentStreak} icon={Flame} color="text-orange-400" />
-                    <StatItem label="Best Streak" value={myStats.bestStreak} icon={Star} color="text-purple-400" />
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-4 border-white/20 text-white hover:bg-white/10"
-                    onClick={() => router.push("/profile?tab=challenges")}
-                  >
-                    View Full Stats
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            {/* How It Works Card */}
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-4">How It Works</h3>
+              <div className="space-y-4">
+                <HowItWorksItem
+                  icon={Swords}
+                  title="1v1 Battles"
+                  description="Platform selects creators for head-to-head battles"
+                  color="text-accent-blue"
+                  bg="bg-accent-blue/10"
+                />
+                <HowItWorksItem
+                  icon={Users}
+                  title="Open Challenges"
+                  description="Join community-wide competitions freely"
+                  color="text-accent-peach"
+                  bg="bg-accent-peach/10"
+                />
+                <HowItWorksItem
+                  icon={Trophy}
+                  title="Win Karma"
+                  description="Winners earn karma and climb the leaderboard"
+                  color="text-accent-sage"
+                  bg="bg-accent-sage/10"
+                />
+              </div>
+            </div>
 
-            {/* Leaderboard */}
-            <Card className="bg-white/5 border-white/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-white flex items-center gap-2">
-                  <Medal className="w-5 h-5 text-orange-400" />
-                  Top Challengers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <Skeleton className="w-6 h-6 rounded-full" />
-                        <Skeleton className="w-8 h-8 rounded-full" />
-                        <div className="flex-1">
-                          <Skeleton className="h-4 w-24 mb-1" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {leaderboard.map((entry) => (
-                      <LeaderboardRow key={entry.userId} entry={entry} />
-                    ))}
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  className="w-full mt-4 text-gray-400 hover:text-white"
-                  onClick={() => router.push("/leaderboard?mode=challenges")}
-                >
-                  View Full Leaderboard <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Info Card */}
-            <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">How Challenges Work</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-orange-500/20">
-                      <Award className="w-4 h-4 text-orange-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-white">1v1 Challenges</h4>
-                      <p className="text-xs text-gray-400">Platform selects two creators to compete head-to-head</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/20">
-                      <Users className="w-4 h-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-white">Open Competitions</h4>
-                      <p className="text-xs text-gray-400">Anyone can join and compete for top spots</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-green-500/20">
-                      <Trophy className="w-4 h-4 text-green-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-white">Earn Karma</h4>
-                      <p className="text-xs text-gray-400">Winners receive karma rewards and climb the leaderboard</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            {/* CTA Card */}
+            <div className="bg-gradient-to-br from-accent-blue to-purple-500 rounded-2xl p-5 text-white">
+              <Zap className="w-8 h-8 mb-3" />
+              <h3 className="font-bold text-lg mb-2">Ready to Compete?</h3>
+              <p className="text-sm text-white/80 mb-4">
+                Build your portfolio by participating in creative challenges.
+              </p>
+              <Button
+                variant="secondary"
+                className="w-full bg-white text-accent-blue hover:bg-white/90"
+                onClick={() => router.push("/challenges")}
+              >
+                Browse All Challenges
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
   );
 }
 
-// ==================== Sub-components ====================
-
-function ChallengeCard({ challenge, onClick }: { challenge: Challenge; onClick: () => void }) {
-  const timeRemaining = challenge.votingDeadline ? getTimeRemaining(challenge.votingDeadline) : null;
-  const contentInfo = getContentTypeInfo(challenge.contentType);
-  const typeInfo = getChallengeTypeInfo(challenge.challengeType);
-  const Icon = contentTypeIcons[challenge.contentType];
-
-  return (
-    <Card
-      className="bg-white/5 border-white/10 hover:border-purple-500/50 transition-all cursor-pointer group"
-      onClick={onClick}
-    >
-      <CardContent className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className={cn("text-xs", contentInfo.color, "bg-white/10")}>
-              <Icon className="w-3 h-3 mr-1" />
-              {contentInfo.label}
-            </Badge>
-            <Badge variant="secondary" className="text-xs bg-purple-500/20 text-purple-300">
-              {typeInfo.label}
-            </Badge>
-          </div>
-          {timeRemaining && !timeRemaining.isExpired && (
-            <div className="flex items-center gap-1 text-xs text-gray-400">
-              <Clock className="w-3 h-3" />
-              {timeRemaining.days > 0
-                ? `${timeRemaining.days}d ${timeRemaining.hours}h`
-                : `${timeRemaining.hours}h ${timeRemaining.minutes}m`}
-            </div>
-          )}
-        </div>
-
-        {/* Title */}
-        <h3 className="font-medium text-white mb-3 line-clamp-2 group-hover:text-purple-400 transition-colors">
-          {challenge.title}
-        </h3>
-
-        {/* 1v1 Participants */}
-        {challenge.challengeType === "one_on_one" && (
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Avatar className="w-8 h-8 border-2 border-blue-500">
-                <AvatarImage src={challenge.participant1Avatar} />
-                <AvatarFallback className="bg-blue-500/20 text-blue-400 text-xs">
-                  {challenge.participant1Name?.[0]?.toUpperCase() || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-gray-400">vs</span>
-              <Avatar className="w-8 h-8 border-2 border-red-500">
-                <AvatarImage src={challenge.participant2Avatar} />
-                <AvatarFallback className="bg-red-500/20 text-red-400 text-xs">
-                  {challenge.participant2Name?.[0]?.toUpperCase() || "?"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium text-white">{challenge.totalVotes}</div>
-              <div className="text-xs text-gray-500">votes</div>
-            </div>
-          </div>
-        )}
-
-        {/* Category Challenge Stats */}
-        {challenge.challengeType === "category" && (
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Users className="w-4 h-4" />
-              {challenge.totalEntries} entries
-            </div>
-            <div className="text-right">
-              <div className="text-sm font-medium text-white">{challenge.totalVotes}</div>
-              <div className="text-xs text-gray-500">votes</div>
-            </div>
-          </div>
-        )}
-
-        {/* Vote CTA */}
-        <Button size="sm" className="w-full bg-purple-500/20 text-purple-300 hover:bg-purple-500/30">
-          <Zap className="w-4 h-4 mr-2" />
-          Cast Your Vote
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function OpenChallengeCard({ challenge, onClick }: { challenge: Challenge; onClick: () => void }) {
-  const timeRemaining = challenge.submissionDeadline ? getTimeRemaining(challenge.submissionDeadline) : null;
-  const contentInfo = getContentTypeInfo(challenge.contentType);
-  const Icon = contentTypeIcons[challenge.contentType];
-
-  return (
-    <Card
-      className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20 hover:border-blue-400/50 transition-all cursor-pointer group"
-      onClick={onClick}
-    >
-      <CardContent className="p-6">
-        {/* Badge */}
-        <div className="flex items-center justify-between mb-4">
-          <Badge variant="secondary" className={cn("text-xs", contentInfo.color, "bg-white/10")}>
-            <Icon className="w-3 h-3 mr-1" />
-            {contentInfo.label}
-          </Badge>
-          {challenge.isFeatured && (
-            <Badge className="bg-yellow-500 text-black text-xs">
-              <Star className="w-3 h-3 mr-1" />
-              Featured
-            </Badge>
-          )}
-        </div>
-
-        {/* Title & Description */}
-        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors">
-          {challenge.title}
-        </h3>
-        {challenge.description && (
-          <p className="text-sm text-gray-400 mb-4 line-clamp-2">{challenge.description}</p>
-        )}
-
-        {/* Stats */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4 text-sm text-gray-400">
-            <span className="flex items-center gap-1">
-              <Users className="w-4 h-4" />
-              {challenge.totalEntries} entries
-            </span>
-            {timeRemaining && !timeRemaining.isExpired && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                {timeRemaining.days > 0
-                  ? `${timeRemaining.days}d left`
-                  : `${timeRemaining.hours}h left`}
-              </span>
-            )}
-          </div>
-          {challenge.maxWinners > 1 && (
-            <Badge variant="secondary" className="bg-green-500/20 text-green-300 text-xs">
-              Top {challenge.maxWinners} win
-            </Badge>
-          )}
-        </div>
-
-        {/* Join CTA */}
-        <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-          <Users className="w-4 h-4 mr-2" />
-          Join Competition
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PromptCard({ prompt }: { prompt: ChallengePrompt }) {
-  const Icon = contentTypeIcons[prompt.contentType];
-  const info = getContentTypeInfo(prompt.contentType);
-
-  return (
-    <Card className="bg-white/5 border-white/10 hover:border-pink-500/50 transition-all cursor-pointer group">
-      <CardContent className="p-4">
-        <div className={cn("p-2 rounded-lg w-fit mb-3", "bg-white/5")}>
-          <Icon className={cn("w-5 h-5", info.color)} />
-        </div>
-        <h4 className="font-medium text-white text-sm mb-1 line-clamp-2 group-hover:text-pink-400 transition-colors">
-          {prompt.title}
-        </h4>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Badge variant="neutral" className="text-[10px] px-1.5 py-0 bg-transparent border border-white/10">
-            {prompt.difficulty}
-          </Badge>
-          <span>{prompt.timesUsed} uses</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// Sub-components
 
 function StatItem({
-  label,
-  value,
   icon: Icon,
+  value,
+  label,
   color,
 }: {
-  label: string;
-  value: string | number;
   icon: React.ComponentType<{ className?: string }>;
+  value: string | number;
+  label: string;
   color: string;
 }) {
   return (
-    <div className="text-center p-3 rounded-lg bg-white/5">
+    <div className="text-center">
       <Icon className={cn("w-5 h-5 mx-auto mb-1", color)} />
-      <div className="text-lg font-bold text-white">{value}</div>
+      <div className="text-xl font-bold text-gray-900">{value}</div>
       <div className="text-xs text-gray-500">{label}</div>
     </div>
   );
 }
 
-function LeaderboardRow({ entry }: { entry: ChallengeLeaderboardEntry }) {
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-400" />;
-    if (rank === 2) return <Medal className="w-5 h-5 text-gray-300" />;
-    if (rank === 3) return <Medal className="w-5 h-5 text-orange-400" />;
-    return <span className="w-5 h-5 flex items-center justify-center text-sm text-gray-500">{rank}</span>;
+function LeaderboardRow({ entry, rank }: { entry: ChallengeLeaderboardEntry; rank: number }) {
+  const getRankStyle = (rank: number) => {
+    if (rank === 1) return { icon: Crown, color: "text-yellow-500", bg: "bg-yellow-50" };
+    if (rank === 2) return { icon: Medal, color: "text-gray-400", bg: "bg-gray-50" };
+    if (rank === 3) return { icon: Medal, color: "text-orange-400", bg: "bg-orange-50" };
+    return { icon: null, color: "text-gray-400", bg: "bg-gray-50" };
   };
 
+  const style = getRankStyle(rank);
+  const RankIcon = style.icon;
+
   return (
-    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-      <div className="w-6 flex justify-center">{getRankIcon(entry.rank)}</div>
-      <Avatar className="w-8 h-8">
+    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
+      <div className={cn("w-7 h-7 rounded-full flex items-center justify-center", style.bg)}>
+        {RankIcon ? (
+          <RankIcon className={cn("w-4 h-4", style.color)} />
+        ) : (
+          <span className={cn("text-xs font-bold", style.color)}>{rank}</span>
+        )}
+      </div>
+      <Avatar className="w-8 h-8 border border-gray-100">
         <AvatarImage src={entry.userAvatar} />
-        <AvatarFallback className="bg-white/10 text-white text-xs">
+        <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
           {entry.userName[0]?.toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-white truncate">{entry.userName}</div>
-        <div className="text-xs text-gray-500">{entry.challengesWon} wins</div>
+        <p className="font-medium text-gray-900 text-sm truncate">{entry.userName}</p>
       </div>
-      <div className="text-right">
-        <div className="text-sm font-medium text-green-400">{entry.winRate}%</div>
+      <div className="text-xs font-medium text-accent-sage">{entry.winRate}%</div>
+    </div>
+  );
+}
+
+function HowItWorksItem({
+  icon: Icon,
+  title,
+  description,
+  color,
+  bg,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  color: string;
+  bg: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className={cn("p-2 rounded-lg flex-shrink-0", bg)}>
+        <Icon className={cn("w-4 h-4", color)} />
+      </div>
+      <div>
+        <p className="font-medium text-gray-900 text-sm">{title}</p>
+        <p className="text-xs text-gray-500">{description}</p>
       </div>
     </div>
   );

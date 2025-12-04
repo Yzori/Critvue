@@ -5,7 +5,7 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field, field_validator
 
 from app.models.review_request import ContentType
-from app.models.challenge import ChallengeStatus, ChallengeType
+from app.models.challenge import ChallengeStatus, ChallengeType, InvitationMode
 from app.models.challenge_prompt import PromptDifficulty
 from app.models.challenge_invitation import InvitationStatus
 
@@ -222,6 +222,12 @@ class ChallengeCreateAdmin(ChallengeBase):
     submission_hours: int = Field(default=72, ge=24, le=168)
     voting_hours: int = Field(default=48, ge=24, le=96)
 
+    # 1v1-specific: how participants are selected
+    invitation_mode: InvitationMode = Field(
+        default=InvitationMode.ADMIN_CURATED,
+        description="For 1v1: admin_curated (invite specific users) or open_slots (first-come-first-served)"
+    )
+
     # Category-specific
     max_winners: int = Field(default=1, ge=1, le=10, description="Number of winners (for category challenges)")
 
@@ -270,6 +276,13 @@ class ChallengeResponse(ChallengeBase):
     winner_id: Optional[int] = None
     participant1_votes: int = 0
     participant2_votes: int = 0
+
+    # 1v1 invitation mode
+    invitation_mode: InvitationMode = InvitationMode.ADMIN_CURATED
+    slots_open_at: Optional[datetime] = None
+    slots_close_at: Optional[datetime] = None
+    has_open_slots: bool = False  # Computed property
+    available_slots: int = 0      # Computed property
 
     # Display
     is_featured: bool = False
@@ -415,3 +428,51 @@ class ReplaceInvitationRequest(BaseModel):
     """Schema for replacing a declined invitation"""
     new_user_id: int = Field(..., description="User ID of the replacement invitee")
     message: Optional[str] = Field(None, max_length=500, description="Optional invitation message")
+
+
+# ===== Open Slots Schemas =====
+
+class OpenSlotsRequest(BaseModel):
+    """Schema for opening slots for a 1v1 challenge"""
+    duration_hours: int = Field(
+        default=24,
+        ge=1,
+        le=168,
+        description="How long slots remain open for claiming (1-168 hours)"
+    )
+
+
+class SlotClaimResponse(BaseModel):
+    """Schema for slot claim response"""
+    challenge_id: int
+    user_id: int
+    slot: int  # 1 or 2
+    claimed_at: datetime
+    challenge_activated: bool  # True if this claim filled both slots and activated the challenge
+
+    class Config:
+        from_attributes = True
+
+
+class OpenSlotChallengeResponse(BaseModel):
+    """Schema for challenge with open slots (simplified for listing)"""
+    id: int
+    title: str
+    description: Optional[str] = None
+    content_type: ContentType
+    prompt: Optional[ChallengePromptResponse] = None
+    available_slots: int
+    slots_close_at: Optional[datetime] = None
+    submission_hours: int
+    voting_hours: int
+    prize_description: Optional[str] = None
+    winner_karma_reward: Optional[int] = None
+    is_featured: bool = False
+
+    # Who's already claimed a slot
+    participant1_id: Optional[int] = None
+    participant1_name: Optional[str] = None
+    participant1_avatar: Optional[str] = None
+
+    class Config:
+        from_attributes = True

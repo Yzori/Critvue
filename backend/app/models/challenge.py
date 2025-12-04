@@ -46,6 +46,12 @@ class ChallengeType(str, enum.Enum):
     CATEGORY = "category"          # Open category challenge
 
 
+class InvitationMode(str, enum.Enum):
+    """How participants are selected for 1v1 challenges"""
+    ADMIN_CURATED = "admin_curated"  # Admin invites specific users
+    OPEN_SLOTS = "open_slots"        # First-come-first-served claiming
+
+
 class Challenge(Base):
     """
     Challenge model for platform-curated creative competitions.
@@ -105,6 +111,18 @@ class Challenge(Base):
     submission_deadline = Column(DateTime, nullable=True)
     voting_deadline = Column(DateTime, nullable=True)
 
+    # 1v1 invitation mode (how participants are selected)
+    invitation_mode = Column(
+        Enum(InvitationMode, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=InvitationMode.ADMIN_CURATED,
+        index=True
+    )
+
+    # Open slots timing (for OPEN_SLOTS mode)
+    slots_open_at = Column(DateTime, nullable=True)   # When slots become claimable
+    slots_close_at = Column(DateTime, nullable=True)  # Deadline to claim slots
+
     # Category-specific: number of winners
     max_winners = Column(Integer, default=1, nullable=False)
 
@@ -158,6 +176,7 @@ class Challenge(Base):
     __table_args__ = (
         Index('idx_challenge_status_type', 'status', 'challenge_type'),
         Index('idx_challenge_status_content', 'status', 'content_type'),
+        Index('idx_challenge_open_slots', 'status', 'challenge_type', 'invitation_mode'),
     )
 
     # Relationships
@@ -262,3 +281,26 @@ class Challenge(Base):
     def is_close_match(self) -> bool:
         """Check if the match is close (within 5% margin) - for 1v1"""
         return self.vote_margin_percentage <= 5.0
+
+    @property
+    def has_open_slots(self) -> bool:
+        """Check if challenge has claimable slots (open slots 1v1 only)"""
+        if not self.is_one_on_one:
+            return False
+        if self.invitation_mode != InvitationMode.OPEN_SLOTS:
+            return False
+        if self.status != ChallengeStatus.OPEN:
+            return False
+        if self.slots_close_at and datetime.utcnow() > self.slots_close_at:
+            return False
+        # Check how many slots are taken
+        slots_taken = sum([1 for p in [self.participant1_id, self.participant2_id] if p is not None])
+        return slots_taken < 2
+
+    @property
+    def available_slots(self) -> int:
+        """Get number of available slots for open slots 1v1"""
+        if not self.is_one_on_one or self.invitation_mode != InvitationMode.OPEN_SLOTS:
+            return 0
+        slots_taken = sum([1 for p in [self.participant1_id, self.participant2_id] if p is not None])
+        return 2 - slots_taken

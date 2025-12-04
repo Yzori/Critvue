@@ -20,6 +20,7 @@ export type ChallengeStatus = 'draft' | 'inviting' | 'open' | 'active' | 'voting
 export type ChallengeType = 'one_on_one' | 'category';
 export type PromptDifficulty = 'beginner' | 'intermediate' | 'advanced';
 export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'replaced';
+export type InvitationMode = 'admin_curated' | 'open_slots';
 
 // ==================== Types ====================
 
@@ -115,6 +116,13 @@ export interface Challenge {
   winnerId?: number;
   participant1Votes: number;
   participant2Votes: number;
+  // Open slots mode for 1v1
+  invitationMode: InvitationMode;
+  slotsOpenAt?: string;
+  slotsCloseAt?: string;
+  hasOpenSlots: boolean;
+  availableSlots: number;
+  // Display
   isFeatured: boolean;
   bannerImageUrl?: string;
   prizeDescription?: string;
@@ -184,6 +192,33 @@ export interface ChallengeLeaderboardResponse {
   currentUserRank?: number;
 }
 
+// Open Slots types
+export interface OpenSlotChallenge {
+  id: number;
+  title: string;
+  description?: string;
+  contentType: ContentType;
+  prompt?: ChallengePrompt;
+  availableSlots: number;
+  slotsCloseAt?: string;
+  submissionHours: number;
+  votingHours: number;
+  prizeDescription?: string;
+  winnerKarmaReward?: number;
+  isFeatured: boolean;
+  participant1Id?: number;
+  participant1Name?: string;
+  participant1Avatar?: string;
+}
+
+export interface SlotClaimResponse {
+  challengeId: number;
+  userId: number;
+  slot: number;
+  claimedAt: string;
+  challengeActivated: boolean;
+}
+
 // ==================== API Request Types ====================
 
 export interface CreateChallengeRequest {
@@ -195,6 +230,7 @@ export interface CreateChallengeRequest {
   submissionHours?: number;
   votingHours?: number;
   maxWinners?: number;
+  invitationMode?: InvitationMode; // For 1v1: admin_curated or open_slots
   isFeatured?: boolean;
   bannerImageUrl?: string;
   prizeDescription?: string;
@@ -311,6 +347,13 @@ interface ApiChallenge {
   winner_id?: number;
   participant1_votes: number;
   participant2_votes: number;
+  // Open slots mode
+  invitation_mode: string;
+  slots_open_at?: string;
+  slots_close_at?: string;
+  has_open_slots: boolean;
+  available_slots: number;
+  // Display
   is_featured: boolean;
   banner_image_url?: string;
   prize_description?: string;
@@ -395,6 +438,32 @@ interface ApiChallengeVoteStats {
   participant1_percentage?: number;
   participant2_percentage?: number;
   top_entries?: Array<{ entry_id: number; user_id: number; votes: number }>;
+}
+
+interface ApiOpenSlotChallenge {
+  id: number;
+  title: string;
+  description?: string;
+  content_type: string;
+  prompt?: ApiChallengePrompt;
+  available_slots: number;
+  slots_close_at?: string;
+  submission_hours: number;
+  voting_hours: number;
+  prize_description?: string;
+  winner_karma_reward?: number;
+  is_featured: boolean;
+  participant1_id?: number;
+  participant1_name?: string;
+  participant1_avatar?: string;
+}
+
+interface ApiSlotClaimResponse {
+  challenge_id: number;
+  user_id: number;
+  slot: number;
+  claimed_at: string;
+  challenge_activated: boolean;
 }
 
 // ==================== Transform Functions ====================
@@ -483,6 +552,13 @@ function transformChallenge(api: ApiChallenge): Challenge {
     winnerId: api.winner_id,
     participant1Votes: api.participant1_votes,
     participant2Votes: api.participant2_votes,
+    // Open slots mode
+    invitationMode: api.invitation_mode as InvitationMode,
+    slotsOpenAt: api.slots_open_at,
+    slotsCloseAt: api.slots_close_at,
+    hasOpenSlots: api.has_open_slots,
+    availableSlots: api.available_slots,
+    // Display
     isFeatured: api.is_featured,
     bannerImageUrl: api.banner_image_url,
     prizeDescription: api.prize_description,
@@ -507,6 +583,26 @@ function transformChallenge(api: ApiChallenge): Challenge {
     currentUserVoteEntryId: api.current_user_vote_entry_id,
     currentUserInvitation: api.current_user_invitation ? transformInvitation(api.current_user_invitation) : undefined,
     currentUserIsParticipant: api.current_user_is_participant,
+  };
+}
+
+function transformOpenSlotChallenge(api: ApiOpenSlotChallenge): OpenSlotChallenge {
+  return {
+    id: api.id,
+    title: api.title,
+    description: api.description,
+    contentType: api.content_type as ContentType,
+    prompt: api.prompt ? transformPrompt(api.prompt) : undefined,
+    availableSlots: api.available_slots,
+    slotsCloseAt: api.slots_close_at,
+    submissionHours: api.submission_hours,
+    votingHours: api.voting_hours,
+    prizeDescription: api.prize_description,
+    winnerKarmaReward: api.winner_karma_reward,
+    isFeatured: api.is_featured,
+    participant1Id: api.participant1_id,
+    participant1Name: api.participant1_name,
+    participant1Avatar: api.participant1_avatar,
   };
 }
 
@@ -608,6 +704,7 @@ export async function createChallenge(data: CreateChallengeRequest): Promise<Cha
     submission_hours: data.submissionHours || 72,
     voting_hours: data.votingHours || 48,
     max_winners: data.maxWinners || 1,
+    invitation_mode: data.invitationMode || 'admin_curated',
     is_featured: data.isFeatured || false,
     banner_image_url: data.bannerImageUrl,
     prize_description: data.prizeDescription,
@@ -709,6 +806,57 @@ export async function completeChallenge(challengeId: number): Promise<Challenge>
     `/challenges/admin/${challengeId}/complete`
   );
   return transformChallenge(response);
+}
+
+/**
+ * Open slots for a 1v1 challenge (admin only)
+ * Makes the challenge available for first-come-first-served slot claiming
+ */
+export async function openChallengeSlots(
+  challengeId: number,
+  durationHours: number = 24
+): Promise<Challenge> {
+  const response = await apiClient.post<ApiChallenge>(
+    `/challenges/admin/${challengeId}/open-slots`,
+    { duration_hours: durationHours }
+  );
+  return transformChallenge(response);
+}
+
+// ==================== API Functions - Open Slots ====================
+
+/**
+ * Get 1v1 challenges with available slots for claiming
+ */
+export async function getOpenSlotChallenges(
+  contentType?: ContentType,
+  limit: number = 20
+): Promise<OpenSlotChallenge[]> {
+  const params = new URLSearchParams();
+  if (contentType) params.append('content_type', contentType);
+  params.append('limit', limit.toString());
+
+  const response = await apiClient.get<ApiOpenSlotChallenge[]>(
+    `/challenges/open-slots?${params.toString()}`
+  );
+  return response.map(transformOpenSlotChallenge);
+}
+
+/**
+ * Claim a slot in an open slots 1v1 challenge
+ * Auto-activates the challenge when both slots are filled
+ */
+export async function claimChallengeSlot(challengeId: number): Promise<SlotClaimResponse> {
+  const response = await apiClient.post<ApiSlotClaimResponse>(
+    `/challenges/${challengeId}/claim-slot`
+  );
+  return {
+    challengeId: response.challenge_id,
+    userId: response.user_id,
+    slot: response.slot,
+    claimedAt: response.claimed_at,
+    challengeActivated: response.challenge_activated,
+  };
 }
 
 // ==================== API Functions - Public Challenges ====================

@@ -144,6 +144,18 @@ class User(Base):
     challenge_win_streak = Column(Integer, default=0, nullable=False, server_default='0')
     best_challenge_streak = Column(Integer, default=0, nullable=False, server_default='0')
 
+    # Moderation fields
+    is_banned = Column(Boolean, default=False, nullable=False, server_default='0')
+    banned_at = Column(DateTime, nullable=True)
+    banned_by_id = Column(Integer, nullable=True)  # Admin user ID who banned
+    ban_reason = Column(Text, nullable=True)
+
+    is_suspended = Column(Boolean, default=False, nullable=False, server_default='0')
+    suspended_until = Column(DateTime, nullable=True)
+    suspended_at = Column(DateTime, nullable=True)
+    suspended_by_id = Column(Integer, nullable=True)  # Admin user ID who suspended
+    suspension_reason = Column(Text, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

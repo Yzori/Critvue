@@ -32,6 +32,9 @@ from app.schemas.challenge import (
     InvitationRespondRequest,
     ChallengeParticipantResponse,
     ReplaceInvitationRequest,
+    OpenSlotsRequest,
+    SlotClaimResponse,
+    OpenSlotChallengeResponse,
 )
 from app.services.challenge_service import ChallengeService
 from app.core.logging_config import security_logger
@@ -218,6 +221,11 @@ def _build_challenge_response(
         winner_id=challenge.winner_id,
         participant1_votes=challenge.participant1_votes if challenge.status in [ChallengeStatus.COMPLETED, ChallengeStatus.DRAW] else 0,
         participant2_votes=challenge.participant2_votes if challenge.status in [ChallengeStatus.COMPLETED, ChallengeStatus.DRAW] else 0,
+        invitation_mode=challenge.invitation_mode,
+        slots_open_at=challenge.slots_open_at,
+        slots_close_at=challenge.slots_close_at,
+        has_open_slots=challenge.has_open_slots,
+        available_slots=challenge.available_slots,
         is_featured=challenge.is_featured,
         banner_image_url=challenge.banner_image_url,
         prize_description=challenge.prize_description,
@@ -455,7 +463,8 @@ async def create_challenge(
             max_winners=challenge_data.max_winners,
             is_featured=challenge_data.is_featured,
             banner_image_url=challenge_data.banner_image_url,
-            prize_description=challenge_data.prize_description
+            prize_description=challenge_data.prize_description,
+            invitation_mode=challenge_data.invitation_mode
         )
 
         security_logger.logger.info(
@@ -670,6 +679,40 @@ async def open_challenge(
 
 
 @router.post(
+    "/admin/{challenge_id}/open-slots",
+    response_model=ChallengeResponse,
+    summary="Open slots for a 1v1 challenge (Admin only)"
+)
+async def open_challenge_slots(
+    slots_data: OpenSlotsRequest,
+    challenge_id: int = PathParam(..., ge=1, description="Challenge ID"),
+    admin_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+) -> ChallengeResponse:
+    """Open slots for first-come-first-served claiming on a 1v1 challenge (Admin only)."""
+    try:
+        service = ChallengeService(db)
+        challenge = await service.open_challenge_slots(
+            challenge_id=challenge_id,
+            duration_hours=slots_data.duration_hours
+        )
+
+        security_logger.logger.info(
+            f"Challenge slots opened: id={challenge_id}, duration={slots_data.duration_hours}h, by admin={admin_user.email}"
+        )
+
+        return _build_challenge_response(challenge, admin_user.id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        security_logger.logger.error(f"Failed to open challenge slots: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to open challenge slots"
+        )
+
+
+@router.post(
     "/admin/{challenge_id}/close-submissions",
     response_model=ChallengeResponse,
     summary="Close submissions and start voting (Admin only)"
@@ -773,6 +816,113 @@ async def get_challenges(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve challenges"
+        )
+
+
+@router.get(
+    "/open-slots",
+    response_model=List[OpenSlotChallengeResponse],
+    summary="Get 1v1 challenges with available slots"
+)
+async def get_open_slot_challenges(
+    content_type: Optional[ContentType] = Query(None, description="Filter by content type"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number"),
+    db: AsyncSession = Depends(get_db)
+) -> List[OpenSlotChallengeResponse]:
+    """Get 1v1 challenges with available slots for claiming."""
+    try:
+        service = ChallengeService(db)
+        challenges = await service.get_open_slot_challenges(
+            content_type=content_type,
+            limit=limit
+        )
+
+        responses = []
+        for c in challenges:
+            participant1_name = None
+            participant1_avatar = None
+            if c.participant1:
+                participant1_name = c.participant1.full_name or c.participant1.email.split('@')[0]
+                participant1_avatar = c.participant1.avatar_url
+
+            # Build prompt response
+            prompt_response = None
+            if c.prompt:
+                prompt_response = ChallengePromptResponse(
+                    id=c.prompt.id,
+                    title=c.prompt.title,
+                    description=c.prompt.description,
+                    content_type=c.prompt.content_type,
+                    difficulty=c.prompt.difficulty,
+                    is_active=c.prompt.is_active,
+                    times_used=c.prompt.times_used,
+                    created_at=c.prompt.created_at
+                )
+
+            responses.append(OpenSlotChallengeResponse(
+                id=c.id,
+                title=c.title,
+                description=c.description,
+                content_type=c.content_type,
+                prompt=prompt_response,
+                available_slots=c.available_slots,
+                slots_close_at=c.slots_close_at,
+                submission_hours=c.submission_hours,
+                voting_hours=c.voting_hours,
+                prize_description=c.prize_description,
+                winner_karma_reward=c.winner_karma_reward,
+                is_featured=c.is_featured,
+                participant1_id=c.participant1_id,
+                participant1_name=participant1_name,
+                participant1_avatar=participant1_avatar
+            ))
+
+        return responses
+    except Exception as e:
+        security_logger.logger.error(f"Failed to get open slot challenges: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve open slot challenges"
+        )
+
+
+@router.post(
+    "/{challenge_id}/claim-slot",
+    response_model=SlotClaimResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Claim a slot in an open slots 1v1 challenge"
+)
+async def claim_challenge_slot(
+    challenge_id: int = PathParam(..., ge=1, description="Challenge ID"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> SlotClaimResponse:
+    """Claim a slot in an open slots 1v1 challenge. Auto-activates when both slots are filled."""
+    try:
+        service = ChallengeService(db)
+        result = await service.claim_challenge_slot(
+            challenge_id=challenge_id,
+            user_id=current_user.id
+        )
+
+        security_logger.logger.info(
+            f"Slot claimed: challenge={challenge_id}, slot={result['slot']}, user={current_user.email}, activated={result['challenge_activated']}"
+        )
+
+        return SlotClaimResponse(
+            challenge_id=result["challenge_id"],
+            user_id=result["user_id"],
+            slot=result["slot"],
+            claimed_at=result["claimed_at"],
+            challenge_activated=result["challenge_activated"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        security_logger.logger.error(f"Failed to claim slot: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to claim slot"
         )
 
 

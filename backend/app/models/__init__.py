@@ -32,6 +32,8 @@ from app.models.challenge_entry import ChallengeEntry
 from app.models.challenge_vote import ChallengeVote
 from app.models.challenge_invitation import ChallengeInvitation, InvitationStatus
 from app.models.challenge_participant import ChallengeParticipant
+# Admin audit system
+from app.models.admin_audit_log import AdminAuditLog, AdminAction
 
 __all__ = [
     "User",
@@ -94,4 +96,7 @@ __all__ = [
     "ChallengeInvitation",
     "InvitationStatus",
     "ChallengeParticipant",
+    # Admin audit system
+    "AdminAuditLog",
+    "AdminAction",
 ]

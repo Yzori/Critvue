@@ -40,6 +40,7 @@ async def get_committee_member(
 ) -> CommitteeMember:
     """
     Dependency to verify current user is an active committee member.
+    Admins are auto-enrolled as committee members if not already.
     """
     stmt = select(CommitteeMember).where(
         CommitteeMember.user_id == current_user.id,
@@ -49,10 +50,22 @@ async def get_committee_member(
     member = result.scalar_one_or_none()
 
     if not member:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not a committee member"
-        )
+        # Auto-create committee membership for admins
+        if current_user.role == UserRole.ADMIN:
+            member = CommitteeMember(
+                user_id=current_user.id,
+                is_active=True,
+                role="admin"  # ADMIN role has full approval power
+            )
+            db.add(member)
+            await db.commit()
+            await db.refresh(member)
+            logger.info(f"Auto-created committee membership for admin user {current_user.id}")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not a committee member"
+            )
 
     return member
 

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -27,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -61,21 +63,298 @@ import {
   Award,
   Plus,
   Upload,
+  ArrowRight,
+  Star,
 } from "lucide-react";
 
-// Content type icons
-const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: string }>> = {
-  design: Palette,
-  code: Code,
-  video: Video,
-  stream: Radio,
-  audio: Headphones,
-  writing: FileText,
-  art: Brush,
+// Content type icons and config
+const contentTypeConfig: Record<ContentType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
+  design: { icon: Palette, color: "text-accent-blue", bg: "bg-accent-blue/10" },
+  code: { icon: Code, color: "text-accent-sage", bg: "bg-accent-sage/10" },
+  video: { icon: Video, color: "text-red-500", bg: "bg-red-50" },
+  audio: { icon: Headphones, color: "text-accent-peach", bg: "bg-accent-peach/10" },
+  writing: { icon: FileText, color: "text-blue-500", bg: "bg-blue-50" },
+  art: { icon: Brush, color: "text-purple-500", bg: "bg-purple-50" },
+  stream: { icon: Radio, color: "text-pink-500", bg: "bg-pink-50" },
+};
+
+const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
+  draft: { label: "Draft", color: "text-gray-500", bg: "bg-gray-100" },
+  inviting: { label: "Inviting", color: "text-blue-500", bg: "bg-blue-50" },
+  open: { label: "Open for Entries", color: "text-accent-sage", bg: "bg-accent-sage/10" },
+  active: { label: "Submissions Open", color: "text-accent-blue", bg: "bg-accent-blue/10" },
+  voting: { label: "Voting", color: "text-accent-peach", bg: "bg-accent-peach/10" },
+  completed: { label: "Completed", color: "text-gray-500", bg: "bg-gray-100" },
+  draw: { label: "Draw", color: "text-gray-500", bg: "bg-gray-100" },
+};
+
+// Mock data flag - should match the main challenges page
+const USE_MOCK_DATA = true;
+
+// Mock challenge data for demo
+const getMockChallenge = (id: number): Challenge | null => {
+  const mockChallenges: Record<number, Challenge> = {
+    1: {
+      id: 1,
+      title: "Cyberpunk UI Battle",
+      description: "Design a futuristic dashboard interface with neon aesthetics and dark themes. Show us your vision of 2077. The best designs will be featured in our showcase.",
+      challengeType: "one_on_one",
+      contentType: "design",
+      status: "voting",
+      submissionHours: 48,
+      votingHours: 24,
+      votingDeadline: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 1,
+      totalEntries: 2,
+      participant1Id: 1,
+      participant2Id: 2,
+      participant1Votes: 127,
+      participant2Votes: 98,
+      participant1Name: "PixelMaster",
+      participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster",
+      participant2Name: "NeonDreamer",
+      participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NeonDreamer",
+      isFeatured: true,
+      totalVotes: 225,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [
+        {
+          id: 1,
+          challengeId: 1,
+          userId: 1,
+          title: "Neon Dashboard Concept",
+          description: "A cyberpunk-inspired dashboard with holographic elements",
+          thumbnailUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=400&fit=crop",
+          voteCount: 127,
+          submittedAt: new Date().toISOString(),
+          userName: "PixelMaster",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=PixelMaster",
+        },
+        {
+          id: 2,
+          challengeId: 1,
+          userId: 2,
+          title: "Cyber Control Panel",
+          description: "Minimalist neon interface with dynamic data visualization",
+          thumbnailUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop",
+          voteCount: 98,
+          submittedAt: new Date().toISOString(),
+          userName: "NeonDreamer",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NeonDreamer",
+        },
+      ],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    2: {
+      id: 2,
+      title: "Algorithm Showdown",
+      description: "Implement the most elegant sorting algorithm visualization. Show creativity in how you display data transformations.",
+      challengeType: "one_on_one",
+      contentType: "code",
+      status: "voting",
+      submissionHours: 24,
+      votingHours: 12,
+      votingDeadline: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 1,
+      totalEntries: 2,
+      participant1Id: 3,
+      participant2Id: 4,
+      participant1Votes: 45,
+      participant2Votes: 52,
+      participant1Name: "CodeNinja",
+      participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CodeNinja",
+      participant2Name: "ByteWizard",
+      participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ByteWizard",
+      isFeatured: false,
+      totalVotes: 97,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [
+        {
+          id: 3,
+          challengeId: 2,
+          userId: 3,
+          title: "Bubble Sort Symphony",
+          description: "Musical visualization of bubble sort",
+          voteCount: 45,
+          submittedAt: new Date().toISOString(),
+          userName: "CodeNinja",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=CodeNinja",
+        },
+        {
+          id: 4,
+          challengeId: 2,
+          userId: 4,
+          title: "Quick Sort Galaxy",
+          description: "Space-themed quick sort visualization",
+          voteCount: 52,
+          submittedAt: new Date().toISOString(),
+          userName: "ByteWizard",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ByteWizard",
+        },
+      ],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    3: {
+      id: 3,
+      title: "Motion Magic",
+      description: "Create a mesmerizing loading animation that captivates users while they wait.",
+      challengeType: "one_on_one",
+      contentType: "design",
+      status: "voting",
+      submissionHours: 24,
+      votingHours: 12,
+      votingDeadline: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 1,
+      totalEntries: 2,
+      participant1Id: 5,
+      participant2Id: 6,
+      participant1Votes: 78,
+      participant2Votes: 65,
+      participant1Name: "AnimateX",
+      participant1Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AnimateX",
+      participant2Name: "FrameFlow",
+      participant2Avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=FrameFlow",
+      isFeatured: false,
+      totalVotes: 143,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [
+        {
+          id: 5,
+          challengeId: 3,
+          userId: 5,
+          title: "Morphing Loader",
+          description: "A smooth morphing animation",
+          voteCount: 78,
+          submittedAt: new Date().toISOString(),
+          userName: "AnimateX",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=AnimateX",
+        },
+        {
+          id: 6,
+          challengeId: 3,
+          userId: 6,
+          title: "Particle Storm",
+          description: "Dynamic particle-based loading animation",
+          voteCount: 65,
+          submittedAt: new Date().toISOString(),
+          userName: "FrameFlow",
+          userAvatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=FrameFlow",
+        },
+      ],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    101: {
+      id: 101,
+      title: "Mobile App Redesign Sprint",
+      description: "Reimagine a popular app's user experience with fresh, modern design principles. Focus on usability, accessibility, and visual appeal.",
+      challengeType: "category",
+      contentType: "design",
+      status: "open",
+      submissionHours: 72,
+      votingHours: 48,
+      submissionDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 3,
+      totalEntries: 24,
+      participant1Votes: 0,
+      participant2Votes: 0,
+      isFeatured: true,
+      totalVotes: 0,
+      winnerKarmaReward: 100,
+      prizeDescription: "Top 3 designs will be featured on our homepage",
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    102: {
+      id: 102,
+      title: "React Component Challenge",
+      description: "Build an innovative, reusable React component that solves a common problem.",
+      challengeType: "category",
+      contentType: "code",
+      status: "open",
+      submissionHours: 48,
+      votingHours: 24,
+      submissionDeadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 1,
+      totalEntries: 18,
+      participant1Votes: 0,
+      participant2Votes: 0,
+      isFeatured: false,
+      totalVotes: 0,
+      winnerKarmaReward: 75,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    103: {
+      id: 103,
+      title: "Short Film Festival",
+      description: "Create a compelling 60-second short film on the theme of 'Connection'.",
+      challengeType: "category",
+      contentType: "video",
+      status: "open",
+      submissionHours: 168,
+      votingHours: 72,
+      submissionDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 5,
+      totalEntries: 12,
+      participant1Votes: 0,
+      participant2Votes: 0,
+      isFeatured: false,
+      totalVotes: 0,
+      winnerKarmaReward: 150,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+    104: {
+      id: 104,
+      title: "Podcast Intro Battle",
+      description: "Produce a captivating 30-second podcast intro with music and voice.",
+      challengeType: "category",
+      contentType: "audio",
+      status: "voting",
+      submissionHours: 48,
+      votingHours: 24,
+      votingDeadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+      maxWinners: 1,
+      totalEntries: 8,
+      participant1Votes: 0,
+      participant2Votes: 0,
+      isFeatured: false,
+      totalVotes: 45,
+      winnerKarmaReward: 50,
+      createdAt: new Date().toISOString(),
+      createdBy: 1,
+      entries: [],
+      invitations: [],
+      currentUserVoted: false,
+      currentUserIsParticipant: false,
+    },
+  };
+  return mockChallenges[id] || null;
 };
 
 /**
- * Challenge Detail Page
+ * Challenge Detail Page - Light Theme
  *
  * Shows challenge information, entries, and voting/submission interface
  * Handles both 1v1 and category challenges
@@ -107,6 +386,30 @@ export default function ChallengeDetailPage() {
       try {
         setLoading(true);
         setError(null);
+
+        if (USE_MOCK_DATA) {
+          // Use mock data for demo
+          await new Promise((r) => setTimeout(r, 300)); // Simulate loading
+          const mockChallenge = getMockChallenge(challengeId);
+          if (mockChallenge) {
+            setChallenge(mockChallenge);
+            // Mock vote stats
+            if (["voting", "completed", "draw"].includes(mockChallenge.status)) {
+              setVoteStats({
+                totalVotes: mockChallenge.totalVotes,
+                showVoteCounts: mockChallenge.status !== "voting",
+                topEntries: mockChallenge.entries?.slice(0, 10).map((e) => ({
+                  entryId: e.id,
+                  votes: e.voteCount || 0,
+                })) || [],
+              });
+            }
+          } else {
+            setError("Challenge not found");
+          }
+          setLoading(false);
+          return;
+        }
 
         const challengeData = await getChallenge(challengeId);
         setChallenge(challengeData);
@@ -237,13 +540,13 @@ export default function ChallengeDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black p-4 md:p-8">
-        <div className="container mx-auto max-w-6xl">
-          <Skeleton className="h-8 w-32 mb-8" />
-          <Skeleton className="h-64 w-full mb-8" />
+      <div className="min-h-screen bg-[var(--background-subtle)]">
+        <div className="container mx-auto max-w-6xl p-4 md:p-8">
+          <Skeleton className="h-8 w-32 mb-8 bg-gray-200" />
+          <Skeleton className="h-64 w-full mb-8 bg-gray-200 rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Skeleton className="h-96 w-full" />
-            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-96 w-full bg-gray-200 rounded-2xl" />
+            <Skeleton className="h-96 w-full bg-gray-200 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -253,13 +556,18 @@ export default function ChallengeDetailPage() {
   // Error state
   if (error || !challenge) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center p-4">
-        <Card className="bg-white/5 border-white/10 max-w-md w-full">
+      <div className="min-h-screen bg-[var(--background-subtle)] flex items-center justify-center p-4">
+        <Card className="bg-white border-gray-100 shadow-sm max-w-md w-full">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-2">Challenge Not Found</h2>
-            <p className="text-gray-400 mb-6">{error || "This challenge doesn't exist or has been removed."}</p>
-            <Button onClick={() => router.push("/challenges")}>
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4">
+              <AlertCircle className="w-6 h-6 text-red-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Challenge Not Found</h2>
+            <p className="text-gray-500 mb-6">{error || "This challenge doesn't exist or has been removed."}</p>
+            <Button
+              className="bg-accent-blue hover:bg-accent-blue/90 text-white"
+              onClick={() => router.push("/challenges")}
+            >
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back to Challenges
             </Button>
@@ -269,10 +577,9 @@ export default function ChallengeDetailPage() {
     );
   }
 
-  const statusInfo = getChallengeStatusInfo(challenge.status);
-  const contentInfo = getContentTypeInfo(challenge.contentType);
-  const typeInfo = getChallengeTypeInfo(challenge.challengeType);
-  const ContentIcon = contentTypeIcons[challenge.contentType];
+  const typeConfig = contentTypeConfig[challenge.contentType] || contentTypeConfig.design;
+  const currentStatusConfig = statusConfig[challenge.status] || statusConfig.open;
+  const ContentIcon = typeConfig.icon;
 
   // Get deadline info
   const deadlineInfo = challenge.status === "active" && challenge.submissionDeadline
@@ -287,174 +594,257 @@ export default function ChallengeDetailPage() {
   const participant1Entry = challenge.entries.find((e) => e.userId === challenge.participant1Id);
   const participant2Entry = challenge.entries.find((e) => e.userId === challenge.participant2Id);
 
+  // Calculate vote percentages for 1v1
+  const totalVotes = (challenge.participant1Votes || 0) + (challenge.participant2Votes || 0);
+  const p1Percentage = totalVotes > 0 ? Math.round((challenge.participant1Votes || 0) / totalVotes * 100) : 50;
+  const p2Percentage = 100 - p1Percentage;
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
+    <div className="min-h-screen bg-[var(--background-subtle)]">
       <div className="container mx-auto max-w-6xl p-4 md:p-8">
         {/* Back Button */}
         <Button
           variant="ghost"
-          className="text-gray-400 hover:text-white mb-6"
+          className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 mb-6"
           onClick={() => router.push("/challenges")}
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Challenges
         </Button>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <Badge variant="secondary" className={cn("text-sm", contentInfo.color, "bg-white/10")}>
-              <ContentIcon className="w-4 h-4 mr-1" />
-              {contentInfo.label}
-            </Badge>
-            <Badge variant="secondary" className="bg-purple-500/20 text-purple-300">
-              {typeInfo.label}
-            </Badge>
-            <Badge variant="secondary" className={cn(statusInfo.color, statusInfo.bgColor)}>
-              {statusInfo.label}
-            </Badge>
-            {deadlineInfo && !deadlineInfo.isExpired && (
-              <Badge variant="neutral" className="border-white/20 text-gray-300 bg-transparent">
-                <Clock className="w-3 h-3 mr-1" />
-                {deadlineInfo.days > 0
-                  ? `${deadlineInfo.days}d ${deadlineInfo.hours}h left`
-                  : `${deadlineInfo.hours}h ${deadlineInfo.minutes}m left`}
-              </Badge>
+        {/* Header Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className={cn(
+            "bg-white border-gray-100 shadow-sm mb-6 overflow-hidden",
+            challenge.isFeatured && "ring-2 ring-accent-peach/30"
+          )}>
+            {/* Featured Banner */}
+            {challenge.isFeatured && (
+              <div className="bg-gradient-to-r from-accent-peach to-orange-500 px-4 py-2 flex items-center justify-center gap-2">
+                <Star className="w-4 h-4 text-white fill-white" />
+                <span className="text-sm font-semibold text-white">Featured Challenge</span>
+              </div>
             )}
-          </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{challenge.title}</h1>
+            <CardContent className="p-6">
+              {/* Badges Row */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className={cn("p-2 rounded-xl", typeConfig.bg)}>
+                  <ContentIcon className={cn("w-5 h-5", typeConfig.color)} />
+                </div>
+                <Badge variant="outline" className={cn("font-medium border-0", typeConfig.bg, typeConfig.color)}>
+                  {challenge.contentType.charAt(0).toUpperCase() + challenge.contentType.slice(1)}
+                </Badge>
+                <Badge variant="outline" className="bg-purple-50 text-purple-600 border-0 font-medium">
+                  {challenge.challengeType === "one_on_one" ? "1v1 Battle" : "Open Challenge"}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn("font-medium border-0", currentStatusConfig.bg, currentStatusConfig.color)}
+                >
+                  {challenge.status === "voting" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent-peach animate-pulse mr-1.5" />
+                  )}
+                  {currentStatusConfig.label}
+                </Badge>
+                {deadlineInfo && !deadlineInfo.isExpired && (
+                  <Badge variant="outline" className="border-gray-200 text-gray-600 font-medium">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {deadlineInfo.days > 0
+                      ? `${deadlineInfo.days}d ${deadlineInfo.hours}h left`
+                      : `${deadlineInfo.hours}h ${deadlineInfo.minutes}m left`}
+                  </Badge>
+                )}
+              </div>
 
-          {challenge.description && (
-            <p className="text-gray-400 max-w-2xl">{challenge.description}</p>
-          )}
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{challenge.title}</h1>
 
-          {challenge.prompt && (
-            <Card className="mt-4 bg-white/5 border-white/10">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 text-purple-400 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-medium text-white mb-1">Challenge Prompt</h4>
-                    <p className="text-sm text-gray-400">{challenge.prompt.description}</p>
+              {challenge.description && (
+                <p className="text-gray-500 max-w-2xl mb-4">{challenge.description}</p>
+              )}
+
+              {challenge.prompt && (
+                <div className="p-4 rounded-xl bg-purple-50 border border-purple-100">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-5 h-5 text-purple-500 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-1">Challenge Prompt</h4>
+                      <p className="text-sm text-gray-600">{challenge.prompt.description}</p>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* 1v1 Challenge View */}
         {challenge.challengeType === "one_on_one" && (
           <>
-            {/* Participants vs Card */}
-            <Card className="bg-white/5 border-white/10 mb-8">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  {/* Participant 1 */}
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-16 h-16 border-4 border-blue-500">
-                      <AvatarImage src={challenge.participant1Avatar} />
-                      <AvatarFallback className="bg-blue-500/20 text-blue-400 text-xl">
-                        {challenge.participant1Name?.[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="text-lg font-semibold text-white">{challenge.participant1Name || "TBD"}</div>
-                      {challenge.status === "completed" && challenge.winnerId === challenge.participant1Id && (
-                        <div className="flex items-center gap-1 text-yellow-400 text-sm">
-                          <Crown className="w-4 h-4" />
-                          Winner
+            {/* VS Battle Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <Card className="bg-white border-gray-100 shadow-sm mb-6">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    {/* Participant 1 */}
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "relative",
+                        challenge.winnerId === challenge.participant1Id && "ring-4 ring-accent-sage ring-offset-2 rounded-full"
+                      )}>
+                        <Avatar className="w-16 h-16 border-4 border-accent-blue">
+                          <AvatarImage src={challenge.participant1Avatar} />
+                          <AvatarFallback className="bg-accent-blue/10 text-accent-blue text-xl font-semibold">
+                            {challenge.participant1Name?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        {challenge.winnerId === challenge.participant1Id && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent-sage flex items-center justify-center">
+                            <Crown className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-lg font-semibold text-gray-900">{challenge.participant1Name || "TBD"}</div>
+                        {["voting", "completed", "draw"].includes(challenge.status) && (
+                          <div className="text-sm text-gray-500">{challenge.participant1Votes || 0} votes</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* VS Badge */}
+                    <div className="flex-shrink-0 flex flex-col items-center px-8">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent-blue via-purple-500 to-accent-peach flex items-center justify-center shadow-lg">
+                        <span className="text-sm font-bold text-white">VS</span>
+                      </div>
+                    </div>
+
+                    {/* Participant 2 */}
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-lg font-semibold text-gray-900">{challenge.participant2Name || "TBD"}</div>
+                        {["voting", "completed", "draw"].includes(challenge.status) && (
+                          <div className="text-sm text-gray-500">{challenge.participant2Votes || 0} votes</div>
+                        )}
+                      </div>
+                      <div className={cn(
+                        "relative",
+                        challenge.winnerId === challenge.participant2Id && "ring-4 ring-accent-sage ring-offset-2 rounded-full"
+                      )}>
+                        <Avatar className="w-16 h-16 border-4 border-purple-500">
+                          <AvatarImage src={challenge.participant2Avatar} />
+                          <AvatarFallback className="bg-purple-500/10 text-purple-600 text-xl font-semibold">
+                            {challenge.participant2Name?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        {challenge.winnerId === challenge.participant2Id && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent-sage flex items-center justify-center">
+                            <Crown className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Vote Progress Bar */}
+                  {["voting", "completed", "draw"].includes(challenge.status) && totalVotes > 0 && (
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-2 text-sm">
+                        <span className={cn(
+                          "font-semibold",
+                          challenge.winnerId === challenge.participant1Id ? "text-accent-sage" : "text-accent-blue"
+                        )}>
+                          {p1Percentage}%
+                        </span>
+                        <span className="text-gray-500">{totalVotes} total votes</span>
+                        <span className={cn(
+                          "font-semibold",
+                          challenge.winnerId === challenge.participant2Id ? "text-accent-sage" : "text-purple-500"
+                        )}>
+                          {p2Percentage}%
+                        </span>
+                      </div>
+                      <div className="h-3 rounded-full overflow-hidden bg-gray-100">
+                        <div className="h-full flex">
+                          <motion.div
+                            className={cn(
+                              "transition-all",
+                              challenge.winnerId === challenge.participant1Id
+                                ? "bg-accent-sage"
+                                : "bg-gradient-to-r from-accent-blue to-cyan-400"
+                            )}
+                            initial={{ width: "50%" }}
+                            animate={{ width: `${p1Percentage}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                          />
+                          <motion.div
+                            className={cn(
+                              "transition-all",
+                              challenge.winnerId === challenge.participant2Id
+                                ? "bg-accent-sage"
+                                : "bg-gradient-to-l from-purple-500 to-violet-400"
+                            )}
+                            initial={{ width: "50%" }}
+                            animate={{ width: `${p2Percentage}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                          />
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* VS */}
-                  <div className="flex flex-col items-center px-8">
-                    <Award className="w-8 h-8 text-purple-400 mb-2" />
-                    <span className="text-gray-500 text-sm font-medium">VS</span>
-                  </div>
-
-                  {/* Participant 2 */}
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <div className="text-lg font-semibold text-white">{challenge.participant2Name || "TBD"}</div>
-                      {challenge.status === "completed" && challenge.winnerId === challenge.participant2Id && (
-                        <div className="flex items-center justify-end gap-1 text-yellow-400 text-sm">
-                          <Crown className="w-4 h-4" />
-                          Winner
-                        </div>
-                      )}
-                    </div>
-                    <Avatar className="w-16 h-16 border-4 border-red-500">
-                      <AvatarImage src={challenge.participant2Avatar} />
-                      <AvatarFallback className="bg-red-500/20 text-red-400 text-xl">
-                        {challenge.participant2Name?.[0]?.toUpperCase() || "?"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                </div>
-
-                {/* Vote Stats (if voting or completed) */}
-                {voteStats && ["voting", "completed", "draw"].includes(challenge.status) && (
-                  <div className="mt-6 pt-6 border-t border-white/10">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-gray-400">
-                        {challenge.status === "voting" ? "Current Votes" : "Final Results"}
-                      </span>
-                      <span className="text-sm text-gray-400">{voteStats.totalVotes} total votes</span>
-                    </div>
-
-                    <div className="relative h-4 bg-gray-800 rounded-full overflow-hidden">
-                      <div
-                        className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-blue-400 transition-all"
-                        style={{ width: `${voteStats.participant1Percentage || 0}%` }}
-                      />
-                      <div
-                        className="absolute right-0 top-0 h-full bg-gradient-to-l from-red-500 to-red-400 transition-all"
-                        style={{ width: `${voteStats.participant2Percentage || 0}%` }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-blue-400 font-medium">{(voteStats.participant1Percentage || 0).toFixed(1)}%</span>
-                      <span className="text-red-400 font-medium">{(voteStats.participant2Percentage || 0).toFixed(1)}%</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Entries Grid for 1v1 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {/* Participant 1 Entry */}
-              <EntryCard
-                entry={participant1Entry}
-                participant={challenge.participant1Name || "Participant 1"}
-                participantAvatar={challenge.participant1Avatar}
-                isWinner={challenge.winnerId === challenge.participant1Id}
-                isBlind={challenge.status === "active"}
-                canVote={canVote}
-                isSelected={selectedEntry === participant1Entry?.id}
-                userVotedFor={challenge.currentUserVoteEntryId === participant1Entry?.id}
-                onSelect={() => participant1Entry && setSelectedEntry(participant1Entry.id)}
-                color="blue"
-              />
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <EntryCard
+                  entry={participant1Entry}
+                  participant={challenge.participant1Name || "Participant 1"}
+                  participantAvatar={challenge.participant1Avatar}
+                  isWinner={challenge.winnerId === challenge.participant1Id}
+                  isBlind={challenge.status === "active"}
+                  canVote={canVote}
+                  isSelected={selectedEntry === participant1Entry?.id}
+                  userVotedFor={challenge.currentUserVoteEntryId === participant1Entry?.id}
+                  onSelect={() => participant1Entry && setSelectedEntry(participant1Entry.id)}
+                  color="blue"
+                />
+              </motion.div>
 
               {/* Participant 2 Entry */}
-              <EntryCard
-                entry={participant2Entry}
-                participant={challenge.participant2Name || "Participant 2"}
-                participantAvatar={challenge.participant2Avatar}
-                isWinner={challenge.winnerId === challenge.participant2Id}
-                isBlind={challenge.status === "active"}
-                canVote={canVote}
-                isSelected={selectedEntry === participant2Entry?.id}
-                userVotedFor={challenge.currentUserVoteEntryId === participant2Entry?.id}
-                onSelect={() => participant2Entry && setSelectedEntry(participant2Entry.id)}
-                color="red"
-              />
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+              >
+                <EntryCard
+                  entry={participant2Entry}
+                  participant={challenge.participant2Name || "Participant 2"}
+                  participantAvatar={challenge.participant2Avatar}
+                  isWinner={challenge.winnerId === challenge.participant2Id}
+                  isBlind={challenge.status === "active"}
+                  canVote={canVote}
+                  isSelected={selectedEntry === participant2Entry?.id}
+                  userVotedFor={challenge.currentUserVoteEntryId === participant2Entry?.id}
+                  onSelect={() => participant2Entry && setSelectedEntry(participant2Entry.id)}
+                  color="purple"
+                />
+              </motion.div>
             </div>
           </>
         )}
@@ -463,137 +853,167 @@ export default function ChallengeDetailPage() {
         {challenge.challengeType === "category" && (
           <>
             {/* Stats Card */}
-            <Card className="bg-white/5 border-white/10 mb-8">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{challenge.totalEntries}</div>
-                      <div className="text-sm text-gray-400">Entries</div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <Card className="bg-white border-gray-100 shadow-sm mb-6">
+                <CardContent className="p-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-8">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-900">{challenge.totalEntries}</div>
+                        <div className="text-sm text-gray-500">Entries</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-900">{challenge.totalVotes}</div>
+                        <div className="text-sm text-gray-500">Votes</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-accent-peach">{challenge.maxWinners}</div>
+                        <div className="text-sm text-gray-500">Winners</div>
+                      </div>
+                      {challenge.winnerKarmaReward && (
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-accent-sage">+{challenge.winnerKarmaReward}</div>
+                          <div className="text-sm text-gray-500">Karma</div>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-white">{challenge.totalVotes}</div>
-                      <div className="text-sm text-gray-400">Votes</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-400">{challenge.maxWinners}</div>
-                      <div className="text-sm text-gray-400">Winners</div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      {canJoin && (
+                        <Button
+                          className="bg-gradient-to-r from-accent-blue to-cyan-500 hover:opacity-90 text-white"
+                          onClick={() => setShowJoinConfirm(true)}
+                        >
+                          <Users className="w-4 h-4 mr-2" />
+                          Join Challenge
+                        </Button>
+                      )}
+
+                      {isParticipant && challenge.status === "active" && !challenge.currentUserEntry && (
+                        <Button
+                          className="bg-accent-blue hover:bg-accent-blue/90 text-white"
+                          onClick={() => setShowEntryForm(true)}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Entry
+                        </Button>
+                      )}
+
+                      {canSubmitEntry && (
+                        <Button
+                          className="bg-accent-sage hover:bg-accent-sage/90 text-white"
+                          onClick={handleSubmitEntry}
+                          disabled={submitting}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {submitting ? "Submitting..." : "Submit Entry"}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Join Button */}
-                  {canJoin && (
-                    <Button
-                      className="bg-purple-500 hover:bg-purple-600 text-white"
-                      onClick={() => setShowJoinConfirm(true)}
-                    >
-                      <Users className="w-4 h-4 mr-2" />
-                      Join Competition
-                    </Button>
+                  {/* Prize Description */}
+                  {challenge.prizeDescription && (
+                    <div className="mt-4 p-4 rounded-xl bg-accent-peach/5 border border-accent-peach/20">
+                      <div className="flex items-center gap-2 text-accent-peach font-medium">
+                        <Trophy className="w-4 h-4" />
+                        Prize: {challenge.prizeDescription}
+                      </div>
+                    </div>
                   )}
-
-                  {/* Create Entry Button */}
-                  {isParticipant && challenge.status === "active" && !challenge.currentUserEntry && (
-                    <Button
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
-                      onClick={() => setShowEntryForm(true)}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Entry
-                    </Button>
-                  )}
-
-                  {/* Submit Entry Button */}
-                  {canSubmitEntry && (
-                    <Button
-                      className="bg-green-500 hover:bg-green-600 text-white"
-                      onClick={handleSubmitEntry}
-                      disabled={submitting}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {submitting ? "Submitting..." : "Submit Entry"}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Entries Grid for Category */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-white mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 {challenge.status === "voting" ? "Vote for Your Favorite" : "Entries"}
               </h2>
 
               {challenge.entries.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {challenge.entries.map((entry) => {
+                  {challenge.entries.map((entry, index) => {
                     const isTopEntry = voteStats?.topEntries?.some((t) => t.entryId === entry.id);
 
                     return (
-                      <Card
+                      <motion.div
                         key={entry.id}
-                        className={cn(
-                          "bg-white/5 border-white/10 transition-all",
-                          canVote && "cursor-pointer hover:border-purple-500/50",
-                          selectedEntry === entry.id && "ring-2 ring-purple-500",
-                          challenge.currentUserVoteEntryId === entry.id && "ring-2 ring-green-500"
-                        )}
-                        onClick={canVote ? () => setSelectedEntry(entry.id) : undefined}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
                       >
-                        <CardContent className="p-4">
-                          {/* User Info */}
-                          <div className="flex items-center gap-3 mb-3">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage src={entry.userAvatar} />
-                              <AvatarFallback className="bg-white/10 text-white text-xs">
-                                {entry.userName?.[0]?.toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-white truncate">{entry.userName}</div>
+                        <Card
+                          className={cn(
+                            "bg-white border-gray-100 shadow-sm transition-all hover:shadow-md",
+                            canVote && "cursor-pointer hover:border-accent-blue/50",
+                            selectedEntry === entry.id && "ring-2 ring-accent-blue",
+                            challenge.currentUserVoteEntryId === entry.id && "ring-2 ring-accent-sage"
+                          )}
+                          onClick={canVote ? () => setSelectedEntry(entry.id) : undefined}
+                        >
+                          <CardContent className="p-4">
+                            {/* User Info */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <Avatar className="w-8 h-8 border border-gray-200">
+                                <AvatarImage src={entry.userAvatar} />
+                                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                                  {entry.userName?.[0]?.toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900 truncate">{entry.userName}</div>
+                              </div>
+                              {isTopEntry && (
+                                <Trophy className="w-4 h-4 text-accent-peach" />
+                              )}
                             </div>
-                            {isTopEntry && (
-                              <Trophy className="w-4 h-4 text-yellow-400" />
+
+                            {/* Entry Content */}
+                            <h4 className="font-medium text-gray-900 mb-2">{entry.title}</h4>
+                            {entry.description && (
+                              <p className="text-sm text-gray-500 line-clamp-2 mb-3">{entry.description}</p>
                             )}
-                          </div>
 
-                          {/* Entry Content */}
-                          <h4 className="font-medium text-white mb-2">{entry.title}</h4>
-                          {entry.description && (
-                            <p className="text-sm text-gray-400 line-clamp-2 mb-3">{entry.description}</p>
-                          )}
-
-                          {/* Vote Count (if voting) */}
-                          {challenge.status === "voting" && (
-                            <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                              <span className="text-sm text-gray-400">{entry.voteCount} votes</span>
-                              {canVote && (
-                                <span className={cn(
-                                  "text-sm",
-                                  selectedEntry === entry.id ? "text-purple-400" : "text-gray-500"
-                                )}>
-                                  {selectedEntry === entry.id ? "Selected" : "Click to vote"}
-                                </span>
-                              )}
-                              {challenge.currentUserVoteEntryId === entry.id && (
-                                <Badge className="bg-green-500 text-white text-xs">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Your Vote
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                            {/* Vote Count (if voting) */}
+                            {challenge.status === "voting" && (
+                              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                <span className="text-sm text-gray-500">{entry.voteCount} votes</span>
+                                {canVote && (
+                                  <span className={cn(
+                                    "text-sm font-medium",
+                                    selectedEntry === entry.id ? "text-accent-blue" : "text-gray-400"
+                                  )}>
+                                    {selectedEntry === entry.id ? "Selected" : "Click to select"}
+                                  </span>
+                                )}
+                                {challenge.currentUserVoteEntryId === entry.id && (
+                                  <Badge className="bg-accent-sage text-white text-xs border-0">
+                                    <CheckCircle className="w-3 h-3 mr-1" />
+                                    Your Vote
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     );
                   })}
                 </div>
               ) : (
-                <Card className="bg-white/5 border-white/10">
+                <Card className="bg-white border-gray-100 shadow-sm">
                   <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <Users className="w-12 h-12 text-gray-600 mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-2">No Entries Yet</h3>
-                    <p className="text-gray-400">Be the first to submit an entry!</p>
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                      <Users className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Entries Yet</h3>
+                    <p className="text-gray-500">Be the first to submit an entry!</p>
                   </CardContent>
                 </Card>
               )}
@@ -603,36 +1023,40 @@ export default function ChallengeDetailPage() {
 
         {/* Vote Button */}
         {canVote && selectedEntry && (
-          <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-gray-900 to-transparent">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white to-transparent"
+          >
             <div className="container mx-auto max-w-md">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                className="w-full bg-gradient-to-r from-accent-blue to-cyan-500 hover:opacity-90 text-white shadow-lg"
                 onClick={() => setShowVoteConfirm(true)}
               >
                 <Vote className="w-5 h-5 mr-2" />
                 Confirm Vote
               </Button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Already Voted Message */}
         {challenge.currentUserVoted && (
-          <Card className="bg-green-500/10 border-green-500/20">
+          <Card className="bg-accent-sage/10 border-accent-sage/20 shadow-sm">
             <CardContent className="flex items-center justify-center gap-3 py-4">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-green-400">You've voted in this challenge!</span>
+              <CheckCircle className="w-5 h-5 text-accent-sage" />
+              <span className="text-accent-sage font-medium">You've voted in this challenge!</span>
             </CardContent>
           </Card>
         )}
 
         {/* Participant Message */}
         {isParticipant && challenge.status === "voting" && (
-          <Card className="bg-blue-500/10 border-blue-500/20">
+          <Card className="bg-accent-blue/10 border-accent-blue/20 shadow-sm">
             <CardContent className="flex items-center justify-center gap-3 py-4">
-              <Award className="w-5 h-5 text-blue-400" />
-              <span className="text-blue-400">You're a participant - let the community decide!</span>
+              <Award className="w-5 h-5 text-accent-blue" />
+              <span className="text-accent-blue font-medium">You're a participant - let the community decide!</span>
             </CardContent>
           </Card>
         )}
@@ -640,19 +1064,19 @@ export default function ChallengeDetailPage() {
 
       {/* Vote Confirmation Dialog */}
       <Dialog open={showVoteConfirm} onOpenChange={setShowVoteConfirm}>
-        <DialogContent className="bg-gray-900 border-white/10">
+        <DialogContent className="bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">Confirm Your Vote</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-gray-900">Confirm Your Vote</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Your vote is final and cannot be changed. Make sure you've reviewed all entries carefully.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowVoteConfirm(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-purple-500 hover:bg-purple-600"
+              className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleVote}
               disabled={voting}
             >
@@ -664,19 +1088,19 @@ export default function ChallengeDetailPage() {
 
       {/* Join Confirmation Dialog */}
       <Dialog open={showJoinConfirm} onOpenChange={setShowJoinConfirm}>
-        <DialogContent className="bg-gray-900 border-white/10">
+        <DialogContent className="bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">Join Competition</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-gray-900">Join Challenge</DialogTitle>
+            <DialogDescription className="text-gray-500">
               You're about to join this challenge. Once joined, you'll be able to create and submit your entry.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowJoinConfirm(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-purple-500 hover:bg-purple-600"
+              className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleJoin}
               disabled={joining}
             >
@@ -688,42 +1112,42 @@ export default function ChallengeDetailPage() {
 
       {/* Entry Form Dialog */}
       <Dialog open={showEntryForm} onOpenChange={setShowEntryForm}>
-        <DialogContent className="bg-gray-900 border-white/10">
+        <DialogContent className="bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white">Create Your Entry</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-gray-900">Create Your Entry</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Fill in the details for your challenge entry. You can edit this before submitting.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="entryTitle" className="text-white">Title</Label>
+              <Label htmlFor="entryTitle" className="text-gray-700">Title</Label>
               <Input
                 id="entryTitle"
                 value={entryTitle}
                 onChange={(e) => setEntryTitle(e.target.value)}
                 placeholder="Give your entry a title"
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div>
-              <Label htmlFor="entryDescription" className="text-white">Description (optional)</Label>
+              <Label htmlFor="entryDescription" className="text-gray-700">Description (optional)</Label>
               <Textarea
                 id="entryDescription"
                 value={entryDescription}
                 onChange={(e) => setEntryDescription(e.target.value)}
                 placeholder="Describe your entry..."
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-400"
                 rows={4}
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowEntryForm(false)}>
               Cancel
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600"
+              className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleCreateEntry}
               disabled={submitting || !entryTitle.trim()}
             >
@@ -748,7 +1172,7 @@ interface EntryCardProps {
   isSelected: boolean;
   userVotedFor: boolean;
   onSelect: () => void;
-  color: "blue" | "red";
+  color: "blue" | "purple";
 }
 
 function EntryCard({
@@ -765,16 +1189,18 @@ function EntryCard({
 }: EntryCardProps) {
   const colorClasses = {
     blue: {
-      border: "border-blue-500",
-      ring: "ring-blue-500",
-      bg: "bg-blue-500/10",
-      text: "text-blue-400",
+      border: "border-t-accent-blue",
+      ring: "ring-accent-blue",
+      bg: "bg-accent-blue/10",
+      text: "text-accent-blue",
+      avatar: "border-accent-blue",
     },
-    red: {
-      border: "border-red-500",
-      ring: "ring-red-500",
-      bg: "bg-red-500/10",
-      text: "text-red-400",
+    purple: {
+      border: "border-t-purple-500",
+      ring: "ring-purple-500",
+      bg: "bg-purple-50",
+      text: "text-purple-600",
+      avatar: "border-purple-500",
     },
   };
 
@@ -783,11 +1209,13 @@ function EntryCard({
   // Blind mode - hide content
   if (isBlind && entry) {
     return (
-      <Card className={cn("bg-white/5 border-white/10", colors.border, "border-t-4")}>
+      <Card className={cn("bg-white border-gray-100 shadow-sm border-t-4", colors.border)}>
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <Lock className="w-12 h-12 text-gray-600 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">Entry Hidden</h3>
-          <p className="text-gray-400 text-sm">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Entry Hidden</h3>
+          <p className="text-gray-500 text-sm">
             Entries are hidden until both participants submit their work.
           </p>
         </CardContent>
@@ -798,11 +1226,16 @@ function EntryCard({
   // No entry yet
   if (!entry) {
     return (
-      <Card className={cn("bg-white/5 border-white/10", colors.border, "border-t-4")}>
+      <Card className={cn("bg-white border-gray-100 shadow-sm border-t-4", colors.border)}>
         <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <Users className="w-12 h-12 text-gray-600 mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">{participant}</h3>
-          <p className="text-gray-400 text-sm">Waiting for submission...</p>
+          <Avatar className={cn("w-16 h-16 mb-4 border-4", colors.avatar)}>
+            <AvatarImage src={participantAvatar} />
+            <AvatarFallback className={cn(colors.bg, colors.text, "text-xl font-semibold")}>
+              {participant[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{participant}</h3>
+          <p className="text-gray-500 text-sm">Waiting for submission...</p>
         </CardContent>
       </Card>
     );
@@ -811,20 +1244,19 @@ function EntryCard({
   return (
     <Card
       className={cn(
-        "bg-white/5 border-white/10 transition-all relative",
+        "bg-white border-gray-100 shadow-sm transition-all relative border-t-4",
         colors.border,
-        "border-t-4",
-        canVote && "cursor-pointer hover:bg-white/10",
+        canVote && "cursor-pointer hover:shadow-lg hover:border-gray-200",
         isSelected && "ring-2",
         isSelected && colors.ring,
-        userVotedFor && "ring-2 ring-green-500"
+        userVotedFor && "ring-2 ring-accent-sage"
       )}
       onClick={canVote ? onSelect : undefined}
     >
       {/* Winner Badge */}
       {isWinner && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-          <Badge className="bg-yellow-500 text-black">
+          <Badge className="bg-accent-sage text-white border-0 shadow-md">
             <Crown className="w-3 h-3 mr-1" />
             Winner
           </Badge>
@@ -834,7 +1266,7 @@ function EntryCard({
       {/* User Voted Badge */}
       {userVotedFor && (
         <div className="absolute -top-3 right-4 z-10">
-          <Badge className="bg-green-500 text-white">
+          <Badge className="bg-accent-sage text-white border-0 shadow-md">
             <CheckCircle className="w-3 h-3 mr-1" />
             Your Vote
           </Badge>
@@ -843,14 +1275,14 @@ function EntryCard({
 
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
-          <Avatar className={cn("w-10 h-10 border-2", colors.border)}>
+          <Avatar className={cn("w-10 h-10 border-2", colors.avatar)}>
             <AvatarImage src={participantAvatar} />
-            <AvatarFallback className={cn(colors.bg, colors.text)}>
+            <AvatarFallback className={cn(colors.bg, colors.text, "font-semibold")}>
               {participant[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-base text-white">{participant}</CardTitle>
+            <CardTitle className="text-base text-gray-900">{participant}</CardTitle>
             {entry.submittedAt && (
               <p className="text-xs text-gray-500">
                 Submitted {new Date(entry.submittedAt).toLocaleDateString()}
@@ -861,15 +1293,15 @@ function EntryCard({
       </CardHeader>
 
       <CardContent>
-        <h3 className="text-lg font-semibold text-white mb-2">{entry.title}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{entry.title}</h3>
 
         {entry.description && (
-          <p className="text-gray-400 text-sm mb-4 line-clamp-3">{entry.description}</p>
+          <p className="text-gray-500 text-sm mb-4 line-clamp-3">{entry.description}</p>
         )}
 
         {/* Thumbnail */}
         {entry.thumbnailUrl && (
-          <div className="relative aspect-video rounded-lg overflow-hidden mb-4 bg-gray-800">
+          <div className="relative aspect-video rounded-xl overflow-hidden mb-4 bg-gray-100">
             <Image
               src={getFileUrl(entry.thumbnailUrl)}
               alt={entry.title}
@@ -882,14 +1314,14 @@ function EntryCard({
         {/* Files */}
         {entry.fileUrls && entry.fileUrls.length > 0 && (
           <div className="space-y-2 mb-4">
-            <h4 className="text-sm font-medium text-gray-400">Files</h4>
+            <h4 className="text-sm font-medium text-gray-600">Files</h4>
             {entry.fileUrls.map((file, i) => (
               <a
                 key={i}
                 href={getFileUrl(file.url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-white transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm text-gray-700 transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Eye className="w-4 h-4 text-gray-400" />
@@ -903,14 +1335,14 @@ function EntryCard({
         {/* External Links */}
         {entry.externalLinks && entry.externalLinks.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-400">Links</h4>
+            <h4 className="text-sm font-medium text-gray-600">Links</h4>
             {entry.externalLinks.map((link, i) => (
               <a
                 key={i}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm text-blue-400 transition-colors"
+                className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-sm text-accent-blue transition-colors"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLink className="w-4 h-4" />
@@ -923,12 +1355,12 @@ function EntryCard({
         {/* Vote indicator */}
         {canVote && (
           <div className={cn(
-            "mt-4 p-3 rounded-lg border-2 border-dashed transition-colors text-center",
-            isSelected ? colors.border : "border-gray-700",
-            isSelected ? colors.text : "text-gray-500"
+            "mt-4 p-3 rounded-xl border-2 border-dashed transition-colors text-center",
+            isSelected ? colors.border.replace("border-t-", "border-") : "border-gray-200",
+            isSelected ? colors.text : "text-gray-400"
           )}>
             {isSelected ? (
-              <span className="flex items-center justify-center gap-2">
+              <span className="flex items-center justify-center gap-2 font-medium">
                 <CheckCircle className="w-4 h-4" />
                 Selected
               </span>

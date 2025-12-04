@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.user import User, UserTier
 from app.models.review_request import ContentType
-from app.models.challenge import Challenge, ChallengeStatus, ChallengeType
+from app.models.challenge import Challenge, ChallengeStatus, ChallengeType, InvitationMode
 from app.models.challenge_entry import ChallengeEntry
 from app.models.challenge_vote import ChallengeVote
 from app.models.challenge_invitation import ChallengeInvitation, InvitationStatus
@@ -163,7 +163,8 @@ class ChallengeService:
         max_winners: int = 1,
         is_featured: bool = False,
         banner_image_url: Optional[str] = None,
-        prize_description: Optional[str] = None
+        prize_description: Optional[str] = None,
+        invitation_mode: InvitationMode = InvitationMode.ADMIN_CURATED
     ) -> Challenge:
         """
         Create a new challenge (admin only).
@@ -189,6 +190,7 @@ class ChallengeService:
             submission_hours=submission_hours,
             voting_hours=voting_hours,
             max_winners=max_winners if challenge_type == ChallengeType.CATEGORY else 1,
+            invitation_mode=invitation_mode if challenge_type == ChallengeType.ONE_ON_ONE else InvitationMode.ADMIN_CURATED,
             is_featured=is_featured,
             banner_image_url=banner_image_url,
             prize_description=prize_description,
@@ -443,6 +445,143 @@ class ChallengeService:
         await self.db.refresh(participant)
 
         return participant
+
+    # ==================== OPEN SLOTS (1v1) ====================
+
+    async def open_challenge_slots(
+        self,
+        challenge_id: int,
+        duration_hours: int = 24
+    ) -> Challenge:
+        """
+        Open slots for a 1v1 challenge (admin action).
+        Users can claim slots first-come-first-served.
+        """
+        challenge = await self._get_challenge_with_relations(challenge_id)
+        if not challenge:
+            raise ValueError("Challenge not found")
+
+        if challenge.challenge_type != ChallengeType.ONE_ON_ONE:
+            raise ValueError("Only 1v1 challenges support open slots")
+
+        if challenge.invitation_mode != InvitationMode.OPEN_SLOTS:
+            raise ValueError("Challenge must be configured for open slots mode")
+
+        if challenge.status != ChallengeStatus.DRAFT:
+            raise ValueError("Challenge must be in DRAFT status to open slots")
+
+        now = datetime.utcnow()
+        challenge.status = ChallengeStatus.OPEN
+        challenge.slots_open_at = now
+        challenge.slots_close_at = now + timedelta(hours=duration_hours)
+
+        await self.db.commit()
+        await self.db.refresh(challenge)
+
+        return challenge
+
+    async def claim_challenge_slot(
+        self,
+        challenge_id: int,
+        user_id: int
+    ) -> Dict[str, Any]:
+        """
+        Claim a slot in an open slots 1v1 challenge.
+        Auto-activates challenge when both slots are claimed.
+        """
+        challenge = await self._get_challenge_with_relations(challenge_id)
+        if not challenge:
+            raise ValueError("Challenge not found")
+
+        if challenge.challenge_type != ChallengeType.ONE_ON_ONE:
+            raise ValueError("Only 1v1 challenges support slot claiming")
+
+        if challenge.invitation_mode != InvitationMode.OPEN_SLOTS:
+            raise ValueError("Challenge is not in open slots mode")
+
+        if challenge.status != ChallengeStatus.OPEN:
+            raise ValueError("Challenge is not open for slot claiming")
+
+        # Check deadline
+        if challenge.slots_close_at and datetime.utcnow() > challenge.slots_close_at:
+            raise ValueError("Slot claiming deadline has passed")
+
+        # Check if user already claimed
+        if user_id in [challenge.participant1_id, challenge.participant2_id]:
+            raise ValueError("You have already claimed a slot in this challenge")
+
+        # Determine which slot to fill
+        now = datetime.utcnow()
+        slot = 0
+        challenge_activated = False
+
+        if challenge.participant1_id is None:
+            challenge.participant1_id = user_id
+            slot = 1
+        elif challenge.participant2_id is None:
+            challenge.participant2_id = user_id
+            slot = 2
+
+            # Both slots filled - auto-activate!
+            challenge.status = ChallengeStatus.ACTIVE
+            challenge.started_at = now
+            challenge.submission_deadline = now + timedelta(hours=challenge.submission_hours)
+            challenge_activated = True
+        else:
+            raise ValueError("All slots are already taken")
+
+        await self.db.commit()
+        await self.db.refresh(challenge)
+
+        # Notify if challenge was activated
+        if challenge_activated:
+            await self._notify_challenge_started(challenge)
+
+        return {
+            "challenge_id": challenge.id,
+            "user_id": user_id,
+            "slot": slot,
+            "claimed_at": now,
+            "challenge_activated": challenge_activated
+        }
+
+    async def get_open_slot_challenges(
+        self,
+        content_type: Optional[ContentType] = None,
+        limit: int = 20
+    ) -> List[Challenge]:
+        """Get 1v1 challenges with available slots for claiming."""
+        now = datetime.utcnow()
+
+        stmt = (
+            select(Challenge)
+            .where(
+                Challenge.challenge_type == ChallengeType.ONE_ON_ONE,
+                Challenge.invitation_mode == InvitationMode.OPEN_SLOTS,
+                Challenge.status == ChallengeStatus.OPEN,
+                or_(
+                    Challenge.slots_close_at.is_(None),
+                    Challenge.slots_close_at > now
+                )
+            )
+            .options(
+                selectinload(Challenge.prompt),
+                selectinload(Challenge.participant1),
+                selectinload(Challenge.participant2),
+                selectinload(Challenge.creator)
+            )
+            .order_by(Challenge.created_at.desc())
+            .limit(limit)
+        )
+
+        if content_type:
+            stmt = stmt.where(Challenge.content_type == content_type)
+
+        result = await self.db.execute(stmt)
+        challenges = list(result.scalars().all())
+
+        # Filter to only those with available slots
+        return [c for c in challenges if c.available_slots > 0]
 
     async def close_submissions(self, challenge_id: int) -> Challenge:
         """

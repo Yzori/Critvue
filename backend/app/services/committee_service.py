@@ -61,7 +61,7 @@ class CommitteeService:
         """Get count of currently claimed (not voted) applications for a member"""
         stmt = select(func.count(ApplicationReview.id)).where(
             ApplicationReview.reviewer_id == member_id,
-            ApplicationReview.status == ReviewStatus.CLAIMED.value.value
+            ApplicationReview.status == ReviewStatus.CLAIMED.value
         )
         result = await self.db.execute(stmt)
         return result.scalar() or 0
