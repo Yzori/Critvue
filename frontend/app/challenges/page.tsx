@@ -844,15 +844,14 @@ export default function ChallengesPage() {
             </div>
 
             {/* CTA Card */}
-            <div className="bg-gradient-to-br from-accent-blue to-purple-500 rounded-2xl p-5 text-white">
-              <Zap className="w-8 h-8 mb-3" />
-              <h3 className="font-bold text-lg mb-2">Ready to Compete?</h3>
-              <p className="text-sm text-white/80 mb-4">
+            <div className="bg-gradient-to-br from-accent-blue/10 to-purple-500/10 dark:from-accent-blue/20 dark:to-purple-500/10 rounded-2xl p-5 border border-accent-blue/20 dark:border-accent-blue/30">
+              <Zap className="w-8 h-8 mb-3 text-accent-blue" />
+              <h3 className="font-bold text-lg mb-2 text-foreground">Ready to Compete?</h3>
+              <p className="text-sm text-foreground-muted mb-4">
                 Build your portfolio by participating in creative challenges.
               </p>
               <Button
-                variant="secondary"
-                className="w-full bg-background text-accent-blue hover:bg-background/90"
+                className="w-full bg-accent-blue hover:bg-accent-blue/90 text-white"
                 onClick={() => router.push("/challenges")}
               >
                 Browse All Challenges
