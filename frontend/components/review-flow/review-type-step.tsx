@@ -733,7 +733,7 @@ export function ReviewTypeStep({
             {/* Unavailable Badge for free when quota exceeded */}
             {isFreeDisabled && (
               <div className="absolute top-4 right-4">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 text-xs font-semibold">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-muted text-gray-500 dark:text-muted-foreground text-xs font-semibold">
                   Limit Reached
                 </span>
               </div>

@@ -54,13 +54,14 @@ export function PickedForYou({ recommendations, userSkills, isLoggedIn, onCustom
         className={cn(
           "relative overflow-hidden rounded-3xl p-6 md:p-8",
           // Subtle gradient background - theme aware
-          "bg-gradient-to-br from-blue-500/5 via-background to-orange-500/5",
+          "bg-gradient-to-br from-accent-blue/5 via-background to-cyan-500/5",
+          "dark:from-accent-blue/10 dark:via-card dark:to-cyan-500/5",
           // Glassmorphic effect
           "backdrop-blur-sm",
-          // Gradient border effect
-          "border-2 border-border",
-          // Shadow for depth
-          "shadow-xl"
+          // Light blue accent border
+          "border border-accent-blue/30 dark:border-accent-blue/40",
+          // Shadow for depth with blue tint
+          "shadow-xl shadow-accent-blue/5 dark:shadow-accent-blue/10"
         )}
       >
         {/* Subtle shimmer effect */}

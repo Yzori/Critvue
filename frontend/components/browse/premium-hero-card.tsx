@@ -83,10 +83,18 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
       <div
         className={cn(
           "group relative overflow-hidden rounded-xl w-full",
-          "bg-card border border-border",
+          // Light mode
+          "bg-card border border-amber-200/50",
+          // Dark mode - use Tier 3 for elevated premium card
+          "dark:bg-[var(--dark-tier-3)] dark:border-amber-500/30",
+          // Transitions
           "transition-all duration-300",
+          // Light mode hover
           "hover:shadow-lg hover:-translate-y-0.5",
-          "hover:border-accent-blue/30",
+          "hover:border-amber-300/60",
+          // Dark mode hover - golden glow effect
+          "dark:hover:shadow-xl dark:hover:shadow-amber-500/15",
+          "dark:hover:border-amber-500/50",
           "flex flex-row"
         )}
         style={{
@@ -94,7 +102,7 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
         }}
       >
         {/* LEFT: Image Thumbnail */}
-        <div className="relative w-[50%] min-w-[200px] max-w-[450px] flex-shrink-0 bg-muted">
+        <div className="relative w-[50%] min-w-[200px] max-w-[450px] flex-shrink-0 bg-muted dark:bg-[var(--dark-tier-2)]">
           {review.preview_image && !review.requires_nda ? (
             <img
               src={getFileUrl(review.preview_image)}
@@ -119,15 +127,20 @@ export function PremiumHeroCard({ review }: PremiumHeroCardProps) {
             </div>
           )}
 
-          {/* Premium Badge - Overlay on image */}
+          {/* Premium Badge - Overlay on image with shimmer animation */}
           <div className="absolute top-2 left-2">
             <Badge
               className={cn(
-                "bg-background/95 backdrop-blur-sm text-accent-blue border-accent-blue/20 shadow-sm",
-                "px-2 py-0.5 text-xs font-semibold flex items-center gap-1"
+                "premium-badge-shimmer",
+                "bg-gradient-to-r from-amber-50/95 to-cyan-50/95 backdrop-blur-sm",
+                "dark:from-amber-950/90 dark:to-cyan-950/90",
+                "text-amber-700 dark:text-amber-300",
+                "border border-amber-300/50 dark:border-amber-500/30",
+                "shadow-md shadow-amber-500/10 dark:shadow-amber-500/20",
+                "px-2.5 py-1 text-xs font-bold flex items-center gap-1.5"
               )}
             >
-              <Award className="size-3" />
+              <Award className="size-3.5 text-amber-500 dark:text-amber-400" />
               Premium
             </Badge>
           </div>

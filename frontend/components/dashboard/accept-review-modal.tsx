@@ -105,7 +105,7 @@ export function AcceptReviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-popover">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <CheckCircle2 className="size-6 text-green-600" />

@@ -205,38 +205,64 @@ body {
 }
 
 .dark {
-  --background-subtle: oklch(0.18 0 0);
-  --background: oklch(0.145 0 0);
+  /* ============================================
+     Unified 3-Tier Dark Mode Color System
+     ============================================
+     Tier 1 (Page BG):    #080A10 - Almost black, soft on eyes
+     Tier 2 (Surfaces):   #0D1118 - Cards, panels
+     Tier 3 (Elevated):   #161C27 - Pop-outs, modals, hover states
+     ============================================ */
+
+  /* Tier tokens for direct use */
+  --dark-tier-1: #080A10;
+  --dark-tier-2: #0D1118;
+  --dark-tier-3: #161C27;
+
+  /* RGB versions for gradients/opacity */
+  --dark-tier-1-rgb: 8, 10, 16;
+  --dark-tier-2-rgb: 13, 17, 24;
+  --dark-tier-3-rgb: 22, 28, 39;
+
+  /* Semantic mappings using the tier system */
+  --background-subtle: #0A0D14;
+  --background: #080A10;           /* Tier 1 - Page background */
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: #0D1118;                 /* Tier 2 - Card surfaces */
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: #161C27;              /* Tier 3 - Elevated popover */
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: #0D1118;
+  --secondary: #0D1118;            /* Tier 2 */
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: #0D1118;                /* Tier 2 - Muted backgrounds */
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: #161C27;               /* Tier 3 - Accent backgrounds */
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.10);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: #0D1118;              /* Tier 2 */
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: #161C27;       /* Tier 3 */
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Glass morphism for dark mode */
+  --glass-light: rgba(13, 17, 24, 0.7);
+  --glass-medium: rgba(13, 17, 24, 0.85);
+  --glass-heavy: rgba(13, 17, 24, 0.95);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --background-glass: rgba(13, 17, 24, 0.95);
 }
 
 @layer base {
@@ -256,6 +282,61 @@ body {
   100% {
     transform: translateX(100%);
   }
+}
+
+/* Premium Badge Shimmer - Very Faint, Elegant */
+@keyframes premium-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes premium-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px 0 rgba(251, 191, 36, 0), 0 0 12px 0 rgba(34, 211, 238, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.15), 0 0 12px 2px rgba(34, 211, 238, 0.1);
+  }
+}
+
+.premium-badge-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(251, 191, 36, 0.08) 45%,
+    rgba(34, 211, 238, 0.08) 50%,
+    rgba(251, 191, 36, 0.08) 55%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: premium-shimmer 4s ease-in-out infinite, premium-glow 4s ease-in-out infinite;
+}
+
+/* Dark mode - slightly more visible shimmer */
+.dark .premium-badge-shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(251, 191, 36, 0.12) 45%,
+    rgba(34, 211, 238, 0.12) 50%,
+    rgba(251, 191, 36, 0.12) 55%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+}
+
+.dark .premium-badge-shimmer {
+  animation: premium-shimmer 4s ease-in-out infinite, premium-glow 4s ease-in-out infinite;
 }
 
 /* Navigation Micro-Animations */
@@ -612,6 +693,45 @@ body {
     background: var(--glass-heavy);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* ========================================
+     Dark Mode Tier Utilities
+     ========================================
+     Use these for consistent dark backgrounds:
+     - dark-tier-1: Page backgrounds (#080A10)
+     - dark-tier-2: Card surfaces (#0D1118)
+     - dark-tier-3: Elevated/hover states (#161C27)
+  */
+
+  .dark .dark-tier-1 {
+    background-color: var(--dark-tier-1);
+  }
+
+  .dark .dark-tier-2 {
+    background-color: var(--dark-tier-2);
+  }
+
+  .dark .dark-tier-3 {
+    background-color: var(--dark-tier-3);
+  }
+
+  /* Gradient variants for smooth transitions */
+  .dark .dark-gradient-1-2 {
+    background: linear-gradient(to bottom, var(--dark-tier-1), var(--dark-tier-2));
+  }
+
+  .dark .dark-gradient-2-3 {
+    background: linear-gradient(to bottom, var(--dark-tier-2), var(--dark-tier-3));
+  }
+
+  /* Border using tier colors */
+  .dark .dark-border-subtle {
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .dark .dark-border-medium {
+    border-color: rgba(255, 255, 255, 0.10);
   }
 
   /* Support for reduced motion */

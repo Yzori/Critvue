@@ -198,7 +198,7 @@ export function ClaimButton({
               {/* Modal */}
               <div
                 className={cn(
-                  "relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white dark:bg-gray-900 p-6 sm:p-8",
+                  "relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-popover p-6 sm:p-8",
                   "shadow-2xl"
                 )}
                 onClick={(e) => e.stopPropagation()}
@@ -222,7 +222,7 @@ export function ClaimButton({
 
               {/* Details Grid */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-3 rounded-lg bg-gray-100 dark:bg-muted border border-gray-200 dark:border-border">
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-1">
                     <Clock className="size-4" />
                     <span className="text-xs font-medium">Deadline</span>
@@ -232,7 +232,7 @@ export function ClaimButton({
                   </p>
                 </div>
 
-                <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <div className="p-3 rounded-lg bg-gray-100 dark:bg-muted border border-gray-200 dark:border-border">
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-1">
                     <DollarSign className="size-4" />
                     <span className="text-xs font-medium">Payment</span>

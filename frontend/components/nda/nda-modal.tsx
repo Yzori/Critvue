@@ -95,7 +95,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
       <div className="absolute inset-0 overflow-y-auto">
         <div className="min-h-full flex items-center justify-center p-4">
           {/* Modal */}
-          <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
+          <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-popover rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-border bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20 rounded-t-2xl">
           <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 bg-white dark:bg-gray-900">
+        <div className="p-6 overflow-y-auto flex-1 bg-white dark:bg-popover">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-8 animate-spin text-purple-600" />
@@ -170,7 +170,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
                 </button>
 
                 {showFullNDA && (
-                  <div className="border-t border-border p-4 bg-gray-50 dark:bg-gray-800 max-h-64 overflow-y-auto">
+                  <div className="border-t border-border p-4 bg-gray-50 dark:bg-muted max-h-64 overflow-y-auto">
                     <pre className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed">
                       {ndaContent?.content}
                     </pre>
@@ -230,7 +230,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
 
         {/* Footer */}
         {!isLoading && ndaContent && (
-          <div className="flex-shrink-0 p-6 border-t border-border bg-gray-50 dark:bg-gray-800 rounded-b-2xl">
+          <div className="flex-shrink-0 p-6 border-t border-border bg-gray-50 dark:bg-muted rounded-b-2xl">
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"

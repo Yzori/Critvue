@@ -306,7 +306,11 @@ export function AnimatedStatCard({
       whileHover={{ scale: 1.02, y: -2 }}
       className={cn(
         'relative p-5 rounded-2xl bg-card border border-border',
-        'shadow-sm hover:shadow-md transition-shadow duration-200',
+        // Dark mode - tier 2 with light blue accent border
+        'dark:bg-[var(--dark-tier-2)] dark:border-accent-blue/30',
+        'shadow-sm hover:shadow-md transition-all duration-200',
+        // Dark mode hover - blue glow
+        'dark:hover:border-accent-blue/50 dark:hover:shadow-lg dark:hover:shadow-accent-blue/10',
         data.highlight && colors.highlight,
         className
       )}
@@ -338,8 +342,12 @@ export function AnimatedStatCard({
         </div>
 
         <div className="flex flex-col items-end gap-2">
-          <div className={cn('p-2.5 rounded-xl', colors.icon)}>
-            <Icon className="w-5 h-5" />
+          {/* Icon with glow effect in dark mode */}
+          <div className="relative">
+            <div className={cn('absolute inset-0 rounded-xl blur-md opacity-0 dark:opacity-40', colors.icon)} />
+            <div className={cn('relative p-2.5 rounded-xl', colors.icon)}>
+              <Icon className="w-5 h-5" />
+            </div>
           </div>
           {data.sparklineData && data.sparklineData.length > 1 && (
             <Sparkline data={data.sparklineData} width={60} height={20} />

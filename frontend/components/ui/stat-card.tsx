@@ -152,11 +152,19 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
       <div
         ref={ref}
         className={cn(
-          "group rounded-2xl border border-border bg-card p-3 sm:p-4 lg:p-6",
+          "group rounded-2xl bg-card p-3 sm:p-4 lg:p-6",
+          // Light mode - subtle border
+          "border border-border",
+          // Light mode shadows
           "shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.06)]",
+          // Dark mode - tier 2 with light blue accent border
+          "dark:bg-[var(--dark-tier-2)]",
+          "dark:border-accent-blue/30 dark:shadow-accent-blue/5",
           "transition-all duration-200 ease-in-out",
           "hover:shadow-[0_8px_16px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.04)]",
           "hover:-translate-y-0.5",
+          // Dark mode hover - subtle blue glow
+          "dark:hover:border-accent-blue/50 dark:hover:shadow-lg dark:hover:shadow-accent-blue/10",
           onClick && "cursor-pointer active:scale-[0.98]",
           className
         )}
@@ -174,14 +182,22 @@ const StatCard = React.forwardRef<HTMLDivElement, StatCardProps>(
         {/* Mobile: horizontal icon + label, Desktop: vertical */}
         <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="flex items-center sm:flex-col sm:items-start gap-2 sm:gap-3 flex-1 min-w-0">
-            <div
-              className={cn(
-                "size-8 sm:size-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 [&>svg]:size-4 [&>svg]:sm:size-5",
-                "transition-transform duration-200 group-hover:scale-110",
+            {/* Icon with subtle glow in dark mode */}
+            <div className="relative">
+              {/* Glow effect - only visible in dark mode */}
+              <div className={cn(
+                "absolute inset-0 rounded-lg sm:rounded-xl blur-md opacity-0 dark:opacity-40 transition-opacity",
                 bgColor
-              )}
-            >
-              {icon}
+              )} />
+              <div
+                className={cn(
+                  "relative size-8 sm:size-10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 [&>svg]:size-4 [&>svg]:sm:size-5",
+                  "transition-transform duration-200 group-hover:scale-110",
+                  bgColor
+                )}
+              >
+                {icon}
+              </div>
             </div>
             <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{label}</p>
           </div>

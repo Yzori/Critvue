@@ -251,12 +251,14 @@ export function ReviewActionCard({
         urgencyBorderColors[urgency],
         "border-t border-r border-b border-border",
         "bg-card",
+        // Dark mode - use tier 3 for elevated cards
+        "dark:bg-[var(--dark-tier-3)] dark:border-[rgba(255,255,255,0.06)]",
         "p-3",
         "cursor-pointer",
-        "transition-shadow duration-200",
+        "transition-all duration-200",
         isHovered || isFocused
-          ? "shadow-md"
-          : "shadow-sm hover:shadow-md",
+          ? "shadow-md dark:shadow-lg dark:shadow-black/20"
+          : "shadow-sm hover:shadow-md dark:hover:shadow-lg dark:hover:shadow-black/20",
         "focus-within:ring-2 focus-within:ring-accent-blue focus-within:ring-offset-2",
         className
       )}

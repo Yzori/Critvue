@@ -166,7 +166,9 @@ function KanbanColumn({
         "flex flex-col",
         "rounded-xl",
         "border border-border/60",
-        "bg-background",
+        // Dark mode - use tier 2 for columns
+        "bg-background dark:bg-[var(--dark-tier-2)]",
+        "dark:border-[rgba(255,255,255,0.06)]",
         "overflow-hidden",
         "min-h-[240px]"
       )}
@@ -263,6 +265,9 @@ function KanbanColumn({
                   "rounded-xl",
                   "border border-border",
                   "bg-background/50 hover:bg-background/80",
+                  // Dark mode - elevated button
+                  "dark:bg-[var(--dark-tier-3)] dark:border-[rgba(255,255,255,0.08)]",
+                  "dark:hover:bg-[var(--dark-tier-3)] dark:hover:border-[rgba(255,255,255,0.12)]",
                   "text-sm font-medium text-muted-foreground hover:text-foreground",
                   "transition-all duration-200",
                   "flex items-center justify-center gap-2"

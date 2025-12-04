@@ -355,13 +355,13 @@ export default function BrowsePage() {
             {splitReviews.featuredPaid.length > 0 && (
               <section id="premium-marketplace">
                 <div className="flex items-center justify-between mb-3 md:mb-4">
-                  <div>
-                    <h2 className="text-lg md:text-2xl font-bold text-foreground">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-amber-600 via-amber-500 to-cyan-500 dark:from-amber-400 dark:via-amber-300 dark:to-cyan-400 bg-clip-text text-transparent">
                       Premium
                     </h2>
-                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5 md:mt-1">
-                      Paid opportunities
-                    </p>
+                    <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/50">
+                      Exclusive
+                    </span>
                   </div>
                   <div className="text-xs md:text-sm text-muted-foreground">
                     {splitReviews.featuredPaid.length} {splitReviews.featuredPaid.length === 1 ? "review" : "reviews"}
@@ -384,18 +384,36 @@ export default function BrowsePage() {
                   ))}
                 </div>
 
-                {/* Desktop: Clean Premium Container - Subtle Refinement */}
+                {/* Desktop: Premium Container - Exclusive Dark Mode Design */}
                 <div
                   className={cn(
                     "hidden md:block",
                     "relative overflow-hidden rounded-2xl p-4",
-                    "bg-muted/50",
-                    "border border-border",
-                    "shadow-sm"
+                    // Light mode
+                    "bg-gradient-to-b from-amber-50/50 via-background to-background",
+                    // Dark mode - uses unified tier system (Tier 2 surface with Tier 1 fade)
+                    "dark:bg-[var(--dark-tier-2)]",
+                    // Border styling
+                    "border border-amber-200/30 dark:border-amber-500/20",
+                    // Shadow
+                    "shadow-sm dark:shadow-lg dark:shadow-amber-500/5"
                   )}
                 >
+                  {/* Gold/Cyan Ambient Glow Strip - Top Edge */}
+                  <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 to-cyan-400/60 dark:via-amber-500/80 dark:to-cyan-400/80" />
+                  <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-amber-400/10 via-cyan-400/5 to-transparent dark:from-amber-500/15 dark:via-cyan-400/10 dark:to-transparent blur-sm" />
+
+                  {/* Diagonal Light Vignette - Behind Hero */}
+                  <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    <div className="absolute top-0 left-0 w-2/3 h-2/3 bg-gradient-to-br from-amber-500/5 via-cyan-500/3 to-transparent dark:from-amber-500/10 dark:via-cyan-400/5 dark:to-transparent transform -rotate-12 origin-top-left" />
+                  </div>
+
+                  {/* Subtle Corner Accents */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-400/10 to-transparent dark:from-cyan-400/15 blur-xl" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-amber-400/10 to-transparent dark:from-amber-500/10 blur-xl" />
+
                   {/* Marketplace Showcase Layout - Stacked Banner Style */}
-                  <div className="flex flex-col gap-4">
+                  <div className="relative z-10 flex flex-col gap-4">
                     {/* TOP: Hero Featured Banner (full width) */}
                     {splitReviews.featuredPaid[0] && (
                       <PremiumHeroCard review={splitReviews.featuredPaid[0]} />
@@ -423,7 +441,7 @@ export default function BrowsePage() {
 
                   {/* Show remaining paid reviews in standard grid if more than 4 */}
                   {splitReviews.featuredPaid.length > 4 && (
-                    <div className="mt-6 pt-6 border-t border-border/50">
+                    <div className="relative z-10 mt-6 pt-6 border-t border-amber-200/20 dark:border-amber-500/10">
                       <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
                         {splitReviews.featuredPaid.slice(4).map((review, index) => (
                           <ReviewCard

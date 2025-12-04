@@ -140,6 +140,8 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
         <div className={cn(
           "p-4 rounded-xl",
           "border border-border bg-card",
+          // Dark mode - tier 2 surface
+          "dark:bg-[var(--dark-tier-2)] dark:border-[rgba(255,255,255,0.06)]",
           "space-y-3"
         )}>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -219,6 +221,8 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
       <div className={cn(
         "p-4 rounded-xl",
         "border border-border bg-card",
+        // Dark mode - tier 2 surface
+        "dark:bg-[var(--dark-tier-2)] dark:border-[rgba(255,255,255,0.06)]",
         "space-y-3"
       )}>
         <div className="flex items-center justify-between">
@@ -257,6 +261,8 @@ export function DesktopRightPanel({ role }: DesktopRightPanelProps) {
       <div className={cn(
         "p-4 rounded-xl",
         "border border-border bg-card",
+        // Dark mode - tier 2 surface
+        "dark:bg-[var(--dark-tier-2)] dark:border-[rgba(255,255,255,0.06)]",
         "space-y-3"
       )}>
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -379,7 +385,7 @@ interface StatItemProps {
 
 function StatItem({ icon, label, value, change, trend }: StatItemProps) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 py-2 first:pt-0 last:pb-0 border-b border-border/50 dark:border-[rgba(255,255,255,0.04)] last:border-0">
       <div className="flex items-center gap-2">
         {icon}
         <span className="text-sm text-muted-foreground">{label}</span>
@@ -388,8 +394,8 @@ function StatItem({ icon, label, value, change, trend }: StatItemProps) {
         <span className="text-2xl font-bold text-foreground">{value}</span>
         <span className={cn(
           "text-xs font-medium flex items-center gap-1",
-          trend === "up" ? "text-green-700" :
-          trend === "down" ? "text-red-700" :
+          trend === "up" ? "text-green-600 dark:text-green-400" :
+          trend === "down" ? "text-red-600 dark:text-red-400" :
           "text-muted-foreground"
         )}>
           {trend === "up" && <TrendingUp className="size-3" />}
@@ -430,8 +436,9 @@ function NotificationItem({
     <div
       className={cn(
         "relative p-3 rounded-lg cursor-pointer",
-        "transition-all duration-150 hover:bg-accent-blue/5",
-        !read && "bg-accent-blue/5"
+        "transition-all duration-150",
+        "hover:bg-accent-blue/5 dark:hover:bg-accent-blue/10",
+        !read && "bg-accent-blue/5 dark:bg-accent-blue/10"
       )}
     >
       {/* Unread indicator */}
@@ -441,7 +448,7 @@ function NotificationItem({
 
       {/* Icon */}
       <div className="flex items-start gap-3">
-        <div className="size-8 rounded-lg bg-muted/30 flex items-center justify-center flex-shrink-0">
+        <div className="size-8 rounded-lg bg-muted/30 dark:bg-[var(--dark-tier-3)] flex items-center justify-center flex-shrink-0">
           {icons[type]}
         </div>
 

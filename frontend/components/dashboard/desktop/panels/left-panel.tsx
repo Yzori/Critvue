@@ -132,7 +132,9 @@ export function DesktopLeftPanel({
       <div className={cn(
         "relative p-2",
         "bg-muted/50 rounded-xl",
-        "border border-border"
+        "border border-border",
+        // Dark mode - tier 2
+        "dark:bg-[var(--dark-tier-2)] dark:border-[rgba(255,255,255,0.06)]"
       )}>
         {/* Background slider for active role */}
         <motion.div
@@ -247,6 +249,8 @@ export function DesktopLeftPanel({
         <div className={cn(
           "p-4 rounded-xl",
           "bg-accent-blue/5 border border-accent-blue/10",
+          // Dark mode - tier 2 with subtle blue tint
+          "dark:bg-[var(--dark-tier-2)] dark:border-accent-blue/20",
           "space-y-3"
         )}>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -306,6 +310,8 @@ export function DesktopLeftPanel({
         "p-4 rounded-xl",
         "bg-gradient-to-br from-accent-peach/5 to-accent-blue/5",
         "border border-border",
+        // Dark mode - tier 2 with subtle gradient tint
+        "dark:bg-[var(--dark-tier-2)] dark:border-[rgba(255,255,255,0.06)]",
         "space-y-3"
       )}>
         {/* Header */}
@@ -373,7 +379,7 @@ function StatRow({ icon, label, value, trend, trendDirection }: StatRowProps) {
         {trend && (
           <span className={cn(
             "text-xs font-medium flex items-center gap-0.5",
-            trendDirection === "up" ? "text-green-700" : "text-red-700"
+            trendDirection === "up" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
           )}>
             {trendDirection === "up" ? (
               <TrendingUp className="size-3" />

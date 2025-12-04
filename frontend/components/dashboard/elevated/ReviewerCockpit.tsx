@@ -66,6 +66,10 @@ export function EarningsDashboard({
       className={cn(
         'rounded-xl',
         'bg-card border border-border/60',
+        // Dark mode - tier 2 with light blue accent border
+        'dark:bg-[var(--dark-tier-2)] dark:border-accent-blue/30',
+        'dark:hover:border-accent-blue/50 dark:hover:shadow-lg dark:hover:shadow-accent-blue/10',
+        'transition-all duration-200',
         className
       )}
     >
@@ -161,6 +165,10 @@ export function EfficiencyMetrics({
       transition={{ delay: 0.1 }}
       className={cn(
         'p-5 rounded-2xl bg-card border border-border',
+        // Dark mode - tier 2 with light blue accent border
+        'dark:bg-[var(--dark-tier-2)] dark:border-accent-blue/30',
+        'dark:hover:border-accent-blue/50 dark:hover:shadow-lg dark:hover:shadow-accent-blue/10',
+        'transition-all duration-200',
         className
       )}
     >
