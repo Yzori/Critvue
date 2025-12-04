@@ -36,7 +36,7 @@ export function FilterChips({
   const contentTypes: Array<{ value: ContentType | "all"; label: string }> = [
     { value: "all", label: "All" },
     { value: "design", label: "Design" },
-    { value: "code", label: "Code" },
+    { value: "photography", label: "Photography" },
     { value: "video", label: "Video" },
     { value: "audio", label: "Audio" },
     { value: "writing", label: "Writing" },

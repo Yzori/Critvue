@@ -157,7 +157,7 @@ export function ActiveFilterChips({
 function getContentTypeLabel(type: ContentType): string {
   const labels: Record<ContentType, string> = {
     design: "Design",
-    code: "Code",
+    photography: "Photography",
     video: "Video",
     stream: "Stream",
     audio: "Audio",

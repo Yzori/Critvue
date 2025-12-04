@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { ContentType } from "@/lib/api/reviews";
 import {
   Palette,
-  Code,
+  Camera,
   Video,
   Headphones,
   PenTool,
@@ -50,13 +50,13 @@ export function CategoryCards({ onCategorySelect, selectedCategory }: CategoryCa
       description: "UI/UX, Graphics, Branding",
     },
     {
-      value: "code",
-      label: "Code",
-      icon: Code,
+      value: "photography",
+      label: "Photography",
+      icon: Camera,
       gradient: "from-blue-500 to-cyan-500",
       hoverGradient: "from-blue-600 to-cyan-600",
       count: 18,
-      description: "Web, Mobile, Backend",
+      description: "Portrait, Landscape, Product",
     },
     {
       value: "video",

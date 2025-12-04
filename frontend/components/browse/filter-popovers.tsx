@@ -34,7 +34,7 @@ export function ContentTypePopover({
   const options: Array<{ value: ContentType | "all"; label: string; count?: number }> = [
     { value: "all", label: "All Content" },
     { value: "design", label: "Design", count: 12 },
-    { value: "code", label: "Code", count: 8 },
+    { value: "photography", label: "Photography", count: 8 },
     { value: "video", label: "Video", count: 15 },
     { value: "stream", label: "Stream", count: 11 },
     { value: "audio", label: "Audio", count: 5 },

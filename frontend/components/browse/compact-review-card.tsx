@@ -10,7 +10,7 @@ import {
   Clock,
   DollarSign,
   Star,
-  Code2,
+  Camera,
   Palette,
   PenTool,
   Video,
@@ -30,9 +30,9 @@ const categoryPlaceholders: Record<string, { gradient: string; icon: React.React
     gradient: "from-violet-500/30 via-purple-500/20 to-fuchsia-500/30",
     icon: <Palette className="size-8 text-violet-500/60" />,
   },
-  code: {
+  photography: {
     gradient: "from-blue-500/30 via-cyan-500/20 to-sky-500/30",
-    icon: <Code2 className="size-8 text-blue-500/60" />,
+    icon: <Camera className="size-8 text-blue-500/60" />,
   },
   writing: {
     gradient: "from-amber-500/30 via-orange-500/20 to-yellow-500/30",

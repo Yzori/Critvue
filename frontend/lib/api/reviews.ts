@@ -6,7 +6,7 @@
 import apiClient from "./client";
 
 // Content type options for reviews
-export type ContentType = "design" | "code" | "video" | "stream" | "audio" | "writing" | "art";
+export type ContentType = "design" | "photography" | "video" | "stream" | "audio" | "writing" | "art";
 
 // Review type options
 export type ReviewType = "free" | "expert";

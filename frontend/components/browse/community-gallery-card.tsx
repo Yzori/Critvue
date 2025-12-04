@@ -13,7 +13,7 @@ import {
   Star,
   Users,
   ArrowRight,
-  Code2,
+  Camera,
   Palette,
   PenTool,
   Video,
@@ -59,9 +59,9 @@ export function CommunityGalleryCard({ review }: CommunityGalleryCardProps) {
         icon: <Palette className="size-12 text-violet-500" />,
         iconBg: "bg-violet-500/20",
       },
-      code: {
+      photography: {
         gradient: "from-blue-500/20 via-cyan-500/10 to-sky-500/20",
-        icon: <Code2 className="size-12 text-blue-500" />,
+        icon: <Camera className="size-12 text-blue-500" />,
         iconBg: "bg-blue-500/20",
       },
       writing: {
