@@ -82,6 +82,22 @@ async def get_current_user(
             detail="Inactive user"
         )
 
+    # Check if user is banned
+    if user.is_banned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been banned"
+        )
+
+    # Check if user is suspended (and suspension hasn't expired)
+    if user.is_suspended:
+        from datetime import datetime
+        if user.suspended_until and user.suspended_until > datetime.utcnow():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account is suspended until {user.suspended_until.isoformat()}"
+            )
+
     return user
 
 
@@ -121,6 +137,16 @@ async def get_current_user_optional(
 
     if user is None or not user.is_active:
         return None
+
+    # Banned users get None (treated as not authenticated)
+    if user.is_banned:
+        return None
+
+    # Suspended users get None if suspension is active
+    if user.is_suspended:
+        from datetime import datetime
+        if user.suspended_until and user.suspended_until > datetime.utcnow():
+            return None
 
     return user
 

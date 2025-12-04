@@ -4,9 +4,14 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.api.deps import get_current_user
+
+# Rate limiter for admin endpoints
+limiter = Limiter(key_func=get_remote_address)
 from app.models.user import User, UserRole, UserTier
 from app.services.admin_users_service import AdminUsersService
 from app.schemas.admin_users import (
@@ -44,11 +49,27 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
 
 
 def get_client_ip(request: Request) -> Optional[str]:
-    """Get client IP from request"""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else None
+    """
+    Get client IP from request.
+
+    Security: Only trust X-Forwarded-For if the direct client is a known proxy.
+    In production, configure TRUSTED_PROXY_IPS in settings.
+    """
+    client_ip = request.client.host if request.client else None
+
+    # List of trusted proxy IPs (localhost for development, add production proxies)
+    TRUSTED_PROXIES = {"127.0.0.1", "::1", "localhost"}
+
+    # Only trust X-Forwarded-For if request comes from a trusted proxy
+    if client_ip in TRUSTED_PROXIES:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            # Get the rightmost untrusted IP (closest to our proxy)
+            ips = [ip.strip() for ip in forwarded.split(",")]
+            # Return first IP (original client) - but log that it's from proxy
+            return f"{ips[0]} (via proxy)"
+
+    return client_ip
 
 
 # ============ User List & Search ============
@@ -135,10 +156,11 @@ async def get_user_detail(
 # ============ Role Management ============
 
 @router.post("/{user_id}/role", response_model=ModerationActionResponse)
+@limiter.limit("10/minute")
 async def change_user_role(
+    request: Request,
     user_id: int,
     request_body: UserRoleChangeRequest,
-    request: Request,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -168,10 +190,11 @@ async def change_user_role(
 # ============ Ban Management ============
 
 @router.post("/{user_id}/ban", response_model=ModerationActionResponse)
+@limiter.limit("5/minute")
 async def ban_user(
+    request: Request,
     user_id: int,
     request_body: BanUserRequest,
-    request: Request,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -228,10 +251,11 @@ async def unban_user(
 # ============ Suspension Management ============
 
 @router.post("/{user_id}/suspend", response_model=ModerationActionResponse)
+@limiter.limit("5/minute")
 async def suspend_user(
+    request: Request,
     user_id: int,
     request_body: SuspendUserRequest,
-    request: Request,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -319,10 +343,11 @@ async def verify_user(
 # ============ Karma Management ============
 
 @router.post("/{user_id}/karma", response_model=ModerationActionResponse)
+@limiter.limit("10/minute")
 async def adjust_karma(
+    request: Request,
     user_id: int,
     request_body: KarmaAdjustRequest,
-    request: Request,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
@@ -352,10 +377,11 @@ async def adjust_karma(
 # ============ Tier Management ============
 
 @router.post("/{user_id}/tier", response_model=ModerationActionResponse)
+@limiter.limit("10/minute")
 async def override_tier(
+    request: Request,
     user_id: int,
     request_body: TierOverrideRequest,
-    request: Request,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):

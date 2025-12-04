@@ -73,8 +73,17 @@ class AdminUsersService:
         total_result = await self.db.execute(count_stmt)
         total = total_result.scalar() or 0
 
-        # Apply sorting
-        sort_column = getattr(User, sort_by, User.created_at)
+        # Apply sorting with whitelist to prevent SQL injection
+        ALLOWED_SORT_FIELDS = {
+            "created_at": User.created_at,
+            "email": User.email,
+            "full_name": User.full_name,
+            "role": User.role,
+            "karma_points": User.karma_points,
+            "last_login": User.last_login,
+            "user_tier": User.user_tier,
+        }
+        sort_column = ALLOWED_SORT_FIELDS.get(sort_by, User.created_at)
         if sort_order.lower() == "asc":
             stmt = stmt.order_by(asc(sort_column))
         else:
@@ -107,6 +116,10 @@ class AdminUsersService:
         user = await self.get_user_by_id(user_id)
         if not user:
             raise ValueError("User not found")
+
+        # Prevent admin self-demotion (could lock themselves out)
+        if user.id == admin.id and user.role == UserRole.ADMIN and new_role != UserRole.ADMIN:
+            raise ValueError("Cannot demote yourself from admin role")
 
         old_role = user.role
         user.role = new_role

@@ -68,16 +68,45 @@ app.include_router(nda.router, prefix="/api/v1")  # NDA signing for confidential
 app.include_router(activity.router, prefix="/api/v1")  # User activity heatmap and timeline
 app.include_router(challenges.router, prefix="/api/v1")  # Platform-curated creative challenges
 
+# Security headers middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add security headers to all responses"""
+    async def dispatch(self, request, call_next):
+        response: Response = await call_next(request)
+        # Prevent MIME type sniffing
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        # Prevent clickjacking
+        response.headers["X-Frame-Options"] = "DENY"
+        # XSS protection (legacy but still useful)
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # Referrer policy
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        # Permissions policy (disable dangerous features)
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 # Session middleware for OAuth state management
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
-# Configure CORS
+# Configure CORS with explicit allowed methods and headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ],
+    expose_headers=["X-Total-Count", "X-Page", "X-Page-Size"],
 )
 
 # Mount static files for uploaded content
@@ -137,9 +166,32 @@ async def health_check(db: AsyncSession = Depends(get_db)):
 async def startup_event():
     """Initialize services on application startup"""
     import logging
+    import os
     logger = logging.getLogger(__name__)
 
     logger.info("Starting Critvue backend...")
+
+    # Security: Validate secret keys are not defaults in production
+    INSECURE_DEFAULTS = [
+        "CHANGE_THIS_IN_PRODUCTION_USE_LONG_RANDOM_STRING",
+        "CHANGE_THIS_REFRESH_KEY_IN_PRODUCTION",
+    ]
+
+    is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+
+    if settings.SECRET_KEY in INSECURE_DEFAULTS:
+        if is_production:
+            logger.critical("SECURITY CRITICAL: SECRET_KEY is using default value in production!")
+            raise RuntimeError("Cannot start with default SECRET_KEY in production")
+        else:
+            logger.warning("⚠️  SECRET_KEY is using default value - change before deploying to production!")
+
+    if settings.REFRESH_SECRET_KEY in INSECURE_DEFAULTS:
+        if is_production:
+            logger.critical("SECURITY CRITICAL: REFRESH_SECRET_KEY is using default value in production!")
+            raise RuntimeError("Cannot start with default REFRESH_SECRET_KEY in production")
+        else:
+            logger.warning("⚠️  REFRESH_SECRET_KEY is using default value - change before deploying to production!")
 
     # Start background job scheduler
     try:
