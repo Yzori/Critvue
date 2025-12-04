@@ -165,6 +165,12 @@ export function Step3ProfessionalBackground({ onValidationChange }: Step3Profess
               )}
             </div>
 
+            {/* About You Section Header */}
+            <div className="pt-4 border-t border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-1">About You</h3>
+              <p className="text-sm text-foreground-muted mb-4">Tell us more about your role and expertise</p>
+            </div>
+
             {/* Current Role */}
             <div className="space-y-2">
               <Label htmlFor="currentRole" className="flex items-center gap-2">
@@ -191,8 +197,8 @@ export function Step3ProfessionalBackground({ onValidationChange }: Step3Profess
               <Textarea
                 {...register('briefBio')}
                 id="briefBio"
-                placeholder="Tell us about your professional journey, key achievements, and areas of expertise..."
-                className="min-h-[120px] resize-none"
+                placeholder="Tell us about your professional journey, key achievements, and areas of expertise. What makes you uniquely qualified to review creative work? What perspective do you bring?"
+                className="min-h-[160px] resize-none"
                 maxLength={500}
               />
               <div className="flex items-center justify-between text-sm">

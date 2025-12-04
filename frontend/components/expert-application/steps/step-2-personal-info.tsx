@@ -10,7 +10,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { User, Mail, MapPin, Globe, Linkedin, Lock } from 'lucide-react'
+import { User, Mail, MapPin, Globe, Linkedin, Lock, Info } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -135,6 +135,7 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
               label="Location"
               error={errors.location?.message}
               hint="City, Country"
+              tooltip="Helps us match you with creators in similar timezones for scheduling and communication."
             >
               <Input
                 {...register('location')}
@@ -147,22 +148,28 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
               />
             </FormField>
 
-            {/* Timezone */}
+            {/* Timezone - Auto-detected and read-only */}
             <FormField
               icon={Globe}
               label="Timezone"
               error={errors.timezone?.message}
+              tooltip="Used to display accurate scheduling times and match you with creators for live sessions."
             >
-              <Input
-                {...register('timezone')}
-                type="text"
-                placeholder="America/Los_Angeles"
-                className="h-12"
-                aria-invalid={!!errors.timezone}
-                aria-describedby={errors.timezone ? 'timezone-error' : undefined}
-              />
-              <p className="mt-1 text-xs text-foreground-muted">
-                Current time: {new Date().toLocaleTimeString()}
+              <div className="relative">
+                <Input
+                  {...register('timezone')}
+                  type="text"
+                  placeholder="America/Los_Angeles"
+                  className="h-12 pr-10 bg-muted/50"
+                  readOnly
+                  aria-invalid={!!errors.timezone}
+                  aria-describedby={errors.timezone ? 'timezone-error' : undefined}
+                />
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="mt-1 text-xs text-foreground-muted flex items-center gap-1">
+                <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                Detected automatically • Current time: {new Date().toLocaleTimeString()}
               </p>
             </FormField>
 
@@ -172,6 +179,7 @@ export function Step2PersonalInfo({ onValidationChange }: Step2PersonalInfoProps
               label="LinkedIn Profile"
               error={errors.linkedinUrl?.message}
               optional
+              tooltip="You can add more portfolio links (Behance, Dribbble, etc.) in Step 6."
             >
               <Input
                 {...register('linkedinUrl')}
@@ -204,11 +212,12 @@ interface FormFieldProps {
   label: string
   error?: string
   hint?: string
+  tooltip?: string
   optional?: boolean
   children: React.ReactNode
 }
 
-function FormField({ icon: Icon, label, error, hint, optional, children }: FormFieldProps) {
+function FormField({ icon: Icon, label, error, hint, tooltip, optional, children }: FormFieldProps) {
   const fieldId = label.toLowerCase().replace(/\s+/g, '-')
 
   return (
@@ -218,6 +227,15 @@ function FormField({ icon: Icon, label, error, hint, optional, children }: FormF
         {label}
         {optional && (
           <span className="text-sm font-normal text-foreground-muted">(optional)</span>
+        )}
+        {tooltip && (
+          <span className="group relative cursor-help">
+            <Info className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+            <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 text-xs font-normal text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-normal w-64 text-center z-50 shadow-lg">
+              {tooltip}
+              <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-900"></span>
+            </span>
+          </span>
         )}
       </Label>
       {children}

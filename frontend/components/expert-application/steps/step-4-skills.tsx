@@ -67,9 +67,20 @@ export function Step4Skills({ onValidationChange }: Step4SkillsProps) {
       >
         <Card className="glass-light p-6 sm:p-8">
           <h2 className="mb-2 text-2xl font-bold text-foreground">Skills & Specializations</h2>
-          <p className="mb-6 text-foreground-muted">
-            Select 1-10 skills that best represent your expertise. Mark your primary skill with a star.
+          <p className="mb-4 text-foreground-muted">
+            Select 1-10 skills that best represent your expertise.
           </p>
+
+          {/* Top Skill Explanation */}
+          <div className="mb-6 flex items-start gap-3 rounded-lg bg-[var(--accent-blue)]/10 p-4 border border-[var(--accent-blue)]/20">
+            <Star className="h-5 w-5 text-[var(--accent-blue)] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-foreground">Mark your Top Skill</p>
+              <p className="text-sm text-foreground-muted">
+                Click the star on one skill to mark it as your specialty — this helps creators choose the right expert for their work.
+              </p>
+            </div>
+          </div>
 
           {/* Selected Skills */}
           {skills.length > 0 && (
@@ -120,27 +131,34 @@ export function Step4Skills({ onValidationChange }: Step4SkillsProps) {
           )}
 
           {/* Category Filter */}
-          <div className="mb-4 flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                !selectedCategory ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]' : 'border-border hover:border-[var(--accent-blue)]'
-              }`}
-            >
-              All
-            </button>
-            {SKILL_CATEGORIES.map(category => (
+          <div className="mb-4">
+            <p className="text-sm font-medium text-foreground mb-2">Filter by Category</p>
+            <div className="flex flex-wrap gap-2">
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`rounded-full border px-4 py-2 text-sm transition-colors ${
-                  selectedCategory === category.id ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)]/10 text-[var(--accent-blue)]' : 'border-border hover:border-[var(--accent-blue)]'
+                onClick={() => setSelectedCategory(null)}
+                className={`rounded-full border-2 px-4 py-2 text-sm font-medium transition-all ${
+                  !selectedCategory
+                    ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)] text-white shadow-md'
+                    : 'border-border bg-background hover:border-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/5'
                 }`}
               >
-                <span className="mr-1">{category.icon}</span>
-                {category.label}
+                All
               </button>
-            ))}
+              {SKILL_CATEGORIES.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`rounded-full border-2 px-4 py-2 text-sm font-medium transition-all ${
+                    selectedCategory === category.id
+                      ? 'border-[var(--accent-blue)] bg-[var(--accent-blue)] text-white shadow-md'
+                      : 'border-border bg-background hover:border-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/5'
+                  }`}
+                >
+                  <span className="mr-1.5">{category.icon}</span>
+                  {category.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Search */}
@@ -156,8 +174,42 @@ export function Step4Skills({ onValidationChange }: Step4SkillsProps) {
             />
           </div>
 
+          {/* Suggested Skills - Show top 5 from selected category */}
+          {selectedCategory && !searchQuery && (
+            <div className="mb-4 p-4 rounded-lg bg-muted/50 border border-border">
+              <p className="text-sm font-medium text-foreground mb-3">
+                Suggested {SKILL_CATEGORIES.find(c => c.id === selectedCategory)?.label} Skills
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {SKILL_CATEGORIES
+                  .find(c => c.id === selectedCategory)
+                  ?.skills.slice(0, 5)
+                  .map(skill => {
+                    const isSelected = skills.some(s => s.name === skill)
+                    const canAdd = skills.length < 10
+                    return (
+                      <button
+                        key={`suggested-${skill}`}
+                        onClick={() => !isSelected && canAdd && handleAddSkill(skill, selectedCategory)}
+                        disabled={isSelected || !canAdd}
+                        className={`rounded-full px-3 py-1.5 text-sm transition-all ${
+                          isSelected
+                            ? 'bg-green-100 text-green-700 border border-green-300'
+                            : canAdd
+                              ? 'bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/20 border border-[var(--accent-blue)]/30'
+                              : 'bg-muted text-muted-foreground cursor-not-allowed'
+                        }`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}{skill}
+                      </button>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
+
           {/* Available Skills */}
-          <div className="max-h-[400px] overflow-y-auto rounded-lg border border-border p-4">
+          <div className="max-h-[350px] overflow-y-auto rounded-lg border border-border p-4">
             <div className="grid gap-2 sm:grid-cols-2">
               {filteredSkills.map(({ skill, category, icon }) => {
                 const isSelected = skills.some(s => s.name === skill)
@@ -186,7 +238,7 @@ export function Step4Skills({ onValidationChange }: Step4SkillsProps) {
           </div>
 
           <p className="mt-4 text-sm text-foreground-muted">
-            Tip: Click the star icon to mark your strongest skill as primary.
+            Your top skill will be prominently displayed on your reviewer profile.
           </p>
         </Card>
       </motion.div>

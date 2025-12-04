@@ -43,10 +43,30 @@ export function Step7References({ onValidationChange }: Step7ReferencesProps) {
             <Users className="h-6 w-6 text-[var(--accent-blue)]" />
             Professional References
           </h2>
-          <p className="mb-6 text-foreground-muted">
-            Provide exactly 3 professional contacts who can speak to your work quality. Each email
-            must be unique.
+          <p className="mb-4 text-foreground-muted">
+            Provide exactly 3 professional contacts who can speak to your work quality.
           </p>
+
+          {/* Progress indicator */}
+          <div className="mb-6 flex items-center gap-4">
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+                    references[i]
+                      ? 'bg-green-100 text-green-700 border-2 border-green-500'
+                      : 'bg-muted text-muted-foreground border-2 border-border'
+                  }`}
+                >
+                  {references[i] ? '✓' : i + 1}
+                </div>
+              ))}
+            </div>
+            <span className="text-sm text-foreground-muted">
+              {references.length}/3 references added
+            </span>
+          </div>
 
           <div className="space-y-4">
             {[0, 1, 2].map((index) => {
@@ -317,8 +337,14 @@ function ReferenceForm({
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="jane.smith@example.com"
             required
-            className="mt-1"
+            className={`mt-1 ${formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-destructive' : ''}`}
           />
+          {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-destructive mt-1">Please enter a valid email address</p>
+          )}
+          {formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-green-600 mt-1">✓ Valid email format</p>
+          )}
         </div>
 
         <div>

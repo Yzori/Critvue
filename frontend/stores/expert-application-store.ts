@@ -12,7 +12,7 @@ import type {
 
 const initialCredentials: Credentials = {
   mode: 'quick',
-  linkedInUrl: undefined,
+  portfolioLinks: [],
   education: [],
   certifications: [],
   employment: []
@@ -230,11 +230,31 @@ export const useExpertApplicationStore = create<ApplicationState>()(
           isDirty: true
         })),
 
-      updateLinkedInUrl: (linkedInUrl) =>
+      addPortfolioLink: (link) =>
         set((state) => ({
           credentials: {
             ...state.credentials,
-            linkedInUrl
+            portfolioLinks: [...(state.credentials.portfolioLinks || []), link]
+          },
+          isDirty: true
+        })),
+
+      removePortfolioLink: (linkId) =>
+        set((state) => ({
+          credentials: {
+            ...state.credentials,
+            portfolioLinks: (state.credentials.portfolioLinks || []).filter((l) => l.id !== linkId)
+          },
+          isDirty: true
+        })),
+
+      updatePortfolioLink: (linkId, data) =>
+        set((state) => ({
+          credentials: {
+            ...state.credentials,
+            portfolioLinks: (state.credentials.portfolioLinks || []).map((l) =>
+              l.id === linkId ? { ...l, ...data } : l
+            )
           },
           isDirty: true
         })),

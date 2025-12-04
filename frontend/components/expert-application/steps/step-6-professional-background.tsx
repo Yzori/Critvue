@@ -9,13 +9,14 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, FileText, GraduationCap, Award, Briefcase, Users,
-  Plus, X, Check, Mail, Phone, Building, Linkedin
+  Plus, X, Check, Mail, Phone, Building
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
+import { PortfolioLinks } from '@/components/expert-application/portfolio-links'
 import type { Education, Certification, Employment, Reference, CredentialsMode } from '@/lib/expert-application/types'
 
 interface Step6ProfessionalBackgroundProps {
@@ -34,8 +35,9 @@ export function Step6ProfessionalBackground({ onValidationChange }: Step6Profess
 
   const mode = credentials.mode
 
-  // Validation logic
-  const isQuickModeValid = !!(credentials.linkedInUrl?.trim()) || references.length >= 1
+  // Validation logic (with fallbacks for existing stored state)
+  const portfolioLinks = credentials.portfolioLinks || []
+  const isQuickModeValid = portfolioLinks.length >= 1 || references.length >= 1
   const isDetailedModeValid =
     credentials.education.length >= 1 &&
     credentials.employment.length >= 1 &&
@@ -126,7 +128,7 @@ export function Step6ProfessionalBackground({ onValidationChange }: Step6Profess
             >
               <p className="text-sm text-destructive">
                 {mode === 'quick'
-                  ? 'Please provide your LinkedIn profile URL or add at least 1 professional reference to continue.'
+                  ? 'Please add at least 1 portfolio link or 1 professional reference to continue.'
                   : 'Please add at least 1 education entry, 1 employment entry, and 1 professional reference to continue.'
                 }
               </p>
@@ -141,10 +143,19 @@ export function Step6ProfessionalBackground({ onValidationChange }: Step6Profess
 // Quick Mode Content
 function QuickModeContent() {
   const credentials = useExpertApplicationStore((state) => state.credentials)
-  const updateLinkedInUrl = useExpertApplicationStore((state) => state.updateLinkedInUrl)
+  const skills = useExpertApplicationStore((state) => state.skills)
+  const addPortfolioLink = useExpertApplicationStore((state) => state.addPortfolioLink)
+  const removePortfolioLink = useExpertApplicationStore((state) => state.removePortfolioLink)
+  const updatePortfolioLink = useExpertApplicationStore((state) => state.updatePortfolioLink)
   const references = useExpertApplicationStore((state) => state.references)
   const [editingReferenceId, setEditingReferenceId] = useState<string | null>(null)
   const [showAddReference, setShowAddReference] = useState(false)
+
+  // Get skill categories for platform suggestions
+  const skillCategories = [...new Set(skills.map(s => s.category))]
+
+  // Fallback for existing stored state
+  const portfolioLinks = credentials.portfolioLinks || []
 
   return (
     <motion.div
@@ -154,24 +165,14 @@ function QuickModeContent() {
       transition={{ duration: 0.2 }}
       className="space-y-6"
     >
-      {/* LinkedIn Section */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Linkedin className="h-5 w-5 text-[var(--accent-blue)]" />
-          <h3 className="font-semibold text-lg">LinkedIn Profile</h3>
-          <span className="text-xs text-foreground-muted">(Recommended)</span>
-        </div>
-        <Input
-          type="url"
-          value={credentials.linkedInUrl || ''}
-          onChange={(e) => updateLinkedInUrl(e.target.value || undefined)}
-          placeholder="https://linkedin.com/in/yourprofile"
-          className="w-full"
-        />
-        <p className="text-xs text-foreground-muted">
-          Providing your LinkedIn helps us verify your background quickly.
-        </p>
-      </div>
+      {/* Portfolio Links Section */}
+      <PortfolioLinks
+        links={portfolioLinks}
+        skillCategories={skillCategories}
+        onAdd={addPortfolioLink}
+        onRemove={removePortfolioLink}
+        onUpdate={updatePortfolioLink}
+      />
 
       {/* Divider */}
       <div className="relative">
@@ -189,13 +190,15 @@ function QuickModeContent() {
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-[var(--accent-blue)]" />
             <h3 className="font-semibold text-lg">Professional Reference</h3>
-            <span className="text-xs text-destructive">* At least 1 required</span>
+            {portfolioLinks.length === 0 && (
+              <span className="text-xs text-destructive">* Required if no portfolio links</span>
+            )}
           </div>
           <span className="text-sm text-foreground-muted">{references.length} added</span>
         </div>
 
         <p className="text-sm text-foreground-muted">
-          Add at least 1 professional contact who can vouch for your work.
+          Add a professional contact who can vouch for your work (optional if you have portfolio links).
         </p>
 
         {/* List of references */}
@@ -441,8 +444,14 @@ function QuickReferenceForm({
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="jane.smith@example.com"
             required
-            className="mt-1"
+            className={`mt-1 ${formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-destructive' : ''}`}
           />
+          {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-destructive mt-1">Please enter a valid email address</p>
+          )}
+          {formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-green-600 mt-1">✓ Valid email format</p>
+          )}
         </div>
 
         <div>
@@ -492,7 +501,6 @@ function DetailedModeContent({
   setShowEmploymentForm: (show: boolean) => void
 }) {
   const credentials = useExpertApplicationStore((state) => state.credentials)
-  const references = useExpertApplicationStore((state) => state.references)
 
   return (
     <motion.div
@@ -1332,8 +1340,14 @@ function DetailedReferenceForm({
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="jane.smith@example.com"
             required
-            className="mt-1"
+            className={`mt-1 ${formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) ? 'border-destructive' : ''}`}
           />
+          {formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-destructive mt-1">Please enter a valid email address</p>
+          )}
+          {formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) && (
+            <p className="text-xs text-green-600 mt-1">✓ Valid email format</p>
+          )}
         </div>
 
         <div>

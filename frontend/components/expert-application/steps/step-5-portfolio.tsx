@@ -6,16 +6,256 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Upload, Camera, Link as LinkIcon, X, FileText } from 'lucide-react'
+import { Upload, Camera, Link as LinkIcon, X, FileText, FileImage, File } from 'lucide-react'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { FileUpload, UploadedFile } from '@/components/ui/file-upload'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import type { PortfolioItem } from '@/lib/expert-application/types'
+
+// Helper to get file type icon based on file type
+function getFileTypeIcon(fileType: string) {
+  if (fileType.startsWith('image/')) {
+    return <FileImage className="w-4 h-4 text-purple-500" />
+  }
+  if (fileType === 'application/pdf') {
+    return <FileText className="w-4 h-4 text-red-500" />
+  }
+  if (fileType.includes('word') || fileType.includes('document')) {
+    return <FileText className="w-4 h-4 text-blue-500" />
+  }
+  return <File className="w-4 h-4 text-gray-500" />
+}
+
+// Helper to get friendly file type name
+function getFileTypeName(fileType: string) {
+  if (fileType.startsWith('image/')) return 'Image'
+  if (fileType === 'application/pdf') return 'PDF'
+  if (fileType.includes('word') || fileType.includes('document')) return 'Document'
+  return 'File'
+}
+
+// Premium Auto-Resize Textarea with Floating Label
+interface AutoResizeTextareaProps {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  label: string
+  placeholder?: string
+  hint?: string
+  maxLength?: number
+  minHeight?: number
+  maxHeight?: number
+  required?: boolean
+  error?: string
+}
+
+function AutoResizeTextarea({
+  id,
+  value,
+  onChange,
+  label,
+  placeholder = '',
+  hint,
+  maxLength = 500,
+  minHeight = 100,
+  maxHeight = 280,
+  required,
+  error
+}: AutoResizeTextareaProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
+  const hasValue = value.length > 0
+
+  // Smooth auto-resize function
+  const adjustHeight = useCallback(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = 'auto'
+
+    // Calculate new height with smooth bounds
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, minHeight), maxHeight)
+    textarea.style.height = `${newHeight}px`
+
+    // Show scrollbar only when content exceeds maxHeight
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden'
+  }, [minHeight, maxHeight])
+
+  // Adjust on value change
+  useEffect(() => {
+    adjustHeight()
+  }, [value, adjustHeight])
+
+  // Adjust on mount
+  useEffect(() => {
+    adjustHeight()
+  }, [adjustHeight])
+
+  const showFloatingLabel = isFocused || hasValue
+
+  return (
+    <div className="relative">
+      {/* Floating Label */}
+      <label
+        htmlFor={id}
+        className={`
+          absolute left-3 transition-all duration-150 ease-out pointer-events-none z-10
+          ${showFloatingLabel
+            ? '-top-2.5 text-xs px-1 bg-background text-[var(--accent-blue)] font-medium'
+            : 'top-3 text-sm text-muted-foreground'
+          }
+        `}
+      >
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+
+      {/* Textarea */}
+      <textarea
+        ref={textareaRef}
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={showFloatingLabel ? placeholder : ''}
+        maxLength={maxLength}
+        className={`
+          w-full px-3 py-3 pt-4 rounded-lg border-2 text-sm
+          resize-none transition-all duration-150 ease-out
+          bg-background
+          focus:outline-none
+          ${isFocused
+            ? 'border-[var(--accent-blue)] shadow-[0_0_0_3px_rgba(59,130,246,0.1)] bg-[var(--accent-blue)]/[0.02]'
+            : error
+              ? 'border-destructive'
+              : 'border-border hover:border-muted-foreground/50'
+          }
+        `}
+        style={{
+          minHeight: `${minHeight}px`,
+          maxHeight: `${maxHeight}px`,
+          wordBreak: 'break-word',
+          overflowWrap: 'anywhere',
+          overflowX: 'hidden',
+        }}
+      />
+
+      {/* Helper text and character count */}
+      <div className="flex justify-between items-start mt-1.5 px-1">
+        <div className="flex-1">
+          {hint && !error && (
+            <p className="text-xs text-muted-foreground">{hint}</p>
+          )}
+          {error && (
+            <p className="text-xs text-destructive">{error}</p>
+          )}
+        </div>
+        <span className={`text-xs ml-2 tabular-nums ${
+          value.length >= (maxLength * 0.9)
+            ? value.length >= maxLength
+              ? 'text-destructive'
+              : 'text-amber-500'
+            : value.length >= 10
+              ? 'text-green-600'
+              : 'text-muted-foreground'
+        }`}>
+          {value.length}/{maxLength}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Premium Input with Floating Label
+interface FloatingInputProps {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  label: string
+  placeholder?: string
+  hint?: string
+  maxLength?: number
+  required?: boolean
+  error?: string
+  autoFocus?: boolean
+}
+
+function FloatingInput({
+  id,
+  value,
+  onChange,
+  label,
+  placeholder = '',
+  hint,
+  maxLength = 100,
+  required,
+  error,
+  autoFocus
+}: FloatingInputProps) {
+  const [isFocused, setIsFocused] = useState(false)
+  const hasValue = value.length > 0
+  const showFloatingLabel = isFocused || hasValue
+
+  return (
+    <div className="relative">
+      {/* Floating Label */}
+      <label
+        htmlFor={id}
+        className={`
+          absolute left-3 transition-all duration-150 ease-out pointer-events-none z-10
+          ${showFloatingLabel
+            ? '-top-2.5 text-xs px-1 bg-background text-[var(--accent-blue)] font-medium'
+            : 'top-3 text-sm text-muted-foreground'
+          }
+        `}
+      >
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+
+      {/* Input */}
+      <input
+        type="text"
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={showFloatingLabel ? placeholder : ''}
+        maxLength={maxLength}
+        autoFocus={autoFocus}
+        className={`
+          w-full h-12 px-3 pt-1 rounded-lg border-2 text-sm
+          transition-all duration-150 ease-out
+          bg-background
+          focus:outline-none
+          ${isFocused
+            ? 'border-[var(--accent-blue)] shadow-[0_0_0_3px_rgba(59,130,246,0.1)] bg-[var(--accent-blue)]/[0.02]'
+            : error
+              ? 'border-destructive'
+              : 'border-border hover:border-muted-foreground/50'
+          }
+        `}
+      />
+
+      {/* Helper text */}
+      {(hint || error) && (
+        <div className="mt-1.5 px-1">
+          {hint && !error && (
+            <p className="text-xs text-muted-foreground">{hint}</p>
+          )}
+          {error && (
+            <p className="text-xs text-destructive">{error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface Step5PortfolioProps {
   onValidationChange?: (isValid: boolean) => void
@@ -135,9 +375,19 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
       >
         <Card className="glass-light p-6 sm:p-8">
           <h2 className="mb-2 text-2xl font-bold">Portfolio Submission</h2>
-          <p className="mb-6 text-foreground-muted">
-            Upload 3-5 work samples showcasing your expertise. Each sample should include a title and description.
+          <p className="mb-4 text-foreground-muted">
+            Upload 3-5 work samples showcasing your expertise.
           </p>
+
+          {/* Quality Expectations */}
+          <div className="mb-6 rounded-lg bg-muted/50 p-4 border border-border">
+            <p className="font-medium text-foreground mb-2">What makes a great sample?</p>
+            <ul className="text-sm text-foreground-muted space-y-1">
+              <li>• High-quality images or professionally formatted documents</li>
+              <li>• Work that demonstrates your specific expertise</li>
+              <li>• Projects where you played a significant role</li>
+            </ul>
+          </div>
 
           <FileUpload
             maxFiles={5}
@@ -157,8 +407,8 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
               </p>
 
               {portfolio.map((item, index) => (
-                <Card key={item.id} className="p-4 border-2">
-                  <div className="flex gap-4">
+                <Card key={item.id} className="p-4 border-2 overflow-hidden">
+                  <div className="flex gap-4 min-w-0">
                     {/* Preview */}
                     <div className="flex-shrink-0">
                       {item.thumbnailUrl ? (
@@ -175,62 +425,62 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
                     </div>
 
                     {/* Input Fields */}
-                    <div className="flex-1 space-y-4">
+                    <div className="flex-1 min-w-0 space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-muted-foreground mb-3">
-                            Sample {index + 1}: {item.fileName}
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-muted flex items-center gap-1">
+                              {getFileTypeIcon(item.fileType)}
+                              {getFileTypeName(item.fileType)}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {(item.fileSize / 1024).toFixed(0)} KB
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-foreground">
+                            Sample {index + 1}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            {item.fileName}
                           </p>
                         </div>
                         <button
                           onClick={() => handleFileRemove(item.id)}
-                          className="flex-shrink-0 p-1 hover:bg-destructive/10 rounded transition-colors"
+                          className="flex-shrink-0 p-1.5 hover:bg-destructive/10 rounded-full transition-colors"
                           aria-label="Remove file"
                         >
                           <X className="w-4 h-4 text-destructive" />
                         </button>
                       </div>
 
-                      <div>
-                        <Label htmlFor={`title-${item.id}`} className="text-sm font-medium">
-                          Title <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                          id={`title-${item.id}`}
-                          value={item.title}
-                          onChange={(e) => updatePortfolioItem(item.id, { title: e.target.value })}
-                          placeholder="e.g., E-commerce Website Redesign"
-                          className="mt-1.5"
-                          maxLength={100}
-                        />
-                        {!item.title && portfolio.length >= 3 && (
-                          <p className="text-xs text-destructive mt-1">Title is required</p>
-                        )}
-                      </div>
+                      {/* Premium Floating Input for Title */}
+                      <FloatingInput
+                        id={`title-${item.id}`}
+                        value={item.title}
+                        onChange={(value) => updatePortfolioItem(item.id, { title: value })}
+                        label="Title"
+                        placeholder="e.g., E-commerce Website Redesign"
+                        hint="Give this work a clear, descriptive title"
+                        maxLength={100}
+                        required
+                        error={!item.title && portfolio.length >= 3 ? 'Title is required' : undefined}
+                        autoFocus={index === portfolio.length - 1 && !item.title}
+                      />
 
-                      <div>
-                        <Label htmlFor={`description-${item.id}`} className="text-sm font-medium">
-                          Description <span className="text-destructive">*</span>
-                        </Label>
-                        <Textarea
-                          id={`description-${item.id}`}
-                          value={item.description}
-                          onChange={(e) => updatePortfolioItem(item.id, { description: e.target.value })}
-                          placeholder="Briefly describe this work sample, your role, and what makes it notable..."
-                          className="mt-1.5 min-h-[80px]"
-                          maxLength={500}
-                        />
-                        <div className="flex justify-between mt-1">
-                          <span>
-                            {!item.description && portfolio.length >= 3 && (
-                              <p className="text-xs text-destructive">Description is required</p>
-                            )}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {item.description.length}/500
-                          </span>
-                        </div>
-                      </div>
+                      {/* Premium Auto-Resize Textarea for Description */}
+                      <AutoResizeTextarea
+                        id={`description-${item.id}`}
+                        value={item.description}
+                        onChange={(value) => updatePortfolioItem(item.id, { description: value })}
+                        label="Description"
+                        placeholder="Describe your role, the tools you used, and the outcome achieved..."
+                        hint={item.description.length < 10 ? 'Minimum 10 characters — explain your role, process, and impact' : 'Explain your role, process, and impact'}
+                        maxLength={500}
+                        minHeight={100}
+                        maxHeight={280}
+                        required
+                        error={!item.description && portfolio.length >= 3 ? 'Description is required' : undefined}
+                      />
                     </div>
                   </div>
                 </Card>

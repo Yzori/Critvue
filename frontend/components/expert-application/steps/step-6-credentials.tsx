@@ -36,9 +36,16 @@ export function Step6Credentials({ onValidationChange }: Step6CredentialsProps) 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <Card className="glass-light p-6 sm:p-8">
           <h2 className="mb-2 text-2xl font-bold">Professional Credentials</h2>
-          <p className="mb-6 text-foreground-muted">
+          <p className="mb-4 text-foreground-muted">
             Add your education, certifications, and work history.
           </p>
+
+          {/* Quick tip */}
+          <div className="mb-6 rounded-lg bg-muted/50 p-4 border border-border">
+            <p className="text-sm text-foreground-muted">
+              <span className="font-medium text-foreground">Tip:</span> Focus on relevant experience that demonstrates your expertise in the skills you selected.
+            </p>
+          </div>
 
           <div className="space-y-8">
             {/* Education Section */}
@@ -89,14 +96,26 @@ export function Step6Credentials({ onValidationChange }: Step6CredentialsProps) 
             )}
           </div>
 
-          {/* Validation Message */}
-          {!isValid && (
-            <div className="mt-6 rounded-lg bg-destructive/10 border border-destructive/20 p-4">
-              <p className="text-sm text-destructive">
-                Please add at least 1 education entry and 1 employment entry to continue.
-              </p>
+          {/* Progress Indicator */}
+          <div className="mt-6 p-4 rounded-lg border border-border bg-muted/30">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Requirements</span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${isValid ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {isValid ? 'Complete' : 'In Progress'}
+              </span>
             </div>
-          )}
+            <div className="space-y-2 text-sm">
+              <div className={`flex items-center gap-2 ${credentials.education.length >= 1 ? 'text-green-600' : 'text-foreground-muted'}`}>
+                {credentials.education.length >= 1 ? '✓' : '○'} At least 1 education entry
+              </div>
+              <div className={`flex items-center gap-2 ${credentials.employment.length >= 1 ? 'text-green-600' : 'text-foreground-muted'}`}>
+                {credentials.employment.length >= 1 ? '✓' : '○'} At least 1 employment entry
+              </div>
+              <div className={`flex items-center gap-2 ${credentials.certifications.length >= 1 ? 'text-green-600' : 'text-foreground-muted'}`}>
+                {credentials.certifications.length >= 1 ? '✓' : '○'} Certifications (optional)
+              </div>
+            </div>
+          </div>
         </Card>
       </motion.div>
     </div>
