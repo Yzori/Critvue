@@ -283,18 +283,18 @@ export default function ReviewDetailPage() {
   // Loading state with skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-accent-blue/5">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-accent-blue/5 dark:from-[var(--dark-tier-1)] dark:via-[var(--dark-tier-1)] dark:to-[var(--dark-tier-1)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             {/* Hero skeleton */}
-            <div className="h-64 bg-gray-200 rounded-3xl" />
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-3xl" />
             <div className="flex gap-8">
               <div className="flex-1 space-y-4">
-                <div className="h-8 bg-gray-200 rounded-lg w-3/4" />
-                <div className="h-4 bg-gray-200 rounded w-1/2" />
-                <div className="h-32 bg-gray-200 rounded-2xl" />
+                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-2xl" />
               </div>
-              <div className="w-[380px] h-96 bg-gray-200 rounded-3xl hidden lg:block" />
+              <div className="w-[380px] h-96 bg-gray-200 dark:bg-gray-700 rounded-3xl hidden lg:block" />
             </div>
           </div>
         </div>
@@ -305,10 +305,10 @@ export default function ReviewDetailPage() {
   // Error state
   if (error || !review) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50/30 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50/30 dark:from-[var(--dark-tier-1)] dark:via-[var(--dark-tier-1)] dark:to-[var(--dark-tier-1)] flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <div className="size-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center shadow-lg shadow-red-100">
-            <AlertCircle className="size-12 text-red-500" />
+          <div className="size-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-red-50 dark:from-red-500/20 dark:to-red-500/10 flex items-center justify-center shadow-lg shadow-red-100 dark:shadow-red-900/20">
+            <AlertCircle className="size-12 text-red-500 dark:text-red-400" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Review Not Found</h1>
           <p className="text-foreground-muted mb-8">{error || "This review request does not exist or has been removed."}</p>
@@ -435,7 +435,7 @@ export default function ReviewDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-accent-blue/5">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-accent-blue/5 dark:from-[var(--dark-tier-1)] dark:via-[var(--dark-tier-1)] dark:to-[var(--dark-tier-1)]">
       {/* Enhanced Lightbox Modal - Rendered via Portal */}
       {isMounted && lightboxIndex !== null && currentLightboxFile && createPortal(
         <div
@@ -651,19 +651,19 @@ export default function ReviewDetailPage() {
               alt=""
               className="w-full h-full object-cover scale-110 blur-2xl opacity-30"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white" />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/60 to-white dark:from-[var(--dark-tier-1)]/80 dark:via-[var(--dark-tier-1)]/60 dark:to-[var(--dark-tier-1)]" />
           </div>
         )}
 
         {/* Top Navigation */}
-        <nav className="relative z-10 sticky top-0 bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm">
+        <nav className="relative z-10 sticky top-0 bg-white/70 dark:bg-[var(--dark-tier-2)]/70 backdrop-blur-xl border-b border-white/50 dark:border-white/10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.back()}
-                className="gap-2 hover:bg-white/50"
+                className="gap-2 hover:bg-white/50 dark:hover:bg-white/10"
               >
                 <ArrowLeft className="size-4" />
                 <span className="hidden sm:inline">Back</span>
@@ -675,13 +675,13 @@ export default function ReviewDetailPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => router.push(`/review/${review.id}/edit`)}
-                    className="gap-2 bg-white/50 hover:bg-white"
+                    className="gap-2 bg-white/50 hover:bg-white dark:bg-white/10 dark:hover:bg-white/20"
                   >
                     <Edit className="size-4" />
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" onClick={handleShare} className="hover:bg-white/50">
+                <Button variant="ghost" size="icon" onClick={handleShare} className="hover:bg-white/50 dark:hover:bg-white/10">
                   <Share2 className="size-4" />
                 </Button>
                 {!isOwner && (
@@ -689,7 +689,7 @@ export default function ReviewDetailPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => toast.info("Report feature coming soon")}
-                    className="text-foreground-muted hover:text-destructive hover:bg-white/50"
+                    className="text-foreground-muted hover:text-destructive hover:bg-white/50 dark:hover:bg-white/10"
                   >
                     <Flag className="size-4" />
                   </Button>
@@ -717,7 +717,7 @@ export default function ReviewDetailPage() {
               "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold shadow-sm",
               isPaidReview
                 ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white"
-                : "bg-white text-gray-700 border border-gray-200"
+                : "bg-white dark:bg-[var(--dark-tier-2)] text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
             )}>
               {isPaidReview ? <DollarSign className="size-4" /> : <MessageSquare className="size-4" />}
               {isPaidReview ? "Expert Review" : "Free Review"}
@@ -728,7 +728,7 @@ export default function ReviewDetailPage() {
                 variant="info"
                 size="md"
                 icon={<Shield className="size-3.5" />}
-                className="bg-purple-100 text-purple-700 border-purple-200 shadow-sm"
+                className="bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30 shadow-sm"
               >
                 NDA Required
               </Badge>
@@ -775,7 +775,7 @@ export default function ReviewDetailPage() {
           <div className="flex-1 min-w-0 space-y-6 order-2 lg:order-1">
 
             {/* Description Card */}
-            <section className="rounded-3xl bg-white border border-gray-100 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
+            <section className="rounded-3xl bg-white dark:bg-[var(--dark-tier-2)] border border-gray-100 dark:border-gray-800 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
                   <FileText className="size-4 text-accent-blue" />
@@ -788,7 +788,7 @@ export default function ReviewDetailPage() {
 
               {/* Feedback Areas as Tags */}
               {feedbackTags.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-gray-100">
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                   <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                     <Target className="size-4 text-accent-blue" />
                     Looking for feedback on
@@ -809,7 +809,7 @@ export default function ReviewDetailPage() {
 
             {/* Files Gallery Section */}
             {review.files && review.files.length > 0 && (
-              <section className="rounded-3xl bg-white border border-gray-100 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
+              <section className="rounded-3xl bg-white dark:bg-[var(--dark-tier-2)] border border-gray-100 dark:border-gray-800 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
@@ -848,7 +848,7 @@ export default function ReviewDetailPage() {
                       <div
                         key={file.id}
                         className={cn(
-                          "group relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50",
+                          "group relative rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-[var(--dark-tier-3)]",
                           "hover:border-accent-blue/30 hover:shadow-lg transition-all duration-300",
                           index === 0 && review.files.length > 1 && "sm:col-span-2"
                         )}
@@ -935,7 +935,7 @@ export default function ReviewDetailPage() {
             )}
 
             {/* Review Slots Section - Compact Design */}
-            <section className="rounded-3xl bg-white border border-gray-100 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
+            <section className="rounded-3xl bg-white dark:bg-[var(--dark-tier-2)] border border-gray-100 dark:border-gray-800 p-6 lg:p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <div className="size-8 rounded-lg bg-accent-blue/10 flex items-center justify-center">
@@ -951,7 +951,7 @@ export default function ReviewDetailPage() {
               {/* Visual Progress Bar */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-accent-blue to-cyan-400 rounded-full transition-all duration-500"
                       style={{ width: `${completionPercent}%` }}
@@ -975,10 +975,10 @@ export default function ReviewDetailPage() {
                         key={slot.id}
                         className={cn(
                           "size-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all",
-                          isAvailable && "bg-gray-100 text-gray-500 border-2 border-dashed border-gray-300",
-                          isClaimed && "bg-amber-100 text-amber-700 border-2 border-amber-300",
-                          isSubmitted && "bg-blue-100 text-blue-700 border-2 border-blue-300",
-                          isCompleted && "bg-green-100 text-green-700 border-2 border-green-300"
+                          isAvailable && "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-600",
+                          isClaimed && "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-2 border-amber-300 dark:border-amber-500/40",
+                          isSubmitted && "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-500/40",
+                          isCompleted && "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 border-2 border-green-300 dark:border-green-500/40"
                         )}
                         title={`Slot ${index + 1}: ${slot.status}${slot.reviewer_username ? ` - ${slot.reviewer_username}` : ""}`}
                       >
@@ -1016,8 +1016,8 @@ export default function ReviewDetailPage() {
                           className={cn(
                             "p-4 rounded-xl border transition-colors",
                             slot.status === "available"
-                              ? "bg-gray-50 border-gray-200"
-                              : "bg-white border-gray-100"
+                              ? "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
+                              : "bg-white dark:bg-[var(--dark-tier-3)] border-gray-100 dark:border-gray-700"
                           )}
                         >
                           <div className="flex items-center justify-between">
@@ -1083,7 +1083,7 @@ export default function ReviewDetailPage() {
             <div className="lg:sticky lg:top-20 space-y-4">
 
               {/* Premium Glassmorphism Card */}
-              <div className="rounded-3xl overflow-hidden shadow-xl shadow-gray-200/50">
+              <div className="rounded-3xl overflow-hidden shadow-xl shadow-gray-200/50 dark:shadow-black/30">
                 {/* Gradient Header */}
                 <div className={cn(
                   "p-6 text-white",
@@ -1107,7 +1107,7 @@ export default function ReviewDetailPage() {
                 </div>
 
                 {/* Card Body */}
-                <div className="bg-white p-6 space-y-5">
+                <div className="bg-white dark:bg-[var(--dark-tier-2)] p-6 space-y-5">
                   {/* Requester Row */}
                   <div className="flex items-center gap-4">
                     <div className="size-14 rounded-full bg-gradient-to-br from-accent-blue to-cyan-500 flex items-center justify-center text-white text-lg font-bold shadow-lg shadow-accent-blue/25">
@@ -1133,11 +1133,11 @@ export default function ReviewDetailPage() {
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-100">
+                    <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/30 border border-gray-100 dark:border-gray-700">
                       <p className="text-2xl font-bold text-accent-blue">{availableSlots}</p>
                       <p className="text-xs text-foreground-muted font-medium">Slots Open</p>
                     </div>
-                    <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-100">
+                    <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/30 border border-gray-100 dark:border-gray-700">
                       <p className="text-2xl font-bold text-foreground">{totalSlots}</p>
                       <p className="text-xs text-foreground-muted font-medium">Total Slots</p>
                     </div>
@@ -1169,7 +1169,7 @@ export default function ReviewDetailPage() {
                         <p className="text-sm font-semibold text-foreground">Your Review Request</p>
                       </div>
                     ) : availableSlots === 0 ? (
-                      <div className="text-center p-4 rounded-2xl bg-gray-50 border border-gray-200">
+                      <div className="text-center p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
                         <Users className="size-6 mx-auto mb-2 text-foreground-muted" />
                         <p className="text-sm font-semibold text-foreground-muted">All Slots Filled</p>
                       </div>
@@ -1186,14 +1186,14 @@ export default function ReviewDetailPage() {
 
                   {/* Deadline Warning */}
                   {deadlineInfo && deadlineInfo.urgent && (
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/20 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/30">
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-amber-100 flex items-center justify-center">
-                          <Clock className="size-5 text-amber-600" />
+                        <div className="size-10 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+                          <Clock className="size-5 text-amber-600 dark:text-amber-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-amber-800">{deadlineInfo.text}</p>
-                          <p className="text-xs text-amber-600">Deadline approaching</p>
+                          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">{deadlineInfo.text}</p>
+                          <p className="text-xs text-amber-600 dark:text-amber-400">Deadline approaching</p>
                         </div>
                       </div>
                     </div>
@@ -1201,14 +1201,14 @@ export default function ReviewDetailPage() {
 
                   {/* NDA Badge */}
                   {review.requires_nda && (
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200">
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-500/20 dark:to-violet-500/10 border border-purple-200 dark:border-purple-500/30">
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-purple-100 flex items-center justify-center">
-                          <Shield className="size-5 text-purple-600" />
+                        <div className="size-10 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center">
+                          <Shield className="size-5 text-purple-600 dark:text-purple-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-purple-800">NDA Required</p>
-                          <p className="text-xs text-purple-600">Sign before viewing files</p>
+                          <p className="text-sm font-semibold text-purple-800 dark:text-purple-200">NDA Required</p>
+                          <p className="text-xs text-purple-600 dark:text-purple-400">Sign before viewing files</p>
                         </div>
                       </div>
                     </div>
@@ -1221,7 +1221,7 @@ export default function ReviewDetailPage() {
       </main>
 
       {/* Mobile Bottom Action Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[var(--dark-tier-2)]/95 backdrop-blur-xl border-t border-gray-200 dark:border-gray-700 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
         <div className="px-4 py-4 pb-safe">
           <div className="flex items-center gap-4">
             {/* Price */}

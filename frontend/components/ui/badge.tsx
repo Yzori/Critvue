@@ -18,11 +18,11 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        success: "bg-green-50 text-green-700 border border-green-200/50 shadow-sm shadow-green-100/50",
-        warning: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm shadow-amber-100/50",
-        error: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm shadow-red-100/50",
-        info: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm shadow-blue-100/50",
-        neutral: "bg-gray-50 text-gray-700 border border-gray-200/50 shadow-sm shadow-gray-100/50",
+        success: "bg-green-50 text-green-700 border border-green-200/50 shadow-sm shadow-green-100/50 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30 dark:shadow-green-900/20",
+        warning: "bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm shadow-amber-100/50 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 dark:shadow-amber-900/20",
+        error: "bg-red-50 text-red-700 border border-red-200/50 shadow-sm shadow-red-100/50 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30 dark:shadow-red-900/20",
+        info: "bg-blue-50 text-blue-700 border border-blue-200/50 shadow-sm shadow-blue-100/50 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 dark:shadow-blue-900/20",
+        neutral: "bg-gray-50 text-gray-700 border border-gray-200/50 shadow-sm shadow-gray-100/50 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30 dark:shadow-gray-900/20",
         primary: "bg-accent-blue/10 text-accent-blue border border-accent-blue/20 shadow-sm shadow-accent-blue/5",
         secondary: "bg-accent-peach/10 text-accent-peach border border-accent-peach/20 shadow-sm shadow-accent-peach/5",
       },
