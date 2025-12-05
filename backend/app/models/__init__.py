@@ -34,6 +34,10 @@ from app.models.challenge_invitation import ChallengeInvitation, InvitationStatu
 from app.models.challenge_participant import ChallengeParticipant
 # Admin audit system
 from app.models.admin_audit_log import AdminAuditLog, AdminAction
+# Privacy settings
+from app.models.privacy_settings import PrivacySettings, ProfileVisibility
+# User sessions
+from app.models.user_session import UserSession
 
 __all__ = [
     "User",
@@ -99,4 +103,9 @@ __all__ = [
     # Admin audit system
     "AdminAuditLog",
     "AdminAction",
+    # Privacy settings
+    "PrivacySettings",
+    "ProfileVisibility",
+    # User sessions
+    "UserSession",
 ]

@@ -13,6 +13,7 @@ from starlette.config import Config
 
 from app.db.session import get_db
 from app.models.user import User
+from app.models.user_session import UserSession
 from app.schemas.user import UserCreate, UserLogin, UserResponse
 from app.core.security import (
     verify_password,
@@ -29,6 +30,46 @@ from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
+
+
+def parse_user_agent(user_agent: str) -> dict:
+    """Parse user agent string to extract browser and OS info"""
+    browser = "Unknown"
+    os = "Unknown"
+    device_type = "desktop"
+
+    if not user_agent:
+        return {"browser": browser, "os": os, "device_type": device_type}
+
+    user_agent_lower = user_agent.lower()
+
+    # Detect OS
+    if "windows" in user_agent_lower:
+        os = "Windows"
+    elif "mac os" in user_agent_lower or "macintosh" in user_agent_lower:
+        os = "macOS"
+    elif "linux" in user_agent_lower:
+        os = "Linux"
+    elif "android" in user_agent_lower:
+        os = "Android"
+        device_type = "mobile"
+    elif "iphone" in user_agent_lower or "ipad" in user_agent_lower:
+        os = "iOS"
+        device_type = "mobile" if "iphone" in user_agent_lower else "tablet"
+
+    # Detect browser
+    if "chrome" in user_agent_lower and "edg" not in user_agent_lower:
+        browser = "Chrome"
+    elif "firefox" in user_agent_lower:
+        browser = "Firefox"
+    elif "safari" in user_agent_lower and "chrome" not in user_agent_lower:
+        browser = "Safari"
+    elif "edg" in user_agent_lower:
+        browser = "Edge"
+    elif "opera" in user_agent_lower or "opr" in user_agent_lower:
+        browser = "Opera"
+
+    return {"browser": browser, "os": os, "device_type": device_type}
 
 # OAuth setup
 oauth = OAuth()
@@ -179,6 +220,27 @@ async def login(
     token_data = {"user_id": user.id, "email": user.email}
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
+
+    # Create a new session record
+    user_agent = request.headers.get("user-agent", "")
+    ua_info = parse_user_agent(user_agent)
+    client_ip = request.client.host if request.client else None
+
+    new_session = UserSession(
+        user_id=user.id,
+        session_token=access_token[:32],  # Use first 32 chars as identifier
+        device_type=ua_info["device_type"],
+        browser=ua_info["browser"],
+        os=ua_info["os"],
+        ip_address=client_ip,
+        user_agent=user_agent,
+        location="Current session",  # Could be enriched with IP geolocation
+        is_active=True,
+        created_at=datetime.utcnow(),
+        last_active_at=datetime.utcnow(),
+    )
+    db.add(new_session)
+    await db.commit()
 
     # Set access token as httpOnly cookie
     # max_age must match JWT expiration time from settings
@@ -351,6 +413,88 @@ async def refresh_access_token(
     return {
         "message": "Token refreshed successfully",
         "detail": "New access token has been set in httpOnly cookie"
+    }
+
+
+@router.post("/change-password")
+async def change_password(
+    request: Request,
+    current_password: str = None,
+    new_password: str = None,
+    body: dict = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Change user password while logged in.
+
+    Args:
+        request: FastAPI request
+        body: Request body with current_password and new_password
+        current_user: Current authenticated user
+        db: Database session
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: If current password is wrong or validation fails
+    """
+    from pydantic import BaseModel, Field
+
+    class ChangePasswordRequest(BaseModel):
+        current_password: str = Field(..., min_length=1)
+        new_password: str = Field(..., min_length=8)
+
+    # Parse body from request
+    import json
+    body_bytes = await request.body()
+    body_data = json.loads(body_bytes) if body_bytes else {}
+
+    try:
+        password_data = ChangePasswordRequest(**body_data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid request body. Required: current_password, new_password (min 8 chars)"
+        )
+
+    # Check if user has a password (OAuth users might not)
+    if not current_user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change password for OAuth-only accounts. Please set a password first."
+        )
+
+    # Verify current password
+    if not verify_password(password_data.current_password, current_user.hashed_password):
+        security_logger.log_auth_failure(
+            current_user.email,
+            request,
+            reason="incorrect_current_password",
+            event_type="change_password"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+
+    # Ensure new password is different
+    if verify_password(password_data.new_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from current password"
+        )
+
+    # Update password
+    current_user.hashed_password = get_password_hash(password_data.new_password)
+    await db.commit()
+
+    security_logger.log_auth_success(current_user.email, request, event_type="change_password")
+
+    return {
+        "message": "Password changed successfully",
+        "detail": "Your password has been updated. Please use the new password for future logins."
     }
 
 
@@ -530,3 +674,130 @@ async def google_callback(
             url=f"{settings.FRONTEND_URL}/login?error=google_auth_failed",
             status_code=302
         )
+
+
+# =============================================================================
+# SESSION MANAGEMENT ENDPOINTS
+# =============================================================================
+
+@router.get("/sessions")
+async def get_sessions(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    access_token: Optional[str] = Cookie(None)
+) -> list[dict]:
+    """
+    Get all active sessions for the current user.
+    """
+    # Get current session token to mark it
+    current_session_token = None
+    if access_token:
+        payload = decode_access_token(access_token)
+        if payload:
+            current_session_token = access_token[:32]  # Use first 32 chars as identifier
+
+    # Get all active sessions for user
+    result = await db.execute(
+        select(UserSession)
+        .where(UserSession.user_id == current_user.id)
+        .where(UserSession.is_active == True)
+        .order_by(UserSession.last_active_at.desc())
+    )
+    sessions = result.scalars().all()
+
+    return [
+        {
+            "id": str(session.id),
+            "device": session.device_type or "Desktop",
+            "browser": session.browser or "Unknown",
+            "os": session.os or "Unknown",
+            "location": session.location or "Unknown location",
+            "last_active": session.last_active_at.isoformat() if session.last_active_at else None,
+            "is_current": session.session_token == current_session_token if current_session_token else False,
+        }
+        for session in sessions
+    ]
+
+
+@router.delete("/sessions/{session_id}")
+async def revoke_session(
+    session_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    Revoke a specific session by ID.
+    """
+    # Find the session
+    result = await db.execute(
+        select(UserSession)
+        .where(UserSession.id == session_id)
+        .where(UserSession.user_id == current_user.id)
+        .where(UserSession.is_active == True)
+    )
+    session = result.scalar_one_or_none()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+
+    # Revoke the session
+    session.is_active = False
+    session.revoked_at = datetime.utcnow()
+    await db.commit()
+
+    security_logger.log_auth_success(
+        current_user.email,
+        request,
+        event_type="session_revoked"
+    )
+
+    return {"message": "Session revoked successfully"}
+
+
+@router.delete("/sessions")
+async def revoke_all_other_sessions(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    access_token: Optional[str] = Cookie(None)
+) -> dict:
+    """
+    Revoke all sessions except the current one.
+    """
+    # Get current session token
+    current_session_token = None
+    if access_token:
+        current_session_token = access_token[:32]
+
+    # Get all active sessions except current
+    result = await db.execute(
+        select(UserSession)
+        .where(UserSession.user_id == current_user.id)
+        .where(UserSession.is_active == True)
+    )
+    sessions = result.scalars().all()
+
+    revoked_count = 0
+    for session in sessions:
+        if session.session_token != current_session_token:
+            session.is_active = False
+            session.revoked_at = datetime.utcnow()
+            revoked_count += 1
+
+    await db.commit()
+
+    security_logger.log_auth_success(
+        current_user.email,
+        request,
+        event_type="all_sessions_revoked"
+    )
+
+    return {
+        "message": f"Revoked {revoked_count} session(s)",
+        "revoked_count": revoked_count
+    }

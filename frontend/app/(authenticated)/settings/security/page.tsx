@@ -83,19 +83,29 @@ export default function SecuritySettingsPage() {
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [connectedAccounts, setConnectedAccounts] = React.useState<ConnectedAccount[]>([]);
 
-  // Simulated sessions data (replace with actual API call)
+  // Fetch sessions from API
+  const fetchSessions = React.useCallback(async () => {
+    try {
+      const data = await apiClient.get<Session[]>("/auth/sessions");
+      setSessions(data);
+    } catch (error) {
+      console.error("Failed to fetch sessions:", error);
+      // Fallback to showing current session
+      setSessions([
+        {
+          id: "current",
+          device: "Desktop",
+          browser: "Chrome",
+          location: "Current session",
+          last_active: new Date().toISOString(),
+          is_current: true,
+        },
+      ]);
+    }
+  }, []);
+
   React.useEffect(() => {
-    // Simulated data - in production, fetch from API
-    setSessions([
-      {
-        id: "current",
-        device: "Desktop",
-        browser: "Chrome",
-        location: "Current session",
-        last_active: new Date().toISOString(),
-        is_current: true,
-      },
-    ]);
+    fetchSessions();
 
     // Check for connected OAuth accounts
     // This would come from the user object or a separate API call
@@ -103,7 +113,7 @@ export default function SecuritySettingsPage() {
       // Placeholder - check if user signed up with Google
       setConnectedAccounts([]);
     }
-  }, [user]);
+  }, [user, fetchSessions]);
 
   const validatePassword = (): boolean => {
     const errors: Partial<PasswordFormData> = {};
@@ -155,8 +165,9 @@ export default function SecuritySettingsPage() {
   const handleRevokeSession = async (sessionId: string) => {
     try {
       await apiClient.delete(`/auth/sessions/${sessionId}`);
-      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
       toast.success("Session revoked successfully");
+      // Refresh sessions list
+      await fetchSessions();
     } catch (error) {
       console.error("Failed to revoke session:", error);
       toast.error("Failed to revoke session");
@@ -165,9 +176,10 @@ export default function SecuritySettingsPage() {
 
   const handleRevokeAllSessions = async () => {
     try {
-      await apiClient.delete("/auth/sessions");
-      setSessions((prev) => prev.filter((s) => s.is_current));
-      toast.success("All other sessions revoked");
+      const result = await apiClient.delete<{ revoked_count: number }>("/auth/sessions");
+      toast.success(`Revoked ${result.revoked_count} session(s)`);
+      // Refresh sessions list
+      await fetchSessions();
     } catch (error) {
       console.error("Failed to revoke sessions:", error);
       toast.error("Failed to revoke sessions");

@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import apiClient from "@/lib/api/client";
 
 /**
  * Privacy Settings Page
@@ -80,9 +81,13 @@ export default function PrivacySettingsPage() {
   const fetchSettings = async () => {
     try {
       setIsLoading(true);
-      // In production, fetch from API
-      // const data = await apiClient.get<PrivacySettings>("/settings/privacy");
-      // For now, use defaults
+      const data = await apiClient.get<PrivacySettings>("/settings/privacy");
+      setSettings(data);
+      setOriginalSettings(data);
+    } catch (error) {
+      console.error("Failed to fetch privacy settings:", error);
+      toast.error("Failed to load privacy settings");
+      // Fallback to defaults on error
       const defaultSettings: PrivacySettings = {
         profile_visibility: "public",
         show_on_leaderboard: true,
@@ -92,9 +97,6 @@ export default function PrivacySettingsPage() {
       };
       setSettings(defaultSettings);
       setOriginalSettings(defaultSettings);
-    } catch (error) {
-      console.error("Failed to fetch privacy settings:", error);
-      toast.error("Failed to load privacy settings");
     } finally {
       setIsLoading(false);
     }
@@ -103,10 +105,9 @@ export default function PrivacySettingsPage() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      // In production, save to API
-      // await apiClient.patch("/settings/privacy", settings);
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-      setOriginalSettings(settings);
+      const updatedSettings = await apiClient.patch<PrivacySettings>("/settings/privacy", settings);
+      setSettings(updatedSettings);
+      setOriginalSettings(updatedSettings);
       setHasChanges(false);
       toast.success("Privacy settings saved");
     } catch (error) {
