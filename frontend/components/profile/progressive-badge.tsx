@@ -10,6 +10,7 @@
  */
 
 import * as React from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
@@ -36,7 +37,8 @@ export interface Badge {
   name: string;
   description: string;
   icon: keyof typeof badgeIcons;
-  category: 'milestone' | 'expertise' | 'behavior' | 'streak' | 'community';
+  imageUrl?: string;       // Optional image URL (for tier badges)
+  category: 'milestone' | 'expertise' | 'behavior' | 'streak' | 'community' | 'tier';
   status: BadgeStatus;
   progress?: number;       // 0-100 for in_progress
   requirement?: string;    // "100 reviews", "Help 10 users", etc.
@@ -67,6 +69,7 @@ const categoryColors = {
   behavior: { bg: 'from-green-400 to-green-600', ring: 'ring-green-400/30' },
   streak: { bg: 'from-orange-400 to-red-500', ring: 'ring-orange-400/30' },
   community: { bg: 'from-purple-400 to-purple-600', ring: 'ring-purple-400/30' },
+  tier: { bg: 'from-cyan-400 to-blue-600', ring: 'ring-cyan-400/30' },
 };
 
 const rarityGlow = {
@@ -179,14 +182,24 @@ export function ProgressiveBadge({
         {/* Icon container */}
         <div
           className={cn(
-            'relative rounded-full flex items-center justify-center',
+            'relative rounded-full flex items-center justify-center overflow-hidden',
             sizes.icon,
-            badge.status === 'earned' && `bg-gradient-to-br ${colors.bg} shadow-lg`,
-            badge.status === 'in_progress' && 'bg-background border-2 border-border',
-            badge.status === 'locked' && 'bg-muted'
+            badge.imageUrl
+              ? 'bg-transparent'
+              : badge.status === 'earned' && `bg-gradient-to-br ${colors.bg} shadow-lg`,
+            !badge.imageUrl && badge.status === 'in_progress' && 'bg-background border-2 border-border',
+            !badge.imageUrl && badge.status === 'locked' && 'bg-muted'
           )}
         >
-          {badge.status === 'locked' ? (
+          {badge.imageUrl ? (
+            // Render image for badges with imageUrl (like tier badges)
+            <Image
+              src={badge.imageUrl}
+              alt={badge.name}
+              fill
+              className="object-contain p-0.5"
+            />
+          ) : badge.status === 'locked' ? (
             <Lock className={cn(sizes.iconInner, 'text-muted-foreground')} />
           ) : (
             <IconComponent

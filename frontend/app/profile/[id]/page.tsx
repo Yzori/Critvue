@@ -1,22 +1,15 @@
 "use client";
 
 /**
- * Profile Page - Premium Redesign
+ * Public Profile Page
  *
- * A unique, distinctive profile that sets Critvue apart with:
- * - Reviewer DNA radar chart (unique fingerprint visualization)
- * - Bento grid layout with visual hierarchy
- * - Progressive badge system with locked/in-progress states
- * - Contextual stats with percentiles and trends
- * - Dual-track activity heatmap
- * - Impact timeline with rich storytelling
- *
- * Mobile-responsive (375px → 2xl)
- * WCAG 2.1 Level AA compliant
+ * Displays any user's public profile by their ID.
+ * Shows view-only mode for other users, with options to request review or contact.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -28,7 +21,6 @@ import {
   Clock,
   MessageSquare,
   Code,
-  Pencil,
   Share2,
   Mail,
   ArrowRight,
@@ -38,10 +30,9 @@ import {
 } from "lucide-react";
 
 // API imports
-import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
+import { getUserProfile, getUserDNA, ReviewerDNAResponse, ProfileData } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
-import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/karma";
-import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/activity";
+import { getUserBadges, Badge as ApiBadge } from "@/lib/api/karma";
 import { ApiClientError } from "@/lib/api/client";
 
 // Component imports
@@ -49,42 +40,17 @@ import { ProfilePageSkeleton } from "@/components/profile/profile-skeleton";
 import {
   ProfileLoadError,
   ProfileNotFoundError,
-  AuthenticationRequiredError,
   NetworkError,
   EmptyPortfolioState,
 } from "@/components/profile/error-states";
-import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { useAuth } from "@/contexts/AuthContext";
 import { TierBadge } from "@/components/tier/tier-badge";
 import { UserTier, getTierInfo } from "@/lib/types/tier";
 
-// New premium components
+// Premium components
 import { ReviewerDNA, ReviewerDNAData } from "@/components/profile/reviewer-dna";
 import { BadgeGrid, Badge as BadgeType } from "@/components/profile/progressive-badge";
-import { ActivityHeatmap, DayActivity } from "@/components/profile/activity-heatmap";
 import { ContextualStatCard } from "@/components/profile/contextual-stat-card";
-import { ImpactTimeline, TimelineEvent } from "@/components/profile/impact-timeline";
-
-interface ProfileData {
-  id: string;
-  username: string;
-  full_name: string;
-  title: string;
-  bio: string;
-  avatar_url?: string;
-  rating: number;
-  total_reviews_given: number;
-  total_reviews_received: number;
-  avg_response_time_hours: number;
-  member_since: string;
-  verified: boolean;
-  badges: string[];
-  specialty_tags: string[];
-  user_tier: string;
-  karma_points: number;
-  tier_achieved_at?: string;
-  role?: "creator" | "reviewer" | "admin";
-}
 
 // Default DNA values for users without enough data
 const defaultReviewerDNA: ReviewerDNAData = {
@@ -102,7 +68,6 @@ const defaultReviewerDNA: ReviewerDNAData = {
 function transformDNAResponse(response: ReviewerDNAResponse): ReviewerDNAData {
   const dnaData: ReviewerDNAData = { ...defaultReviewerDNA };
 
-  // Map dimensions from API response
   for (const dim of response.dimensions) {
     if (dim.key in dnaData) {
       (dnaData as unknown as Record<string, number>)[dim.key] = dim.value;
@@ -115,45 +80,25 @@ function transformDNAResponse(response: ReviewerDNAResponse): ReviewerDNAData {
 /**
  * Transform API badges to component format
  */
-function transformApiBadges(earnedBadges: ApiBadge[], availableBadges: ApiBadge[]): BadgeType[] {
-  const badgeIconMap: Record<string, keyof typeof badgeIconMapping> = {
-    // Milestone badges
+function transformApiBadges(apiBadges: ApiBadge[]): BadgeType[] {
+  const badgeIconMap: Record<string, string> = {
     first_review: 'trophy',
     reviews_10: 'award',
     reviews_50: 'award',
     reviews_100: 'award',
     reviews_500: 'trophy',
-    // Streak badges
     streak_7: 'flame',
     streak_30: 'flame',
     streak_100: 'flame',
-    // Quality badges
     five_star_streak: 'star',
     helpful_reviewer: 'heart',
-    // Skill badges
     code_expert: 'target',
     design_expert: 'target',
     writing_expert: 'target',
-    // Special badges
     early_adopter: 'zap',
     speed_demon: 'zap',
     deep_thinker: 'message',
     mentor: 'users',
-  };
-
-  const badgeIconMapping = {
-    trophy: 'trophy' as const,
-    award: 'award' as const,
-    flame: 'flame' as const,
-    star: 'star' as const,
-    heart: 'heart' as const,
-    target: 'target' as const,
-    zap: 'zap' as const,
-    message: 'message' as const,
-    users: 'users' as const,
-    shield: 'shield' as const,
-    clock: 'clock' as const,
-    trending: 'trending' as const,
   };
 
   const categoryMap: Record<string, BadgeType['category']> = {
@@ -165,8 +110,7 @@ function transformApiBadges(earnedBadges: ApiBadge[], availableBadges: ApiBadge[
     seasonal: 'community',
   };
 
-  // Transform earned badges
-  const earned: BadgeType[] = earnedBadges.map((badge) => ({
+  return apiBadges.map((badge) => ({
     id: badge.badge_code,
     name: badge.badge_name,
     description: badge.badge_description,
@@ -176,52 +120,22 @@ function transformApiBadges(earnedBadges: ApiBadge[], availableBadges: ApiBadge[
     earnedAt: badge.earned_at || undefined,
     rarity: badge.rarity,
   }));
-
-  // Transform available badges (in progress or locked)
-  const available: BadgeType[] = availableBadges.map((badge) => {
-    const hasProgress = badge.progress && badge.progress.percentage > 0;
-    return {
-      id: badge.badge_code,
-      name: badge.badge_name,
-      description: badge.badge_description,
-      icon: badgeIconMap[badge.badge_code] || 'award',
-      category: categoryMap[badge.category] || 'milestone',
-      status: hasProgress ? 'in_progress' as const : 'locked' as const,
-      progress: badge.progress?.percentage,
-      currentValue: badge.progress?.current,
-      targetValue: badge.progress?.required,
-      requirement: badge.progress?.description,
-      rarity: badge.rarity,
-    };
-  });
-
-  return [...earned, ...available];
 }
 
-/**
- * Transform API timeline events to component format
- */
-function transformTimelineEvents(apiEvents: ApiTimelineEvent[]): TimelineEvent[] {
-  return apiEvents.map((event) => ({
-    id: event.id,
-    type: event.type as TimelineEvent['type'],
-    title: event.title,
-    description: event.description,
-    timestamp: event.timestamp,
-    metadata: event.metadata ? {
-      projectName: event.metadata.project_name as string | undefined,
-      rating: event.metadata.rating as number | undefined,
-      quote: event.metadata.quote as string | undefined,
-      badgeName: event.metadata.badgeName as string | undefined,
-      milestoneValue: event.metadata.milestoneValue as number | undefined,
-    } : undefined,
-  }));
+interface PageProps {
+  params: Promise<{ id: string }>;
 }
 
-export default function ProfilePage() {
+export default function PublicProfilePage({ params }: PageProps) {
+  const resolvedParams = use(params);
+  const userId = parseInt(resolvedParams.id, 10);
+
+  const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  const { updateUserAvatar } = useAuth();
-  const [isOwnProfile] = useState(true);
+  const { user: currentUser } = useAuth();
+
+  // Check if viewing own profile - redirect to /profile if so
+  const isOwnProfile = currentUser?.id === userId;
 
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -229,35 +143,39 @@ export default function ProfilePage() {
   const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
   const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
   const [badges, setBadges] = useState<BadgeType[]>([]);
-  const [activityData, setActivityData] = useState<DayActivity[]>([]);
-  const [activityStats, setActivityStats] = useState<{ currentStreak: number; longestStreak: number; totalContributions: number }>({ currentStreak: 0, longestStreak: 0, totalContributions: 0 });
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [enhancedStats, setEnhancedStats] = useState<EnhancedStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
-    type: "not_found" | "auth_required" | "network" | "server" | "unknown";
+    type: "not_found" | "network" | "server" | "unknown";
     message: string;
   } | null>(null);
 
+  // Redirect to own profile page if viewing self
+  useEffect(() => {
+    if (isOwnProfile) {
+      router.replace("/profile");
+    }
+  }, [isOwnProfile, router]);
+
   // Load profile data on mount
   useEffect(() => {
-    loadProfileData();
-  }, []);
+    if (!isOwnProfile && !isNaN(userId)) {
+      loadProfileData();
+    }
+  }, [userId, isOwnProfile]);
 
   const loadProfileData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const profile = await getMyProfile();
+      const profile = await getUserProfile(userId);
       setProfileData(profile);
 
       // Fetch DNA, portfolio, and badges in parallel
-      const [portfolioResponse, dnaResponse, earnedBadges, availableBadges] = await Promise.all([
-        getUserPortfolio(Number(profile.id), { page_size: 20 }),
-        getMyDNA().catch(() => null), // DNA is optional - don't fail if unavailable
-        getMyBadges().catch(() => []), // Badges are optional
-        getAvailableBadges().catch(() => []), // Available badges are optional
+      const [portfolioResponse, dnaResponse, badgesResponse] = await Promise.all([
+        getUserPortfolio(userId, { page_size: 20 }).catch(() => ({ items: [], total: 0 })),
+        getUserDNA(userId).catch(() => null),
+        getUserBadges(userId).catch(() => []),
       ]);
 
       setPortfolioItems(portfolioResponse.items);
@@ -272,7 +190,7 @@ export default function ProfilePage() {
       }
 
       // Transform and set badges, including tier badge
-      const transformedBadges = transformApiBadges(earnedBadges, availableBadges);
+      const transformedBadges = transformApiBadges(badgesResponse);
 
       // Create tier badge from user's current tier
       const tierInfo = getTierInfo(profile.user_tier as UserTier);
@@ -292,49 +210,11 @@ export default function ProfilePage() {
 
       // Add tier badge at the beginning
       setBadges([tierBadge, ...transformedBadges]);
-
-      // Fetch activity data (heatmap, timeline, enhanced stats) in parallel
-      const [heatmapData, timelineData, enhancedStatsData] = await Promise.all([
-        getActivityHeatmap(365).catch(() => null),
-        getActivityTimeline(10).catch(() => null),
-        getEnhancedStats().catch(() => null),
-      ]);
-
-      // Set activity heatmap data
-      if (heatmapData) {
-        // Transform to component format (add commentsGiven field)
-        const transformedActivity: DayActivity[] = heatmapData.data.map((day) => ({
-          date: day.date,
-          reviewsGiven: day.reviewsGiven,
-          reviewsReceived: day.reviewsReceived,
-          commentsGiven: day.karmaEvents, // Use karma events as a proxy for activity
-          total: day.total,
-        }));
-        setActivityData(transformedActivity);
-        setActivityStats({
-          currentStreak: heatmapData.currentStreak,
-          longestStreak: heatmapData.longestStreak,
-          totalContributions: heatmapData.totalContributions,
-        });
-      }
-
-      // Set timeline events
-      if (timelineData) {
-        const transformedEvents = transformTimelineEvents(timelineData.events);
-        setTimelineEvents(transformedEvents);
-      }
-
-      // Set enhanced stats
-      if (enhancedStatsData) {
-        setEnhancedStats(enhancedStatsData);
-      }
     } catch (err) {
       console.error("Profile load error:", err);
 
       if (err instanceof ApiClientError) {
-        if (err.status === 401) {
-          setError({ type: "auth_required", message: "Authentication required" });
-        } else if (err.status === 404) {
+        if (err.status === 404) {
           setError({ type: "not_found", message: "Profile not found" });
         } else if (err.status >= 500) {
           setError({ type: "server", message: "Server error occurred" });
@@ -351,11 +231,20 @@ export default function ProfilePage() {
     }
   };
 
+  // Show loading while redirecting to own profile
+  if (isOwnProfile) {
+    return <ProfilePageSkeleton />;
+  }
+
+  // Invalid user ID
+  if (isNaN(userId)) {
+    return <ProfileNotFoundError onRetry={() => router.push("/leaderboard")} />;
+  }
+
   if (loading) return <ProfilePageSkeleton />;
 
   if (error) {
     switch (error.type) {
-      case "auth_required": return <AuthenticationRequiredError />;
       case "not_found": return <ProfileNotFoundError onRetry={loadProfileData} />;
       case "network": return <NetworkError onRetry={loadProfileData} />;
       default: return <ProfileLoadError onRetry={loadProfileData} />;
@@ -383,29 +272,16 @@ export default function ProfilePage() {
                 transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
               >
                 <div className="relative">
-                  {isOwnProfile ? (
-                    <AvatarUpload
-                      currentAvatarUrl={profileData.avatar_url}
-                      onUploadComplete={(newAvatarUrl) => {
-                        setProfileData((prev) => prev ? { ...prev, avatar_url: newAvatarUrl } : prev);
-                        updateUserAvatar(newAvatarUrl);
-                      }}
-                      onUploadError={(error) => console.error("Avatar upload error:", error)}
+                  {profileData.avatar_url ? (
+                    <img
+                      src={profileData.avatar_url}
+                      alt={profileData.full_name}
+                      className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg object-cover"
                     />
                   ) : (
-                    <>
-                      {profileData.avatar_url ? (
-                        <img
-                          src={profileData.avatar_url}
-                          alt={profileData.full_name}
-                          className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg object-cover"
-                        />
-                      ) : (
-                        <div className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <User className="size-10 sm:size-12 text-white" />
-                        </div>
-                      )}
-                    </>
+                    <div className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <User className="size-10 sm:size-12 text-white" />
+                    </div>
                   )}
 
                   {profileData.verified && (
@@ -497,27 +373,16 @@ export default function ProfilePage() {
 
             {/* Right: Actions */}
             <div className="flex items-start gap-2 lg:ml-auto">
-              {isOwnProfile ? (
-                <>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Pencil className="size-4" />
-                    Edit Profile
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Share2 className="size-4" />
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button size="sm" className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
-                    Request Review
-                    <ArrowRight className="size-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Mail className="size-4" />
-                  </Button>
-                </>
-              )}
+              <Button size="sm" className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+                Request Review
+                <ArrowRight className="size-4" />
+              </Button>
+              <Button variant="outline" size="sm">
+                <Mail className="size-4" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Share2 className="size-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -538,7 +403,7 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Reviewer DNA</h2>
-                <p className="text-sm text-muted-foreground">Your unique review fingerprint</p>
+                <p className="text-sm text-muted-foreground">Unique review fingerprint</p>
               </div>
               <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
                 <Sparkles className="size-4 mr-1" />
@@ -550,7 +415,7 @@ export default function ProfilePage() {
             </div>
             {!dnaMetadata.hasSufficientData && (
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Complete {3 - dnaMetadata.reviewsAnalyzed} more review{3 - dnaMetadata.reviewsAnalyzed !== 1 ? 's' : ''} to unlock your full DNA profile
+                DNA profile building in progress
               </p>
             )}
           </motion.div>
@@ -567,10 +432,6 @@ export default function ProfilePage() {
                 value={profileData.total_reviews_given}
                 icon={<MessageSquare className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-blue-500 to-blue-600"
-                trend={enhancedStats?.reviewsGiven.trend}
-                percentile={enhancedStats?.reviewsGiven.percentile}
-                comparison={enhancedStats?.reviewsGiven.comparison}
-                sparklineData={enhancedStats?.reviewsGiven.sparklineData}
                 size="md"
               />
             </motion.div>
@@ -585,9 +446,6 @@ export default function ProfilePage() {
                 value={profileData.karma_points}
                 icon={<Star className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-purple-500 to-indigo-600"
-                trend={enhancedStats?.karmaPoints.trend}
-                percentile={enhancedStats?.karmaPoints.percentile}
-                sparklineData={enhancedStats?.karmaPoints.sparklineData}
                 size="md"
               />
             </motion.div>
@@ -603,8 +461,6 @@ export default function ProfilePage() {
                 suffix=""
                 icon={<Star className="size-6 text-white fill-white" />}
                 iconBg="bg-gradient-to-br from-amber-400 to-amber-600"
-                percentile={enhancedStats?.avgRating.percentile}
-                comparison={enhancedStats?.avgRating.comparison}
                 size="md"
               />
             </motion.div>
@@ -620,16 +476,12 @@ export default function ProfilePage() {
                 suffix="h"
                 icon={<Clock className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-green-500 to-emerald-600"
-                trend={enhancedStats?.avgResponseTime.trend}
-                percentile={enhancedStats?.avgResponseTime.percentile}
-                comparison={enhancedStats?.avgResponseTime.comparison}
                 size="md"
               />
             </motion.div>
           </div>
 
-          {/* Row 2: Badges + Bio */}
-          {/* Badges Section */}
+          {/* Achievements/Badges Section */}
           <motion.div
             className="col-span-12 lg:col-span-8 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
@@ -639,16 +491,15 @@ export default function ProfilePage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Achievements</h2>
-                <p className="text-sm text-muted-foreground">Your journey and progress</p>
+                <p className="text-sm text-muted-foreground">Earned badges and milestones</p>
               </div>
-              <Link href="/dashboard/karma">
-                <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
-                  View All
-                  <ArrowRight className="size-4 ml-1" />
-                </Button>
-              </Link>
             </div>
-            <BadgeGrid badges={badges.length > 0 ? badges : []} maxDisplay={6} />
+            <BadgeGrid badges={badges} maxDisplay={6} />
+            {badges.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No badges earned yet
+              </p>
+            )}
           </motion.div>
 
           {/* Bio & Skills Card */}
@@ -660,7 +511,7 @@ export default function ProfilePage() {
           >
             <h2 className="text-lg font-bold text-foreground mb-3">About</h2>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              {profileData.bio || "No bio yet. Tell the world about yourself!"}
+              {profileData.bio || "This user hasn't added a bio yet."}
             </p>
 
             {/* Skills */}
@@ -684,12 +535,6 @@ export default function ProfilePage() {
                     </Badge>
                   ))}
                 </div>
-              ) : isOwnProfile ? (
-                <Link href="/browse">
-                  <Button variant="outline" size="sm" className="w-full text-muted-foreground">
-                    Add your skills
-                  </Button>
-                </Link>
               ) : (
                 <p className="text-sm text-muted-foreground">No skills listed</p>
               )}
@@ -703,60 +548,22 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          {/* Row 3: Activity Heatmap */}
-          <motion.div
-            className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Activity</h2>
-                <p className="text-sm text-muted-foreground">Your contribution history</p>
-              </div>
-            </div>
-            <ActivityHeatmap
-              data={activityData.length > 0 ? activityData : []}
-              currentStreak={activityStats.currentStreak}
-              longestStreak={activityStats.longestStreak}
-              totalContributions={activityStats.totalContributions}
-            />
-          </motion.div>
-
-          {/* Row 4: Timeline + Portfolio Preview */}
-          {/* Timeline */}
-          <motion.div
-            className="col-span-12 lg:col-span-5 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <ImpactTimeline events={timelineEvents.length > 0 ? timelineEvents : []} maxDisplay={5} />
-          </motion.div>
-
           {/* Portfolio Preview */}
           <motion.div
             className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.55 }}
+            transition={{ delay: 0.4 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Portfolio</h2>
                 <p className="text-sm text-muted-foreground">Recent work and projects</p>
               </div>
-              {isOwnProfile && (
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Pencil className="size-4" />
-                  Add Project
-                </Button>
-              )}
             </div>
 
             {portfolioItems.length === 0 ? (
-              <EmptyPortfolioState isOwnProfile={isOwnProfile} />
+              <EmptyPortfolioState isOwnProfile={false} />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {portfolioItems.slice(0, 6).map((item, index) => (
@@ -765,7 +572,7 @@ export default function ProfilePage() {
                     className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 + index * 0.05 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
                     whileHover={{ scale: 1.03 }}
                     onClick={() => item.project_url && window.open(item.project_url, "_blank")}
                   >

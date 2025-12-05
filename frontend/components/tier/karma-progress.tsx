@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
   type UserTierStatus,
@@ -210,7 +211,13 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
         {/* Next Tier Preview */}
         <div className="rounded-lg border bg-muted/30 p-3">
           <div className="flex items-start gap-3">
-            <span className="text-2xl">{nextTierInfo.icon}</span>
+            <Image
+              src={nextTierInfo.badgeImage}
+              alt={`${nextTierInfo.name} tier badge`}
+              width={32}
+              height={32}
+              className="object-contain flex-shrink-0"
+            />
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium">{nextTierInfo.name}</p>
               <p className="text-xs text-muted-foreground">

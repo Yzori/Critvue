@@ -42,6 +42,8 @@ export interface TierInfo {
   tier: UserTier;
   name: string;
   icon: string; // emoji or icon identifier
+  badgeImage: string; // path to badge image
+  badgeImageCertified?: string; // alternate badge for Master Certified
   description: string;
   requirements: TierRequirements;
   benefits: TierBenefits;
@@ -118,6 +120,7 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.NOVICE,
     name: 'Novice',
     icon: '🌱',
+    badgeImage: '/badges/novice.png',
     description: 'Just getting started on your review journey',
     requirements: {
       minKarma: 0,
@@ -141,6 +144,7 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.CONTRIBUTOR,
     name: 'Contributor',
     icon: '🔷',
+    badgeImage: '/badges/contributor.png',
     description: 'Building your reputation in the community',
     requirements: {
       minKarma: 100,
@@ -164,6 +168,7 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.SKILLED,
     name: 'Skilled',
     icon: '⭐',
+    badgeImage: '/badges/skilled.png',
     description: 'Recognized for consistent quality reviews',
     requirements: {
       minKarma: 500,
@@ -187,6 +192,7 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.TRUSTED_ADVISOR,
     name: 'Trusted Advisor',
     icon: '💎',
+    badgeImage: '/badges/trusted-advisor.png',
     description: 'First earning tier - unlock paid review opportunities',
     requirements: {
       minKarma: 1500,
@@ -211,6 +217,7 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.EXPERT,
     name: 'Expert',
     icon: '👑',
+    badgeImage: '/badges/expert.png',
     description: 'Elite reviewer with proven expertise',
     requirements: {
       minKarma: 5000,
@@ -235,6 +242,8 @@ export const TIER_CONFIG: Record<UserTier, TierInfo> = {
     tier: UserTier.MASTER,
     name: 'Master',
     icon: '🏆',
+    badgeImage: '/badges/master.png',
+    badgeImageCertified: '/badges/master-certified.png',
     description: 'The pinnacle of reviewing excellence',
     requirements: {
       minKarma: 15000,

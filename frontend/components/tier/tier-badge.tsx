@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import {
   UserTier,
@@ -18,7 +19,7 @@ import {
 /**
  * TierBadge Component
  *
- * Displays a user's tier with icon, name, and optional sub-badge for Master tiers.
+ * Displays a user's tier with badge image, name, and optional sub-badge for Master tiers.
  * Includes tooltips explaining tier benefits and requirements.
  */
 
@@ -63,28 +64,35 @@ const TierBadge = React.forwardRef<HTMLDivElement, TierBadgeProps>(
   ) => {
     const tierInfo: TierInfo = getTierInfo(tier);
 
+    // Get the appropriate badge image (use certified badge for Master Certified)
+    const badgeImage = tier === UserTier.MASTER &&
+      masterType === MasterTierType.CERTIFIED &&
+      tierInfo.badgeImageCertified
+        ? tierInfo.badgeImageCertified
+        : tierInfo.badgeImage;
+
     const sizeClasses = {
       sm: {
         container: 'gap-1 px-2 py-1',
-        icon: 'text-sm',
+        imageSize: 16,
         text: 'text-xs',
         subBadge: 'text-[9px] px-1 py-0.5',
       },
       md: {
         container: 'gap-1.5 px-2.5 py-1.5',
-        icon: 'text-base',
+        imageSize: 20,
         text: 'text-sm',
         subBadge: 'text-[10px] px-1.5 py-0.5',
       },
       lg: {
         container: 'gap-2 px-3 py-2',
-        icon: 'text-lg',
+        imageSize: 24,
         text: 'text-base',
         subBadge: 'text-xs px-2 py-1',
       },
       xl: {
         container: 'gap-2.5 px-4 py-3',
-        icon: 'text-2xl',
+        imageSize: 32,
         text: 'text-lg',
         subBadge: 'text-xs px-2 py-1',
       },
@@ -107,9 +115,13 @@ const TierBadge = React.forwardRef<HTMLDivElement, TierBadgeProps>(
           color: tierInfo.color,
         }}
       >
-        <span className={cn('inline-flex items-center', classes.icon)}>
-          {tierInfo.icon}
-        </span>
+        <Image
+          src={badgeImage}
+          alt={`${tierInfo.name} tier badge`}
+          width={classes.imageSize}
+          height={classes.imageSize}
+          className="object-contain"
+        />
 
         {showName && (
           <span className={cn('font-semibold', classes.text)}>
@@ -149,7 +161,13 @@ const TierBadge = React.forwardRef<HTMLDivElement, TierBadgeProps>(
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-xl">{tierInfo.icon}</span>
+                <Image
+                  src={badgeImage}
+                  alt={`${tierInfo.name} tier badge`}
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
                 <h4 className="font-semibold text-sm">{tierInfo.name}</h4>
               </div>
               <p className="text-xs text-muted-foreground">

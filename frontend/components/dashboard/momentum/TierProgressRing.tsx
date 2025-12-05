@@ -11,10 +11,12 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
   UserTier,
+  MasterTierType,
   getTierByKarma,
   getTierInfo,
   getNextTier,
@@ -25,6 +27,8 @@ export interface TierProgressRingProps {
   karma: number;
   /** Actual user tier from database (takes precedence over karma calculation) */
   userTier?: UserTier | string;
+  /** For Master tier, specify if Certified or Community */
+  masterType?: MasterTierType;
   /** Size of the ring */
   size?: 'sm' | 'md' | 'lg';
   /** Optional className */
@@ -33,14 +37,15 @@ export interface TierProgressRingProps {
 
 // Reduced stroke widths by ~15% for lighter visual weight
 const sizeMap = {
-  sm: { outer: 88, stroke: 6, iconSize: 'text-xl' },
-  md: { outer: 110, stroke: 7, iconSize: 'text-2xl' },
-  lg: { outer: 140, stroke: 8, iconSize: 'text-3xl' },
+  sm: { outer: 88, stroke: 6, imageSize: 36 },
+  md: { outer: 110, stroke: 7, imageSize: 44 },
+  lg: { outer: 140, stroke: 8, imageSize: 56 },
 };
 
 export const TierProgressRing: React.FC<TierProgressRingProps> = ({
   karma,
   userTier,
+  masterType,
   size = 'sm',
   className,
 }) => {
@@ -56,6 +61,13 @@ export const TierProgressRing: React.FC<TierProgressRingProps> = ({
     : getTierByKarma(karma);
   const tierInfo = getTierInfo(currentTier);
   const nextTier = getNextTier(currentTier);
+
+  // Get the appropriate badge image (use certified badge for Master Certified)
+  const badgeImage = currentTier === UserTier.MASTER &&
+    masterType === MasterTierType.CERTIFIED &&
+    tierInfo.badgeImageCertified
+      ? tierInfo.badgeImageCertified
+      : tierInfo.badgeImage;
 
   // Calculate progress percentage
   let progressPercent = 100;
@@ -119,15 +131,19 @@ export const TierProgressRing: React.FC<TierProgressRingProps> = ({
         {/* Center content - with more breathing room */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <motion.div
-            className="text-center"
+            className="text-center flex flex-col items-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
           >
-            {/* Tier Icon */}
-            <span className={cn(dimensions.iconSize, 'block leading-none')}>
-              {tierInfo.icon}
-            </span>
+            {/* Tier Badge Image */}
+            <Image
+              src={badgeImage}
+              alt={`${tierInfo.name} tier badge`}
+              width={dimensions.imageSize}
+              height={dimensions.imageSize}
+              className="object-contain"
+            />
 
             {/* Tier Name */}
             <p
