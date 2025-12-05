@@ -65,6 +65,10 @@ async def browse_reviews(
         None,
         description="Comma-separated list of user skills for personalized match scoring (e.g., 'React,TypeScript,UI Design')"
     ),
+    search: Optional[str] = Query(
+        None,
+        description="Search term to filter reviews by title or description"
+    ),
     db: AsyncSession = Depends(get_db)
 ) -> BrowseReviewsResponse:
     """
@@ -130,7 +134,7 @@ async def browse_reviews(
         security_logger.logger.info(
             f"Browse request: content_type={content_type}, review_type={review_type}, "
             f"sort_by={sort_by}, deadline={deadline}, limit={limit}, offset={offset}, "
-            f"user_skills={len(skills_list) if skills_list else 0} skills"
+            f"user_skills={len(skills_list) if skills_list else 0} skills, search={search}"
         )
 
         # Get reviews from CRUD layer
@@ -142,7 +146,8 @@ async def browse_reviews(
             deadline=deadline,
             limit=limit,
             offset=offset,
-            user_skills=skills_list
+            user_skills=skills_list,
+            search=search
         )
 
         # Build response

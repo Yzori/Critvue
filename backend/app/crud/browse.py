@@ -164,7 +164,8 @@ class BrowseCRUD:
         deadline: Optional[DeadlineFilter] = None,
         limit: int = 50,
         offset: int = 0,
-        user_skills: Optional[List[str]] = None
+        user_skills: Optional[List[str]] = None,
+        search: Optional[str] = None
     ) -> Tuple[List[BrowseReviewItem], int]:
         """
         Get public review requests for marketplace browsing.
@@ -227,6 +228,16 @@ class BrowseCRUD:
             if review_type is not None:
                 query = query.where(ReviewRequest.review_type == review_type)
 
+            # Apply search filter (case-insensitive search in title and description)
+            if search:
+                search_term = f"%{search.lower()}%"
+                query = query.where(
+                    or_(
+                        func.lower(ReviewRequest.title).ilike(search_term),
+                        func.lower(ReviewRequest.description).ilike(search_term)
+                    )
+                )
+
             # Apply deadline filter
             if deadline is not None:
                 now = datetime.utcnow()
@@ -287,6 +298,14 @@ class BrowseCRUD:
                 count_query = count_query.where(ReviewRequest.content_type == content_type)
             if review_type is not None:
                 count_query = count_query.where(ReviewRequest.review_type == review_type)
+            if search:
+                search_term = f"%{search.lower()}%"
+                count_query = count_query.where(
+                    or_(
+                        func.lower(ReviewRequest.title).ilike(search_term),
+                        func.lower(ReviewRequest.description).ilike(search_term)
+                    )
+                )
 
             # Apply deadline filter to count query
             if deadline is not None:
