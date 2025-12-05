@@ -150,6 +150,7 @@ async def get_user_profile(
 
 
 @router.put("/me", response_model=ProfileResponse)
+@router.patch("/me", response_model=ProfileResponse)
 @limiter.limit("10/minute")
 async def update_my_profile(
     request: Request,

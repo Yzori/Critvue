@@ -60,9 +60,24 @@ VALID_SPECIALTY_TAGS = [
 class ProfileUpdate(BaseModel):
     """Schema for updating user profile"""
 
+    full_name: Optional[str] = Field(None, max_length=255)
     title: Optional[str] = Field(None, max_length=255)
     bio: Optional[str] = Field(None, max_length=2000)
     specialty_tags: Optional[List[str]] = Field(None, max_items=10)
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v: Optional[str]) -> Optional[str]:
+        """Validate and sanitize full_name"""
+        if v:
+            v = v.strip()
+            # Remove HTML-like tags
+            v = re.sub(r"<[^>]+>", "", v)
+            if len(v) > 255:
+                raise ValueError("Name must be 255 characters or less")
+            if len(v) < 1:
+                raise ValueError("Name must be at least 1 character")
+        return v
 
     @field_validator("title")
     @classmethod
