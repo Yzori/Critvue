@@ -64,6 +64,7 @@ import { BadgeGrid, Badge as BadgeType } from "@/components/profile/progressive-
 import { ActivityHeatmap, DayActivity } from "@/components/profile/activity-heatmap";
 import { ContextualStatCard } from "@/components/profile/contextual-stat-card";
 import { ImpactTimeline, TimelineEvent } from "@/components/profile/impact-timeline";
+import { SkillsModal } from "@/components/browse/skills-modal";
 
 interface ProfileData {
   id: string;
@@ -238,6 +239,14 @@ export default function ProfilePage() {
     type: "not_found" | "auth_required" | "network" | "server" | "unknown";
     message: string;
   } | null>(null);
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false);
+
+  // Handle skills update from modal
+  const handleSkillsUpdated = (newSkills: string[]) => {
+    if (profileData) {
+      setProfileData({ ...profileData, specialty_tags: newSkills });
+    }
+  };
 
   // Load profile data on mount
   useEffect(() => {
@@ -665,11 +674,21 @@ export default function ProfilePage() {
 
             {/* Skills */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Code className="size-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Skills & Expertise
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Code className="size-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Skills & Expertise
+                  </span>
+                </div>
+                {isOwnProfile && profileData.specialty_tags.length > 0 && (
+                  <button
+                    onClick={() => setSkillsModalOpen(true)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
               {profileData.specialty_tags.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
@@ -685,11 +704,14 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : isOwnProfile ? (
-                <Link href="/browse">
-                  <Button variant="outline" size="sm" className="w-full text-muted-foreground">
-                    Add your skills
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setSkillsModalOpen(true)}
+                >
+                  Add your skills
+                </Button>
               ) : (
                 <p className="text-sm text-muted-foreground">No skills listed</p>
               )}
@@ -804,6 +826,14 @@ export default function ProfilePage() {
 
         </div>
       </main>
+
+      {/* Skills Modal */}
+      <SkillsModal
+        open={skillsModalOpen}
+        onOpenChange={setSkillsModalOpen}
+        currentSkills={profileData?.specialty_tags || []}
+        onSkillsUpdated={handleSkillsUpdated}
+      />
     </div>
   );
 }

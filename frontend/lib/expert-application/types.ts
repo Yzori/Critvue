@@ -440,8 +440,7 @@ export const SKILL_CATEGORIES = [
       'Painting',
       'Drawing',
       'Sculpture',
-      'Photography',
-      'Photo Editing'
+      'Photography'
     ]
   }
 ] as const
