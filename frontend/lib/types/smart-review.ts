@@ -21,7 +21,7 @@ export interface RatingRationale {
 }
 
 export interface Phase2RubricRatings {
-  content_type: string; // 'code' | 'design' | 'writing'
+  content_type: string; // 'photography' | 'design' | 'writing' | 'video' | etc.
   ratings: Record<string, number>; // e.g., { functionality: 5, code_quality: 4 }
   rationales?: Record<string, RatingRationale>; // Justification for each rating
 }

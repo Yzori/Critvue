@@ -130,7 +130,7 @@ class BrowseCRUD:
         # Map content types to related skill keywords
         content_skill_map = {
             "design": ["design", "ui", "ux", "figma", "sketch", "adobe", "visual", "graphic", "prototype"],
-            "code": ["code", "development", "react", "vue", "angular", "typescript", "javascript", "python", "frontend", "backend", "full-stack"],
+            "photography": ["photography", "photo", "camera", "lightroom", "photoshop", "portrait", "landscape", "editing", "retouching", "composition"],
             "video": ["video", "editing", "premiere", "after effects", "motion", "animation", "davinci"],
             "audio": ["audio", "sound", "music", "podcast", "mixing", "mastering", "pro tools", "ableton"],
             "writing": ["writing", "copy", "content", "technical", "documentation", "editing", "seo"],

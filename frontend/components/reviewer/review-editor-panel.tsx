@@ -295,7 +295,7 @@ export function ReviewEditorPanel({
         <div className="h-[calc(100vh-120px)]">
           <ReviewStudio
             slotId={slot.id}
-            contentType={slot.review_request?.content_type || "code"}
+            contentType={slot.review_request?.content_type || "design"}
             contentSubcategory={(slot.review_request as { content_subcategory?: string })?.content_subcategory}
             imageUrl={imageUrl}
             externalUrl={externalUrl}

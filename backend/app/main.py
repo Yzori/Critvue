@@ -15,7 +15,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, admin_users, nda, activity, challenges
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, admin_users, nda, activity, challenges, growth
 from app.api.v1 import settings as settings_router
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
@@ -69,6 +69,7 @@ app.include_router(nda.router, prefix="/api/v1")  # NDA signing for confidential
 app.include_router(activity.router, prefix="/api/v1")  # User activity heatmap and timeline
 app.include_router(challenges.router, prefix="/api/v1")  # Platform-curated creative challenges
 app.include_router(settings_router.router, prefix="/api/v1")  # User settings (privacy, etc.)
+app.include_router(growth.router, prefix="/api/v1")  # Portfolio growth analytics
 
 # Security headers middleware
 from starlette.middleware.base import BaseHTTPMiddleware

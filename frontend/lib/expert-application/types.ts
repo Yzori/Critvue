@@ -72,7 +72,7 @@ export interface PortfolioLink {
   id: string
   url: string
   platform: string // detected platform name
-  platformCategory: 'design' | 'photography' | 'video' | 'audio' | 'writing' | 'code' | 'universal' | 'social' | 'unknown'
+  platformCategory: 'design' | 'photography' | 'video' | 'audio' | 'writing' | 'universal' | 'social' | 'unknown'
 }
 
 export interface Credentials {
@@ -119,11 +119,11 @@ export const PORTFOLIO_PLATFORMS = {
   devto: { name: 'Dev.to', category: 'writing', icon: '👩‍💻', domains: ['dev.to'] },
   contently: { name: 'Contently', category: 'writing', icon: '📝', domains: ['contently.com'] },
 
-  // Code
-  github: { name: 'GitHub', category: 'code', icon: '💻', domains: ['github.com'] },
-  gitlab: { name: 'GitLab', category: 'code', icon: '🦊', domains: ['gitlab.com'] },
-  codepen: { name: 'CodePen', category: 'code', icon: '🖊️', domains: ['codepen.io'] },
-  replit: { name: 'Replit', category: 'code', icon: '⚡', domains: ['replit.com'] },
+  // Developer Portfolios (universal)
+  github: { name: 'GitHub', category: 'universal', icon: '💻', domains: ['github.com'] },
+  gitlab: { name: 'GitLab', category: 'universal', icon: '🦊', domains: ['gitlab.com'] },
+  codepen: { name: 'CodePen', category: 'universal', icon: '🖊️', domains: ['codepen.io'] },
+  replit: { name: 'Replit', category: 'universal', icon: '⚡', domains: ['replit.com'] },
 
   // Universal / Personal
   notion: { name: 'Notion', category: 'universal', icon: '📓', domains: ['notion.so', 'notion.site'] },

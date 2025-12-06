@@ -126,7 +126,7 @@ export function MultiReviewStatusCard({
     switch (contentType.toLowerCase()) {
       case "design":
         return "text-accent-peach bg-accent-peach/10";
-      case "code":
+      case "photography":
         return "text-accent-blue bg-accent-blue/10";
       case "video":
         return "text-purple-600 bg-purple-500/10";

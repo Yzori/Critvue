@@ -62,7 +62,7 @@ import {
   Clock,
   AlertCircle,
   Palette,
-  Code,
+  Camera,
   Video,
   FileText,
   Brush,
@@ -80,7 +80,7 @@ import { toast } from "sonner";
 // Content type icons
 const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: string }>> = {
   design: Palette,
-  code: Code,
+  photography: Camera,
   video: Video,
   stream: Radio,
   audio: Headphones,
@@ -88,7 +88,7 @@ const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: st
   art: Brush,
 };
 
-const contentTypes: ContentType[] = ["design", "code", "video", "stream", "audio", "writing", "art"];
+const contentTypes: ContentType[] = ["design", "photography", "video", "stream", "audio", "writing", "art"];
 const challengeTypes: ChallengeType[] = ["one_on_one", "category"];
 
 export default function AdminChallengesPage() {

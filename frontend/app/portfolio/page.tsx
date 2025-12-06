@@ -1,0 +1,465 @@
+"use client";
+
+/**
+ * Portfolio Page - "The Critique Canvas"
+ *
+ * A unique portfolio experience that showcases the creator's growth journey
+ * through feedback and critique. Unlike standard portfolios that only show
+ * finished work, this tells the story of transformation.
+ */
+
+import { useState, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowRight,
+  Share2,
+  Sparkles,
+  TrendingUp,
+  Users,
+  MessageSquare,
+  Award,
+  ChevronDown,
+} from "lucide-react";
+
+// Portfolio Components
+import { GrowthRing } from "@/components/portfolio/growth-ring";
+import { ProjectJourneyCard } from "@/components/portfolio/project-journey-card";
+import { ReviewerNetwork } from "@/components/portfolio/reviewer-network";
+import { GrowthMilestones } from "@/components/portfolio/growth-milestones";
+import { PortfolioHero } from "@/components/portfolio/portfolio-hero";
+
+// API & Auth
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getFullPortfolioGrowth,
+  transformGrowthData,
+  transformMilestones,
+  transformReviewers,
+} from "@/lib/api/growth";
+
+// Types for transformed data
+interface TransformedGrowthData {
+  totalReviews: number;
+  improvementScore: number;
+  topCategory: string;
+  growthPercentile: number;
+  streakDays: number;
+  totalProjects: number;
+}
+
+interface TransformedMilestone {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  earnedAt: string | null;
+  rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
+}
+
+interface TransformedReviewer {
+  id: number;
+  name: string;
+  avatar: string | null;
+  specialty: string;
+  reviewCount: number;
+  impactScore: number;
+}
+
+// Transform project from API to journey card format
+interface JourneyProject {
+  id: number;
+  title: string;
+  description: string;
+  contentType: "design" | "photography" | "video" | "stream" | "audio" | "writing" | "art";
+  beforeImage: string;
+  afterImage: string;
+  improvementScore: number;
+  keyFeedback: string;
+  reviewerName: string;
+  reviewerSpecialty: string;
+  metrics: {
+    [key: string]: { before: number; after: number } | undefined;
+  };
+}
+
+// Default fallback data
+const defaultGrowthData: TransformedGrowthData = {
+  totalReviews: 0,
+  improvementScore: 0,
+  topCategory: "Design",
+  growthPercentile: 50,
+  streakDays: 0,
+  totalProjects: 0,
+};
+
+const defaultMilestones: TransformedMilestone[] = [
+  {
+    id: "first_review",
+    title: "First Critique",
+    description: "Receive your first expert review",
+    icon: "message",
+    earnedAt: null,
+    rarity: "common",
+  },
+  {
+    id: "five_reviews",
+    title: "Feedback Seeker",
+    description: "Receive critiques from 5 different reviewers",
+    icon: "users",
+    earnedAt: null,
+    rarity: "uncommon",
+  },
+  {
+    id: "top_50",
+    title: "Rising Star",
+    description: "Reach top 50% improvement on the platform",
+    icon: "star",
+    earnedAt: null,
+    rarity: "rare",
+  },
+];
+
+export default function PortfolioPage() {
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Portfolio data state
+  const [growthData, setGrowthData] = useState<TransformedGrowthData>(defaultGrowthData);
+  const [milestones, setMilestones] = useState<TransformedMilestone[]>(defaultMilestones);
+  const [reviewers, setReviewers] = useState<TransformedReviewer[]>([]);
+  const [projects, setProjects] = useState<JourneyProject[]>([]);
+
+  const { scrollYProgress } = useScroll();
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login?redirect=/portfolio");
+      return;
+    }
+
+    if (user) {
+      loadPortfolio();
+    }
+  }, [user, authLoading, router]);
+
+  const loadPortfolio = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch complete portfolio growth data from API
+      const response = await getFullPortfolioGrowth();
+
+      // Transform and set growth data
+      const transformedGrowth = transformGrowthData(response.growth_data);
+      setGrowthData(transformedGrowth);
+
+      // Transform and set milestones
+      const transformedMilestones = transformMilestones(response.milestones);
+      setMilestones(transformedMilestones);
+
+      // Transform and set reviewers
+      const transformedReviewers = transformReviewers(response.top_reviewers);
+      setReviewers(transformedReviewers);
+
+      // Transform projects to journey format
+      const journeyProjects: JourneyProject[] = response.projects.map((p) => ({
+        id: p.id,
+        title: p.title,
+        description: p.description || "A creative project showcasing growth through feedback",
+        contentType: (p.content_type as JourneyProject["contentType"]) || "design",
+        beforeImage: p.image_url || `/portfolio/${p.content_type}-before.jpg`,
+        afterImage: p.image_url || `/portfolio/${p.content_type}-after.jpg`,
+        improvementScore: Math.round((p.rating || 3) * 10), // Convert rating to improvement %
+        keyFeedback: "Expert feedback helped transform this project into something remarkable.",
+        reviewerName: transformedReviewers[0]?.name || "Expert Reviewer",
+        reviewerSpecialty: transformedReviewers[0]?.specialty || "Creative Direction",
+        metrics: {
+          quality: { before: 50, after: Math.min(100, 50 + (p.reviews_received * 10)) },
+          engagement: { before: 40, after: Math.min(100, 40 + p.views_count) },
+        },
+      }));
+      setProjects(journeyProjects);
+
+    } catch (err) {
+      console.error("Failed to load portfolio:", err);
+      setError("Failed to load portfolio data. Please try again.");
+      // Keep default data on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return <PortfolioSkeleton />;
+  }
+
+  // Show error state if needed
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-destructive">{error}</p>
+          <Button onClick={loadPortfolio}>Try Again</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Floating Progress Indicator */}
+      <motion.div
+        className="fixed top-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/50 shadow-lg"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-1.5">
+            <TrendingUp className="size-4 text-emerald-500" />
+            <span className="font-semibold text-foreground">+{growthData.improvementScore}%</span>
+            <span className="text-muted-foreground">growth</span>
+          </div>
+          <div className="w-px h-4 bg-border" />
+          <div className="flex items-center gap-1.5">
+            <MessageSquare className="size-4 text-blue-500" />
+            <span className="font-semibold text-foreground">{growthData.totalReviews}</span>
+            <span className="text-muted-foreground">reviews</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Hero Section with Growth Ring */}
+      <motion.section
+        className="relative min-h-[90vh] flex items-center justify-center overflow-hidden"
+        style={{ opacity: heroOpacity, scale: heroScale }}
+      >
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 dark:from-blue-950/30 dark:via-transparent dark:to-purple-950/20" />
+
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute size-2 rounded-full bg-accent-blue/20"
+              initial={{
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
+              }}
+              animate={{
+                y: [null, Math.random() * -200 - 100],
+                opacity: [0.2, 0.8, 0.2],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 10,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 text-center">
+          <PortfolioHero user={user} growthData={growthData} />
+
+          {/* Scroll Indicator */}
+          <motion.div
+            className="absolute bottom-8 left-1/2 -translate-x-1/2"
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <ChevronDown className="size-8 text-muted-foreground" />
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Growth Ring Visualization */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge variant="info" className="mb-4">
+              <Sparkles className="size-3 mr-1" />
+              Your Growth DNA
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Every critique shapes your journey
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Watch how feedback transformed your work over time. Each ring represents a milestone in your creative evolution.
+            </p>
+          </motion.div>
+
+          <GrowthRing data={growthData} milestones={milestones} />
+        </div>
+      </section>
+
+      {/* Project Journey Cards - The Feedback Theater */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge variant="secondary" className="mb-4">
+              <TrendingUp className="size-3 mr-1" />
+              Transformation Stories
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              From feedback to breakthrough
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              See the before and after of each project, powered by expert critique.
+            </p>
+          </motion.div>
+
+          <div className="space-y-24">
+            {projects.length > 0 ? (
+              projects.map((project, index) => (
+                <ProjectJourneyCard
+                  key={project.id}
+                  project={project}
+                  index={index}
+                />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  No projects yet. Submit your first project for review to start your growth journey!
+                </p>
+                <Button className="mt-4" onClick={() => router.push("/review/new")}>
+                  Submit Your First Project
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Reviewer Network */}
+      <section className="py-20 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge variant="primary" className="mb-4">
+              <Users className="size-3 mr-1" />
+              Growth Network
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              The experts behind your growth
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Meet the reviewers who shaped your creative journey with their expertise.
+            </p>
+          </motion.div>
+
+          {reviewers.length > 0 ? (
+            <ReviewerNetwork reviewers={reviewers} />
+          ) : (
+            <div className="text-center py-12 bg-muted/50 rounded-2xl">
+              <Users className="size-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                Your reviewer network will appear here once you receive feedback from experts.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Growth Milestones */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <Badge variant="success" className="mb-4">
+              <Award className="size-3 mr-1" />
+              Achievements
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Milestones unlocked
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Celebrate your progress with achievements earned through dedication to improvement.
+            </p>
+          </motion.div>
+
+          <GrowthMilestones milestones={milestones} />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 px-4 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              Ready to continue growing?
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Submit your next project and get feedback from experts who can help you reach the next level.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button
+                size="lg"
+                className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                onClick={() => router.push("/review/new")}
+              >
+                Submit New Work
+                <ArrowRight className="size-4" />
+              </Button>
+              <Button variant="outline" size="lg" className="gap-2">
+                <Share2 className="size-4" />
+                Share Portfolio
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function PortfolioSkeleton() {
+  return (
+    <div className="min-h-screen bg-background animate-pulse">
+      <div className="min-h-[90vh] flex items-center justify-center">
+        <div className="text-center space-y-6">
+          <div className="size-32 mx-auto rounded-full bg-muted" />
+          <div className="h-10 w-64 mx-auto rounded-lg bg-muted" />
+          <div className="h-6 w-96 mx-auto rounded bg-muted" />
+        </div>
+      </div>
+    </div>
+  );
+}

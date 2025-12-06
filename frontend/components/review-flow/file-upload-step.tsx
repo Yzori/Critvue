@@ -64,8 +64,8 @@ export function FileUploadStep({
     switch (contentType) {
       case "design":
         return "Upload images (PNG, JPG, SVG, WebP), PDFs, or paste Figma/Sketch links";
-      case "code":
-        return "Upload ZIP files, GitHub repository links, or single code files";
+      case "photography":
+        return "Upload photos (JPG, PNG, RAW) or links to your photography portfolio";
       case "video":
         return "Upload video files (MP4, MOV, WebM) or YouTube/Vimeo links";
       case "stream":
@@ -86,8 +86,8 @@ export function FileUploadStep({
     switch (contentType) {
       case "design":
         return ["Figma", "Sketch Cloud", "Adobe Cloud", "InVision"];
-      case "code":
-        return ["GitHub", "GitLab", "Bitbucket", "CodeSandbox"];
+      case "photography":
+        return ["500px", "Flickr", "SmugMug", "Adobe Portfolio"];
       case "video":
         return ["YouTube", "Vimeo", "TikTok", "Instagram"];
       case "stream":

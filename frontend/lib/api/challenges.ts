@@ -15,7 +15,7 @@ import apiClient from './client';
 
 // ==================== Enums ====================
 
-export type ContentType = 'design' | 'code' | 'video' | 'stream' | 'audio' | 'writing' | 'art';
+export type ContentType = 'design' | 'photography' | 'video' | 'stream' | 'audio' | 'writing' | 'art';
 export type ChallengeStatus = 'draft' | 'inviting' | 'open' | 'active' | 'voting' | 'completed' | 'cancelled' | 'draw';
 export type ChallengeType = 'one_on_one' | 'category';
 export type PromptDifficulty = 'beginner' | 'intermediate' | 'advanced';
@@ -1166,7 +1166,7 @@ export function getContentTypeInfo(contentType: ContentType): {
 } {
   const contentTypeMap: Record<ContentType, { label: string; icon: string; color: string }> = {
     design: { label: 'Design', icon: 'palette', color: 'text-pink-500' },
-    code: { label: 'Code', icon: 'code', color: 'text-blue-500' },
+    photography: { label: 'Photography', icon: 'camera', color: 'text-blue-500' },
     video: { label: 'Video', icon: 'video', color: 'text-red-500' },
     stream: { label: 'Stream', icon: 'broadcast', color: 'text-purple-500' },
     audio: { label: 'Audio', icon: 'music', color: 'text-green-500' },

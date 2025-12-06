@@ -14,7 +14,7 @@ class PortfolioCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     content_type: str = Field(
         ...,
-        description="Type of content: design, code, video, audio, writing, art",
+        description="Type of content: design, photography, video, audio, writing, art",
     )
     image_url: Optional[str] = Field(None, max_length=500)
     project_url: Optional[str] = Field(None, max_length=500)
@@ -49,7 +49,7 @@ class PortfolioCreate(BaseModel):
     @classmethod
     def validate_content_type(cls, v: str) -> str:
         """Validate content type"""
-        valid_types = ["design", "code", "video", "audio", "writing", "art"]
+        valid_types = ["design", "photography", "video", "audio", "writing", "art"]
         v = v.lower().strip()
         if v not in valid_types:
             raise ValueError(
@@ -112,7 +112,7 @@ class PortfolioUpdate(BaseModel):
     def validate_content_type(cls, v: Optional[str]) -> Optional[str]:
         """Validate content type"""
         if v:
-            valid_types = ["design", "code", "video", "audio", "writing", "art"]
+            valid_types = ["design", "photography", "video", "audio", "writing", "art"]
             v = v.lower().strip()
             if v not in valid_types:
                 raise ValueError(

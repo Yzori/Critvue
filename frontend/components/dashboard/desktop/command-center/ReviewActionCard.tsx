@@ -64,7 +64,7 @@ export interface ReviewActionCardProps {
   /**
    * Content type
    */
-  contentType: "design" | "code" | "video" | "stream" | "audio" | "writing" | "art";
+  contentType: "design" | "photography" | "video" | "stream" | "audio" | "writing" | "art";
 
   /**
    * Review status

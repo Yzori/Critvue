@@ -3,7 +3,7 @@
  *
  * Context-aware suggestion chips for reducing typing burden on mobile devices.
  * Suggestions are filtered based on:
- * - Content type (code, design, writing, etc.)
+ * - Content type (photography, design, writing, etc.)
  * - Focus areas selected in Phase 1
  * - Field type (strengths vs improvements)
  */
@@ -16,109 +16,109 @@ export interface Suggestion {
   contentTypes?: string[]; // Which content types this applies to (optional filter)
 }
 
-// ===== CODE REVIEW SUGGESTIONS =====
+// ===== PHOTOGRAPHY REVIEW SUGGESTIONS =====
 
-const CODE_STRENGTHS: Suggestion[] = [
+const PHOTOGRAPHY_STRENGTHS: Suggestion[] = [
   {
-    id: "code-s-1",
-    text: "Clear and descriptive variable names",
+    id: "photo-s-1",
+    text: "Excellent composition and framing",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["code_quality", "readability"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "visual_design"],
   },
   {
-    id: "code-s-2",
-    text: "Well-structured and organized code",
+    id: "photo-s-2",
+    text: "Beautiful use of natural light",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["code_quality", "architecture"],
+    contentTypes: ["photography"],
+    focusAreas: ["lighting", "technical"],
   },
   {
-    id: "code-s-3",
-    text: "Good separation of concerns",
+    id: "photo-s-3",
+    text: "Strong subject focus and depth of field",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["architecture", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["technical", "composition"],
   },
   {
-    id: "code-s-4",
-    text: "Effective error handling",
+    id: "photo-s-4",
+    text: "Effective color grading and tones",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["code_quality", "security"],
+    contentTypes: ["photography"],
+    focusAreas: ["editing", "visual_design"],
   },
   {
-    id: "code-s-5",
-    text: "Comprehensive test coverage",
+    id: "photo-s-5",
+    text: "Compelling storytelling through imagery",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["testing", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["storytelling", "engagement"],
   },
   {
-    id: "code-s-6",
-    text: "Efficient algorithms and data structures",
+    id: "photo-s-6",
+    text: "Sharp focus and clarity",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["performance", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["technical", "quality"],
   },
   {
-    id: "code-s-7",
-    text: "Good use of comments and documentation",
+    id: "photo-s-7",
+    text: "Creative perspective and angles",
     category: "strength",
-    contentTypes: ["code"],
-    focusAreas: ["readability", "documentation"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "creativity"],
   },
 ];
 
-const CODE_IMPROVEMENTS: Suggestion[] = [
+const PHOTOGRAPHY_IMPROVEMENTS: Suggestion[] = [
   {
-    id: "code-i-1",
-    text: "Add unit tests for edge cases",
+    id: "photo-i-1",
+    text: "Consider rule of thirds for stronger composition",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["testing", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "visual_design"],
   },
   {
-    id: "code-i-2",
-    text: "Consider extracting repeated logic into functions",
+    id: "photo-i-2",
+    text: "Adjust exposure for better highlight/shadow balance",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["code_quality", "architecture"],
+    contentTypes: ["photography"],
+    focusAreas: ["technical", "editing"],
   },
   {
-    id: "code-i-3",
-    text: "Add input validation",
+    id: "photo-i-3",
+    text: "Try different angles to add visual interest",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["security", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "creativity"],
   },
   {
-    id: "code-i-4",
-    text: "Improve error messages for better debugging",
+    id: "photo-i-4",
+    text: "Reduce distracting background elements",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["code_quality", "usability"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "visual_design"],
   },
   {
-    id: "code-i-5",
-    text: "Add comments for complex logic",
+    id: "photo-i-5",
+    text: "Experiment with different lighting setups",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["readability", "documentation"],
+    contentTypes: ["photography"],
+    focusAreas: ["lighting", "technical"],
   },
   {
-    id: "code-i-6",
-    text: "Optimize performance for large datasets",
+    id: "photo-i-6",
+    text: "Fine-tune white balance for accurate colors",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["performance", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["editing", "technical"],
   },
   {
-    id: "code-i-7",
-    text: "Consider using more descriptive variable names",
+    id: "photo-i-7",
+    text: "Consider cropping to strengthen the focal point",
     category: "improvement",
-    contentTypes: ["code"],
-    focusAreas: ["readability", "code_quality"],
+    contentTypes: ["photography"],
+    focusAreas: ["composition", "editing"],
   },
 ];
 
@@ -473,8 +473,8 @@ export function getSuggestions(
   let allSuggestions: Suggestion[] = [];
 
   // 1. Select suggestions based on content type
-  if (contentType === "code") {
-    allSuggestions = category === "strength" ? CODE_STRENGTHS : CODE_IMPROVEMENTS;
+  if (contentType === "photography") {
+    allSuggestions = category === "strength" ? PHOTOGRAPHY_STRENGTHS : PHOTOGRAPHY_IMPROVEMENTS;
   } else if (contentType === "design" || contentType === "art") {
     allSuggestions = category === "strength" ? DESIGN_STRENGTHS : DESIGN_IMPROVEMENTS;
   } else if (contentType === "writing") {
