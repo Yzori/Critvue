@@ -21,6 +21,9 @@ from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
 from app.models.karma_transaction import KarmaTransaction, KarmaAction
 from app.models.notification import Notification
+from app.models.challenge_entry import ChallengeEntry
+from app.models.challenge_vote import ChallengeVote
+from app.models.challenge import Challenge
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +38,9 @@ class DayActivity(BaseModel):
     reviews_given: int
     reviews_received: int
     karma_events: int
+    challenge_entries: int
+    challenge_votes: int
+    review_requests_created: int
     total: int
 
 
@@ -137,6 +143,62 @@ async def get_activity_heatmap(
     karma_result = await db.execute(karma_query)
     karma_by_date = {str(row.date): row.count for row in karma_result.all()}
 
+    # Get challenge entries (submissions) grouped by date
+    challenge_entries_query = (
+        select(
+            func.date(ChallengeEntry.submitted_at).label('date'),
+            func.count(ChallengeEntry.id).label('count')
+        )
+        .where(
+            and_(
+                ChallengeEntry.user_id == current_user.id,
+                ChallengeEntry.submitted_at.isnot(None),
+                func.date(ChallengeEntry.submitted_at) >= start_date,
+                func.date(ChallengeEntry.submitted_at) <= end_date,
+            )
+        )
+        .group_by(func.date(ChallengeEntry.submitted_at))
+    )
+    challenge_entries_result = await db.execute(challenge_entries_query)
+    challenge_entries_by_date = {str(row.date): row.count for row in challenge_entries_result.all()}
+
+    # Get challenge votes grouped by date
+    challenge_votes_query = (
+        select(
+            func.date(ChallengeVote.voted_at).label('date'),
+            func.count(ChallengeVote.id).label('count')
+        )
+        .where(
+            and_(
+                ChallengeVote.voter_id == current_user.id,
+                func.date(ChallengeVote.voted_at) >= start_date,
+                func.date(ChallengeVote.voted_at) <= end_date,
+            )
+        )
+        .group_by(func.date(ChallengeVote.voted_at))
+    )
+    challenge_votes_result = await db.execute(challenge_votes_query)
+    challenge_votes_by_date = {str(row.date): row.count for row in challenge_votes_result.all()}
+
+    # Get review requests created grouped by date
+    review_requests_query = (
+        select(
+            func.date(ReviewRequest.created_at).label('date'),
+            func.count(ReviewRequest.id).label('count')
+        )
+        .where(
+            and_(
+                ReviewRequest.user_id == current_user.id,
+                ReviewRequest.deleted_at.is_(None),
+                func.date(ReviewRequest.created_at) >= start_date,
+                func.date(ReviewRequest.created_at) <= end_date,
+            )
+        )
+        .group_by(func.date(ReviewRequest.created_at))
+    )
+    review_requests_result = await db.execute(review_requests_query)
+    review_requests_by_date = {str(row.date): row.count for row in review_requests_result.all()}
+
     # Build activity data for each day
     activity_data: List[DayActivity] = []
     total_contributions = 0
@@ -147,13 +209,20 @@ async def get_activity_heatmap(
         reviews_given = reviews_given_by_date.get(date_str, 0)
         reviews_received = reviews_received_by_date.get(date_str, 0)
         karma_events = karma_by_date.get(date_str, 0)
-        total = reviews_given + reviews_received + karma_events
+        challenge_entries = challenge_entries_by_date.get(date_str, 0)
+        challenge_votes = challenge_votes_by_date.get(date_str, 0)
+        review_requests_created = review_requests_by_date.get(date_str, 0)
+        total = (reviews_given + reviews_received + karma_events +
+                 challenge_entries + challenge_votes + review_requests_created)
 
         activity_data.append(DayActivity(
             date=date_str,
             reviews_given=reviews_given,
             reviews_received=reviews_received,
             karma_events=karma_events,
+            challenge_entries=challenge_entries,
+            challenge_votes=challenge_votes,
+            review_requests_created=review_requests_created,
             total=total,
         ))
 
@@ -638,6 +707,92 @@ async def get_activity_timeline(
                 "points": transaction.points,
                 "action": transaction.action.value,
                 "balance_after": transaction.balance_after,
+            }
+        ))
+
+    # Get challenge entries (submissions)
+    challenge_entries_query = (
+        select(ChallengeEntry, Challenge)
+        .join(Challenge, ChallengeEntry.challenge_id == Challenge.id)
+        .where(
+            and_(
+                ChallengeEntry.user_id == current_user.id,
+                ChallengeEntry.submitted_at.isnot(None),
+            )
+        )
+        .order_by(ChallengeEntry.submitted_at.desc())
+        .limit(limit)
+    )
+    challenge_entries_result = await db.execute(challenge_entries_query)
+
+    for entry, challenge in challenge_entries_result.all():
+        events.append(TimelineEvent(
+            id=f"challenge_entry_{entry.id}",
+            type="challenge_entry",
+            title=f'Submitted to "{challenge.title}"',
+            description=f'Entry: "{entry.title}"',
+            timestamp=entry.submitted_at.isoformat() if entry.submitted_at else "",
+            metadata={
+                "entry_id": entry.id,
+                "challenge_id": challenge.id,
+                "challenge_title": challenge.title,
+                "entry_title": entry.title,
+            }
+        ))
+
+    # Get challenge votes
+    challenge_votes_query = (
+        select(ChallengeVote, Challenge, ChallengeEntry)
+        .join(Challenge, ChallengeVote.challenge_id == Challenge.id)
+        .join(ChallengeEntry, ChallengeVote.entry_id == ChallengeEntry.id)
+        .where(ChallengeVote.voter_id == current_user.id)
+        .order_by(ChallengeVote.voted_at.desc())
+        .limit(limit)
+    )
+    challenge_votes_result = await db.execute(challenge_votes_query)
+
+    for vote, challenge, entry in challenge_votes_result.all():
+        events.append(TimelineEvent(
+            id=f"challenge_vote_{vote.id}",
+            type="challenge_vote",
+            title=f'Voted in "{challenge.title}"',
+            description=f'Voted for entry by participant',
+            timestamp=vote.voted_at.isoformat(),
+            metadata={
+                "vote_id": vote.id,
+                "challenge_id": challenge.id,
+                "challenge_title": challenge.title,
+                "entry_id": entry.id,
+            }
+        ))
+
+    # Get review requests created
+    review_requests_query = (
+        select(ReviewRequest)
+        .where(
+            and_(
+                ReviewRequest.user_id == current_user.id,
+                ReviewRequest.deleted_at.is_(None),
+            )
+        )
+        .order_by(ReviewRequest.created_at.desc())
+        .limit(limit)
+    )
+    review_requests_result = await db.execute(review_requests_query)
+
+    for request in review_requests_result.scalars().all():
+        content_type_display = request.content_type.value.replace("_", " ") if request.content_type else "content"
+        events.append(TimelineEvent(
+            id=f"review_request_{request.id}",
+            type="review_request_created",
+            title=f'Created review request "{request.title}"',
+            description=f"{content_type_display.capitalize()} review",
+            timestamp=request.created_at.isoformat(),
+            metadata={
+                "request_id": request.id,
+                "title": request.title,
+                "content_type": request.content_type.value if request.content_type else None,
+                "status": request.status.value if request.status else None,
             }
         ))
 

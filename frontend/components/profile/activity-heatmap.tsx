@@ -16,7 +16,9 @@ export interface DayActivity {
   date: string;           // ISO date string
   reviewsGiven: number;
   reviewsReceived: number;
-  commentsGiven: number;
+  challengeEntries: number;
+  challengeVotes: number;
+  reviewRequestsCreated: number;
   total: number;
 }
 
@@ -147,7 +149,9 @@ export function ActivityHeatmap({
         date: dateStr,
         reviewsGiven: 0,
         reviewsReceived: 0,
-        commentsGiven: 0,
+        challengeEntries: 0,
+        challengeVotes: 0,
+        reviewRequestsCreated: 0,
         total: 0,
       };
       grid[dayOfWeek]?.push(dayData);
@@ -313,9 +317,12 @@ export function ActivityHeatmap({
                 })}
               </p>
               <div className="space-y-0.5 text-gray-300">
-                <p>{hoveredDay.reviewsGiven} reviews given</p>
-                <p>{hoveredDay.reviewsReceived} reviews received</p>
-                <p>{hoveredDay.commentsGiven} comments</p>
+                {hoveredDay.reviewsGiven > 0 && <p>{hoveredDay.reviewsGiven} reviews given</p>}
+                {hoveredDay.reviewsReceived > 0 && <p>{hoveredDay.reviewsReceived} reviews received</p>}
+                {hoveredDay.challengeEntries > 0 && <p>{hoveredDay.challengeEntries} challenge submissions</p>}
+                {hoveredDay.challengeVotes > 0 && <p>{hoveredDay.challengeVotes} challenge votes</p>}
+                {hoveredDay.reviewRequestsCreated > 0 && <p>{hoveredDay.reviewRequestsCreated} review requests</p>}
+                {hoveredDay.total === 0 && <p>No activity</p>}
               </div>
             </div>
           </motion.div>

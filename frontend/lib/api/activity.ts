@@ -15,6 +15,9 @@ export interface DayActivity {
   reviewsGiven: number;
   reviewsReceived: number;
   karmaEvents: number;
+  challengeEntries: number;
+  challengeVotes: number;
+  reviewRequestsCreated: number;
   total: number;
 }
 
@@ -27,7 +30,7 @@ export interface ActivityHeatmapResponse {
 
 export interface TimelineEvent {
   id: string;
-  type: 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'karma_change' | 'rating';
+  type: 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'karma_change' | 'rating' | 'challenge_entry' | 'challenge_vote' | 'review_request_created';
   title: string;
   description?: string;
   timestamp: string;
@@ -44,6 +47,13 @@ export interface TimelineEvent {
     badgeName?: string;
     milestoneValue?: number;
     quote?: string;
+    entry_id?: number;
+    challenge_id?: number;
+    challenge_title?: string;
+    entry_title?: string;
+    vote_id?: number;
+    title?: string;
+    content_type?: string;
   };
 }
 
@@ -60,6 +70,9 @@ interface ApiDayActivity {
   reviews_given: number;
   reviews_received: number;
   karma_events: number;
+  challenge_entries: number;
+  challenge_votes: number;
+  review_requests_created: number;
   total: number;
 }
 
@@ -102,6 +115,9 @@ export async function getActivityHeatmap(days: number = 365): Promise<ActivityHe
       reviewsGiven: day.reviews_given,
       reviewsReceived: day.reviews_received,
       karmaEvents: day.karma_events,
+      challengeEntries: day.challenge_entries,
+      challengeVotes: day.challenge_votes,
+      reviewRequestsCreated: day.review_requests_created,
       total: day.total,
     })),
     currentStreak: response.current_streak,
