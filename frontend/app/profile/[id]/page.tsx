@@ -52,6 +52,7 @@ import { UserTier, getTierInfo } from "@/lib/types/tier";
 import { ReviewerDNA, ReviewerDNAData } from "@/components/profile/reviewer-dna";
 import { BadgeGrid, Badge as BadgeType } from "@/components/profile/progressive-badge";
 import { ContextualStatCard } from "@/components/profile/contextual-stat-card";
+import { FeaturedWorksCarousel } from "@/components/profile/featured-works-carousel";
 
 // Default DNA values for users without enough data
 const defaultReviewerDNA: ReviewerDNAData = {
@@ -570,51 +571,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {featuredItems.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted border-2 border-amber-200/50 dark:border-amber-700/30"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.45 + index * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => item.project_url && window.open(item.project_url, "_blank")}
-                  >
-                    {item.image_url ? (
-                      <img
-                        src={getFileUrl(item.image_url)}
-                        alt={item.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 flex items-center justify-center">
-                        <Sparkles className="size-10 text-amber-500" />
-                      </div>
-                    )}
-
-                    {/* Featured indicator */}
-                    <div className="absolute top-3 right-3">
-                      <Badge className="bg-amber-500/90 text-white border-0 shadow-lg gap-1">
-                        <Star className="size-3 fill-white" />
-                        Featured
-                      </Badge>
-                    </div>
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-white text-base font-semibold truncate">{item.title}</p>
-                      {item.description && (
-                        <p className="text-white/80 text-sm line-clamp-2 mt-1">{item.description}</p>
-                      )}
-                      <Badge variant="info" size="sm" className="mt-2 capitalize text-xs">
-                        {item.content_type}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <FeaturedWorksCarousel items={featuredItems} />
             </motion.div>
           )}
 
