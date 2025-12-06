@@ -66,6 +66,7 @@ class ProjectMetrics(BaseModel):
     reviews_received: int
     is_self_documented: bool
     is_verified: bool
+    is_featured: bool
     created_at: str
 
 
@@ -377,6 +378,7 @@ async def get_project_metrics(
             reviews_received=reviews_per_project,
             is_self_documented=portfolio.review_request_id is None,
             is_verified=portfolio.review_request_id is not None,
+            is_featured=portfolio.is_featured == 1,
             created_at=portfolio.created_at.isoformat()
         ))
 

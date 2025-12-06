@@ -318,3 +318,104 @@ async def get_featured_portfolio_items(
     )
 
     return list(result.scalars().all())
+
+
+async def get_user_featured_count(db: AsyncSession, user_id: int) -> int:
+    """
+    Get the count of featured portfolio items for a user
+
+    Args:
+        db: Database session
+        user_id: User ID
+
+    Returns:
+        Count of featured items
+    """
+    result = await db.execute(
+        select(func.count(Portfolio.id)).where(
+            and_(
+                Portfolio.user_id == user_id,
+                Portfolio.is_featured == 1
+            )
+        )
+    )
+    return result.scalar() or 0
+
+
+async def get_user_featured_items(
+    db: AsyncSession, user_id: int
+) -> List[Portfolio]:
+    """
+    Get featured portfolio items for a specific user
+
+    Args:
+        db: Database session
+        user_id: User ID
+
+    Returns:
+        List of user's featured portfolio items (max 3)
+    """
+    result = await db.execute(
+        select(Portfolio)
+        .where(
+            and_(
+                Portfolio.user_id == user_id,
+                Portfolio.is_featured == 1
+            )
+        )
+        .order_by(desc(Portfolio.created_at))
+        .limit(3)
+    )
+
+    return list(result.scalars().all())
+
+
+async def toggle_portfolio_featured(
+    db: AsyncSession,
+    portfolio_id: int,
+    user_id: int,
+    featured: bool,
+    max_featured: int = 3,
+) -> Tuple[Optional[Portfolio], Optional[str]]:
+    """
+    Toggle the featured status of a portfolio item
+
+    Args:
+        db: Database session
+        portfolio_id: Portfolio item ID
+        user_id: User ID (for ownership verification)
+        featured: Whether to feature (True) or unfeature (False)
+        max_featured: Maximum number of featured items allowed
+
+    Returns:
+        Tuple of (updated portfolio item or None, error message or None)
+    """
+    # Get the portfolio item
+    result = await db.execute(
+        select(Portfolio).where(
+            Portfolio.id == portfolio_id, Portfolio.user_id == user_id
+        )
+    )
+    portfolio = result.scalar_one_or_none()
+
+    if not portfolio:
+        return None, "Portfolio item not found or you don't have permission to edit it"
+
+    # If trying to feature, check the limit
+    if featured:
+        current_featured_count = await get_user_featured_count(db, user_id)
+        # Don't count current item if it's already featured
+        if portfolio.is_featured == 1:
+            current_featured_count -= 1
+
+        if current_featured_count >= max_featured:
+            return None, f"You can only feature up to {max_featured} portfolio items. Unfeature an item first."
+
+    # Update the featured status
+    portfolio.is_featured = 1 if featured else 0
+    portfolio.updated_at = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(portfolio)
+
+    return portfolio, None

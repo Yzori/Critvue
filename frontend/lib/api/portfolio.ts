@@ -158,3 +158,38 @@ export async function getFeaturedPortfolio(limit: number = 10): Promise<Portfoli
 export async function getPortfolioSlots(): Promise<PortfolioSlotsResponse> {
   return await apiClient.get<PortfolioSlotsResponse>("/portfolio/slots");
 }
+
+/**
+ * Featured Slots Response - tracks featured item limits
+ */
+export interface FeaturedSlotsResponse {
+  used: number;
+  max: number;
+  remaining: number;
+}
+
+/**
+ * Get featured portfolio slots information
+ * Shows how many slots are used and remaining (max 3)
+ */
+export async function getFeaturedSlots(): Promise<FeaturedSlotsResponse> {
+  return await apiClient.get<FeaturedSlotsResponse>("/portfolio/featured/slots");
+}
+
+/**
+ * Get featured portfolio items for a specific user (public)
+ */
+export async function getUserFeaturedPortfolio(userId: number): Promise<PortfolioItem[]> {
+  return await apiClient.get<PortfolioItem[]>(`/portfolio/featured/user/${userId}`);
+}
+
+/**
+ * Toggle the featured status of a portfolio item
+ * Users can feature up to 3 items to display on their profile
+ */
+export async function togglePortfolioFeatured(
+  portfolioId: number,
+  featured: boolean
+): Promise<PortfolioItem> {
+  return await apiClient.post<PortfolioItem>(`/portfolio/${portfolioId}/feature`, { featured });
+}

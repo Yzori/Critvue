@@ -42,7 +42,13 @@ import {
   transformMilestones,
   transformReviewers,
 } from "@/lib/api/growth";
-import { getPortfolioSlots, type PortfolioSlotsResponse } from "@/lib/api/portfolio";
+import {
+  getPortfolioSlots,
+  getFeaturedSlots,
+  togglePortfolioFeatured,
+  type PortfolioSlotsResponse,
+  type FeaturedSlotsResponse,
+} from "@/lib/api/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 
 // Types for transformed data
@@ -83,6 +89,7 @@ interface JourneyProject {
   afterImage: string | null;
   isSelfDocumented: boolean;
   isVerified: boolean;
+  isFeatured: boolean;
   reviewsReceived: number;
   projectUrl: string | null;
 }
@@ -139,6 +146,7 @@ export default function PortfolioPage() {
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [portfolioSlots, setPortfolioSlots] = useState<PortfolioSlotsResponse | null>(null);
+  const [featuredSlots, setFeaturedSlots] = useState<FeaturedSlotsResponse | null>(null);
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
@@ -168,6 +176,14 @@ export default function PortfolioPage() {
         // Ignore - slots will just show as null
       }
 
+      // Fetch featured slots (for featuring limit)
+      try {
+        const featured = await getFeaturedSlots();
+        setFeaturedSlots(featured);
+      } catch {
+        // Ignore - featured slots will just show as null
+      }
+
       // Fetch complete portfolio growth data from API
       const response = await getFullPortfolioGrowth();
 
@@ -194,6 +210,7 @@ export default function PortfolioPage() {
         afterImage: p.image_url ? getFileUrl(p.image_url) : null,
         isSelfDocumented: p.is_self_documented,
         isVerified: p.is_verified,
+        isFeatured: p.is_featured,
         reviewsReceived: p.reviews_received,
         projectUrl: p.project_url,
       }));
@@ -205,6 +222,34 @@ export default function PortfolioPage() {
       // Keep default data on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle toggling featured status of a project
+  const handleToggleFeatured = async (projectId: number, featured: boolean) => {
+    try {
+      const updatedItem = await togglePortfolioFeatured(projectId, featured);
+
+      // Update local state
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === projectId ? { ...p, isFeatured: updatedItem.is_featured } : p
+        )
+      );
+
+      // Update featured slots count
+      setFeaturedSlots((prev) =>
+        prev
+          ? {
+              ...prev,
+              used: featured ? prev.used + 1 : prev.used - 1,
+              remaining: featured ? prev.remaining - 1 : prev.remaining + 1,
+            }
+          : null
+      );
+    } catch (err) {
+      console.error("Failed to toggle featured:", err);
+      // Could show a toast notification here
     }
   };
 
@@ -371,6 +416,8 @@ export default function PortfolioPage() {
                   key={project.id}
                   project={project}
                   index={index}
+                  onToggleFeatured={handleToggleFeatured}
+                  featuredSlotsRemaining={featuredSlots?.remaining ?? 3}
                 />
               ))
             ) : (

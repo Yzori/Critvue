@@ -57,6 +57,7 @@ export interface ProjectMetrics {
   reviews_received: number;
   is_self_documented: boolean;
   is_verified: boolean;
+  is_featured: boolean;
   created_at: string;
 }
 

@@ -40,6 +40,7 @@ import {
 // API imports
 import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getFileUrl } from "@/lib/api/client";
 import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/karma";
 import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/activity";
 import { ApiClientError } from "@/lib/api/client";
@@ -51,7 +52,6 @@ import {
   ProfileNotFoundError,
   AuthenticationRequiredError,
   NetworkError,
-  EmptyPortfolioState,
 } from "@/components/profile/error-states";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +65,7 @@ import { ActivityHeatmap, DayActivity } from "@/components/profile/activity-heat
 import { ContextualStatCard } from "@/components/profile/contextual-stat-card";
 import { ImpactTimeline, TimelineEvent } from "@/components/profile/impact-timeline";
 import { SkillsModal } from "@/components/browse/skills-modal";
+import { SelectFeaturedModal } from "@/components/profile/select-featured-modal";
 
 interface ProfileData {
   id: string;
@@ -227,6 +228,8 @@ export default function ProfilePage() {
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
+  const [selectFeaturedModalOpen, setSelectFeaturedModalOpen] = useState(false);
   const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
   const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
   const [badges, setBadges] = useState<BadgeType[]>([]);
@@ -270,6 +273,8 @@ export default function ProfilePage() {
       ]);
 
       setPortfolioItems(portfolioResponse.items);
+      // Extract featured items from portfolio
+      setFeaturedItems(portfolioResponse.items.filter((item) => item.is_featured));
 
       // Transform and set DNA data
       if (dnaResponse) {
@@ -725,12 +730,23 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          {/* Row 3: Activity Heatmap */}
+          {/* Row 3: Recent Activity (Timeline) + Activity Heatmap */}
+          {/* Recent Activity Timeline - Left */}
           <motion.div
-            className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
+            className="col-span-12 lg:col-span-5 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
+          >
+            <ImpactTimeline events={timelineEvents.length > 0 ? timelineEvents : []} maxDisplay={5} />
+          </motion.div>
+
+          {/* Activity Heatmap - Right */}
+          <motion.div
+            className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -746,81 +762,104 @@ export default function ProfilePage() {
             />
           </motion.div>
 
-          {/* Row 4: Timeline + Portfolio Preview */}
-          {/* Timeline */}
+          {/* Featured Works Section */}
           <motion.div
-            className="col-span-12 lg:col-span-5 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <ImpactTimeline events={timelineEvents.length > 0 ? timelineEvents : []} maxDisplay={5} />
-          </motion.div>
-
-          {/* Portfolio Preview */}
-          <motion.div
-            className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
+            className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Portfolio</h2>
-                <p className="text-sm text-muted-foreground">Recent work and projects</p>
+              <div className="flex items-center gap-2">
+                <Star className="size-5 text-amber-500 fill-amber-500" />
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Featured Works</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {featuredItems.length > 0
+                      ? "Your handpicked highlights"
+                      : "Select up to 3 works to showcase on your profile"}
+                  </p>
+                </div>
               </div>
               {isOwnProfile && (
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setSelectFeaturedModalOpen(true)}
+                >
                   <Pencil className="size-4" />
-                  Add Project
+                  {featuredItems.length > 0 ? "Edit" : "Select Works"}
                 </Button>
               )}
             </div>
 
-            {portfolioItems.length === 0 ? (
-              <EmptyPortfolioState isOwnProfile={isOwnProfile} />
+            {featuredItems.length === 0 ? (
+              <div className="text-center py-8 bg-muted/30 rounded-xl border border-dashed border-border">
+                <Sparkles className="size-10 mx-auto text-amber-400 mb-3" />
+                <p className="text-sm text-muted-foreground mb-4">
+                  {portfolioItems.length > 0
+                    ? "Select up to 3 portfolio items to feature on your profile"
+                    : "Add projects to your portfolio first, then select which ones to feature"}
+                </p>
+                {portfolioItems.length > 0 && isOwnProfile && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setSelectFeaturedModalOpen(true)}
+                  >
+                    <Star className="size-4" />
+                    Select Featured Works
+                  </Button>
+                )}
+              </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {portfolioItems.slice(0, 6).map((item, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {featuredItems.map((item, index) => (
                   <motion.div
                     key={item.id}
-                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted"
+                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted border-2 border-amber-200/50 dark:border-amber-700/30"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 + index * 0.05 }}
-                    whileHover={{ scale: 1.03 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
                     onClick={() => item.project_url && window.open(item.project_url, "_blank")}
                   >
                     {item.image_url ? (
                       <img
-                        src={item.image_url}
+                        src={getFileUrl(item.image_url)}
                         alt={item.title}
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted flex items-center justify-center">
-                        <Code className="size-8 text-muted-foreground" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 flex items-center justify-center">
+                        <Sparkles className="size-10 text-amber-500" />
                       </div>
                     )}
 
+                    {/* Featured indicator */}
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-amber-500/90 text-white border-0 shadow-lg gap-1">
+                        <Star className="size-3 fill-white" />
+                        Featured
+                      </Badge>
+                    </div>
+
                     {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-white text-sm font-medium truncate">{item.title}</p>
-                      <Badge variant="info" size="sm" className="mt-1 capitalize text-[10px]">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-base font-semibold truncate">{item.title}</p>
+                      {item.description && (
+                        <p className="text-white/80 text-sm line-clamp-2 mt-1">{item.description}</p>
+                      )}
+                      <Badge variant="info" size="sm" className="mt-2 capitalize text-xs">
                         {item.content_type}
                       </Badge>
                     </div>
                   </motion.div>
                 ))}
               </div>
-            )}
-
-            {portfolioItems.length > 6 && (
-              <Button variant="ghost" className="w-full mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
-                View all {portfolioItems.length} projects
-                <ArrowRight className="size-4 ml-2" />
-              </Button>
             )}
           </motion.div>
 
@@ -833,6 +872,23 @@ export default function ProfilePage() {
         onOpenChange={setSkillsModalOpen}
         currentSkills={profileData?.specialty_tags || []}
         onSkillsUpdated={handleSkillsUpdated}
+      />
+
+      {/* Select Featured Works Modal */}
+      <SelectFeaturedModal
+        open={selectFeaturedModalOpen}
+        onOpenChange={setSelectFeaturedModalOpen}
+        currentFeaturedIds={featuredItems.map((item) => item.id)}
+        onFeaturedUpdated={(newFeaturedItems) => {
+          setFeaturedItems(newFeaturedItems);
+          // Also update the portfolio items state to reflect featured changes
+          setPortfolioItems((prev) =>
+            prev.map((item) => ({
+              ...item,
+              is_featured: newFeaturedItems.some((f) => f.id === item.id),
+            }))
+          );
+        }}
       />
     </div>
   );

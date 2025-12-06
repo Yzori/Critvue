@@ -33,6 +33,21 @@ class PortfolioSlotsResponse(BaseModel):
     remaining: int
 
 
+class FeaturedSlotsResponse(BaseModel):
+    """Response for featured portfolio slots"""
+    used: int
+    max: int
+    remaining: int
+
+
+class ToggleFeaturedRequest(BaseModel):
+    """Request to toggle featured status"""
+    featured: bool
+
+
+MAX_FEATURED_ITEMS = 3
+
+
 def _portfolio_to_response(portfolio) -> PortfolioResponse:
     """Convert a Portfolio model to a PortfolioResponse"""
     return PortfolioResponse(
@@ -308,3 +323,83 @@ async def get_featured_portfolio(
     items = await portfolio_crud.get_featured_portfolio_items(db, limit)
 
     return [_portfolio_to_response(item) for item in items]
+
+
+@router.get("/featured/slots", response_model=FeaturedSlotsResponse)
+async def get_featured_slots(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> FeaturedSlotsResponse:
+    """
+    Get the number of featured portfolio slots used and remaining
+
+    Returns:
+        Featured slots information
+    """
+    used = await portfolio_crud.get_user_featured_count(db, current_user.id)
+    return FeaturedSlotsResponse(
+        used=used,
+        max=MAX_FEATURED_ITEMS,
+        remaining=max(0, MAX_FEATURED_ITEMS - used),
+    )
+
+
+@router.get("/featured/user/{user_id}", response_model=list[PortfolioResponse])
+async def get_user_featured_portfolio(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> list[PortfolioResponse]:
+    """
+    Get featured portfolio items for a specific user (public endpoint)
+
+    Args:
+        user_id: User ID
+
+    Returns:
+        List of user's featured portfolio items (max 3)
+    """
+    items = await portfolio_crud.get_user_featured_items(db, user_id)
+
+    return [_portfolio_to_response(item) for item in items]
+
+
+@router.post("/{portfolio_id}/feature", response_model=PortfolioResponse)
+@limiter.limit("30/minute")
+async def toggle_featured(
+    request: Request,
+    portfolio_id: int,
+    toggle_request: ToggleFeaturedRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PortfolioResponse:
+    """
+    Toggle the featured status of a portfolio item
+
+    Users can feature up to 3 portfolio items to display on their profile.
+
+    Args:
+        portfolio_id: Portfolio item ID
+        toggle_request: Request body with featured status
+
+    Returns:
+        Updated portfolio item
+
+    Raises:
+        HTTPException: If portfolio item not found, not owned, or max featured reached
+
+    Rate limited to 30 requests per minute
+    """
+    portfolio, error = await portfolio_crud.toggle_portfolio_featured(
+        db, portfolio_id, current_user.id, toggle_request.featured, MAX_FEATURED_ITEMS
+    )
+
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error,
+        )
+
+    action = "featured" if toggle_request.featured else "unfeatured"
+    logger.info(f"Portfolio item {portfolio_id} {action} by user {current_user.id}")
+
+    return _portfolio_to_response(portfolio)

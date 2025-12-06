@@ -31,7 +31,8 @@ import {
 
 // API imports
 import { getUserProfile, getUserDNA, ReviewerDNAResponse, ProfileData } from "@/lib/api/profile";
-import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getUserPortfolio, getUserFeaturedPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getFileUrl } from "@/lib/api/client";
 import { getUserBadges, Badge as ApiBadge } from "@/lib/api/karma";
 import { ApiClientError } from "@/lib/api/client";
 
@@ -140,6 +141,7 @@ export default function PublicProfilePage({ params }: PageProps) {
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
   const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
   const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
   const [badges, setBadges] = useState<BadgeType[]>([]);
@@ -171,14 +173,16 @@ export default function PublicProfilePage({ params }: PageProps) {
       const profile = await getUserProfile(userId);
       setProfileData(profile);
 
-      // Fetch DNA, portfolio, and badges in parallel
-      const [portfolioResponse, dnaResponse, badgesResponse] = await Promise.all([
+      // Fetch DNA, portfolio, featured items, and badges in parallel
+      const [portfolioResponse, featuredResponse, dnaResponse, badgesResponse] = await Promise.all([
         getUserPortfolio(userId, { page_size: 20 }).catch(() => ({ items: [], total: 0 })),
+        getUserFeaturedPortfolio(userId).catch(() => []),
         getUserDNA(userId).catch(() => null),
         getUserBadges(userId).catch(() => []),
       ]);
 
       setPortfolioItems(portfolioResponse.items);
+      setFeaturedItems(featuredResponse);
 
       // Transform and set DNA data
       if (dnaResponse) {
@@ -548,12 +552,78 @@ export default function PublicProfilePage({ params }: PageProps) {
             </div>
           </motion.div>
 
+          {/* Featured Works Section */}
+          {featuredItems.length > 0 && (
+            <motion.div
+              className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Star className="size-5 text-amber-500 fill-amber-500" />
+                  <div>
+                    <h2 className="text-lg font-bold text-foreground">Featured Works</h2>
+                    <p className="text-sm text-muted-foreground">Handpicked highlights from this creator</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {featuredItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted border-2 border-amber-200/50 dark:border-amber-700/30"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.45 + index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => item.project_url && window.open(item.project_url, "_blank")}
+                  >
+                    {item.image_url ? (
+                      <img
+                        src={getFileUrl(item.image_url)}
+                        alt={item.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 flex items-center justify-center">
+                        <Sparkles className="size-10 text-amber-500" />
+                      </div>
+                    )}
+
+                    {/* Featured indicator */}
+                    <div className="absolute top-3 right-3">
+                      <Badge className="bg-amber-500/90 text-white border-0 shadow-lg gap-1">
+                        <Star className="size-3 fill-white" />
+                        Featured
+                      </Badge>
+                    </div>
+
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-white text-base font-semibold truncate">{item.title}</p>
+                      {item.description && (
+                        <p className="text-white/80 text-sm line-clamp-2 mt-1">{item.description}</p>
+                      )}
+                      <Badge variant="info" size="sm" className="mt-2 capitalize text-xs">
+                        {item.content_type}
+                      </Badge>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Portfolio Preview */}
           <motion.div
             className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: featuredItems.length > 0 ? 0.55 : 0.4 }}
           >
             <div className="flex items-center justify-between mb-4">
               <div>

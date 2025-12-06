@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   User,
   X,
+  Star,
 } from "lucide-react";
 
 interface Project {
@@ -34,6 +35,7 @@ interface Project {
   afterImage: string | null;
   isSelfDocumented: boolean;
   isVerified: boolean;
+  isFeatured: boolean;
   reviewsReceived: number;
   projectUrl: string | null;
 }
@@ -41,6 +43,8 @@ interface Project {
 interface ProjectJourneyCardProps {
   project: Project;
   index: number;
+  onToggleFeatured?: (projectId: number, featured: boolean) => Promise<void>;
+  featuredSlotsRemaining?: number;
 }
 
 const contentTypeColors = {
@@ -53,11 +57,28 @@ const contentTypeColors = {
   art: "from-pink-500 to-rose-500",
 };
 
-export function ProjectJourneyCard({ project, index }: ProjectJourneyCardProps) {
+export function ProjectJourneyCard({ project, index, onToggleFeatured, featuredSlotsRemaining = 0 }: ProjectJourneyCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-20%" });
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [isTogglingFeatured, setIsTogglingFeatured] = useState(false);
+
+  const handleToggleFeatured = async () => {
+    if (!onToggleFeatured || isTogglingFeatured) return;
+
+    // Check if can feature (has remaining slots or is currently featured)
+    if (!project.isFeatured && featuredSlotsRemaining <= 0) {
+      return;
+    }
+
+    setIsTogglingFeatured(true);
+    try {
+      await onToggleFeatured(project.id, !project.isFeatured);
+    } finally {
+      setIsTogglingFeatured(false);
+    }
+  };
   const [showFullscreen, setShowFullscreen] = useState(false);
 
   const { scrollYProgress } = useScroll({
@@ -245,6 +266,32 @@ export function ProjectJourneyCard({ project, index }: ProjectJourneyCardProps) 
               <Badge variant="info" className="gap-1">
                 {project.reviewsReceived} review{project.reviewsReceived !== 1 ? 's' : ''}
               </Badge>
+            )}
+            {/* Featured Badge/Toggle */}
+            {onToggleFeatured && (
+              <button
+                onClick={handleToggleFeatured}
+                disabled={isTogglingFeatured || (!project.isFeatured && featuredSlotsRemaining <= 0)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-all",
+                  project.isFeatured
+                    ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/30"
+                    : featuredSlotsRemaining > 0
+                      ? "bg-muted text-muted-foreground border border-border hover:bg-muted/80 hover:border-amber-500/50"
+                      : "bg-muted/50 text-muted-foreground/50 border border-border/50 cursor-not-allowed",
+                  isTogglingFeatured && "opacity-50"
+                )}
+                title={
+                  project.isFeatured
+                    ? "Click to unfeature"
+                    : featuredSlotsRemaining > 0
+                      ? "Click to feature on your profile"
+                      : "Maximum featured items reached"
+                }
+              >
+                <Star className={cn("size-3", project.isFeatured && "fill-amber-500")} />
+                {project.isFeatured ? "Featured" : "Feature"}
+              </button>
             )}
           </div>
           <h3 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
