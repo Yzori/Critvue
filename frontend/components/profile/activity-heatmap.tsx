@@ -29,17 +29,38 @@ export interface ActivityHeatmapProps {
   className?: string;
 }
 
-// Generate months for labels
-const getMonthLabels = () => {
-  const months = [];
-  const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({
-      label: date.toLocaleDateString('en-US', { month: 'short' }),
-      index: 11 - i,
-    });
+// Generate months for labels with their actual week positions
+const getMonthLabels = (startDate: Date) => {
+  const months: { label: string; weekIndex: number }[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Calculate start of grid (aligned to start day)
+  const gridStart = new Date(startDate);
+  const startDay = gridStart.getDay();
+  gridStart.setDate(gridStart.getDate() - startDay); // Go back to Sunday
+
+  let currentMonth = -1;
+  let weekIndex = 0;
+  const currentDate = new Date(gridStart);
+
+  while (currentDate <= today) {
+    const month = currentDate.getMonth();
+
+    // Check if this is a new month and it's on or after the first day of the grid
+    if (month !== currentMonth && currentDate >= startDate) {
+      currentMonth = month;
+      months.push({
+        label: currentDate.toLocaleDateString('en-US', { month: 'short' }),
+        weekIndex: weekIndex,
+      });
+    }
+
+    // Move to next week (next Sunday)
+    currentDate.setDate(currentDate.getDate() + 7);
+    weekIndex++;
   }
+
   return months;
 };
 
@@ -91,15 +112,22 @@ export function ActivityHeatmap({
   const [hoverPosition, setHoverPosition] = React.useState({ x: 0, y: 0 });
   const [activeView, setActiveView] = React.useState(view);
 
-  // Generate grid data for past 365 days
-  const generateGridData = () => {
-    const grid: (DayActivity | null)[][] = Array(7).fill(null).map(() => []);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // Calculate start date for the grid
+  const today = React.useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
-    // Start from 364 days ago
-    const startDate = new Date(today);
-    startDate.setDate(startDate.getDate() - 364);
+  const startDate = React.useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - 364);
+    return d;
+  }, [today]);
+
+  // Generate grid data for past 365 days
+  const generateGridData = React.useCallback(() => {
+    const grid: (DayActivity | null)[][] = Array(7).fill(null).map(() => []);
 
     // Pad to start on Sunday
     const startDay = startDate.getDay();
@@ -127,10 +155,10 @@ export function ActivityHeatmap({
     }
 
     return grid;
-  };
+  }, [data, startDate, today]);
 
   const gridData = generateGridData();
-  const months = getMonthLabels();
+  const months = React.useMemo(() => getMonthLabels(startDate), [startDate]);
 
   const handleDayHover = (day: DayActivity | null, e: React.MouseEvent) => {
     if (day) {
@@ -309,15 +337,16 @@ function HeatmapGrid({
   valueKey = 'total',
 }: {
   gridData: (DayActivity | null)[][];
-  months: { label: string; index: number }[];
+  months: { label: string; weekIndex: number }[];
   colorScale: string[];
   onDayHover: (day: DayActivity | null, e: React.MouseEvent) => void;
   label: string;
   valueKey?: keyof DayActivity;
 }) {
-  // Calculate week positions for month labels
-  const firstRow = gridData[0] ?? [];
-  const weeksPerMonth = Math.ceil(firstRow.length / 4.3);
+  // Cell size + gap = 14px per week column
+  const cellSize = 11;
+  const gap = 3;
+  const weekWidth = cellSize + gap;
 
   return (
     <div>
@@ -327,22 +356,22 @@ function HeatmapGrid({
       <div className="inline-flex gap-1">
         {/* Day labels */}
         <div className="flex flex-col gap-[3px] pr-2">
-          {dayLabels.map((label, i) => (
+          {dayLabels.map((dayLabel, i) => (
             <div key={i} className="h-[11px] text-[10px] text-muted-foreground/70 leading-[11px]">
-              {label}
+              {dayLabel}
             </div>
           ))}
         </div>
 
         {/* Grid */}
         <div>
-          {/* Month labels */}
-          <div className="flex mb-1" style={{ marginLeft: '0' }}>
+          {/* Month labels - positioned based on weekIndex */}
+          <div className="relative h-4 mb-1">
             {months.map((month, i) => (
               <div
                 key={i}
-                className="text-[10px] text-muted-foreground/70"
-                style={{ width: `${weeksPerMonth * 14}px` }}
+                className="absolute text-[10px] text-muted-foreground/70"
+                style={{ left: `${month.weekIndex * weekWidth}px` }}
               >
                 {month.label}
               </div>

@@ -31,7 +31,7 @@ interface FeaturedWorksCarouselProps {
 
 export function FeaturedWorksCarousel({
   items,
-  autoPlayInterval = 5000,
+  autoPlayInterval = 8000,
 }: FeaturedWorksCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0); // -1 for left, 1 for right

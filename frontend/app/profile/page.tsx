@@ -802,16 +802,28 @@ export default function ProfilePage() {
                     ? "Select up to 3 portfolio items to feature on your profile"
                     : "Add projects to your portfolio first, then select which ones to feature"}
                 </p>
-                {portfolioItems.length > 0 && isOwnProfile && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => setSelectFeaturedModalOpen(true)}
-                  >
-                    <Star className="size-4" />
-                    Select Featured Works
-                  </Button>
+                {isOwnProfile && (
+                  portfolioItems.length > 0 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setSelectFeaturedModalOpen(true)}
+                    >
+                      <Star className="size-4" />
+                      Select Featured Works
+                    </Button>
+                  ) : (
+                    <Link href="/portfolio">
+                      <Button
+                        size="sm"
+                        className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
+                      >
+                        <ArrowRight className="size-4" />
+                        Add Work to Portfolio
+                      </Button>
+                    </Link>
+                  )
                 )}
               </div>
             ) : (
