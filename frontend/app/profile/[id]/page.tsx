@@ -27,11 +27,12 @@ import {
   Sparkles,
   Award,
   Shield,
+  Briefcase,
 } from "lucide-react";
 
 // API imports
 import { getUserProfile, getUserDNA, ReviewerDNAResponse, ProfileData } from "@/lib/api/profile";
-import { getUserPortfolio, getUserFeaturedPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getUserFeaturedPortfolio, PortfolioItem } from "@/lib/api/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 import { getUserBadges, Badge as ApiBadge } from "@/lib/api/karma";
 import { ApiClientError } from "@/lib/api/client";
@@ -42,7 +43,6 @@ import {
   ProfileLoadError,
   ProfileNotFoundError,
   NetworkError,
-  EmptyPortfolioState,
 } from "@/components/profile/error-states";
 import { useAuth } from "@/contexts/AuthContext";
 import { TierBadge } from "@/components/tier/tier-badge";
@@ -141,7 +141,6 @@ export default function PublicProfilePage({ params }: PageProps) {
 
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
   const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
   const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
@@ -174,15 +173,13 @@ export default function PublicProfilePage({ params }: PageProps) {
       const profile = await getUserProfile(userId);
       setProfileData(profile);
 
-      // Fetch DNA, portfolio, featured items, and badges in parallel
-      const [portfolioResponse, featuredResponse, dnaResponse, badgesResponse] = await Promise.all([
-        getUserPortfolio(userId, { page_size: 20 }).catch(() => ({ items: [], total: 0 })),
+      // Fetch DNA, featured items, and badges in parallel
+      const [featuredResponse, dnaResponse, badgesResponse] = await Promise.all([
         getUserFeaturedPortfolio(userId).catch(() => []),
         getUserDNA(userId).catch(() => null),
         getUserBadges(userId).catch(() => []),
       ]);
 
-      setPortfolioItems(portfolioResponse.items);
       setFeaturedItems(featuredResponse);
 
       // Transform and set DNA data
@@ -346,8 +343,15 @@ export default function PublicProfilePage({ params }: PageProps) {
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{profileData.title}</p>
 
+                {/* Bio */}
+                {profileData.bio && (
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-2xl">
+                    {profileData.bio}
+                  </p>
+                )}
+
                 {/* Quick stats row */}
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                   <div className="flex items-center gap-1.5">
                     <div className="flex items-center">
                       {[1, 2, 3, 4, 5].map((i) => (
@@ -364,13 +368,17 @@ export default function PublicProfilePage({ params }: PageProps) {
                     </div>
                     <span className="font-semibold text-foreground">{profileData.rating.toFixed(1)}</span>
                   </div>
-                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{profileData.total_reviews_given}</span> reviews
                   </span>
-                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{profileData.karma_points}</span> karma
+                  </span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
+                  <span className="text-muted-foreground text-xs">
+                    Member since {new Date(profileData.member_since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
               </div>
@@ -382,6 +390,12 @@ export default function PublicProfilePage({ params }: PageProps) {
                 Request Review
                 <ArrowRight className="size-4" />
               </Button>
+              <Link href={`/portfolio/${userId}`}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Briefcase className="size-4" />
+                  Portfolio
+                </Button>
+              </Link>
               <Button variant="outline" size="sm">
                 <Mail className="size-4" />
               </Button>
@@ -507,132 +521,71 @@ export default function PublicProfilePage({ params }: PageProps) {
             )}
           </motion.div>
 
-          {/* Bio & Skills Card */}
+          {/* Skills Card */}
           <motion.div
             className="col-span-12 lg:col-span-4 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-lg font-bold text-foreground mb-3">About</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              {profileData.bio || "This user hasn't added a bio yet."}
-            </p>
-
-            {/* Skills */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Code className="size-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  Skills & Expertise
-                </span>
+            <div className="flex items-center gap-2 mb-4">
+              <Code className="size-5 text-blue-500" />
+              <h2 className="text-lg font-bold text-foreground">Skills & Expertise</h2>
+            </div>
+            {profileData.specialty_tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profileData.specialty_tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
               </div>
-              {profileData.specialty_tags.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.specialty_tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      size="sm"
-                      className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No skills listed</p>
-              )}
-            </div>
-
-            {/* Member since */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground">
-                Member since {new Date(profileData.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </p>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills listed</p>
+            )}
           </motion.div>
 
           {/* Featured Works Section */}
-          {featuredItems.length > 0 && (
-            <motion.div
-              className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Star className="size-5 text-amber-500 fill-amber-500" />
-                  <div>
-                    <h2 className="text-lg font-bold text-foreground">Featured Works</h2>
-                    <p className="text-sm text-muted-foreground">Handpicked highlights from this creator</p>
-                  </div>
-                </div>
-              </div>
-
-              <FeaturedWorksCarousel items={featuredItems} />
-            </motion.div>
-          )}
-
-          {/* Portfolio Preview */}
           <motion.div
-            className="col-span-12 lg:col-span-7 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
+            className="col-span-12 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: featuredItems.length > 0 ? 0.55 : 0.4 }}
+            transition={{ delay: 0.4 }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-lg font-bold text-foreground">Portfolio</h2>
-                <p className="text-sm text-muted-foreground">Recent work and projects</p>
+              <div className="flex items-center gap-2">
+                <Star className="size-5 text-amber-500 fill-amber-500" />
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">Featured Works</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {featuredItems.length > 0
+                      ? "Handpicked highlights from this creator"
+                      : "This creator hasn't featured any works yet"}
+                  </p>
+                </div>
               </div>
+              <Link href={`/portfolio/${userId}`}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Briefcase className="size-4" />
+                  View Full Portfolio
+                </Button>
+              </Link>
             </div>
 
-            {portfolioItems.length === 0 ? (
-              <EmptyPortfolioState isOwnProfile={false} />
+            {featuredItems.length > 0 ? (
+              <FeaturedWorksCarousel items={featuredItems} />
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {portfolioItems.slice(0, 6).map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer bg-muted"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 + index * 0.05 }}
-                    whileHover={{ scale: 1.03 }}
-                    onClick={() => item.project_url && window.open(item.project_url, "_blank")}
-                  >
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted flex items-center justify-center">
-                        <Code className="size-8 text-muted-foreground" />
-                      </div>
-                    )}
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-white text-sm font-medium truncate">{item.title}</p>
-                      <Badge variant="info" size="sm" className="mt-1 capitalize text-[10px]">
-                        {item.content_type}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="text-center py-12 bg-muted/30 rounded-xl border border-dashed border-border">
+                <Sparkles className="size-10 mx-auto text-amber-400/50 mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  Check out their full portfolio to see their work
+                </p>
               </div>
-            )}
-
-            {portfolioItems.length > 6 && (
-              <Button variant="ghost" className="w-full mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
-                View all {portfolioItems.length} projects
-                <ArrowRight className="size-4 ml-2" />
-              </Button>
             )}
           </motion.div>
 

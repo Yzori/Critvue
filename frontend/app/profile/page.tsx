@@ -35,6 +35,7 @@ import {
   Sparkles,
   Award,
   Shield,
+  Briefcase,
 } from "lucide-react";
 
 // API imports
@@ -436,7 +437,7 @@ export default function ProfilePage() {
               </motion.div>
 
               {/* Name & Title */}
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                     {profileData.full_name}
@@ -479,8 +480,15 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">{profileData.title}</p>
 
+                {/* Bio */}
+                {profileData.bio && (
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-2xl">
+                    {profileData.bio}
+                  </p>
+                )}
+
                 {/* Quick stats row */}
-                <div className="flex items-center gap-4 text-sm">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                   <div className="flex items-center gap-1.5">
                     <div className="flex items-center">
                       {[1, 2, 3, 4, 5].map((i) => (
@@ -497,13 +505,17 @@ export default function ProfilePage() {
                     </div>
                     <span className="font-semibold text-foreground">{profileData.rating.toFixed(1)}</span>
                   </div>
-                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{profileData.total_reviews_given}</span> reviews
                   </span>
-                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
                     <span className="font-semibold text-foreground">{profileData.karma_points}</span> karma
+                  </span>
+                  <span className="text-muted-foreground hidden sm:inline">|</span>
+                  <span className="text-muted-foreground text-xs">
+                    Member since {new Date(profileData.member_since).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                   </span>
                 </div>
               </div>
@@ -513,6 +525,12 @@ export default function ProfilePage() {
             <div className="flex items-start gap-2 lg:ml-auto">
               {isOwnProfile ? (
                 <>
+                  <Link href="/portfolio">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Briefcase className="size-4" />
+                      Portfolio
+                    </Button>
+                  </Link>
                   <Button variant="outline" size="sm" className="gap-2">
                     <Pencil className="size-4" />
                     Edit Profile
@@ -665,69 +683,56 @@ export default function ProfilePage() {
             <BadgeGrid badges={badges.length > 0 ? badges : []} maxDisplay={6} />
           </motion.div>
 
-          {/* Bio & Skills Card */}
+          {/* Skills Card */}
           <motion.div
             className="col-span-12 lg:col-span-4 bg-background rounded-2xl border border-border/60 p-6 shadow-sm"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h2 className="text-lg font-bold text-foreground mb-3">About</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              {profileData.bio || "No bio yet. Tell the world about yourself!"}
-            </p>
-
-            {/* Skills */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Code className="size-4 text-muted-foreground" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Skills & Expertise
-                  </span>
-                </div>
-                {isOwnProfile && profileData.specialty_tags.length > 0 && (
-                  <button
-                    onClick={() => setSkillsModalOpen(true)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Edit
-                  </button>
-                )}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Code className="size-5 text-blue-500" />
+                <h2 className="text-lg font-bold text-foreground">Skills & Expertise</h2>
               </div>
-              {profileData.specialty_tags.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.specialty_tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      size="sm"
-                      className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              ) : isOwnProfile ? (
+              {isOwnProfile && profileData.specialty_tags.length > 0 && (
+                <button
+                  onClick={() => setSkillsModalOpen(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {profileData.specialty_tags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {profileData.specialty_tags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            ) : isOwnProfile ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground mb-3">Showcase your expertise</p>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full text-muted-foreground"
+                  className="gap-2"
                   onClick={() => setSkillsModalOpen(true)}
                 >
-                  Add your skills
+                  <Code className="size-4" />
+                  Add Skills
                 </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground">No skills listed</p>
-              )}
-            </div>
-
-            {/* Member since */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-xs text-muted-foreground">
-                Member since {new Date(profileData.member_since).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-              </p>
-            </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No skills listed</p>
+            )}
           </motion.div>
 
           {/* Row 3: Recent Activity (Timeline) + Activity Heatmap */}
