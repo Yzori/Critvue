@@ -59,10 +59,13 @@ class ProjectMetrics(BaseModel):
     description: Optional[str]
     content_type: str
     image_url: Optional[str]
+    before_image_url: Optional[str]
     project_url: Optional[str]
     views_count: int
     rating: Optional[float]
     reviews_received: int
+    is_self_documented: bool
+    is_verified: bool
     created_at: str
 
 
@@ -115,10 +118,14 @@ async def get_growth_summary(
             )
         )
     )
-    avg_rating = avg_rating_result.scalar() or 3.0
+    avg_rating = avg_rating_result.scalar()
 
     # Improvement score: combination of review count and rating
-    improvement_score = min(100, int((total_reviews * 5) + (float(avg_rating) * 10)))
+    # Only calculate if user has received reviews, otherwise 0
+    if total_reviews > 0 and avg_rating is not None:
+        improvement_score = min(100, int((total_reviews * 5) + (float(avg_rating) * 10)))
+    else:
+        improvement_score = 0
 
     # Get top content category
     category_result = await db.execute(
@@ -363,10 +370,13 @@ async def get_project_metrics(
             description=portfolio.description,
             content_type=portfolio.content_type,
             image_url=portfolio.image_url,
+            before_image_url=portfolio.before_image_url,
             project_url=portfolio.project_url,
             views_count=portfolio.views_count or 0,
             rating=float(portfolio.rating) if portfolio.rating else None,
             reviews_received=reviews_per_project,
+            is_self_documented=portfolio.review_request_id is None,
+            is_verified=portfolio.review_request_id is not None,
             created_at=portfolio.created_at.isoformat()
         ))
 

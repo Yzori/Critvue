@@ -50,10 +50,13 @@ export interface ProjectMetrics {
   description: string | null;
   content_type: string;
   image_url: string | null;
+  before_image_url: string | null;
   project_url: string | null;
   views_count: number;
   rating: number | null;
   reviews_received: number;
+  is_self_documented: boolean;
+  is_verified: boolean;
   created_at: string;
 }
 

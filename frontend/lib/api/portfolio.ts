@@ -16,16 +16,29 @@ export type PortfolioContentType = "design" | "photography" | "video" | "stream"
 export interface PortfolioItem {
   id: number;
   user_id: number;
+  review_request_id: number | null; // If set, this is a verified item
   title: string;
   description: string | null;
   content_type: PortfolioContentType;
   image_url: string | null;
+  before_image_url: string | null; // Before image for comparison
   project_url: string | null;
   rating: number | null;
   views_count: number;
   is_featured: boolean;
+  is_self_documented: boolean; // True if manually uploaded
+  is_verified: boolean; // True if linked to a review
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Portfolio Slots Response - tracks self-documented item limits
+ */
+export interface PortfolioSlotsResponse {
+  used: number;
+  max: number;
+  remaining: number;
 }
 
 /**
@@ -40,13 +53,14 @@ export interface PortfolioListResponse {
 }
 
 /**
- * Create Portfolio Item Payload
+ * Create Portfolio Item Payload (self-documented)
  */
 export interface CreatePortfolioData {
   title: string;
   description?: string;
   content_type: PortfolioContentType;
-  image_url?: string;
+  image_url?: string; // Main/After image
+  before_image_url?: string; // Before image for comparison
   project_url?: string;
   is_featured?: boolean;
 }
@@ -59,6 +73,7 @@ export interface UpdatePortfolioData {
   description?: string;
   content_type?: PortfolioContentType;
   image_url?: string;
+  before_image_url?: string;
   project_url?: string;
   is_featured?: boolean;
 }
@@ -134,4 +149,12 @@ export async function deletePortfolioItem(portfolioId: number): Promise<void> {
  */
 export async function getFeaturedPortfolio(limit: number = 10): Promise<PortfolioItem[]> {
   return await apiClient.get<PortfolioItem[]>(`/portfolio/featured/all?limit=${limit}`);
+}
+
+/**
+ * Get self-documented portfolio slots information
+ * Shows how many slots are used and remaining (max 3)
+ */
+export async function getPortfolioSlots(): Promise<PortfolioSlotsResponse> {
+  return await apiClient.get<PortfolioSlotsResponse>("/portfolio/slots");
 }

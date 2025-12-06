@@ -1,8 +1,9 @@
 """File upload API endpoints for review requests"""
 
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from typing import List, Literal
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 
 from app.db.session import get_db
 from app.api.deps import get_current_user
@@ -14,6 +15,89 @@ from app.utils.file_utils import process_upload, delete_file
 from app.core.logging_config import security_logger
 
 router = APIRouter(prefix="/reviews", tags=["Files"])
+
+# Generic file upload router (for portfolio, avatar, etc.)
+generic_files_router = APIRouter(prefix="/files", tags=["Generic Files"])
+
+
+class GenericFileUploadResponse(BaseModel):
+    """Response model for generic file uploads"""
+    url: str
+    filename: str
+    file_size: int
+    file_type: str
+
+
+# Category to content type mapping for validation
+CATEGORY_CONTENT_TYPE_MAP = {
+    "portfolio": "design",  # Portfolio images use design validation (images)
+    "avatar": "design",     # Avatars use design validation (images)
+    "media": "design",      # Generic media uses design validation
+}
+
+
+@generic_files_router.post(
+    "/upload",
+    response_model=GenericFileUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload a generic file (portfolio, avatar, etc.)"
+)
+async def upload_generic_file(
+    file: UploadFile = File(...),
+    category: Literal["portfolio", "avatar", "media"] = Form("portfolio"),
+    current_user: User = Depends(get_current_user),
+) -> GenericFileUploadResponse:
+    """
+    Upload a generic file for portfolio images, avatars, or other media.
+
+    This endpoint handles:
+    - File type validation based on category (images only)
+    - File size validation (10MB limit)
+    - Secure file storage
+
+    Args:
+        file: The file to upload
+        category: Category for the file (portfolio, avatar, media)
+        current_user: Currently authenticated user
+
+    Returns:
+        File metadata including URL
+
+    Raises:
+        HTTPException: If validation fails
+    """
+    try:
+        # Map category to content type for validation
+        content_type = CATEGORY_CONTENT_TYPE_MAP.get(category, "design")
+
+        # Process the file upload
+        file_metadata = await process_upload(
+            file=file,
+            content_type=content_type
+        )
+
+        security_logger.logger.info(
+            f"Generic file uploaded: category={category}, "
+            f"user={current_user.email}, size={file_metadata['file_size'] / (1024*1024):.2f}MB"
+        )
+
+        return GenericFileUploadResponse(
+            url=file_metadata["file_url"],
+            filename=file_metadata["filename"],
+            file_size=file_metadata["file_size"],
+            file_type=file_metadata["file_type"],
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        security_logger.logger.error(
+            f"Failed to upload generic file for user {current_user.email}: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload file: {str(e)}"
+        )
 
 
 @router.post(

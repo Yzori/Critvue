@@ -21,7 +21,12 @@ if TYPE_CHECKING:
 
 
 class Portfolio(Base):
-    """Portfolio project model for user project showcase"""
+    """Portfolio project model for user project showcase
+
+    Items can be:
+    - Verified (linked to a review request) - unlimited
+    - Self-documented (manually uploaded) - max 3 per user
+    """
 
     __tablename__ = "portfolio"
 
@@ -36,16 +41,26 @@ class Portfolio(Base):
         index=True
     )
 
+    # Optional link to review request (if verified through reviews)
+    # If null, this is a self-documented item
+    review_request_id = Column(
+        Integer,
+        ForeignKey("review_requests.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+
     # Project information
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
 
     # Content type (matches ReviewRequest ContentType)
-    # Values: "design", "code", "video", "stream", "audio", "writing", "art"
+    # Values: "design", "photography", "video", "stream", "audio", "writing", "art"
     content_type = Column(String(50), nullable=False, index=True)
 
-    # Media
-    image_url = Column(String(500), nullable=True)  # Cover image/thumbnail
+    # Media - Before/After support
+    image_url = Column(String(500), nullable=True)  # Main/After image
+    before_image_url = Column(String(500), nullable=True)  # Before image for comparison
     project_url = Column(String(500), nullable=True)  # External link to project
 
     # Metrics
@@ -76,10 +91,13 @@ class Portfolio(Base):
         Index('idx_portfolio_content_type', 'content_type', 'created_at'),
         # Index for featured projects
         Index('idx_portfolio_featured', 'is_featured', 'created_at'),
+        # Index for self-documented items (where review_request_id is NULL)
+        Index('idx_portfolio_self_documented', 'user_id', 'review_request_id'),
     )
 
     # Relationships
     user = relationship("User", backref="portfolio_items")
+    review_request = relationship("ReviewRequest", backref="portfolio_item")
 
     def __repr__(self) -> str:
         return f"<Portfolio {self.id}: {self.title[:30]}>"
@@ -88,3 +106,13 @@ class Portfolio(Base):
     def is_featured_bool(self) -> bool:
         """Convert integer to boolean for is_featured"""
         return bool(self.is_featured)
+
+    @property
+    def is_self_documented(self) -> bool:
+        """Check if this is a self-documented item (not linked to a review)"""
+        return self.review_request_id is None
+
+    @property
+    def is_verified(self) -> bool:
+        """Check if this is a verified item (linked to a review)"""
+        return self.review_request_id is not None

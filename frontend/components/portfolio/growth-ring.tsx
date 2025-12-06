@@ -81,10 +81,14 @@ export function GrowthRing({ data, milestones, className }: GrowthRingProps) {
   const [hoveredRing, setHoveredRing] = useState<number | null>(null);
 
   // Calculate ring data based on growth
+  // Foundation: based on total projects (each project = 20% progress, max 100%)
+  // Early Growth: based on reviews received (each review = 5% progress, max 100%)
+  // Breakthrough: based on improvement score (direct percentage)
+  // Mastery: based on growth percentile ranking
   const rings = [
-    { radius: 60, progress: 100, label: "Foundation", color: "#4CC9F0" },
-    { radius: 100, progress: Math.min(100, data.totalReviews * 5), label: "Early Growth", color: "#60A5FA" },
-    { radius: 140, progress: Math.min(100, data.improvementScore * 2), label: "Breakthrough", color: "#8B5CF6" },
+    { radius: 60, progress: Math.min(100, data.totalProjects * 20), label: "Foundation", color: "#4CC9F0" },
+    { radius: 100, progress: Math.min(100, data.totalReviews * 10), label: "Early Growth", color: "#60A5FA" },
+    { radius: 140, progress: Math.min(100, data.improvementScore), label: "Breakthrough", color: "#8B5CF6" },
     { radius: 180, progress: Math.min(100, data.growthPercentile), label: "Mastery", color: "#EC4899" },
   ];
 

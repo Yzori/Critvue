@@ -2,18 +2,42 @@
 
 from datetime import datetime
 from typing import Optional, List, Tuple
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.portfolio import Portfolio
-from app.schemas.portfolio import PortfolioCreate, PortfolioUpdate
+from app.schemas.portfolio import PortfolioCreate, PortfolioUpdate, MAX_SELF_DOCUMENTED_ITEMS
+
+
+async def get_self_documented_count(db: AsyncSession, user_id: int) -> int:
+    """
+    Get the count of self-documented portfolio items for a user
+
+    Args:
+        db: Database session
+        user_id: User ID
+
+    Returns:
+        Count of self-documented items
+    """
+    result = await db.execute(
+        select(func.count(Portfolio.id)).where(
+            and_(
+                Portfolio.user_id == user_id,
+                Portfolio.review_request_id.is_(None)  # Self-documented = no review link
+            )
+        )
+    )
+    return result.scalar() or 0
 
 
 async def create_portfolio_item(
     db: AsyncSession, user_id: int, portfolio_data: PortfolioCreate
 ) -> Portfolio:
     """
-    Create a new portfolio item
+    Create a new portfolio item (self-documented)
+
+    Self-documented items are limited to MAX_SELF_DOCUMENTED_ITEMS (3) per user.
 
     Args:
         db: Database session
@@ -22,15 +46,77 @@ async def create_portfolio_item(
 
     Returns:
         Created portfolio item
+
+    Raises:
+        ValueError: If user has reached the self-documented item limit
     """
+    # Check if user has reached the limit for self-documented items
+    current_count = await get_self_documented_count(db, user_id)
+    if current_count >= MAX_SELF_DOCUMENTED_ITEMS:
+        raise ValueError(
+            f"You have reached the maximum of {MAX_SELF_DOCUMENTED_ITEMS} self-documented portfolio items. "
+            "To add more, complete reviews to earn verified portfolio entries."
+        )
+
     portfolio_dict = portfolio_data.model_dump()
 
     # Convert is_featured boolean to integer for SQLite
     portfolio_dict["is_featured"] = 1 if portfolio_dict.get("is_featured") else 0
 
+    # Self-documented items have no review_request_id
     portfolio = Portfolio(
         user_id=user_id,
+        review_request_id=None,  # Explicitly mark as self-documented
         **portfolio_dict,
+    )
+
+    db.add(portfolio)
+    await db.commit()
+    await db.refresh(portfolio)
+
+    return portfolio
+
+
+async def create_verified_portfolio_item(
+    db: AsyncSession,
+    user_id: int,
+    review_request_id: int,
+    title: str,
+    description: Optional[str] = None,
+    content_type: str = "design",
+    image_url: Optional[str] = None,
+    before_image_url: Optional[str] = None,
+    project_url: Optional[str] = None,
+) -> Portfolio:
+    """
+    Create a verified portfolio item (linked to a review request)
+
+    Verified items have no limit.
+
+    Args:
+        db: Database session
+        user_id: User ID
+        review_request_id: Review request ID to link to
+        title: Portfolio item title
+        description: Optional description
+        content_type: Type of content
+        image_url: Main/after image URL
+        before_image_url: Before image URL for comparison
+        project_url: External project URL
+
+    Returns:
+        Created portfolio item
+    """
+    portfolio = Portfolio(
+        user_id=user_id,
+        review_request_id=review_request_id,
+        title=title,
+        description=description,
+        content_type=content_type,
+        image_url=image_url,
+        before_image_url=before_image_url,
+        project_url=project_url,
+        is_featured=0,
     )
 
     db.add(portfolio)

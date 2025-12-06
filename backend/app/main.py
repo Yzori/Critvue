@@ -50,6 +50,7 @@ app.include_router(webhooks.router, prefix="/api/v1")  # Webhooks (no auth requi
 app.include_router(browse.router, prefix="/api/v1")  # Public browse marketplace (must be before reviews to avoid conflicts)
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(files.router, prefix="/api/v1")
+app.include_router(files.generic_files_router, prefix="/api/v1")  # Generic file uploads
 app.include_router(review_slots.router, prefix="/api/v1")  # Review slots workflow
 app.include_router(reviewer_dashboard.router, prefix="/api/v1")  # Reviewer dashboard
 app.include_router(profile.router, prefix="/api/v1")  # User profiles

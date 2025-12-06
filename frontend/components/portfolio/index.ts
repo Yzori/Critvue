@@ -10,3 +10,4 @@ export { GrowthRing } from "./growth-ring";
 export { ProjectJourneyCard } from "./project-journey-card";
 export { ReviewerNetwork } from "./reviewer-network";
 export { GrowthMilestones } from "./growth-milestones";
+export { PortfolioUploadDialog } from "./portfolio-upload-dialog";

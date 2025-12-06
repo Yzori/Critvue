@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from pydantic import BaseModel
 
 from app.db.session import get_db
 from app.models.user import User
@@ -14,6 +15,7 @@ from app.schemas.portfolio import (
     PortfolioUpdate,
     PortfolioResponse,
     PortfolioListResponse,
+    MAX_SELF_DOCUMENTED_ITEMS,
 )
 from app.crud import portfolio as portfolio_crud
 from app.core.config import settings
@@ -22,6 +24,54 @@ from app.core.logging_config import logging
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/portfolio", tags=["Portfolio"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
+
+
+class PortfolioSlotsResponse(BaseModel):
+    """Response for self-documented portfolio slots"""
+    used: int
+    max: int
+    remaining: int
+
+
+def _portfolio_to_response(portfolio) -> PortfolioResponse:
+    """Convert a Portfolio model to a PortfolioResponse"""
+    return PortfolioResponse(
+        id=portfolio.id,
+        user_id=portfolio.user_id,
+        review_request_id=portfolio.review_request_id,
+        title=portfolio.title,
+        description=portfolio.description,
+        content_type=portfolio.content_type,
+        image_url=portfolio.image_url,
+        before_image_url=portfolio.before_image_url,
+        project_url=portfolio.project_url,
+        rating=portfolio.rating,
+        views_count=portfolio.views_count,
+        is_featured=portfolio.is_featured_bool,
+        is_self_documented=portfolio.is_self_documented,
+        is_verified=portfolio.is_verified,
+        created_at=portfolio.created_at,
+        updated_at=portfolio.updated_at,
+    )
+
+
+@router.get("/slots", response_model=PortfolioSlotsResponse)
+async def get_self_documented_slots(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PortfolioSlotsResponse:
+    """
+    Get the number of self-documented portfolio slots used and remaining
+
+    Returns:
+        Slots information
+    """
+    used = await portfolio_crud.get_self_documented_count(db, current_user.id)
+    return PortfolioSlotsResponse(
+        used=used,
+        max=MAX_SELF_DOCUMENTED_ITEMS,
+        remaining=max(0, MAX_SELF_DOCUMENTED_ITEMS - used),
+    )
 
 
 @router.post("", response_model=PortfolioResponse, status_code=status.HTTP_201_CREATED)
@@ -33,7 +83,10 @@ async def create_portfolio_item(
     db: AsyncSession = Depends(get_db),
 ) -> PortfolioResponse:
     """
-    Create a new portfolio item
+    Create a new self-documented portfolio item
+
+    Self-documented items are limited to 3 per user. Complete reviews
+    to earn unlimited verified portfolio entries.
 
     Args:
         portfolio_data: Portfolio item data
@@ -43,26 +96,19 @@ async def create_portfolio_item(
 
     Rate limited to 20 requests per minute
     """
-    portfolio = await portfolio_crud.create_portfolio_item(
-        db, current_user.id, portfolio_data
-    )
+    try:
+        portfolio = await portfolio_crud.create_portfolio_item(
+            db, current_user.id, portfolio_data
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
     logger.info(f"Portfolio item {portfolio.id} created by user {current_user.id}")
 
-    return PortfolioResponse(
-        id=portfolio.id,
-        user_id=portfolio.user_id,
-        title=portfolio.title,
-        description=portfolio.description,
-        content_type=portfolio.content_type,
-        image_url=portfolio.image_url,
-        project_url=portfolio.project_url,
-        rating=portfolio.rating,
-        views_count=portfolio.views_count,
-        is_featured=portfolio.is_featured_bool,
-        created_at=portfolio.created_at,
-        updated_at=portfolio.updated_at,
-    )
+    return _portfolio_to_response(portfolio)
 
 
 @router.get("/{portfolio_id}", response_model=PortfolioResponse)
@@ -92,20 +138,7 @@ async def get_portfolio_item(
     # Increment view count
     await portfolio_crud.increment_portfolio_views(db, portfolio_id)
 
-    return PortfolioResponse(
-        id=portfolio.id,
-        user_id=portfolio.user_id,
-        title=portfolio.title,
-        description=portfolio.description,
-        content_type=portfolio.content_type,
-        image_url=portfolio.image_url,
-        project_url=portfolio.project_url,
-        rating=portfolio.rating,
-        views_count=portfolio.views_count,
-        is_featured=portfolio.is_featured_bool,
-        created_at=portfolio.created_at,
-        updated_at=portfolio.updated_at,
-    )
+    return _portfolio_to_response(portfolio)
 
 
 @router.get("/user/{user_id}", response_model=PortfolioListResponse)
@@ -135,23 +168,7 @@ async def get_user_portfolio(
     )
 
     # Convert to response models
-    portfolio_items = [
-        PortfolioResponse(
-            id=item.id,
-            user_id=item.user_id,
-            title=item.title,
-            description=item.description,
-            content_type=item.content_type,
-            image_url=item.image_url,
-            project_url=item.project_url,
-            rating=item.rating,
-            views_count=item.views_count,
-            is_featured=item.is_featured_bool,
-            created_at=item.created_at,
-            updated_at=item.updated_at,
-        )
-        for item in items
-    ]
+    portfolio_items = [_portfolio_to_response(item) for item in items]
 
     has_more = (skip + len(items)) < total
 
@@ -190,23 +207,7 @@ async def get_my_portfolio(
     )
 
     # Convert to response models
-    portfolio_items = [
-        PortfolioResponse(
-            id=item.id,
-            user_id=item.user_id,
-            title=item.title,
-            description=item.description,
-            content_type=item.content_type,
-            image_url=item.image_url,
-            project_url=item.project_url,
-            rating=item.rating,
-            views_count=item.views_count,
-            is_featured=item.is_featured_bool,
-            created_at=item.created_at,
-            updated_at=item.updated_at,
-        )
-        for item in items
-    ]
+    portfolio_items = [_portfolio_to_response(item) for item in items]
 
     has_more = (skip + len(items)) < total
 
@@ -255,20 +256,7 @@ async def update_portfolio_item(
 
     logger.info(f"Portfolio item {portfolio_id} updated by user {current_user.id}")
 
-    return PortfolioResponse(
-        id=portfolio.id,
-        user_id=portfolio.user_id,
-        title=portfolio.title,
-        description=portfolio.description,
-        content_type=portfolio.content_type,
-        image_url=portfolio.image_url,
-        project_url=portfolio.project_url,
-        rating=portfolio.rating,
-        views_count=portfolio.views_count,
-        is_featured=portfolio.is_featured_bool,
-        created_at=portfolio.created_at,
-        updated_at=portfolio.updated_at,
-    )
+    return _portfolio_to_response(portfolio)
 
 
 @router.delete("/{portfolio_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -319,20 +307,4 @@ async def get_featured_portfolio(
     """
     items = await portfolio_crud.get_featured_portfolio_items(db, limit)
 
-    return [
-        PortfolioResponse(
-            id=item.id,
-            user_id=item.user_id,
-            title=item.title,
-            description=item.description,
-            content_type=item.content_type,
-            image_url=item.image_url,
-            project_url=item.project_url,
-            rating=item.rating,
-            views_count=item.views_count,
-            is_featured=item.is_featured_bool,
-            created_at=item.created_at,
-            updated_at=item.updated_at,
-        )
-        for item in items
-    ]
+    return [_portfolio_to_response(item) for item in items]

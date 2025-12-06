@@ -22,6 +22,8 @@ import {
   MessageSquare,
   Award,
   ChevronDown,
+  Plus,
+  Upload,
 } from "lucide-react";
 
 // Portfolio Components
@@ -30,6 +32,7 @@ import { ProjectJourneyCard } from "@/components/portfolio/project-journey-card"
 import { ReviewerNetwork } from "@/components/portfolio/reviewer-network";
 import { GrowthMilestones } from "@/components/portfolio/growth-milestones";
 import { PortfolioHero } from "@/components/portfolio/portfolio-hero";
+import { PortfolioUploadDialog } from "@/components/portfolio/portfolio-upload-dialog";
 
 // API & Auth
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +42,8 @@ import {
   transformMilestones,
   transformReviewers,
 } from "@/lib/api/growth";
+import { getPortfolioSlots, type PortfolioSlotsResponse } from "@/lib/api/portfolio";
+import { getFileUrl } from "@/lib/api/client";
 
 // Types for transformed data
 interface TransformedGrowthData {
@@ -74,15 +79,12 @@ interface JourneyProject {
   title: string;
   description: string;
   contentType: "design" | "photography" | "video" | "stream" | "audio" | "writing" | "art";
-  beforeImage: string;
-  afterImage: string;
-  improvementScore: number;
-  keyFeedback: string;
-  reviewerName: string;
-  reviewerSpecialty: string;
-  metrics: {
-    [key: string]: { before: number; after: number } | undefined;
-  };
+  beforeImage: string | null;
+  afterImage: string | null;
+  isSelfDocumented: boolean;
+  isVerified: boolean;
+  reviewsReceived: number;
+  projectUrl: string | null;
 }
 
 // Default fallback data
@@ -90,7 +92,7 @@ const defaultGrowthData: TransformedGrowthData = {
   totalReviews: 0,
   improvementScore: 0,
   topCategory: "Design",
-  growthPercentile: 50,
+  growthPercentile: 0,
   streakDays: 0,
   totalProjects: 0,
 };
@@ -134,6 +136,10 @@ export default function PortfolioPage() {
   const [reviewers, setReviewers] = useState<TransformedReviewer[]>([]);
   const [projects, setProjects] = useState<JourneyProject[]>([]);
 
+  // Upload dialog state
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [portfolioSlots, setPortfolioSlots] = useState<PortfolioSlotsResponse | null>(null);
+
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.15], [1, 0.95]);
@@ -154,6 +160,14 @@ export default function PortfolioPage() {
       setLoading(true);
       setError(null);
 
+      // Fetch portfolio slots (for self-documented items limit)
+      try {
+        const slots = await getPortfolioSlots();
+        setPortfolioSlots(slots);
+      } catch {
+        // Ignore - slots will just show as null
+      }
+
       // Fetch complete portfolio growth data from API
       const response = await getFullPortfolioGrowth();
 
@@ -169,22 +183,19 @@ export default function PortfolioPage() {
       const transformedReviewers = transformReviewers(response.top_reviewers);
       setReviewers(transformedReviewers);
 
-      // Transform projects to journey format
+      // Transform projects to journey format - use actual data, no fake placeholders
+      // Convert relative file URLs to full backend URLs
       const journeyProjects: JourneyProject[] = response.projects.map((p) => ({
         id: p.id,
         title: p.title,
-        description: p.description || "A creative project showcasing growth through feedback",
+        description: p.description || "",
         contentType: (p.content_type as JourneyProject["contentType"]) || "design",
-        beforeImage: p.image_url || `/portfolio/${p.content_type}-before.jpg`,
-        afterImage: p.image_url || `/portfolio/${p.content_type}-after.jpg`,
-        improvementScore: Math.round((p.rating || 3) * 10), // Convert rating to improvement %
-        keyFeedback: "Expert feedback helped transform this project into something remarkable.",
-        reviewerName: transformedReviewers[0]?.name || "Expert Reviewer",
-        reviewerSpecialty: transformedReviewers[0]?.specialty || "Creative Direction",
-        metrics: {
-          quality: { before: 50, after: Math.min(100, 50 + (p.reviews_received * 10)) },
-          engagement: { before: 40, after: Math.min(100, 40 + p.views_count) },
-        },
+        beforeImage: p.before_image_url ? getFileUrl(p.before_image_url) : null,
+        afterImage: p.image_url ? getFileUrl(p.image_url) : null,
+        isSelfDocumented: p.is_self_documented,
+        isVerified: p.is_verified,
+        reviewsReceived: p.reviews_received,
+        projectUrl: p.project_url,
       }));
       setProjects(journeyProjects);
 
@@ -215,6 +226,14 @@ export default function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Upload Dialog */}
+      <PortfolioUploadDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        slotsRemaining={portfolioSlots?.remaining ?? 3}
+        onSuccess={loadPortfolio}
+      />
+
       {/* Floating Progress Indicator */}
       <motion.div
         className="fixed top-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/50 shadow-lg"
@@ -234,6 +253,21 @@ export default function PortfolioPage() {
             <span className="font-semibold text-foreground">{growthData.totalReviews}</span>
             <span className="text-muted-foreground">reviews</span>
           </div>
+          <div className="w-px h-4 bg-border" />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1.5 text-xs"
+            onClick={() => setUploadDialogOpen(true)}
+          >
+            <Plus className="size-3.5" />
+            Add Work
+            {portfolioSlots && (
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                {portfolioSlots.remaining}/3
+              </Badge>
+            )}
+          </Button>
         </div>
       </motion.div>
 
@@ -340,14 +374,41 @@ export default function PortfolioPage() {
                 />
               ))
             ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No projects yet. Submit your first project for review to start your growth journey!
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-16 rounded-2xl bg-muted/30 border border-border/50"
+              >
+                <div className="size-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                  <Sparkles className="size-10 text-accent-blue" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Start Your Growth Journey
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                  Submit your work for expert review to earn verified portfolio entries,
+                  or add up to 3 self-documented projects to showcase your best work.
                 </p>
-                <Button className="mt-4" onClick={() => router.push("/review/new")}>
-                  Submit Your First Project
-                </Button>
-              </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Button onClick={() => router.push("/review/new")} className="gap-2">
+                    <ArrowRight className="size-4" />
+                    Submit for Review
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUploadDialogOpen(true)}
+                    className="gap-2"
+                  >
+                    <Upload className="size-4" />
+                    Add Self-Documented Work
+                    {portfolioSlots && portfolioSlots.remaining > 0 && (
+                      <Badge variant="secondary" className="ml-1">
+                        {portfolioSlots.remaining} left
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
+              </motion.div>
             )}
           </div>
         </div>

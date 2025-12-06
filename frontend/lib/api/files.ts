@@ -177,6 +177,78 @@ export function formatFileSize(bytes: number): string {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
 }
 
+// Generic file upload response (for portfolio, etc.)
+export interface GenericFileUploadResponse {
+  url: string;
+  filename: string;
+  file_size: number;
+  file_type: string;
+}
+
+/**
+ * Upload a generic file (for portfolio images, etc.)
+ * Uses a simple endpoint that doesn't require a review_request_id
+ */
+export async function uploadGenericFile(
+  file: File,
+  category: "portfolio" | "avatar" | "media" = "portfolio",
+  onProgress?: UploadProgressCallback
+): Promise<GenericFileUploadResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("category", category);
+
+  // Use XMLHttpRequest for progress tracking
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+
+    // Track upload progress
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100);
+          onProgress(progress);
+        }
+      });
+    }
+
+    // Handle completion
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          resolve(response);
+        } catch (error) {
+          reject(new Error("Failed to parse response"));
+        }
+      } else {
+        try {
+          const error = JSON.parse(xhr.responseText);
+          reject(new Error(error.detail || "Upload failed"));
+        } catch {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      }
+    });
+
+    // Handle errors
+    xhr.addEventListener("error", () => {
+      reject(new Error("Network error during upload"));
+    });
+
+    xhr.addEventListener("abort", () => {
+      reject(new Error("Upload cancelled"));
+    });
+
+    // Set up request
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/files/upload`);
+    xhr.withCredentials = true; // Send httpOnly cookies with request
+
+    // Send request
+    xhr.send(formData);
+  });
+}
+
 /**
  * Validate file type based on content type
  */

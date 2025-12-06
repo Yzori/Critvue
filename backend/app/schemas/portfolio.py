@@ -7,8 +7,12 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator, HttpUrl
 
 
+# Maximum self-documented portfolio items per user
+MAX_SELF_DOCUMENTED_ITEMS = 3
+
+
 class PortfolioCreate(BaseModel):
-    """Schema for creating a portfolio item"""
+    """Schema for creating a portfolio item (self-documented)"""
 
     title: str = Field(..., min_length=3, max_length=255)
     description: Optional[str] = Field(None, max_length=2000)
@@ -16,7 +20,8 @@ class PortfolioCreate(BaseModel):
         ...,
         description="Type of content: design, photography, video, audio, writing, art",
     )
-    image_url: Optional[str] = Field(None, max_length=500)
+    image_url: Optional[str] = Field(None, max_length=500)  # Main/After image
+    before_image_url: Optional[str] = Field(None, max_length=500)  # Before image for comparison
     project_url: Optional[str] = Field(None, max_length=500)
     is_featured: bool = False
 
@@ -57,7 +62,7 @@ class PortfolioCreate(BaseModel):
             )
         return v
 
-    @field_validator("image_url", "project_url")
+    @field_validator("image_url", "before_image_url", "project_url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         """Validate URL format"""
@@ -78,6 +83,7 @@ class PortfolioUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     content_type: Optional[str] = None
     image_url: Optional[str] = Field(None, max_length=500)
+    before_image_url: Optional[str] = Field(None, max_length=500)
     project_url: Optional[str] = Field(None, max_length=500)
     is_featured: Optional[bool] = None
 
@@ -120,7 +126,7 @@ class PortfolioUpdate(BaseModel):
                 )
         return v
 
-    @field_validator("image_url", "project_url")
+    @field_validator("image_url", "before_image_url", "project_url")
     @classmethod
     def validate_url(cls, v: Optional[str]) -> Optional[str]:
         """Validate URL format"""
@@ -139,14 +145,18 @@ class PortfolioResponse(BaseModel):
 
     id: int
     user_id: int
+    review_request_id: Optional[int] = None  # If set, this is a verified item
     title: str
     description: Optional[str] = None
     content_type: str
     image_url: Optional[str] = None
+    before_image_url: Optional[str] = None  # Before image for comparison
     project_url: Optional[str] = None
     rating: Optional[Decimal] = None
     views_count: int = 0
     is_featured: bool = False
+    is_self_documented: bool = True  # True if manually uploaded, False if review-based
+    is_verified: bool = False  # True if linked to a review
     created_at: datetime
     updated_at: datetime
 
