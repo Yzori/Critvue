@@ -178,6 +178,7 @@ export interface ChallengeStats {
 export interface ChallengeLeaderboardEntry {
   rank: number;
   userId: number;
+  username?: string;  // SEO-friendly URL identifier
   userName: string;
   userAvatar?: string;
   userTier?: string;

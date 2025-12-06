@@ -6,6 +6,7 @@
 export interface User {
   id: number;
   email: string;
+  username?: string | null;  // SEO-friendly URL identifier
   full_name: string;
   avatar_url?: string | null;
   is_active: boolean;

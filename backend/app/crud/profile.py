@@ -1,6 +1,7 @@
 """CRUD operations for user profiles"""
 
 import json
+import re
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, List, Dict, Any
@@ -26,6 +27,138 @@ async def get_user_profile(db: AsyncSession, user_id: int) -> Optional[User]:
     """
     result = await db.execute(select(User).where(User.id == user_id))
     return result.scalar_one_or_none()
+
+
+async def get_user_by_username(db: AsyncSession, username: str) -> Optional[User]:
+    """
+    Get user profile by username
+
+    Args:
+        db: Database session
+        username: Username (case-insensitive)
+
+    Returns:
+        User object or None if not found
+    """
+    result = await db.execute(
+        select(User).where(func.lower(User.username) == func.lower(username))
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_identifier(db: AsyncSession, identifier: str) -> Optional[User]:
+    """
+    Get user profile by ID or username
+
+    This function first tries to parse the identifier as an integer (user ID),
+    and if that fails, treats it as a username.
+
+    Args:
+        db: Database session
+        identifier: User ID (numeric) or username (string)
+
+    Returns:
+        User object or None if not found
+    """
+    # Try parsing as integer ID first
+    try:
+        user_id = int(identifier)
+        return await get_user_profile(db, user_id)
+    except ValueError:
+        # Not a number, treat as username
+        return await get_user_by_username(db, identifier)
+
+
+async def update_username(
+    db: AsyncSession, user_id: int, username: Optional[str]
+) -> Optional[User]:
+    """
+    Update user's username
+
+    Args:
+        db: Database session
+        user_id: User ID
+        username: New username (None to clear)
+
+    Returns:
+        Updated user object or None if not found
+    """
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        return None
+
+    user.username = username
+    user.updated_at = datetime.utcnow()
+
+    await db.commit()
+    await db.refresh(user)
+
+    return user
+
+
+async def is_username_available(db: AsyncSession, username: str, exclude_user_id: Optional[int] = None) -> bool:
+    """
+    Check if a username is available
+
+    Args:
+        db: Database session
+        username: Username to check
+        exclude_user_id: Optional user ID to exclude (for updating own username)
+
+    Returns:
+        True if username is available, False otherwise
+    """
+    query = select(User).where(func.lower(User.username) == func.lower(username))
+    if exclude_user_id:
+        query = query.where(User.id != exclude_user_id)
+
+    result = await db.execute(query)
+    return result.scalar_one_or_none() is None
+
+
+async def generate_unique_username(db: AsyncSession, email: str) -> str:
+    """
+    Generate a unique username from an email address.
+
+    The username is derived from the email prefix (before @), sanitized to only
+    contain lowercase letters, numbers, underscores, and hyphens.
+
+    Args:
+        db: Database session
+        email: User's email address
+
+    Returns:
+        A unique username string
+    """
+    # Extract email prefix and sanitize
+    email_prefix = email.split('@')[0].lower()
+    # Replace invalid characters with underscore, keep only a-z, 0-9, _, -
+    base = re.sub(r'[^a-z0-9_-]', '_', email_prefix)
+    # Remove consecutive underscores
+    base = re.sub(r'_+', '_', base)
+    # Remove leading/trailing underscores
+    base = base.strip('_')
+    # Truncate to 45 chars (leaving room for counter suffix)
+    base = base[:45] if base else 'user'
+
+    # Try base username first
+    if await is_username_available(db, base):
+        return base
+
+    # Append incrementing numbers until unique
+    counter = 2
+    while True:
+        candidate = f"{base}{counter}"
+        if await is_username_available(db, candidate):
+            return candidate
+        counter += 1
+        # Safety limit to prevent infinite loops
+        if counter > 10000:
+            # Fallback to timestamp-based username
+            import time
+            return f"{base}_{int(time.time())}"
 
 
 async def update_profile(

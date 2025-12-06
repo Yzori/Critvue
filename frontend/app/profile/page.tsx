@@ -67,6 +67,7 @@ import { ImpactTimeline, TimelineEvent } from "@/components/profile/impact-timel
 import { SkillsModal } from "@/components/browse/skills-modal";
 import { SelectFeaturedModal } from "@/components/profile/select-featured-modal";
 import { FeaturedWorksCarousel } from "@/components/profile/featured-works-carousel";
+import { UsernameModal } from "@/components/profile/username-modal";
 
 interface ProfileData {
   id: string;
@@ -244,11 +245,19 @@ export default function ProfilePage() {
     message: string;
   } | null>(null);
   const [skillsModalOpen, setSkillsModalOpen] = useState(false);
+  const [usernameModalOpen, setUsernameModalOpen] = useState(false);
 
   // Handle skills update from modal
   const handleSkillsUpdated = (newSkills: string[]) => {
     if (profileData) {
       setProfileData({ ...profileData, specialty_tags: newSkills });
+    }
+  };
+
+  // Handle username update from modal
+  const handleUsernameUpdated = (newUsername: string) => {
+    if (profileData) {
+      setProfileData({ ...profileData, username: newUsername });
     }
   };
 
@@ -478,7 +487,22 @@ export default function ProfilePage() {
                     </motion.div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mb-2">{profileData.title}</p>
+                <p className="text-sm text-muted-foreground mb-1">{profileData.title}</p>
+
+                {/* Username with edit button */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs text-muted-foreground">
+                    @{profileData.username}
+                  </span>
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setUsernameModalOpen(true)}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Edit
+                    </button>
+                  )}
+                </div>
 
                 {/* Bio */}
                 {profileData.bio && (
@@ -862,6 +886,14 @@ export default function ProfilePage() {
             }))
           );
         }}
+      />
+
+      {/* Username Edit Modal */}
+      <UsernameModal
+        open={usernameModalOpen}
+        onOpenChange={setUsernameModalOpen}
+        currentUsername={profileData?.username || ""}
+        onUsernameUpdated={handleUsernameUpdated}
       />
     </div>
   );

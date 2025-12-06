@@ -12,11 +12,13 @@ import apiClient from "./client";
 export interface ProfileResponse {
   id: number;
   email: string;
+  username: string | null;  // SEO-friendly URL identifier
   full_name: string | null;
   title: string | null;
   bio: string | null;
   avatar_url: string | null;
   role: string;
+  is_active: boolean;
   is_verified: boolean;
   specialty_tags: string[];
   badges: string[];
@@ -60,9 +62,20 @@ export interface ProfileData {
  * Profile Update Payload
  */
 export interface ProfileUpdateData {
+  full_name?: string;
+  username?: string;
   title?: string;
   bio?: string;
   specialty_tags?: string[];
+}
+
+/**
+ * Username availability check response
+ */
+export interface UsernameCheckResponse {
+  available: boolean;
+  username: string;
+  reason: string | null;
 }
 
 /**
@@ -99,7 +112,8 @@ export interface AvatarUploadResponse {
 export function transformProfileResponse(response: ProfileResponse): ProfileData {
   return {
     id: response.id.toString(),
-    username: response.email.split("@")[0], // Extract username from email
+    // Use actual username if set, otherwise fallback to email prefix
+    username: response.username || response.email.split("@")[0] || "user",
     full_name: response.full_name || "Anonymous User",
     title: response.title || "New Member",
     bio: response.bio || "",
@@ -120,6 +134,16 @@ export function transformProfileResponse(response: ProfileResponse): ProfileData
 }
 
 /**
+ * Helper function to get the profile URL identifier (username or ID)
+ * Prefers username for SEO, falls back to ID if username not set
+ */
+export function getProfileIdentifier(profile: ProfileData): string {
+  // If username looks like a real username (not just email prefix), use it
+  // Real usernames must be set by the user and won't contain @
+  return profile.username.includes('@') ? profile.id : profile.username;
+}
+
+/**
  * Get authenticated user's own profile
  */
 export async function getMyProfile(): Promise<ProfileData> {
@@ -128,11 +152,20 @@ export async function getMyProfile(): Promise<ProfileData> {
 }
 
 /**
- * Get any user's public profile by user ID
+ * Get any user's public profile by user ID or username
+ * @param identifier - User ID (numeric) or username (alphanumeric)
  */
-export async function getUserProfile(userId: number): Promise<ProfileData> {
-  const response = await apiClient.get<ProfileResponse>(`/profile/${userId}`);
+export async function getUserProfile(identifier: string | number): Promise<ProfileData> {
+  const response = await apiClient.get<ProfileResponse>(`/profile/${identifier}`);
   return transformProfileResponse(response);
+}
+
+/**
+ * Check if a username is available
+ * @param username - The username to check
+ */
+export async function checkUsernameAvailability(username: string): Promise<UsernameCheckResponse> {
+  return await apiClient.get<UsernameCheckResponse>(`/profile/check-username/${username}`);
 }
 
 /**
@@ -163,9 +196,10 @@ export async function uploadAvatar(file: File): Promise<AvatarUploadResponse> {
 
 /**
  * Get detailed stats for a user
+ * @param identifier - User ID (numeric) or username (alphanumeric)
  */
-export async function getProfileStats(userId: number): Promise<ProfileStats> {
-  return await apiClient.get<ProfileStats>(`/profile/${userId}/stats`);
+export async function getProfileStats(identifier: string | number): Promise<ProfileStats> {
+  return await apiClient.get<ProfileStats>(`/profile/${identifier}/stats`);
 }
 
 /**
@@ -177,9 +211,10 @@ export async function refreshMyStats(): Promise<ProfileStats> {
 
 /**
  * Get user's achievement badges
+ * @param identifier - User ID (numeric) or username (alphanumeric)
  */
-export async function getProfileBadges(userId: number): Promise<BadgesResponse> {
-  return await apiClient.get<BadgesResponse>(`/profile/${userId}/badges`);
+export async function getProfileBadges(identifier: string | number): Promise<BadgesResponse> {
+  return await apiClient.get<BadgesResponse>(`/profile/${identifier}/badges`);
 }
 
 /**
@@ -225,10 +260,11 @@ export async function getMyDNA(): Promise<ReviewerDNAResponse> {
 }
 
 /**
- * Get any user's Reviewer DNA profile by user ID
+ * Get any user's Reviewer DNA profile by user ID or username
+ * @param identifier - User ID (numeric) or username (alphanumeric)
  */
-export async function getUserDNA(userId: number): Promise<ReviewerDNAResponse> {
-  return await apiClient.get<ReviewerDNAResponse>(`/profile/${userId}/dna`);
+export async function getUserDNA(identifier: string | number): Promise<ReviewerDNAResponse> {
+  return await apiClient.get<ReviewerDNAResponse>(`/profile/${identifier}/dna`);
 }
 
 /**

@@ -61,9 +61,28 @@ class ProfileUpdate(BaseModel):
     """Schema for updating user profile"""
 
     full_name: Optional[str] = Field(None, max_length=255)
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
     title: Optional[str] = Field(None, max_length=255)
     bio: Optional[str] = Field(None, max_length=2000)
     specialty_tags: Optional[List[str]] = Field(None, max_items=10)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: Optional[str]) -> Optional[str]:
+        """Validate username format"""
+        if v:
+            v = v.strip().lower()
+            # Only allow alphanumeric, underscores, and hyphens
+            if not re.match(r'^[a-z0-9_-]+$', v):
+                raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
+            if len(v) < 3:
+                raise ValueError("Username must be at least 3 characters")
+            if len(v) > 50:
+                raise ValueError("Username must be 50 characters or less")
+            # Don't allow purely numeric usernames (to avoid confusion with IDs)
+            if v.isdigit():
+                raise ValueError("Username cannot be purely numeric")
+        return v
 
     @field_validator("full_name")
     @classmethod
@@ -157,6 +176,7 @@ class ProfileResponse(BaseModel):
 
     id: int
     email: str
+    username: Optional[str] = None  # SEO-friendly URL identifier
     full_name: Optional[str] = None
     title: Optional[str] = None
     bio: Optional[str] = None

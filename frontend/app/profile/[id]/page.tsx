@@ -3,7 +3,8 @@
 /**
  * Public Profile Page
  *
- * Displays any user's public profile by their ID.
+ * Displays any user's public profile by their ID or username.
+ * Supports SEO-friendly URLs like /profile/johndoe as well as /profile/123.
  * Shows view-only mode for other users, with options to request review or contact.
  */
 
@@ -130,14 +131,18 @@ interface PageProps {
 
 export default function PublicProfilePage({ params }: PageProps) {
   const resolvedParams = use(params);
-  const userId = parseInt(resolvedParams.id, 10);
+  // Support both numeric IDs and usernames
+  const identifier = resolvedParams.id;
+  const numericId = parseInt(identifier, 10);
+  const isNumericId = !isNaN(numericId);
 
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
   const { user: currentUser } = useAuth();
 
   // Check if viewing own profile - redirect to /profile if so
-  const isOwnProfile = currentUser?.id === userId;
+  // Only compare if we have a numeric ID
+  const isOwnProfile = isNumericId && currentUser?.id === numericId;
 
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -160,23 +165,26 @@ export default function PublicProfilePage({ params }: PageProps) {
 
   // Load profile data on mount
   useEffect(() => {
-    if (!isOwnProfile && !isNaN(userId)) {
+    if (!isOwnProfile && identifier) {
       loadProfileData();
     }
-  }, [userId, isOwnProfile]);
+  }, [identifier, isOwnProfile]);
 
   const loadProfileData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const profile = await getUserProfile(userId);
+      const profile = await getUserProfile(identifier);
       setProfileData(profile);
+
+      // Use the numeric user ID from the profile for API calls that require it
+      const userId = parseInt(profile.id, 10);
 
       // Fetch DNA, featured items, and badges in parallel
       const [featuredResponse, dnaResponse, badgesResponse] = await Promise.all([
         getUserFeaturedPortfolio(userId).catch(() => []),
-        getUserDNA(userId).catch(() => null),
+        getUserDNA(identifier).catch(() => null),
         getUserBadges(userId).catch(() => []),
       ]);
 
@@ -236,11 +244,6 @@ export default function PublicProfilePage({ params }: PageProps) {
   // Show loading while redirecting to own profile
   if (isOwnProfile) {
     return <ProfilePageSkeleton />;
-  }
-
-  // Invalid user ID
-  if (isNaN(userId)) {
-    return <ProfileNotFoundError onRetry={() => router.push("/leaderboard")} />;
   }
 
   if (loading) return <ProfilePageSkeleton />;
@@ -390,7 +393,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                 Request Review
                 <ArrowRight className="size-4" />
               </Button>
-              <Link href={`/portfolio/${userId}`}>
+              <Link href={`/portfolio/${identifier}`}>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Briefcase className="size-4" />
                   Portfolio
@@ -569,7 +572,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                   </p>
                 </div>
               </div>
-              <Link href={`/portfolio/${userId}`}>
+              <Link href={`/portfolio/${identifier}`}>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Briefcase className="size-4" />
                   View Full Portfolio

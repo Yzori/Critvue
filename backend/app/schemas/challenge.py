@@ -366,6 +366,7 @@ class ChallengeLeaderboardEntry(BaseModel):
     """Schema for challenge leaderboard entry"""
     rank: int
     user_id: int
+    username: Optional[str] = None  # SEO-friendly URL identifier
     user_name: str
     user_avatar: Optional[str] = None
     user_tier: Optional[str] = None

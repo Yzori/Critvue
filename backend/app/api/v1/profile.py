@@ -76,6 +76,7 @@ async def get_my_profile(
     return ProfileResponse(
         id=current_user.id,
         email=current_user.email,
+        username=current_user.username,
         full_name=current_user.full_name,
         title=current_user.title,
         bio=current_user.bio,
@@ -97,16 +98,67 @@ async def get_my_profile(
     )
 
 
-@router.get("/{user_id}", response_model=ProfileResponse)
+@router.get("/check-username/{username}")
+async def check_username_availability(
+    username: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """
+    Check if a username is available
+
+    Args:
+        username: Username to check
+
+    Returns:
+        Availability status and sanitized username
+    """
+    # Sanitize the username
+    sanitized = username.strip().lower()
+
+    # Basic validation
+    import re
+    if not re.match(r'^[a-z0-9_-]+$', sanitized):
+        return {
+            "available": False,
+            "username": sanitized,
+            "reason": "Username can only contain letters, numbers, underscores, and hyphens"
+        }
+
+    if len(sanitized) < 3:
+        return {
+            "available": False,
+            "username": sanitized,
+            "reason": "Username must be at least 3 characters"
+        }
+
+    if sanitized.isdigit():
+        return {
+            "available": False,
+            "username": sanitized,
+            "reason": "Username cannot be purely numeric"
+        }
+
+    # Check availability
+    is_available = await profile_crud.is_username_available(db, sanitized, exclude_user_id=current_user.id)
+
+    return {
+        "available": is_available,
+        "username": sanitized,
+        "reason": None if is_available else "Username is already taken"
+    }
+
+
+@router.get("/{identifier}", response_model=ProfileResponse)
 async def get_user_profile(
-    user_id: int,
+    identifier: str,
     db: AsyncSession = Depends(get_db),
 ) -> ProfileResponse:
     """
-    Get any user's public profile by ID
+    Get any user's public profile by ID or username
 
     Args:
-        user_id: User ID to fetch
+        identifier: User ID (numeric) or username (alphanumeric)
 
     Returns:
         User's public profile data
@@ -114,7 +166,7 @@ async def get_user_profile(
     Raises:
         HTTPException: If user not found
     """
-    user = await profile_crud.get_user_profile(db, user_id)
+    user = await profile_crud.get_user_by_identifier(db, identifier)
 
     if not user:
         raise HTTPException(
@@ -128,6 +180,7 @@ async def get_user_profile(
     return ProfileResponse(
         id=user.id,
         email=user.email,
+        username=user.username,
         full_name=user.full_name,
         title=user.title,
         bio=user.bio,
@@ -162,13 +215,24 @@ async def update_my_profile(
     Update authenticated user's profile
 
     Args:
-        profile_data: Profile fields to update (title, bio, specialty_tags)
+        profile_data: Profile fields to update (title, bio, specialty_tags, username)
 
     Returns:
         Updated user profile
 
     Rate limited to 10 requests per minute
     """
+    # Check if username is being updated and if it's available
+    if profile_data.username is not None:
+        is_available = await profile_crud.is_username_available(
+            db, profile_data.username, exclude_user_id=current_user.id
+        )
+        if not is_available:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username is already taken"
+            )
+
     updated_user = await profile_crud.update_profile(
         db, current_user.id, profile_data
     )
@@ -187,6 +251,7 @@ async def update_my_profile(
     return ProfileResponse(
         id=updated_user.id,
         email=updated_user.email,
+        username=updated_user.username,
         full_name=updated_user.full_name,
         title=updated_user.title,
         bio=updated_user.bio,

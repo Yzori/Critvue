@@ -97,6 +97,7 @@ async def get_growth_summary(
     # Get reviews received (as requester)
     reviews_result = await db.execute(
         select(func.count(ReviewSlot.id))
+        .select_from(ReviewSlot)
         .join(ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id)
         .where(
             and_(
@@ -110,6 +111,7 @@ async def get_growth_summary(
     # Calculate improvement score based on accepted reviews and ratings
     avg_rating_result = await db.execute(
         select(func.avg(ReviewSlot.rating))
+        .select_from(ReviewSlot)
         .join(ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id)
         .where(
             and_(
@@ -293,6 +295,7 @@ async def get_top_reviewers(
             func.count(ReviewSlot.id).label('review_count'),
             func.avg(ReviewSlot.requester_helpful_rating).label('avg_helpful')
         )
+        .select_from(User)
         .join(ReviewSlot, ReviewSlot.reviewer_id == User.id)
         .join(ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id)
         .where(
@@ -350,6 +353,7 @@ async def get_project_metrics(
     # Get total accepted reviews for this user (as a general metric)
     reviews_result = await db.execute(
         select(func.count(ReviewSlot.id))
+        .select_from(ReviewSlot)
         .join(ReviewRequest, ReviewSlot.review_request_id == ReviewRequest.id)
         .where(
             and_(

@@ -27,6 +27,7 @@ from app.api.deps import get_current_user
 from app.services.redis_service import redis_service
 from app.core.logging_config import security_logger
 from app.core.config import settings
+from app.crud.profile import generate_unique_username
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
@@ -131,10 +132,14 @@ async def register(
         email_prefix = user_data.email.split('@')[0]
         full_name = email_prefix
 
+    # Auto-generate SEO-friendly username from email
+    username = await generate_unique_username(db, user_data.email)
+
     new_user = User(
         email=user_data.email,
         hashed_password=hashed_password,
         full_name=full_name,
+        username=username,
     )
 
     db.add(new_user)

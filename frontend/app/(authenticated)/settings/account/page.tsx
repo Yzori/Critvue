@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { User, Mail, Camera, Loader2, Check } from "lucide-react";
+import { User, Mail, Camera, Loader2, Check, X, AtSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ import {
 import { Avatar } from "@/components/profile/avatar-display";
 import { useAuth } from "@/contexts/AuthContext";
 import apiClient from "@/lib/api/client";
-import { uploadAvatar } from "@/lib/api/profile";
+import { uploadAvatar, checkUsernameAvailability } from "@/lib/api/profile";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -31,6 +31,7 @@ import { toast } from "sonner";
  */
 
 interface ProfileFormData {
+  username: string;
   full_name: string;
   bio: string;
 }
@@ -38,6 +39,7 @@ interface ProfileFormData {
 export default function AccountSettingsPage() {
   const { user, updateUserAvatar } = useAuth();
   const [formData, setFormData] = React.useState<ProfileFormData>({
+    username: "",
     full_name: "",
     bio: "",
   });
@@ -48,6 +50,13 @@ export default function AccountSettingsPage() {
   const [originalData, setOriginalData] = React.useState<ProfileFormData | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  // Username validation state
+  const [usernameChecking, setUsernameChecking] = React.useState(false);
+  const [usernameAvailability, setUsernameAvailability] = React.useState<{
+    available: boolean;
+    reason: string | null;
+  } | null>(null);
+
   // Fetch profile data on mount
   React.useEffect(() => {
     fetchProfile();
@@ -57,11 +66,13 @@ export default function AccountSettingsPage() {
     try {
       setIsLoading(true);
       const data = await apiClient.get<{
+        username: string | null;
         full_name: string;
         bio: string | null;
       }>("/profile/me");
 
       const profileData = {
+        username: data.username || "",
         full_name: data.full_name || "",
         bio: data.bio || "",
       };
@@ -76,6 +87,45 @@ export default function AccountSettingsPage() {
     }
   };
 
+  // Check username availability with debounce
+  const checkUsername = React.useCallback(async (value: string) => {
+    if (!value || value.length < 3) {
+      setUsernameAvailability(null);
+      return;
+    }
+
+    // Don't check if it's the same as current username
+    if (originalData && value.toLowerCase() === originalData.username.toLowerCase()) {
+      setUsernameAvailability({ available: true, reason: null });
+      return;
+    }
+
+    setUsernameChecking(true);
+    try {
+      const result = await checkUsernameAvailability(value);
+      setUsernameAvailability({
+        available: result.available,
+        reason: result.reason,
+      });
+    } catch (err) {
+      console.error("Error checking username:", err);
+      setUsernameAvailability(null);
+    } finally {
+      setUsernameChecking(false);
+    }
+  }, [originalData]);
+
+  // Debounce username changes
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (formData.username && originalData && formData.username !== originalData.username) {
+        checkUsername(formData.username);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [formData.username, originalData, checkUsername]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -84,15 +134,36 @@ export default function AccountSettingsPage() {
     setHasChanges(true);
   };
 
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Sanitize username: lowercase, only letters, numbers, underscores, hyphens
+    const value = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    setFormData((prev) => ({ ...prev, username: value }));
+    setUsernameAvailability(null);
+    setHasChanges(true);
+  };
+
   const handleSave = async () => {
+    // Validate username before saving
+    if (formData.username.length > 0 && formData.username.length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return;
+    }
+
+    if (usernameAvailability && !usernameAvailability.available) {
+      toast.error(usernameAvailability.reason || "Username is not available");
+      return;
+    }
+
     try {
       setIsSaving(true);
       await apiClient.patch("/profile/me", {
+        username: formData.username || null,
         full_name: formData.full_name,
         bio: formData.bio || null,
       });
       setOriginalData(formData);
       setHasChanges(false);
+      setUsernameAvailability(null);
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Failed to update profile:", error);
@@ -234,6 +305,58 @@ export default function AccountSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Username */}
+          <div className="space-y-2">
+            <Label htmlFor="username" className="flex items-center gap-2">
+              <AtSign className="size-4 text-muted-foreground" />
+              Username
+            </Label>
+            <div className="relative">
+              <Input
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleUsernameChange}
+                placeholder="your-username"
+                className={cn(
+                  "pr-10",
+                  usernameAvailability?.available === false &&
+                    "border-red-500 focus-visible:ring-red-500",
+                  usernameAvailability?.available === true &&
+                    formData.username !== originalData?.username &&
+                    "border-green-500 focus-visible:ring-green-500"
+                )}
+                maxLength={50}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {usernameChecking ? (
+                  <Loader2 className="size-4 text-muted-foreground animate-spin" />
+                ) : usernameAvailability?.available === true &&
+                  formData.username !== originalData?.username ? (
+                  <Check className="size-4 text-green-500" />
+                ) : usernameAvailability?.available === false ? (
+                  <X className="size-4 text-red-500" />
+                ) : null}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Your profile URL: critvue.com/profile/
+              <span className="font-medium text-foreground">
+                {formData.username || "username"}
+              </span>
+            </p>
+            {formData.username.length > 0 && formData.username.length < 3 && (
+              <p className="text-xs text-amber-600">
+                Username must be at least 3 characters
+              </p>
+            )}
+            {usernameAvailability?.available === false && (
+              <p className="text-xs text-red-600">
+                {usernameAvailability.reason || "Username is not available"}
+              </p>
+            )}
+          </div>
+
           {/* Display Name */}
           <div className="space-y-2">
             <Label htmlFor="full_name">Display Name</Label>

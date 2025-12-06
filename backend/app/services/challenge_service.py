@@ -1193,6 +1193,7 @@ class ChallengeService:
             leaderboard.append({
                 "rank": rank,
                 "user_id": user.id,
+                "username": user.username,  # SEO-friendly URL identifier
                 "user_name": user.full_name or user.email.split('@')[0],
                 "user_avatar": user.avatar_url,
                 "user_tier": user.user_tier.value if user.user_tier else None,

@@ -76,6 +76,7 @@ export enum RankChangeDirection {
 
 interface BackendLeaderboardEntry {
   user_id: number;
+  username: string | null;  // SEO-friendly URL identifier
   full_name: string | null;
   avatar_url: string | null;
   user_tier: string;
@@ -271,9 +272,12 @@ function transformToLeaderboardUser(
       scoreLabel = `${score.toLocaleString()} karma`;
   }
 
+  // Use actual username if set, otherwise fallback to generated slug or ID
+  const username = entry.username || entry.user_id.toString();
+
   return {
     id: entry.user_id.toString(),
-    username: entry.full_name?.toLowerCase().replace(/\s+/g, '') || `user${entry.user_id}`,
+    username,
     displayName: entry.full_name || 'Anonymous',
     avatarUrl: entry.avatar_url || undefined,
     tier: entry.user_tier as UserTier,
@@ -342,9 +346,12 @@ function transformToDiscoveryUser(
       };
   }
 
+  // Use actual username if set, otherwise fallback to ID
+  const username = entry.username || entry.user_id.toString();
+
   return {
     id: entry.user_id.toString(),
-    username: entry.full_name?.toLowerCase().replace(/\s+/g, '') || `user${entry.user_id}`,
+    username,
     displayName: entry.full_name || 'Anonymous',
     avatarUrl: entry.avatar_url || undefined,
     tier: entry.user_tier as UserTier,

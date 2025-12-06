@@ -5,6 +5,7 @@
  *
  * View-only portfolio page for viewing another user's portfolio.
  * Shows the creator's growth journey through feedback and critique.
+ * Supports SEO-friendly URLs like /portfolio/johndoe as well as /portfolio/123.
  */
 
 import { useState, useEffect, use } from "react";
@@ -121,7 +122,8 @@ interface PageProps {
 
 export default function PublicPortfolioPage({ params }: PageProps) {
   const { id } = use(params);
-  const userId = parseInt(id, 10);
+  // Support both numeric IDs and usernames
+  const identifier = id;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,20 +141,20 @@ export default function PublicPortfolioPage({ params }: PageProps) {
 
   useEffect(() => {
     loadPortfolio();
-  }, [userId]);
+  }, [identifier]);
 
   const loadPortfolio = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch profile and portfolio in parallel
-      const [profile, portfolioResponse] = await Promise.all([
-        getUserProfile(userId),
-        getUserPortfolio(userId, { page_size: 50 }),
-      ]);
-
+      // First get the profile (supports username or ID)
+      const profile = await getUserProfile(identifier);
       setProfileData(profile);
+
+      // Then fetch portfolio using the numeric user ID from the profile
+      const userId = parseInt(profile.id, 10);
+      const portfolioResponse = await getUserPortfolio(userId, { page_size: 50 });
 
       // Calculate growth data from portfolio
       const totalReviews = portfolioResponse.items.reduce((sum, item) => sum + (item.rating ? 1 : 0), 0);
@@ -218,7 +220,7 @@ export default function PublicPortfolioPage({ params }: PageProps) {
         transition={{ delay: 0.5 }}
       >
         <div className="flex items-center gap-3 text-sm">
-          <Link href={`/profile/${userId}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
+          <Link href={`/profile/${identifier}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
             <ArrowLeft className="size-4" />
             <span className="text-muted-foreground">Back to Profile</span>
           </Link>
@@ -482,7 +484,7 @@ export default function PublicPortfolioPage({ params }: PageProps) {
               Get in touch or request a review from this talented creator.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href={`/profile/${userId}`}>
+              <Link href={`/profile/${identifier}`}>
                 <Button
                   size="lg"
                   className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"

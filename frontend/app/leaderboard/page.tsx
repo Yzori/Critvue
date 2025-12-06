@@ -278,15 +278,15 @@ export default function LeaderboardPage() {
     });
   };
 
-  // Handle user click
+  // Handle user click - use username for SEO-friendly URLs
   const handleUserClick = (user: LeaderboardUser) => {
-    // Navigate to user profile
-    window.location.href = `/profile/${user.id}`;
+    // Navigate to user profile using username (falls back to ID if no username)
+    window.location.href = `/profile/${user.username}`;
   };
 
-  // Handle discovery user click
+  // Handle discovery user click - use username for SEO-friendly URLs
   const handleDiscoveryUserClick = (user: DiscoveryUser) => {
-    window.location.href = `/profile/${user.id}`;
+    window.location.href = `/profile/${user.username}`;
   };
 
   // Split entries into podium (top 3) and list (4+)
@@ -694,7 +694,7 @@ export default function LeaderboardPage() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      onClick={() => window.location.href = `/profile/${entry.userId}`}
+                      onClick={() => window.location.href = `/profile/${entry.username || entry.userId}`}
                       className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                     >
                       <div className="w-8 text-center">

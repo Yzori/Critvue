@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 class LeaderboardEntry(BaseModel):
     """Individual entry in a leaderboard"""
     user_id: int
+    username: Optional[str] = Field(None, description="SEO-friendly URL identifier")
     full_name: Optional[str]
     avatar_url: Optional[str]
     user_tier: str

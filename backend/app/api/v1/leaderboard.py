@@ -262,6 +262,7 @@ async def build_leaderboard(
         # Create entry with relevant stats
         entry = LeaderboardEntry(
             user_id=user.id,
+            username=user.username,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
             user_tier=user.user_tier.value,
