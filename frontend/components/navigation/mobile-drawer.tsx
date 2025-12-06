@@ -10,6 +10,7 @@ import {
   BookOpen,
   LayoutDashboard,
   User,
+  Users,
   Settings,
   HelpCircle,
   LogOut,
@@ -89,6 +90,7 @@ export function MobileDrawer({ isOpen, onClose, user }: MobileDrawerProps) {
   const primaryNavItems: DrawerNavItem[] = [
     { label: "Home", href: "/", icon: Home, primary: true },
     { label: "Browse", href: "/browse", icon: Search, primary: true },
+    { label: "Reviewers", href: "/reviewers", icon: Users, primary: true },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy, primary: true },
     // Only show Dashboard for authenticated users
     ...(user ? [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, primary: true }] : []),

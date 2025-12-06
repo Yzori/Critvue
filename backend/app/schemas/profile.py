@@ -198,6 +198,15 @@ class ProfileResponse(BaseModel):
     karma_points: int = 0
     tier_achieved_at: Optional[datetime] = None
 
+    # Onboarding
+    onboarding_completed: bool = False
+    primary_interest: Optional[str] = None
+
+    # Reviewer Directory
+    is_listed_as_reviewer: bool = False
+    reviewer_availability: str = "available"
+    reviewer_tagline: Optional[str] = None
+
     # Timestamps
     created_at: datetime
     updated_at: datetime
@@ -213,3 +222,74 @@ class AvatarUploadResponse(BaseModel):
     message: str = "Avatar uploaded successfully"
     variants: Optional[dict] = None  # URLs for different size variants
     metadata: Optional[dict] = None  # Image metadata (size, dimensions, format)
+
+
+# ==================== Onboarding Schemas ====================
+
+class OnboardingStatusResponse(BaseModel):
+    """Schema for onboarding status check"""
+
+    onboarding_completed: bool
+    primary_interest: Optional[str] = None
+    is_listed_as_reviewer: bool
+    reviewer_availability: str
+    reviewer_tagline: Optional[str] = None
+
+
+class OnboardingCompleteRequest(BaseModel):
+    """Schema for completing onboarding"""
+
+    primary_interest: str = Field(..., pattern="^(creator|reviewer|both)$")
+    list_as_reviewer: bool = False
+    reviewer_tagline: Optional[str] = Field(None, max_length=200)
+
+    @field_validator("reviewer_tagline")
+    @classmethod
+    def validate_tagline(cls, v: Optional[str]) -> Optional[str]:
+        """Validate and sanitize reviewer tagline"""
+        if v:
+            v = v.strip()
+            # Remove HTML-like tags
+            v = re.sub(r"<[^>]+>", "", v)
+            if len(v) > 200:
+                raise ValueError("Tagline must be 200 characters or less")
+        return v
+
+
+class OnboardingCompleteResponse(BaseModel):
+    """Schema for onboarding completion response"""
+
+    success: bool
+    message: str
+    onboarding_completed: bool
+    primary_interest: str
+    is_listed_as_reviewer: bool
+
+
+# ==================== Reviewer Settings Schemas ====================
+
+class ReviewerSettingsUpdate(BaseModel):
+    """Schema for updating reviewer directory settings"""
+
+    is_listed_as_reviewer: Optional[bool] = None
+    reviewer_availability: Optional[str] = Field(None, pattern="^(available|busy|unavailable)$")
+    reviewer_tagline: Optional[str] = Field(None, max_length=200)
+
+    @field_validator("reviewer_tagline")
+    @classmethod
+    def validate_tagline(cls, v: Optional[str]) -> Optional[str]:
+        """Validate and sanitize reviewer tagline"""
+        if v:
+            v = v.strip()
+            v = re.sub(r"<[^>]+>", "", v)
+            if len(v) > 200:
+                raise ValueError("Tagline must be 200 characters or less")
+        return v
+
+
+class ReviewerSettingsResponse(BaseModel):
+    """Schema for reviewer settings response"""
+
+    is_listed_as_reviewer: bool
+    reviewer_availability: str
+    reviewer_tagline: Optional[str] = None

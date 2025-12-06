@@ -49,6 +49,13 @@ class UserTier(str, enum.Enum):
     MASTER = "master"
 
 
+class ReviewerAvailability(str, enum.Enum):
+    """Reviewer availability status for directory listing"""
+    AVAILABLE = "available"  # Open to receiving review requests
+    BUSY = "busy"  # Temporarily not taking new requests
+    UNAVAILABLE = "unavailable"  # Not accepting requests
+
+
 class User(Base):
     """User model for authentication and basic info"""
 
@@ -156,6 +163,19 @@ class User(Base):
     suspended_at = Column(DateTime, nullable=True)
     suspended_by_id = Column(Integer, nullable=True)  # Admin user ID who suspended
     suspension_reason = Column(Text, nullable=True)
+
+    # Reviewer Directory Listing
+    is_listed_as_reviewer = Column(Boolean, default=False, nullable=False, server_default='0', index=True)
+    reviewer_availability = Column(
+        Enum(ReviewerAvailability, values_callable=lambda x: [e.value for e in x]),
+        default=ReviewerAvailability.AVAILABLE,
+        nullable=False
+    )
+    reviewer_tagline = Column(String(200), nullable=True)  # Short tagline for directory cards
+
+    # Onboarding
+    onboarding_completed = Column(Boolean, default=False, nullable=False, server_default='0')
+    primary_interest = Column(String(20), nullable=True)  # 'creator', 'reviewer', or 'both'
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

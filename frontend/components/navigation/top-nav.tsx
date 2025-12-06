@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, Trophy, Sparkles } from "lucide-react";
+import { Menu, Search, Trophy, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { User } from "@/lib/types/auth";
@@ -43,6 +43,7 @@ interface NavItemWithIcon extends NavItem {
 const getNavItems = (isAuthenticated: boolean): NavItemWithIcon[] => [
   { label: "Browse", href: "/browse", showOn: "tablet", icon: Search },
   { label: "Challenges", href: "/challenges", showOn: "tablet", icon: Sparkles },
+  { label: "Reviewers", href: "/reviewers", showOn: "desktop", icon: Users },
   { label: "Leaderboard", href: "/leaderboard", showOn: "desktop", icon: Trophy },
   // Only show Dashboard and My Reviews for authenticated users
   ...(isAuthenticated ? [

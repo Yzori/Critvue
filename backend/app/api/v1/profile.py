@@ -10,13 +10,18 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, ReviewerAvailability
 from app.api.deps import get_current_user
 from app.schemas.profile import (
     ProfileResponse,
     ProfileUpdate,
     ProfileStatsResponse,
     AvatarUploadResponse,
+    OnboardingStatusResponse,
+    OnboardingCompleteRequest,
+    OnboardingCompleteResponse,
+    ReviewerSettingsUpdate,
+    ReviewerSettingsResponse,
 )
 from app.crud import profile as profile_crud
 from app.core.config import settings
@@ -93,6 +98,11 @@ async def get_my_profile(
         user_tier=current_user.user_tier.value,
         karma_points=current_user.karma_points,
         tier_achieved_at=current_user.tier_achieved_at,
+        onboarding_completed=current_user.onboarding_completed,
+        primary_interest=current_user.primary_interest,
+        is_listed_as_reviewer=current_user.is_listed_as_reviewer,
+        reviewer_availability=current_user.reviewer_availability.value if current_user.reviewer_availability else "available",
+        reviewer_tagline=current_user.reviewer_tagline,
         created_at=current_user.created_at,
         updated_at=current_user.updated_at,
     )
@@ -197,6 +207,11 @@ async def get_user_profile(
         user_tier=user.user_tier.value,
         karma_points=user.karma_points,
         tier_achieved_at=user.tier_achieved_at,
+        onboarding_completed=user.onboarding_completed,
+        primary_interest=user.primary_interest,
+        is_listed_as_reviewer=user.is_listed_as_reviewer,
+        reviewer_availability=user.reviewer_availability.value if user.reviewer_availability else "available",
+        reviewer_tagline=user.reviewer_tagline,
         created_at=user.created_at,
         updated_at=user.updated_at,
     )
@@ -268,6 +283,11 @@ async def update_my_profile(
         user_tier=updated_user.user_tier.value,
         karma_points=updated_user.karma_points,
         tier_achieved_at=updated_user.tier_achieved_at,
+        onboarding_completed=updated_user.onboarding_completed,
+        primary_interest=updated_user.primary_interest,
+        is_listed_as_reviewer=updated_user.is_listed_as_reviewer,
+        reviewer_availability=updated_user.reviewer_availability.value if updated_user.reviewer_availability else "available",
+        reviewer_tagline=updated_user.reviewer_tagline,
         created_at=updated_user.created_at,
         updated_at=updated_user.updated_at,
     )
@@ -785,3 +805,140 @@ async def compare_my_dna(
         )
 
     return comparison
+
+
+# ==================== Onboarding Endpoints ====================
+
+
+@router.get("/me/onboarding", response_model=OnboardingStatusResponse)
+async def get_onboarding_status(
+    current_user: User = Depends(get_current_user),
+) -> OnboardingStatusResponse:
+    """
+    Get current user's onboarding status
+
+    Returns:
+        Onboarding status including completion state and preferences
+    """
+    return OnboardingStatusResponse(
+        onboarding_completed=current_user.onboarding_completed,
+        primary_interest=current_user.primary_interest,
+        is_listed_as_reviewer=current_user.is_listed_as_reviewer,
+        reviewer_availability=current_user.reviewer_availability.value if current_user.reviewer_availability else "available",
+        reviewer_tagline=current_user.reviewer_tagline,
+    )
+
+
+@router.post("/me/onboarding", response_model=OnboardingCompleteResponse)
+async def complete_onboarding(
+    request: Request,
+    data: OnboardingCompleteRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> OnboardingCompleteResponse:
+    """
+    Complete user onboarding
+
+    Sets the user's primary interest (creator, reviewer, or both) and
+    optionally lists them in the reviewer directory.
+
+    Args:
+        data: Onboarding completion data
+
+    Returns:
+        Confirmation of onboarding completion
+    """
+    # Update user's onboarding fields
+    current_user.onboarding_completed = True
+    current_user.primary_interest = data.primary_interest
+    current_user.is_listed_as_reviewer = data.list_as_reviewer
+
+    if data.reviewer_tagline:
+        current_user.reviewer_tagline = data.reviewer_tagline
+
+    # If listing as reviewer, default to available
+    if data.list_as_reviewer:
+        current_user.reviewer_availability = ReviewerAvailability.AVAILABLE
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    logger.info(
+        f"Onboarding completed for user {current_user.id}: "
+        f"interest={data.primary_interest}, listed={data.list_as_reviewer}"
+    )
+
+    return OnboardingCompleteResponse(
+        success=True,
+        message="Onboarding completed successfully",
+        onboarding_completed=True,
+        primary_interest=data.primary_interest,
+        is_listed_as_reviewer=data.list_as_reviewer,
+    )
+
+
+# ==================== Reviewer Settings Endpoints ====================
+
+
+@router.get("/me/reviewer-settings", response_model=ReviewerSettingsResponse)
+async def get_reviewer_settings(
+    current_user: User = Depends(get_current_user),
+) -> ReviewerSettingsResponse:
+    """
+    Get current user's reviewer directory settings
+
+    Returns:
+        Reviewer listing settings
+    """
+    return ReviewerSettingsResponse(
+        is_listed_as_reviewer=current_user.is_listed_as_reviewer,
+        reviewer_availability=current_user.reviewer_availability.value if current_user.reviewer_availability else "available",
+        reviewer_tagline=current_user.reviewer_tagline,
+    )
+
+
+@router.put("/me/reviewer-settings", response_model=ReviewerSettingsResponse)
+@router.patch("/me/reviewer-settings", response_model=ReviewerSettingsResponse)
+@limiter.limit("10/minute")
+async def update_reviewer_settings(
+    request: Request,
+    data: ReviewerSettingsUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReviewerSettingsResponse:
+    """
+    Update current user's reviewer directory settings
+
+    Args:
+        data: Reviewer settings to update
+
+    Returns:
+        Updated reviewer settings
+
+    Rate limited to 10 requests per minute
+    """
+    if data.is_listed_as_reviewer is not None:
+        current_user.is_listed_as_reviewer = data.is_listed_as_reviewer
+
+    if data.reviewer_availability is not None:
+        try:
+            current_user.reviewer_availability = ReviewerAvailability(data.reviewer_availability)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid availability status"
+            )
+
+    if data.reviewer_tagline is not None:
+        current_user.reviewer_tagline = data.reviewer_tagline
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    logger.info(f"Reviewer settings updated for user {current_user.id}")
+
+    return ReviewerSettingsResponse(
+        is_listed_as_reviewer=current_user.is_listed_as_reviewer,
+        reviewer_availability=current_user.reviewer_availability.value if current_user.reviewer_availability else "available",
+        reviewer_tagline=current_user.reviewer_tagline,
+    )

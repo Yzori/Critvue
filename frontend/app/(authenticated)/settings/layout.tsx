@@ -11,6 +11,7 @@ import {
   Palette,
   ChevronLeft,
   Menu,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,12 @@ const navItems: NavItem[] = [
     href: "/settings/account",
     icon: User,
     description: "Profile, email, and personal info",
+  },
+  {
+    label: "Reviewer",
+    href: "/settings/reviewer",
+    icon: MessageSquare,
+    description: "Reviewer directory settings",
   },
   {
     label: "Security",

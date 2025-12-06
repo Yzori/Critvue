@@ -15,6 +15,13 @@ export interface User {
   user_tier?: string;
   karma_points?: number;
   role?: "creator" | "reviewer" | "admin";
+  // Onboarding fields
+  onboarding_completed?: boolean;
+  primary_interest?: "creator" | "reviewer" | "both" | null;
+  // Reviewer directory fields
+  is_listed_as_reviewer?: boolean;
+  reviewer_availability?: "available" | "busy" | "unavailable";
+  reviewer_tagline?: string | null;
 }
 
 export interface AuthTokens {

@@ -5,6 +5,7 @@ import { QueryProvider } from "@/contexts/QueryProvider";
 import { ThemeProvider, themeInitScript } from "@/contexts/ThemeContext";
 import { Navigation } from "@/components/navigation/navigation";
 import { MainWrapper } from "@/components/layout/main-wrapper";
+import { OnboardingChecker } from "@/components/onboarding/OnboardingChecker";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <Navigation />
+              <OnboardingChecker />
               <MainWrapper>
                 {children}
               </MainWrapper>
