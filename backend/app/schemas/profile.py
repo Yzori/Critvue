@@ -7,6 +7,38 @@ from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
+# Reserved usernames that cannot be claimed by users
+# These match API routes and special identifiers to prevent namespace collisions
+RESERVED_USERNAMES = {
+    # API routes
+    "me", "api", "admin", "root", "system", "support",
+    "check-username", "stats", "dna", "avatar", "badges",
+    "onboarding", "reviewer-settings", "notifications", "settings",
+    # Common reserved words
+    "null", "undefined", "anonymous", "unknown", "deleted",
+    "moderator", "mod", "staff", "help", "info", "about",
+    "terms", "privacy", "contact", "feedback", "report",
+    # Platform-specific
+    "critvue", "official", "verified", "team", "bot",
+}
+
+# Prefixes that usernames cannot start with (prevents admin-test, mod-user, etc.)
+RESERVED_USERNAME_PREFIXES = (
+    "admin", "mod-", "moderator", "staff", "support",
+    "system", "official", "critvue", "root", "bot-",
+)
+
+
+def is_username_reserved(username: str) -> bool:
+    """Check if a username is reserved (exact match or prefix match)"""
+    username = username.lower()
+    if username in RESERVED_USERNAMES:
+        return True
+    if username.startswith(RESERVED_USERNAME_PREFIXES):
+        return True
+    return False
+
+
 # Valid specialty tags (can be expanded later)
 VALID_SPECIALTY_TAGS = [
     "UI/UX",
@@ -82,6 +114,9 @@ class ProfileUpdate(BaseModel):
             # Don't allow purely numeric usernames (to avoid confusion with IDs)
             if v.isdigit():
                 raise ValueError("Username cannot be purely numeric")
+            # Check against reserved usernames (exact match and prefix match)
+            if is_username_reserved(v):
+                raise ValueError("This username is reserved and cannot be used")
         return v
 
     @field_validator("full_name")

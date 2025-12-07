@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -22,6 +23,7 @@ from app.schemas.profile import (
     OnboardingCompleteResponse,
     ReviewerSettingsUpdate,
     ReviewerSettingsResponse,
+    is_username_reserved,
 )
 from app.crud import profile as profile_crud
 from app.core.config import settings
@@ -109,7 +111,9 @@ async def get_my_profile(
 
 
 @router.get("/check-username/{username}")
+@limiter.limit("30/minute")
 async def check_username_availability(
+    request: Request,
     username: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -122,6 +126,8 @@ async def check_username_availability(
 
     Returns:
         Availability status and sanitized username
+
+    Rate limited to 30 requests per minute to prevent enumeration
     """
     # Sanitize the username
     sanitized = username.strip().lower()
@@ -149,7 +155,15 @@ async def check_username_availability(
             "reason": "Username cannot be purely numeric"
         }
 
-    # Check availability
+    # Check against reserved usernames (exact match and prefix match)
+    if is_username_reserved(sanitized):
+        return {
+            "available": False,
+            "username": sanitized,
+            "reason": "This username is reserved and cannot be used"
+        }
+
+    # Check availability in database
     is_available = await profile_crud.is_username_available(db, sanitized, exclude_user_id=current_user.id)
 
     return {
@@ -248,9 +262,18 @@ async def update_my_profile(
                 detail="Username is already taken"
             )
 
-    updated_user = await profile_crud.update_profile(
-        db, current_user.id, profile_data
-    )
+    try:
+        updated_user = await profile_crud.update_profile(
+            db, current_user.id, profile_data
+        )
+    except IntegrityError as e:
+        # Handle race condition where username was taken between check and update
+        await db.rollback()
+        logger.warning(f"Username conflict for user {current_user.id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username was taken by another user. Please try a different username."
+        )
 
     if not updated_user:
         raise HTTPException(

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
-from app.schemas.profile import ProfileUpdate
+from app.schemas.profile import ProfileUpdate, is_username_reserved
 
 
 async def get_user_profile(db: AsyncSession, user_id: int) -> Optional[User]:
@@ -118,6 +118,28 @@ async def is_username_available(db: AsyncSession, username: str, exclude_user_id
     return result.scalar_one_or_none() is None
 
 
+def _is_username_valid(username: str) -> bool:
+    """
+    Check if a username passes all validation rules (excluding database uniqueness).
+
+    Args:
+        username: Username to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    # Must not be reserved (exact match or prefix match)
+    if is_username_reserved(username):
+        return False
+    # Must be at least 3 characters
+    if len(username) < 3:
+        return False
+    # Must not be purely numeric
+    if username.isdigit():
+        return False
+    return True
+
+
 async def generate_unique_username(db: AsyncSession, email: str) -> str:
     """
     Generate a unique username from an email address.
@@ -143,15 +165,15 @@ async def generate_unique_username(db: AsyncSession, email: str) -> str:
     # Truncate to 45 chars (leaving room for counter suffix)
     base = base[:45] if base else 'user'
 
-    # Try base username first
-    if await is_username_available(db, base):
+    # Try base username first (if it passes validation)
+    if _is_username_valid(base) and await is_username_available(db, base):
         return base
 
-    # Append incrementing numbers until unique
+    # Append incrementing numbers until unique and valid
     counter = 2
     while True:
         candidate = f"{base}{counter}"
-        if await is_username_available(db, candidate):
+        if _is_username_valid(candidate) and await is_username_available(db, candidate):
             return candidate
         counter += 1
         # Safety limit to prevent infinite loops
