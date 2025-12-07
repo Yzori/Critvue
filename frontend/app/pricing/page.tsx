@@ -108,7 +108,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Header */}
       <section className="relative pt-20 pb-8 px-6 md:pt-32 md:pb-12">
         <div className="max-w-4xl mx-auto text-center">
@@ -120,10 +120,10 @@ export default function PricingPage() {
             <Badge variant="info" size="lg" className="mb-4">
               Simple, Transparent Pricing
             </Badge>
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6">
               Choose Your Plan
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Start free, upgrade when you need more. No hidden fees, cancel anytime.
             </p>
           </motion.div>
@@ -140,7 +140,7 @@ export default function PricingPage() {
         >
           <span className={cn(
             "text-sm font-medium transition-colors",
-            !isAnnual ? "text-gray-900" : "text-gray-500"
+            !isAnnual ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"
           )}>
             Monthly
           </span>
@@ -151,7 +151,7 @@ export default function PricingPage() {
           />
           <span className={cn(
             "text-sm font-medium transition-colors",
-            isAnnual ? "text-gray-900" : "text-gray-500"
+            isAnnual ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"
           )}>
             Annual
           </span>
@@ -180,7 +180,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-6 bg-gray-50">
+      <section className="py-16 px-6 bg-gray-50 dark:bg-gray-900/50">
         <div className="max-w-4xl mx-auto">
           <motion.div
             className="text-center mb-12"
@@ -189,7 +189,7 @@ export default function PricingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
               Frequently Asked Questions
             </h2>
           </motion.div>
@@ -262,8 +262,8 @@ function PricingCard({
       className={cn(
         "relative p-8 rounded-3xl border-2 transition-all duration-300",
         tier.popular
-          ? "border-accent-blue shadow-2xl md:scale-105 bg-white"
-          : "border-gray-200 bg-white/60 backdrop-blur-sm hover:shadow-xl"
+          ? "border-accent-blue shadow-2xl md:scale-105 bg-white dark:bg-gray-800"
+          : "border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm hover:shadow-xl"
       )}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -285,16 +285,16 @@ function PricingCard({
         <div className="flex items-center gap-3 mb-4">
           <div className={cn(
             "p-3 rounded-xl",
-            tier.popular ? "bg-accent-blue/10" : "bg-gray-100"
+            tier.popular ? "bg-accent-blue/10" : "bg-gray-100 dark:bg-gray-700"
           )}>
             <Icon className={cn(
               "size-6",
-              tier.popular ? "text-accent-blue" : "text-gray-600"
+              tier.popular ? "text-accent-blue" : "text-gray-600 dark:text-gray-400"
             )} />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900">{tier.name}</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{tier.name}</h3>
         </div>
-        <p className="text-sm text-gray-600">{tier.description}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{tier.description}</p>
       </div>
 
       <div className="mb-6">
@@ -304,16 +304,16 @@ function PricingCard({
               {tier.originalPrice}
             </span>
           )}
-          <span className="text-5xl font-bold text-gray-900">{tier.price}</span>
+          <span className="text-5xl font-bold text-gray-900 dark:text-white">{tier.price}</span>
         </div>
-        <span className="text-gray-600 text-sm">/ {tier.period}</span>
+        <span className="text-gray-600 dark:text-gray-400 text-sm">/ {tier.period}</span>
       </div>
 
       <ul className="space-y-3 mb-8">
         {tier.features.map((feature: string, i: number) => (
           <li key={i} className="flex items-start gap-3">
             <CheckCircle className="size-5 text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-sm text-gray-700">{feature}</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
           </li>
         ))}
       </ul>
@@ -326,7 +326,7 @@ function PricingCard({
           "w-full min-h-[56px] font-semibold rounded-xl touch-manipulation",
           tier.popular
             ? "bg-accent-blue hover:bg-accent-blue/90 text-white"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+            : "bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
         )}
       >
         {tier.isLoading ? (
@@ -344,8 +344,8 @@ function PricingCard({
 
       {/* Trust signals for Pro tier */}
       {tier.popular && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Shield className="size-3.5" />
               <span>30-day money-back</span>
@@ -366,7 +366,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
   return (
     <motion.div
-      className="bg-white rounded-2xl border border-gray-200 overflow-hidden"
+      className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -375,7 +375,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-6 text-left flex items-center justify-between"
       >
-        <h3 className="font-semibold text-gray-900 pr-4">{question}</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-white pr-4">{question}</h3>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -392,7 +392,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
           exit={{ opacity: 0, height: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <p className="text-gray-600">{answer}</p>
+          <p className="text-gray-600 dark:text-gray-400">{answer}</p>
         </motion.div>
       )}
     </motion.div>
