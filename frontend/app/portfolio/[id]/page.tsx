@@ -35,6 +35,7 @@ import { GrowthMilestones } from "@/components/portfolio/growth-milestones";
 import { getUserProfile, ProfileData } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
 import { getFileUrl } from "@/lib/api/client";
+import { toast } from "sonner";
 
 // Types for transformed data
 interface TransformedGrowthData {
@@ -190,6 +191,30 @@ export default function PublicPortfolioPage({ params }: PageProps) {
       setError("Failed to load portfolio data. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle portfolio share
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = `${profileData?.full_name || "Portfolio"} on Critvue`;
+    const text = "Check out this creative growth journey powered by expert feedback!";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (error) {
+        // User cancelled or error occurred
+        console.log("Share cancelled or failed:", error);
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch {
+        toast.error("Failed to copy link");
+      }
     }
   };
 
@@ -492,7 +517,7 @@ export default function PublicPortfolioPage({ params }: PageProps) {
                   View Profile
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="gap-2">
+              <Button variant="outline" size="lg" className="gap-2" onClick={handleShare}>
                 <Share2 className="size-4" />
                 Share Portfolio
               </Button>

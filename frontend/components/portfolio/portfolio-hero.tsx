@@ -36,9 +36,10 @@ interface PortfolioHeroProps {
     title?: string;
   } | null;
   growthData: GrowthData;
+  onShare?: () => void;
 }
 
-export function PortfolioHero({ user, growthData }: PortfolioHeroProps) {
+export function PortfolioHero({ user, growthData, onShare }: PortfolioHeroProps) {
   return (
     <div className="space-y-8">
       {/* Avatar with Growth Ring Preview */}
@@ -200,6 +201,7 @@ export function PortfolioHero({ user, growthData }: PortfolioHeroProps) {
           size="lg"
           variant="outline"
           className="gap-2 group"
+          onClick={onShare}
         >
           <Share2 className="size-4 group-hover:scale-110 transition-transform" />
           Share Portfolio

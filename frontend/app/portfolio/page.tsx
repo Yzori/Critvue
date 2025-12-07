@@ -50,6 +50,7 @@ import {
   type FeaturedSlotsResponse,
 } from "@/lib/api/portfolio";
 import { getFileUrl } from "@/lib/api/client";
+import { toast } from "sonner";
 
 // Types for transformed data
 interface TransformedGrowthData {
@@ -253,6 +254,30 @@ export default function PortfolioPage() {
     }
   };
 
+  // Handle portfolio share
+  const handleShare = async () => {
+    const url = `${window.location.origin}/portfolio/${user?.username || user?.id}`;
+    const title = `${user?.full_name || "My"} Portfolio on Critvue`;
+    const text = "Check out my creative growth journey powered by expert feedback!";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (error) {
+        // User cancelled or error occurred
+        console.log("Share cancelled or failed:", error);
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied to clipboard!");
+      } catch {
+        toast.error("Failed to copy link");
+      }
+    }
+  };
+
   if (authLoading || loading) {
     return <PortfolioSkeleton />;
   }
@@ -348,7 +373,7 @@ export default function PortfolioPage() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 text-center">
-          <PortfolioHero user={user} growthData={growthData} />
+          <PortfolioHero user={user} growthData={growthData} onShare={handleShare} />
 
           {/* Scroll Indicator */}
           <motion.div
@@ -546,7 +571,7 @@ export default function PortfolioPage() {
                 Submit New Work
                 <ArrowRight className="size-4" />
               </Button>
-              <Button variant="outline" size="lg" className="gap-2">
+              <Button variant="outline" size="lg" className="gap-2" onClick={handleShare}>
                 <Share2 className="size-4" />
                 Share Portfolio
               </Button>
