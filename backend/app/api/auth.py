@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
+import uuid
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +29,11 @@ from app.services.redis_service import redis_service
 from app.core.logging_config import security_logger
 from app.core.config import settings
 from app.crud.profile import generate_unique_username
+
+
+def generate_session_id() -> str:
+    """Generate a unique session identifier using UUID4"""
+    return str(uuid.uuid4())
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 limiter = Limiter(key_func=get_remote_address, enabled=settings.ENABLE_RATE_LIMITING)
@@ -226,14 +232,15 @@ async def login(
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
 
-    # Create a new session record
+    # Create a new session record with secure UUID
     user_agent = request.headers.get("user-agent", "")
     ua_info = parse_user_agent(user_agent)
     client_ip = request.client.host if request.client else None
+    session_id = generate_session_id()  # Use UUID instead of JWT substring
 
     new_session = UserSession(
         user_id=user.id,
-        session_token=access_token[-32:],  # Use last 32 chars (signature) as identifier
+        session_token=session_id,  # Secure UUID-based session identifier
         device_type=ua_info["device_type"],
         browser=ua_info["browser"],
         os=ua_info["os"],
@@ -247,13 +254,16 @@ async def login(
     db.add(new_session)
     await db.commit()
 
+    # Store session ID in Redis for quick lookup (maps access token to session)
+    redis_service.set_session_mapping(access_token, session_id)
+
     # Set access token as httpOnly cookie
     # max_age must match JWT expiration time from settings
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,           # Cannot be accessed by JavaScript
-        secure=False,            # Set to True in production with HTTPS
+        secure=settings.secure_cookies,  # True in production with HTTPS
         samesite="lax",          # CSRF protection
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert minutes to seconds
         path="/",                # Available to all routes
@@ -265,7 +275,7 @@ async def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,           # Cannot be accessed by JavaScript
-        secure=False,            # Set to True in production with HTTPS
+        secure=settings.secure_cookies,  # True in production with HTTPS
         samesite="lax",          # CSRF protection
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         path="/api/v1/auth",     # Only sent to auth endpoints
@@ -394,7 +404,7 @@ async def refresh_access_token(
         key="access_token",
         value=new_access_token,
         httponly=True,
-        secure=False,
+        secure=settings.secure_cookies,  # True in production with HTTPS
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert minutes to seconds
         path="/",
@@ -406,7 +416,7 @@ async def refresh_access_token(
         key="refresh_token",
         value=new_refresh_token,
         httponly=True,
-        secure=False,
+        secure=settings.secure_cookies,  # True in production with HTTPS
         samesite="lax",
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,  # Convert days to seconds
         path="/api/v1/auth",
@@ -649,7 +659,7 @@ async def google_callback(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=settings.secure_cookies,  # True in production with HTTPS
             samesite="lax",
             max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             path="/",
@@ -660,7 +670,7 @@ async def google_callback(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=settings.secure_cookies,  # True in production with HTTPS
             samesite="lax",
             max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
             path="/api/v1/auth",
@@ -695,12 +705,10 @@ async def get_sessions(
     """
     Get all active sessions for the current user.
     """
-    # Get current session token to mark it
+    # Get current session token from Redis mapping
     current_session_token = None
     if access_token:
-        payload = decode_access_token(access_token)
-        if payload:
-            current_session_token = access_token[-32:]  # Use last 32 chars (signature) as identifier
+        current_session_token = redis_service.get_session_id(access_token)
 
     # Get all active sessions for user
     result = await db.execute(
@@ -774,10 +782,10 @@ async def revoke_all_other_sessions(
     """
     Revoke all sessions except the current one.
     """
-    # Get current session token
+    # Get current session token from Redis mapping
     current_session_token = None
     if access_token:
-        current_session_token = access_token[:32]
+        current_session_token = redis_service.get_session_id(access_token)
 
     # Get all active sessions except current
     result = await db.execute(

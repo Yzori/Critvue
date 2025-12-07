@@ -96,7 +96,7 @@ async def upload_generic_file(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}"
+            detail="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
         )
 
 
@@ -191,7 +191,7 @@ async def upload_review_file(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload file: {str(e)}"
+            detail="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
         )
 
 
@@ -304,7 +304,7 @@ async def upload_review_files_batch(
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload files: {str(e)}"
+            detail="Failed to upload files. Please try again."  # Generic message - don't expose internal errors
         )
 
 

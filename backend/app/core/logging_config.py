@@ -6,6 +6,8 @@ from typing import Any, Dict
 from datetime import datetime
 from fastapi import Request
 
+from app.core.config import settings
+
 # Configure logging format
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -32,6 +34,33 @@ def setup_logging(level: str = "INFO") -> None:
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 
+def get_client_ip_secure(request: Request) -> str:
+    """
+    Securely extract client IP from request.
+
+    Only trusts X-Forwarded-For header if the direct client is a known proxy.
+    This prevents IP spoofing attacks.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        Client IP address
+    """
+    direct_client_ip = request.client.host if request.client else "unknown"
+
+    # Only trust X-Forwarded-For if direct client is a trusted proxy
+    if direct_client_ip in settings.trusted_proxies_list:
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            # Get the first IP (original client) from the chain
+            # In a properly configured proxy, this is the real client IP
+            ips = [ip.strip() for ip in forwarded_for.split(",")]
+            return ips[0]
+
+    return direct_client_ip
+
+
 def get_client_info(request: Request) -> Dict[str, Any]:
     """
     Extract client information from request
@@ -42,14 +71,7 @@ def get_client_info(request: Request) -> Dict[str, Any]:
     Returns:
         Dictionary with client IP, user agent, and other metadata
     """
-    # Try to get real IP from X-Forwarded-For header (for proxies/load balancers)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        # X-Forwarded-For can contain multiple IPs, take the first one
-        client_ip = forwarded_for.split(",")[0].strip()
-    else:
-        # Fallback to direct connection IP
-        client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_ip_secure(request)
 
     return {
         "ip": client_ip,

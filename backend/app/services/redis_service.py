@@ -111,6 +111,68 @@ class RedisService:
         except Exception:
             return False
 
+    def set_session_mapping(self, access_token: str, session_id: str) -> bool:
+        """
+        Store mapping from access token to session ID
+
+        Args:
+            access_token: JWT access token
+            session_id: UUID session identifier
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.available:
+            return False
+
+        try:
+            key = f"session:{access_token}"
+            # TTL should match access token expiration
+            ttl = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            self.client.setex(key, ttl, session_id)
+            return True
+        except Exception:
+            return False
+
+    def get_session_id(self, access_token: str) -> Optional[str]:
+        """
+        Get session ID for an access token
+
+        Args:
+            access_token: JWT access token
+
+        Returns:
+            Session ID if found, None otherwise
+        """
+        if not self.available:
+            return None
+
+        try:
+            key = f"session:{access_token}"
+            return self.client.get(key)
+        except Exception:
+            return None
+
+    def delete_session_mapping(self, access_token: str) -> bool:
+        """
+        Remove session mapping for an access token
+
+        Args:
+            access_token: JWT access token
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.available:
+            return False
+
+        try:
+            key = f"session:{access_token}"
+            self.client.delete(key)
+            return True
+        except Exception:
+            return False
+
 
 # Global Redis service instance
 redis_service = RedisService()

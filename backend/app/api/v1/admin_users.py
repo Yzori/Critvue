@@ -167,6 +167,13 @@ async def change_user_role(
     """
     Change a user's role (creator, reviewer, admin).
     """
+    # Security: Prevent admins from changing their own role
+    if user_id == admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change your own role. Contact another admin."
+        )
+
     service = AdminUsersService(db)
 
     try:

@@ -34,8 +34,10 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     description="AI & Human Feedback Platform for Creators",
     version="0.1.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    # Disable API docs in production for security
+    docs_url="/api/docs" if not settings.is_production else None,
+    redoc_url="/api/redoc" if not settings.is_production else None,
+    openapi_url="/api/openapi.json" if not settings.is_production else None,
 )
 
 # Add rate limiter to app state
@@ -92,6 +94,25 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         # Permissions policy (disable dangerous features)
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+        # Production-only security headers
+        if settings.is_production:
+            # HSTS - enforce HTTPS for 1 year, include subdomains
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+            # Content Security Policy - restrictive default, allow self and trusted sources
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://js.stripe.com; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self' data:; "
+                "connect-src 'self' https://api.stripe.com; "
+                "frame-src https://js.stripe.com https://hooks.stripe.com; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self';"
+            )
+
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)

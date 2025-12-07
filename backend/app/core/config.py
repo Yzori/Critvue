@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_V1_STR: str = "/api/v1"
 
+    # Environment
+    ENVIRONMENT: str = "development"  # development, staging, production
+
     # Logging
     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
 
@@ -25,6 +28,24 @@ class Settings(BaseSettings):
 
     # CORS - comma-separated list in .env file
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000"
+
+    # Trusted Proxies for X-Forwarded-For header validation
+    TRUSTED_PROXIES: str = "127.0.0.1,::1"
+
+    @property
+    def trusted_proxies_list(self) -> list[str]:
+        """Parse TRUSTED_PROXIES string into a list"""
+        return [proxy.strip() for proxy in self.TRUSTED_PROXIES.split(",")]
+
+    @property
+    def is_production(self) -> bool:
+        """Check if running in production environment"""
+        return self.ENVIRONMENT.lower() == "production"
+
+    @property
+    def secure_cookies(self) -> bool:
+        """Determine if cookies should be secure (HTTPS only)"""
+        return self.is_production
 
     @property
     def allowed_origins_list(self) -> List[str]:
