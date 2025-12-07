@@ -133,7 +133,7 @@ class ReviewSlot(Base):
     elaboration_deadline = Column(DateTime, nullable=True, index=True)  # When reviewer needs to respond
 
     # Payment tracking (for expert reviews)
-    payment_amount = Column(Numeric(10, 2), nullable=True)  # Amount reviewer receives
+    payment_amount = Column(Numeric(10, 2), nullable=True)  # Amount reviewer receives (before platform fee)
     payment_status = Column(
         String(20),
         nullable=False,
@@ -142,6 +142,11 @@ class ReviewSlot(Base):
     )
     payment_released_at = Column(DateTime, nullable=True)
     transaction_id = Column(String(100), nullable=True)  # External payment processor ID
+
+    # Stripe transfer tracking (for Connect payouts)
+    stripe_transfer_id = Column(String(255), nullable=True, index=True)  # Transfer to reviewer's Connect account
+    platform_fee_amount = Column(Numeric(10, 2), nullable=True)  # 20% platform fee
+    net_amount_to_reviewer = Column(Numeric(10, 2), nullable=True)  # Amount after platform fee
 
     # Quality metrics
     requester_helpful_rating = Column(Integer, nullable=True)  # 1-5: How helpful was this?

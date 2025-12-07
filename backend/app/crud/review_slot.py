@@ -12,9 +12,11 @@ from app.models.review_slot import (
     ReviewSlot,
     ReviewSlotStatus,
     RejectionReason,
-    DisputeResolution
+    DisputeResolution,
+    PaymentStatus
 )
 from app.models.review_request import ReviewRequest, ReviewType
+from app.models.user import User
 from app.schemas.review_slot import ReviewSlotCreate
 
 logger = logging.getLogger(__name__)
@@ -950,6 +952,26 @@ async def process_auto_accepts(db: AsyncSession) -> int:
                 if request.reviews_completed >= request.reviews_requested:
                     request.status = "completed"
                     request.completed_at = datetime.utcnow()
+
+            # Release payment for expert reviews with escrowed funds
+            if slot.requires_payment and slot.payment_status == PaymentStatus.ESCROWED.value:
+                try:
+                    from app.services.payment_service import PaymentService
+
+                    # Get reviewer
+                    reviewer = await db.get(User, slot.reviewer_id)
+                    if reviewer:
+                        payment_released = await PaymentService.release_payment_to_reviewer(
+                            slot=slot,
+                            reviewer=reviewer,
+                            db=db
+                        )
+                        if payment_released:
+                            logger.info(f"Released payment for auto-accepted slot {slot.id}")
+                        else:
+                            logger.warning(f"Could not release payment for auto-accepted slot {slot.id}")
+                except Exception as payment_error:
+                    logger.error(f"Error releasing payment for auto-accepted slot {slot.id}: {payment_error}")
 
             count += 1
         except Exception as e:

@@ -26,9 +26,10 @@ import { FileUploadStep } from "@/components/review-flow/file-upload-step";
 import { ReviewTypeStep } from "@/components/review-flow/review-type-step";
 import { ReviewSubmitStep } from "@/components/review-flow/review-submit-step";
 import { ProgressIndicator } from "@/components/review-flow/progress-indicator";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, CreditCard } from "lucide-react";
 import { getErrorMessage } from "@/lib/api/client";
 import { UploadedFile } from "@/components/ui/file-upload";
+import { ExpertReviewCheckout } from "@/components/checkout";
 
 // Form state interface - Enhanced with new tier fields and feedback goals
 interface FormState {
@@ -76,6 +77,7 @@ export default function NewReviewPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showPayment, setShowPayment] = useState(false); // Payment step for expert reviews
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [encouragingMessage, setEncouragingMessage] = useState("");
   const [showEncouragement, setShowEncouragement] = useState(false);
@@ -270,11 +272,15 @@ export default function NewReviewPage() {
         estimatedDuration = durationDefaults[formState.tier];
       }
 
-      // Update the review with complete data and set status to "pending"
+      // For expert reviews, save as draft first, then show payment
+      // For free reviews, publish immediately
+      const reviewStatus = formState.reviewType === "expert" ? "draft" : "pending";
+
+      // Update the review with complete data
       await updateReview(formState.reviewId, {
         review_type: formState.reviewType,
         reviews_requested: formState.numberOfReviews,
-        status: "pending", // This makes it appear in browse marketplace
+        status: reviewStatus,
         feedback_areas: feedbackAreasStr || undefined,
         budget: formState.reviewType === "expert" ? formState.budget : undefined,
         // Expert review tier fields
@@ -293,13 +299,19 @@ export default function NewReviewPage() {
         external_links: formState.externalLinks.length > 0 ? formState.externalLinks : undefined,
       });
 
-      // Show success state
-      setSubmitSuccess(true);
+      // For expert reviews, show payment step
+      if (formState.reviewType === "expert") {
+        setIsSubmitting(false);
+        setShowPayment(true);
+      } else {
+        // For free reviews, show success immediately
+        setSubmitSuccess(true);
 
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 2000);
+        // Redirect to dashboard after 2 seconds
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
+      }
     } catch (error) {
       console.error("Failed to submit review:", error);
       alert(`Failed to submit review: ${getErrorMessage(error)}`);
@@ -307,8 +319,65 @@ export default function NewReviewPage() {
     }
   };
 
+  // Handle payment success
+  const handlePaymentSuccess = async () => {
+    // Update review status to pending (now that payment is captured)
+    if (formState.reviewId) {
+      try {
+        await updateReview(formState.reviewId, { status: "pending" });
+      } catch (error) {
+        console.error("Failed to publish review after payment:", error);
+      }
+    }
+    setShowPayment(false);
+    setSubmitSuccess(true);
+
+    // Redirect to dashboard after 2 seconds
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 2000);
+  };
+
+  // Handle payment cancel
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    // Stay on the confirmation step so user can try again
+  };
+
   // Render current step content with animations - Updated for 5-step flow
   const renderStepContent = () => {
+    // Payment step for expert reviews
+    if (showPayment && formState.reviewId) {
+      return (
+        <div className="max-w-lg mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Payment Header */}
+          <div className="text-center mb-8">
+            <div className="mx-auto size-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <CreditCard className="size-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground">
+              Complete Payment
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              Pay now to publish your expert review request
+            </p>
+          </div>
+
+          {/* Stripe Checkout */}
+          <div className="bg-card rounded-xl border p-6">
+            <ExpertReviewCheckout
+              reviewRequestId={formState.reviewId}
+              budget={formState.budget}
+              reviewsRequested={formState.numberOfReviews}
+              isProUser={subscriptionStatus?.tier === "pro"}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          </div>
+        </div>
+      );
+    }
+
     if (submitSuccess) {
       return (
         <div className="text-center space-y-6 py-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -507,8 +576,8 @@ export default function NewReviewPage() {
         {/* Normal form content */}
         {!isCheckingQuota && (
           <>
-            {/* Enhanced Progress Indicator */}
-            {!submitSuccess && (
+            {/* Enhanced Progress Indicator - Hide during payment and success */}
+            {!submitSuccess && !showPayment && (
           <div className="mb-8">
             <ProgressIndicator
               currentStep={currentStep}
@@ -524,8 +593,8 @@ export default function NewReviewPage() {
           </div>
         )}
 
-        {/* Encouraging Message Toast */}
-        {showEncouragement && (
+        {/* Encouraging Message Toast - Hide during payment */}
+        {showEncouragement && !showPayment && (
           <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="max-w-2xl mx-auto">
               <div className="rounded-xl bg-gradient-to-r from-accent-blue/10 to-accent-peach/10 border border-accent-blue/20 p-4 flex items-center gap-3">
@@ -542,7 +611,8 @@ export default function NewReviewPage() {
         <div className="mb-8">{renderStepContent()}</div>
 
         {/* Navigation Buttons - Enhanced for mobile touch */}
-        {!submitSuccess && (
+        {/* Hide during payment step and success */}
+        {!submitSuccess && !showPayment && (
           <div className="fixed bottom-0 left-0 right-0 lg:relative bg-background border-t border-border lg:border-0 p-4 lg:p-0 shadow-[0_-4px_8px_rgba(0,0,0,0.04)] lg:shadow-none z-50">
             <div className="max-w-2xl mx-auto flex items-center gap-3">
               {/* Back Button - Enhanced touch target */}

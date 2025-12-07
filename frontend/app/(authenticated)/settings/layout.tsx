@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Menu,
   MessageSquare,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,12 @@ const navItems: NavItem[] = [
     href: "/settings/reviewer",
     icon: MessageSquare,
     description: "Reviewer directory settings",
+  },
+  {
+    label: "Billing",
+    href: "/settings/billing",
+    icon: CreditCard,
+    description: "Subscription, payments & payouts",
   },
   {
     label: "Security",

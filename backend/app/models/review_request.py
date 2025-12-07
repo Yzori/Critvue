@@ -193,6 +193,10 @@ class ReviewRequest(Base):
         doc="Number of reviews that have been accepted"
     )
 
+    # Payment tracking (for expert reviews)
+    stripe_payment_intent_id = Column(String(255), nullable=True, index=True)  # Payment Intent ID
+    payment_captured_at = Column(DateTime, nullable=True)  # When payment was captured
+
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

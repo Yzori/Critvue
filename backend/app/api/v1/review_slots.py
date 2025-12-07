@@ -54,6 +54,8 @@ from app.services.notification_triggers import (
     notify_elaboration_requested,
     notify_elaboration_submitted,
 )
+from app.services.payment_service import PaymentService
+from app.models.review_slot import PaymentStatus
 
 logger = logging.getLogger(__name__)
 
@@ -997,6 +999,22 @@ async def accept_review(
             new_karma
         )
 
+        # Release payment for expert reviews
+        if accepted_slot.requires_payment and accepted_slot.payment_status == PaymentStatus.ESCROWED.value:
+            try:
+                payment_released = await PaymentService.release_payment_to_reviewer(
+                    slot=accepted_slot,
+                    reviewer=reviewer,
+                    db=db
+                )
+                if payment_released:
+                    logger.info(f"Payment released for slot {slot_id} to reviewer {reviewer.id}")
+                else:
+                    logger.warning(f"Payment release failed for slot {slot_id}")
+            except Exception as payment_error:
+                logger.error(f"Error releasing payment for slot {slot_id}: {payment_error}")
+                # Don't fail the accept - payment can be retried later
+
         logger.info(f"User {current_user.id} accepted review for slot {slot_id}")
 
         return accepted_slot
@@ -1080,6 +1098,29 @@ async def reject_review(
             karma_penalty,
             new_karma
         )
+
+        # Process refund for expert reviews
+        if rejected_slot.requires_payment and rejected_slot.payment_status == PaymentStatus.ESCROWED.value:
+            try:
+                # Get the review request for refund processing
+                review_request_result = await db.execute(
+                    select(ReviewRequest).where(ReviewRequest.id == rejected_slot.review_request_id)
+                )
+                review_request = review_request_result.scalar_one_or_none()
+
+                if review_request:
+                    refund_processed = await PaymentService.process_refund(
+                        slot=rejected_slot,
+                        review_request=review_request,
+                        db=db
+                    )
+                    if refund_processed:
+                        logger.info(f"Refund processed for slot {slot_id}")
+                    else:
+                        logger.warning(f"Refund processing failed for slot {slot_id}")
+            except Exception as refund_error:
+                logger.error(f"Error processing refund for slot {slot_id}: {refund_error}")
+                # Don't fail the reject - refund can be processed manually
 
         logger.info(
             f"User {current_user.id} rejected review for slot {slot_id} "

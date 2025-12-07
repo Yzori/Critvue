@@ -15,7 +15,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, karma, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers, payments
 from app.api.v1 import settings as settings_router
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
@@ -72,6 +72,7 @@ app.include_router(challenges.router, prefix="/api/v1")  # Platform-curated crea
 app.include_router(settings_router.router, prefix="/api/v1")  # User settings (privacy, etc.)
 app.include_router(growth.router, prefix="/api/v1")  # Portfolio growth analytics
 app.include_router(reviewers.router, prefix="/api/v1")  # Reviewer directory
+app.include_router(payments.router, prefix="/api/v1")  # Expert review payments and Stripe Connect
 
 # Security headers middleware
 from starlette.middleware.base import BaseHTTPMiddleware

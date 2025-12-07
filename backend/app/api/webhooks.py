@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_db
 from app.services.subscription_service import SubscriptionService
+from app.services.payment_service import PaymentService
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ async def stripe_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid payload"
         )
-    except stripe.error.SignatureVerificationError as e:
+    except stripe.SignatureVerificationError as e:
         # Invalid signature
         logger.warning(f"Invalid webhook signature: {str(e)}")
         raise HTTPException(
@@ -104,6 +105,21 @@ async def stripe_webhook(
 
         elif event_type == "invoice.payment_failed":
             await SubscriptionService.handle_invoice_payment_failed(event_data, db)
+
+        # Payment Intent events (expert review payments)
+        elif event_type == "payment_intent.succeeded":
+            await PaymentService.handle_payment_success(event_data, db)
+
+        elif event_type == "payment_intent.payment_failed":
+            await PaymentService.handle_payment_failed(event_data, db)
+
+        # Refund events
+        elif event_type == "charge.refunded":
+            await PaymentService.handle_refund_completed(event_data, db)
+
+        # Connect account events (reviewer payouts)
+        elif event_type == "account.updated":
+            await PaymentService.handle_connect_account_updated(event_data, db)
 
         else:
             logger.info(f"Unhandled webhook event type: {event_type}")

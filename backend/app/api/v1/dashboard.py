@@ -683,13 +683,31 @@ async def get_dashboard_stats(
             result = await db.execute(stats_query)
             row = result.first()
 
+            # Calculate total spent on expert reviews (escrowed + released payments)
+            spending_query = (
+                select(func.sum(ReviewSlot.payment_amount))
+                .join(ReviewRequest)
+                .where(
+                    and_(
+                        ReviewRequest.user_id == current_user.id,
+                        ReviewSlot.payment_status.in_([
+                            PaymentStatus.ESCROWED.value,
+                            PaymentStatus.RELEASED.value
+                        ]),
+                        ReviewSlot.claimed_at.between(period_start, period_end)
+                    )
+                )
+            )
+            spending_result = await db.execute(spending_query)
+            total_spent = spending_result.scalar() or 0
+
             stats = {
                 "reviews_received": row.total_reviews or 0,
                 "reviews_accepted": row.accepted or 0,
                 "reviews_rejected": row.rejected or 0,
                 "avg_rating": round(float(row.avg_rating), 1) if row.avg_rating else None,
                 "avg_response_time_hours": None,  # TODO: Calculate from acceptance timestamps
-                "total_spent": 0,  # TODO: Calculate from payment amounts
+                "total_spent": float(total_spent),
                 "karma_change": 0  # TODO: Calculate from karma transactions
             }
 
@@ -700,8 +718,7 @@ async def get_dashboard_stats(
                     func.count(ReviewSlot.id).label("total_reviews"),
                     func.sum(case((ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value, 1), else_=0)).label("accepted"),
                     func.sum(case((ReviewSlot.status == ReviewSlotStatus.REJECTED.value, 1), else_=0)).label("rejected"),
-                    func.avg(ReviewSlot.requester_helpful_rating).label("avg_rating"),
-                    func.sum(ReviewSlot.payment_amount).label("total_earned")
+                    func.avg(ReviewSlot.requester_helpful_rating).label("avg_rating")
                 )
                 .where(
                     and_(
@@ -714,6 +731,20 @@ async def get_dashboard_stats(
             result = await db.execute(stats_query)
             row = result.first()
 
+            # Calculate actual earnings from released payments (net amount after platform fee)
+            earnings_query = (
+                select(func.sum(ReviewSlot.net_amount_to_reviewer))
+                .where(
+                    and_(
+                        ReviewSlot.reviewer_id == current_user.id,
+                        ReviewSlot.payment_status == PaymentStatus.RELEASED.value,
+                        ReviewSlot.accepted_at.between(period_start, period_end)
+                    )
+                )
+            )
+            earnings_result = await db.execute(earnings_query)
+            total_earned = earnings_result.scalar() or 0
+
             acceptance_rate = 0
             if row.total_reviews and row.total_reviews > 0:
                 acceptance_rate = (row.accepted or 0) / row.total_reviews
@@ -724,7 +755,7 @@ async def get_dashboard_stats(
                 "reviews_rejected": row.rejected or 0,
                 "acceptance_rate": round(acceptance_rate, 3),
                 "avg_rating": round(float(row.avg_rating), 1) if row.avg_rating else None,
-                "total_earned": float(row.total_earned) if row.total_earned else 0,
+                "total_earned": float(total_earned),
                 "karma_change": 0  # TODO: Calculate from karma transactions
             }
 

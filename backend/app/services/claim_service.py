@@ -51,7 +51,14 @@ class ClaimService:
         if not slot.payment_amount or slot.payment_amount <= 0:
             return True, None
 
-        # For paid reviews, check tier permissions
+        # For paid reviews, check Stripe Connect setup first
+        if not user.stripe_connect_payouts_enabled:
+            return False, (
+                "You need to set up your payment account before claiming paid reviews. "
+                "Go to Settings > Payouts to complete setup."
+            )
+
+        # Then check tier permissions
         try:
             from app.services.tier_service import TierService
             tier_service = TierService(db)

@@ -59,7 +59,7 @@ export function UserMenu({ user }: UserMenuProps) {
     // Admin link - only shown for admin users
     ...(user.role === "admin" ? [{ label: "Admin Panel", href: "/admin/applications", icon: Shield, separator: true }] : []),
     { label: "Settings", href: "/settings", icon: Settings },
-    { label: "Billing", href: "/billing", icon: CreditCard },
+    { label: "Billing", href: "/settings/billing", icon: CreditCard },
     { label: "Help & Support", href: "/help", icon: HelpCircle, separator: true },
     { label: "Sign Out", onClick: handleLogout, icon: LogOut, variant: "destructive" as const },
   ];

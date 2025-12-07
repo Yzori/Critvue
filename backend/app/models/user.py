@@ -145,6 +145,11 @@ class User(Base):
     monthly_reviews_used = Column(Integer, nullable=False, default=0, server_default='0')
     reviews_reset_at = Column(DateTime, nullable=True)
 
+    # Stripe Connect for reviewer payouts
+    stripe_connect_account_id = Column(String(255), nullable=True, unique=True, index=True)
+    stripe_connect_onboarded = Column(Boolean, default=False, nullable=False, server_default='0')
+    stripe_connect_payouts_enabled = Column(Boolean, default=False, nullable=False, server_default='0')
+
     # Challenge stats
     challenges_won = Column(Integer, default=0, nullable=False, server_default='0')
     challenges_lost = Column(Integer, default=0, nullable=False, server_default='0')

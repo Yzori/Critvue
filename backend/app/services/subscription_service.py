@@ -245,7 +245,7 @@ class SubscriptionService:
                 "session_id": session.id,
             }
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             logger.error(f"Stripe error creating checkout session: {str(e)}")
             raise ValueError(f"Failed to create checkout session: {str(e)}")
 
@@ -279,7 +279,7 @@ class SubscriptionService:
                 "portal_url": session.url,
             }
 
-        except stripe.error.StripeError as e:
+        except stripe.StripeError as e:
             logger.error(f"Stripe error creating portal session: {str(e)}")
             raise ValueError(f"Failed to create portal session: {str(e)}")
 
