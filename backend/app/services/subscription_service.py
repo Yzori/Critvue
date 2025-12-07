@@ -415,3 +415,66 @@ class SubscriptionService:
             await db.commit()
             logger.warning(f"Payment failed for user {user.id}, subscription {subscription_id}")
             # TODO: Send email notification to user about failed payment
+
+    @staticmethod
+    async def sync_subscription_from_stripe(user: User, db: AsyncSession) -> bool:
+        """
+        Sync subscription status directly from Stripe API.
+        Useful when webhooks aren't available (local dev) or to verify status.
+
+        Args:
+            user: User model instance
+            db: Database session
+
+        Returns:
+            True if subscription was synced/updated, False otherwise
+        """
+        if not user.stripe_customer_id:
+            logger.info(f"User {user.id} has no Stripe customer ID")
+            return False
+
+        try:
+            # List all subscriptions for this customer
+            subscriptions = stripe.Subscription.list(
+                customer=user.stripe_customer_id,
+                limit=1,
+                status="all"
+            )
+
+            if not subscriptions.data:
+                logger.info(f"No subscriptions found for user {user.id}")
+                return False
+
+            # Get the most recent subscription
+            subscription = subscriptions.data[0]
+            logger.info(f"Found subscription {subscription.id} with status {subscription.status}")
+
+            # Update user subscription data
+            user.stripe_subscription_id = subscription.id
+            user.subscription_end_date = datetime.fromtimestamp(subscription.current_period_end)
+
+            if subscription.status in ["active", "trialing"]:
+                user.subscription_tier = SubscriptionTier.PRO
+                user.subscription_status = SubscriptionStatus.ACTIVE
+                logger.info(f"Synced Pro subscription for user {user.id}")
+            elif subscription.status == "past_due":
+                user.subscription_tier = SubscriptionTier.PRO
+                user.subscription_status = SubscriptionStatus.PAST_DUE
+                logger.info(f"User {user.id} subscription is past due")
+            elif subscription.status == "canceled":
+                user.subscription_tier = SubscriptionTier.FREE
+                user.subscription_status = SubscriptionStatus.CANCELED
+                logger.info(f"User {user.id} subscription is canceled")
+            else:
+                # Other statuses (incomplete, incomplete_expired, unpaid)
+                user.subscription_tier = SubscriptionTier.FREE
+                user.subscription_status = None
+                logger.info(f"User {user.id} subscription status: {subscription.status}")
+
+            await db.commit()
+            await db.refresh(user)
+            return True
+
+        except stripe.StripeError as e:
+            logger.error(f"Stripe error syncing subscription for user {user.id}: {str(e)}")
+            return False

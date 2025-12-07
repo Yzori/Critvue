@@ -90,7 +90,7 @@ export function ConnectSetupBanner({ className }: ConnectSetupBannerProps) {
           </h3>
           <p className="text-sm text-muted-foreground">
             Connect your bank account to receive payments when you complete paid reviews.
-            You'll earn 80% of each review's budget.
+            You'll earn 75% of each review's budget.
           </p>
           <Link href="/reviewer/settings/payouts">
             <Button size="sm" className="mt-2">

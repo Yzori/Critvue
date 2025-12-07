@@ -36,7 +36,7 @@ export default function SubscriptionStatusCard() {
 
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subscriptions/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/status`, {
         credentials: "include",
       });
 
@@ -59,7 +59,7 @@ export default function SubscriptionStatusCard() {
 
     // For Pro users, open Stripe customer portal
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subscriptions/portal`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/portal`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

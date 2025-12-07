@@ -49,7 +49,10 @@ const getNavItems = (isAuthenticated: boolean): NavItemWithIcon[] => [
   ...(isAuthenticated ? [
     { label: "Dashboard", href: "/dashboard", showOn: "tablet" as const },
     { label: "My Reviews", href: "/reviewer/hub", showOn: "desktop" as const },
-  ] : []),
+  ] : [
+    // Show Pricing for non-authenticated users
+    { label: "Pricing", href: "/pricing", showOn: "tablet" as const },
+  ]),
   { label: "How It Works", href: "/how-it-works", showOn: "desktop" },
 ];
 

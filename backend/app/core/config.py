@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: str = ""  # Frontend publishable key
 
     # Stripe Connect (for reviewer payouts)
-    STRIPE_PLATFORM_FEE_PERCENT: float = 0.20  # 20% platform fee on expert reviews
+    STRIPE_PLATFORM_FEE_PERCENT: float = 0.25  # 25% platform fee on expert reviews
 
     # Email
     EMAIL_FROM: str = "noreply@critvue.com"

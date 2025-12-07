@@ -32,6 +32,7 @@ import {
   CreditCard,
   Crown,
   Receipt,
+  RefreshCw,
 } from "lucide-react";
 import {
   getConnectStatus,
@@ -46,16 +47,20 @@ import {
 import {
   getSubscriptionStatus,
   createPortalSession,
+  syncSubscription,
   SubscriptionStatus,
 } from "@/lib/api/subscriptions";
 
 function BillingSettingsContent() {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "subscription";
+  const subscriptionSuccess = searchParams.get("subscription") === "success";
 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Subscription state
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
@@ -66,8 +71,29 @@ function BillingSettingsContent() {
   const [payoutHistory, setPayoutHistory] = useState<PayoutHistoryResponse | null>(null);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    // If returning from successful checkout, sync subscription first
+    if (subscriptionSuccess) {
+      handleSyncSubscription().then(() => fetchData());
+    } else {
+      fetchData();
+    }
+  }, [subscriptionSuccess]);
+
+  async function handleSyncSubscription() {
+    setSyncLoading(true);
+    setError(null);
+    try {
+      const synced = await syncSubscription();
+      setSubscription(synced);
+      if (synced.tier === "pro") {
+        setSuccessMessage("Your Pro subscription is now active!");
+      }
+    } catch (err) {
+      console.error("Error syncing subscription:", err);
+    } finally {
+      setSyncLoading(false);
+    }
+  }
 
   async function fetchData() {
     setLoading(true);
@@ -178,6 +204,16 @@ function BillingSettingsContent() {
         </p>
       </div>
 
+      {/* Success message */}
+      {successMessage && (
+        <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="flex items-center gap-2 py-4 text-green-700 dark:text-green-400">
+            <CheckCircle2 className="h-4 w-4" />
+            <span>{successMessage}</span>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Error message */}
       {error && (
         <Card className="border-destructive">
@@ -278,12 +314,30 @@ function BillingSettingsContent() {
                       </li>
                     </ul>
                   </div>
-                  <Button className="w-full" asChild>
-                    <a href="/pricing">
-                      <Crown className="h-4 w-4 mr-2" />
-                      Upgrade to Pro
-                    </a>
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button className="flex-1" asChild>
+                      <a href="/pricing">
+                        <Crown className="h-4 w-4 mr-2" />
+                        Upgrade to Pro
+                      </a>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSyncSubscription}
+                      disabled={syncLoading}
+                      title="Sync subscription status"
+                    >
+                      {syncLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Just subscribed? Click refresh to sync your status.
+                  </p>
                 </>
               )}
             </CardContent>
@@ -372,7 +426,7 @@ function BillingSettingsContent() {
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">
                     Set up your payout account to receive earnings from expert reviews.
-                    You'll earn 80% of each review's budget.
+                    You'll earn 75% of each review's budget.
                   </p>
                   <div className="bg-muted/50 rounded-lg p-4 space-y-2">
                     <h4 className="font-medium text-sm">What you'll need:</h4>

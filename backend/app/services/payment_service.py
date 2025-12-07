@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_API_KEY
 
 # Constants
-PLATFORM_FEE_PERCENT = settings.STRIPE_PLATFORM_FEE_PERCENT  # 20%
+PLATFORM_FEE_PERCENT = settings.STRIPE_PLATFORM_FEE_PERCENT  # 25%
 PRO_DISCOUNT_PERCENT = Decimal("0.15")  # 15% discount for Pro users
 
 

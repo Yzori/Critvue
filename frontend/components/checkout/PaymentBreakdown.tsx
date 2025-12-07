@@ -111,7 +111,7 @@ export function PaymentBreakdown({
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs text-xs">
-                A 20% platform fee ({formatCurrency(platformFee)} per review) supports
+                A 25% platform fee ({formatCurrency(platformFee)} per review) supports
                 the Critvue platform and ensures quality reviews.
               </p>
             </TooltipContent>

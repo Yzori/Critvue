@@ -11,14 +11,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion, useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, ArrowRight, Star, Crown } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { CheckCircle, ArrowRight, Star, Crown, Shield, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PricingPage() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const [isAnnual, setIsAnnual] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const prefersReducedMotion = useReducedMotion();
+
+  // Pricing constants
+  const MONTHLY_PRICE = 9;
+  const ANNUAL_PRICE = 90; // $7.50/month, save 17%
+  const ANNUAL_SAVINGS = Math.round((1 - ANNUAL_PRICE / (MONTHLY_PRICE * 12)) * 100);
 
   const handleSubscribe = async () => {
     if (!isAuthenticated) {
@@ -26,9 +33,10 @@ export default function PricingPage() {
       return;
     }
 
+    setIsLoading(true);
     try {
       // Call backend to create Stripe checkout session
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/subscriptions/checkout`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/subscriptions/checkout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,6 +60,7 @@ export default function PricingPage() {
     } catch (error: any) {
       console.error("Subscription error:", error);
       alert(error.message || "Failed to start subscription. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -73,11 +82,13 @@ export default function PricingPage() {
       ctaAction: () => router.push(isAuthenticated ? "/review/new" : "/register"),
       popular: false,
       icon: Star,
+      isLoading: false,
     },
     {
       name: "Pro",
-      price: "$9",
-      period: "per month",
+      price: isAnnual ? `$${Math.round(ANNUAL_PRICE / 12)}` : `$${MONTHLY_PRICE}`,
+      period: isAnnual ? "per month, billed annually" : "per month",
+      originalPrice: isAnnual ? `$${MONTHLY_PRICE}` : null,
       description: "Unlock unlimited reviews and discounts",
       features: [
         "Unlimited community reviews",
@@ -92,13 +103,14 @@ export default function PricingPage() {
       ctaAction: handleSubscribe,
       popular: true,
       icon: Crown,
+      isLoading: isLoading,
     },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Header */}
-      <section className="relative pt-20 pb-12 px-6 md:pt-32 md:pb-16">
+      <section className="relative pt-20 pb-8 px-6 md:pt-32 md:pb-12">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -116,6 +128,39 @@ export default function PricingPage() {
             </p>
           </motion.div>
         </div>
+      </section>
+
+      {/* Billing Toggle */}
+      <section className="pb-8 px-6">
+        <motion.div
+          className="flex items-center justify-center gap-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <span className={cn(
+            "text-sm font-medium transition-colors",
+            !isAnnual ? "text-gray-900" : "text-gray-500"
+          )}>
+            Monthly
+          </span>
+          <Switch
+            checked={isAnnual}
+            onCheckedChange={setIsAnnual}
+            className="data-[state=checked]:bg-accent-blue"
+          />
+          <span className={cn(
+            "text-sm font-medium transition-colors",
+            isAnnual ? "text-gray-900" : "text-gray-500"
+          )}>
+            Annual
+          </span>
+          {isAnnual && (
+            <Badge className="bg-green-100 text-green-800 border-green-200">
+              Save {ANNUAL_SAVINGS}%
+            </Badge>
+          )}
+        </motion.div>
       </section>
 
       {/* Pricing Cards */}
@@ -229,10 +274,10 @@ function PricingCard({
       }}
     >
       {tier.popular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-          <Badge variant="info" size="md" className="bg-accent-blue text-white">
+        <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
+          <span className="inline-flex items-center px-4 py-2 rounded-full bg-accent-blue text-white text-sm font-bold tracking-wide uppercase shadow-lg shadow-accent-blue/40">
             Most Popular
-          </Badge>
+          </span>
         </div>
       )}
 
@@ -254,9 +299,14 @@ function PricingCard({
 
       <div className="mb-6">
         <div className="flex items-baseline gap-2">
+          {tier.originalPrice && (
+            <span className="text-2xl font-medium text-gray-400 line-through">
+              {tier.originalPrice}
+            </span>
+          )}
           <span className="text-5xl font-bold text-gray-900">{tier.price}</span>
-          <span className="text-gray-600">/ {tier.period}</span>
         </div>
+        <span className="text-gray-600 text-sm">/ {tier.period}</span>
       </div>
 
       <ul className="space-y-3 mb-8">
@@ -271,6 +321,7 @@ function PricingCard({
       <Button
         size="lg"
         onClick={tier.ctaAction}
+        disabled={tier.isLoading}
         className={cn(
           "w-full min-h-[56px] font-semibold rounded-xl touch-manipulation",
           tier.popular
@@ -278,9 +329,34 @@ function PricingCard({
             : "bg-gray-100 hover:bg-gray-200 text-gray-900"
         )}
       >
-        {tier.cta}
-        <ArrowRight className="ml-2 size-5" />
+        {tier.isLoading ? (
+          <>
+            <Loader2 className="mr-2 size-5 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            {tier.cta}
+            <ArrowRight className="ml-2 size-5" />
+          </>
+        )}
       </Button>
+
+      {/* Trust signals for Pro tier */}
+      {tier.popular && (
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-1">
+              <Shield className="size-3.5" />
+              <span>30-day money-back</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <CheckCircle className="size-3.5" />
+              <span>Cancel anytime</span>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

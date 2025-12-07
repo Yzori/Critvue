@@ -59,3 +59,11 @@ export async function createPortalSession(
 ): Promise<CreatePortalSessionResponse> {
   return apiClient.post<CreatePortalSessionResponse>("/subscriptions/portal", request);
 }
+
+/**
+ * Sync subscription status from Stripe
+ * Useful when webhooks aren't available (local dev) or to verify status
+ */
+export async function syncSubscription(): Promise<SubscriptionStatus> {
+  return apiClient.post<SubscriptionStatus>("/subscriptions/sync", {});
+}

@@ -142,3 +142,39 @@ async def create_portal_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create portal session"
         )
+
+
+@router.post(
+    "/sync",
+    response_model=SubscriptionStatus,
+    summary="Sync subscription status from Stripe"
+)
+async def sync_subscription(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> SubscriptionStatus:
+    """
+    Sync subscription status directly from Stripe API.
+
+    Useful when webhooks aren't available (local development) or
+    to verify the subscription status is up-to-date.
+
+    Returns:
+        Updated subscription status
+    """
+    try:
+        # Sync from Stripe
+        synced = await SubscriptionService.sync_subscription_from_stripe(current_user, db)
+        if synced:
+            logger.info(f"Synced subscription for user {current_user.id}")
+
+        # Return current status
+        status_data = await SubscriptionService.get_subscription_status(current_user)
+        return SubscriptionStatus(**status_data)
+
+    except Exception as e:
+        logger.error(f"Failed to sync subscription for user {current_user.id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to sync subscription status"
+        )
