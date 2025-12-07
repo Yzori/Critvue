@@ -233,7 +233,7 @@ async def login(
 
     new_session = UserSession(
         user_id=user.id,
-        session_token=access_token[:32],  # Use first 32 chars as identifier
+        session_token=access_token[-32:],  # Use last 32 chars (signature) as identifier
         device_type=ua_info["device_type"],
         browser=ua_info["browser"],
         os=ua_info["os"],
@@ -700,7 +700,7 @@ async def get_sessions(
     if access_token:
         payload = decode_access_token(access_token)
         if payload:
-            current_session_token = access_token[:32]  # Use first 32 chars as identifier
+            current_session_token = access_token[-32:]  # Use last 32 chars (signature) as identifier
 
     # Get all active sessions for user
     result = await db.execute(
