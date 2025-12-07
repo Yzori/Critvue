@@ -728,3 +728,90 @@ async def notify_elaboration_submitted(
 
     except Exception as e:
         logger.error(f"Error creating elaboration submitted notification: {e}", exc_info=True)
+
+
+# ==================== Review Invitation Events ====================
+
+async def notify_review_invitation(
+    db: AsyncSession,
+    review_request_id: int,
+    inviter_id: int,
+    invitee_id: int,
+    message: Optional[str] = None
+) -> None:
+    """
+    Notify a user when they receive a review invitation from a creator.
+
+    Args:
+        db: Database session
+        review_request_id: ID of the review request
+        inviter_id: ID of the user sending the invitation (creator)
+        invitee_id: ID of the user being invited (reviewer)
+        message: Optional personal message from inviter
+    """
+    try:
+        # Get review request
+        result = await db.execute(
+            select(ReviewRequest)
+            .where(ReviewRequest.id == review_request_id)
+        )
+        review_request = result.scalar_one_or_none()
+
+        if not review_request:
+            logger.error(f"Review request {review_request_id} not found for invitation notification")
+            return
+
+        # Get inviter info
+        inviter = await db.get(User, inviter_id)
+        if not inviter:
+            logger.error(f"Inviter {inviter_id} not found")
+            return
+
+        # Get invitee to verify they exist
+        invitee = await db.get(User, invitee_id)
+        if not invitee:
+            logger.error(f"Invitee {invitee_id} not found")
+            return
+
+        # Calculate available slots
+        result = await db.execute(
+            select(ReviewSlot)
+            .where(ReviewSlot.review_request_id == review_request_id)
+        )
+        all_slots = result.scalars().all()
+        available_slots = sum(1 for s in all_slots if s.status == "available")
+
+        # Compose notification message
+        notification_message = f"{inviter.full_name or inviter.email} has invited you to review '{review_request.title}'."
+        if message:
+            notification_message += f" Message: \"{message[:100]}{'...' if len(message) > 100 else ''}\""
+
+        # Create notification for invitee
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=invitee_id,
+            notification_type=NotificationType.REVIEW_INVITATION,
+            title=f"Review invitation from {inviter.full_name or inviter.email}",
+            message=notification_message,
+            data={
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "content_type": review_request.content_type.value if review_request.content_type else None,
+                "review_type": review_request.review_type.value if review_request.review_type else None,
+                "inviter_id": inviter.id,
+                "inviter_name": inviter.full_name or inviter.email,
+                "inviter_avatar": inviter.avatar_url,
+                "available_slots": available_slots,
+                "personal_message": message,
+            },
+            priority=NotificationPriority.HIGH,
+            action_url=f"/review/{review_request.id}",
+            action_label="View Request",
+            entity_type=EntityType.REVIEW_REQUEST,
+            entity_id=review_request.id,
+        )
+
+        logger.info(f"Created review invitation notification for user {invitee_id} from {inviter_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating review invitation notification: {e}", exc_info=True)

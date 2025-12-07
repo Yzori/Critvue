@@ -13,6 +13,7 @@ class NotificationType(str, enum.Enum):
     """Types of notifications in the system"""
 
     # Review Lifecycle
+    REVIEW_INVITATION = "review_invitation"  # Creator invites a specific reviewer
     REVIEW_SLOT_CLAIMED = "review_slot_claimed"
     REVIEW_SLOT_AVAILABLE = "review_slot_available"  # When a slot becomes available again (abandoned/released)
     REVIEW_SUBMITTED = "review_submitted"

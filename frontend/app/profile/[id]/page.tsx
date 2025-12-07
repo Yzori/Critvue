@@ -54,6 +54,7 @@ import { ReviewerDNA, ReviewerDNAData } from "@/components/profile/reviewer-dna"
 import { BadgeGrid, Badge as BadgeType } from "@/components/profile/progressive-badge";
 import { ContextualStatCard } from "@/components/profile/contextual-stat-card";
 import { FeaturedWorksCarousel } from "@/components/profile/featured-works-carousel";
+import { InviteReviewerModal } from "@/components/profile/invite-reviewer-modal";
 
 // Default DNA values for users without enough data
 const defaultReviewerDNA: ReviewerDNAData = {
@@ -155,6 +156,7 @@ export default function PublicProfilePage({ params }: PageProps) {
     type: "not_found" | "network" | "server" | "unknown";
     message: string;
   } | null>(null);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   // Redirect to own profile page if viewing self
   useEffect(() => {
@@ -389,7 +391,11 @@ export default function PublicProfilePage({ params }: PageProps) {
 
             {/* Right: Actions */}
             <div className="flex items-start gap-2 lg:ml-auto">
-              <Button size="sm" className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+              <Button
+                size="sm"
+                className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                onClick={() => setInviteModalOpen(true)}
+              >
                 Request Review
                 <ArrowRight className="size-4" />
               </Button>
@@ -594,6 +600,16 @@ export default function PublicProfilePage({ params }: PageProps) {
 
         </div>
       </main>
+
+      {/* Invite Reviewer Modal */}
+      {profileData && (
+        <InviteReviewerModal
+          open={inviteModalOpen}
+          onOpenChange={setInviteModalOpen}
+          reviewerId={parseInt(profileData.id, 10)}
+          reviewerName={profileData.full_name || profileData.username || "this reviewer"}
+        />
+      )}
     </div>
   );
 }

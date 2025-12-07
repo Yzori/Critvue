@@ -3,11 +3,14 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Path as PathParam, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from pydantic import BaseModel, Field
 
 from app.db.session import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.review_request import ReviewStatus
+from app.models.review_slot import ReviewSlot
 from app.schemas.review import (
     ReviewRequestCreate,
     ReviewRequestUpdate,
@@ -18,6 +21,7 @@ from app.schemas.review import (
 from app.crud.review import review_crud
 from app.core.logging_config import security_logger
 from app.services.subscription_service import SubscriptionService
+from app.services.notification_triggers import notify_review_invitation
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -174,6 +178,69 @@ async def get_review_stats(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve statistics"
+        )
+
+
+@router.get(
+    "/with-open-slots",
+    response_model=ReviewRequestListResponse,
+    summary="Get user's review requests that have open slots"
+)
+async def get_reviews_with_open_slots(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> ReviewRequestListResponse:
+    """
+    Get the current user's review requests that have available slots.
+
+    This is useful for the "Request Review" feature where a creator
+    wants to invite a specific reviewer to one of their open requests.
+
+    Returns only requests in PENDING or IN_REVIEW status with at least
+    one available slot.
+    """
+    try:
+        # Get user's reviews that are active (PENDING or IN_REVIEW)
+        reviews, total = await review_crud.get_user_review_requests(
+            db=db,
+            user_id=current_user.id,
+            skip=0,  # Get all first, then filter
+            limit=100,
+            status=None
+        )
+
+        # Filter to only those with available slots
+        reviews_with_slots = []
+        for review in reviews:
+            if review.status not in [ReviewStatus.PENDING, ReviewStatus.IN_REVIEW]:
+                continue
+
+            # Check for available slots
+            available_count = review.reviews_requested - review.reviews_claimed
+            if available_count > 0:
+                reviews_with_slots.append(review)
+
+        # Apply pagination
+        total_with_slots = len(reviews_with_slots)
+        paginated = reviews_with_slots[skip:skip + limit]
+
+        return ReviewRequestListResponse(
+            items=[ReviewRequestResponse.model_validate(r) for r in paginated],
+            total=total_with_slots,
+            skip=skip,
+            limit=limit,
+            has_more=(skip + len(paginated)) < total_with_slots
+        )
+
+    except Exception as e:
+        security_logger.logger.error(
+            f"Failed to get reviews with open slots for user {current_user.email}: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve review requests"
         )
 
 
@@ -441,3 +508,149 @@ async def delete_review_request(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete review request"
         )
+
+
+# ===== Review Invitation Schemas =====
+
+class InviteReviewerRequest(BaseModel):
+    """Schema for inviting a specific reviewer to a review request"""
+    reviewer_id: int = Field(..., gt=0, description="ID of the reviewer to invite")
+    message: Optional[str] = Field(None, max_length=500, description="Optional personal message")
+
+
+class InviteReviewerResponse(BaseModel):
+    """Response after sending a review invitation"""
+    success: bool
+    message: str
+    review_request_id: int
+    reviewer_id: int
+
+
+# ===== Review Invitation Endpoint =====
+
+@router.post(
+    "/{review_id}/invite",
+    response_model=InviteReviewerResponse,
+    summary="Invite a specific reviewer to your review request"
+)
+async def invite_reviewer(
+    review_id: int = PathParam(..., ge=1, description="ID of the review request"),
+    invite_data: InviteReviewerRequest = ...,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+) -> InviteReviewerResponse:
+    """
+    Invite a specific user to review your request.
+
+    This sends a notification to the invited reviewer with a link to the review request.
+    The reviewer can then choose to claim an available slot.
+
+    Requirements:
+    - Must be the owner of the review request
+    - Review request must have available slots
+    - Cannot invite yourself
+    - Review request must be in PENDING or IN_REVIEW status
+
+    Args:
+        review_id: ID of the review request
+        invite_data: Contains reviewer_id and optional message
+        current_user: Currently authenticated user
+        db: Database session
+
+    Returns:
+        Success response with invitation details
+
+    Raises:
+        HTTPException: If validation fails or user doesn't have access
+    """
+    try:
+        # Get the review request
+        review = await review_crud.get_review_request(
+            db=db,
+            review_id=review_id,
+            user_id=current_user.id
+        )
+
+        if not review:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Review request not found or you don't have access"
+            )
+
+        # Verify user owns this review
+        if review.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only invite reviewers to your own review requests"
+            )
+
+        # Check review status - must be PENDING or IN_REVIEW
+        if review.status not in [ReviewStatus.PENDING, ReviewStatus.IN_REVIEW]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only invite reviewers to pending or in-review requests"
+            )
+
+        # Cannot invite yourself
+        if invite_data.reviewer_id == current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot invite yourself to review"
+            )
+
+        # Check available slots
+        result = await db.execute(
+            select(ReviewSlot)
+            .where(ReviewSlot.review_request_id == review_id)
+            .where(ReviewSlot.status == "available")
+        )
+        available_slots = result.scalars().all()
+
+        if not available_slots:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No available slots for this review request"
+            )
+
+        # Verify the reviewer exists
+        reviewer = await db.get(User, invite_data.reviewer_id)
+        if not reviewer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Reviewer not found"
+            )
+
+        # Send the invitation notification
+        await notify_review_invitation(
+            db=db,
+            review_request_id=review_id,
+            inviter_id=current_user.id,
+            invitee_id=invite_data.reviewer_id,
+            message=invite_data.message
+        )
+
+        security_logger.logger.info(
+            f"Review invitation sent: review_id={review_id}, "
+            f"inviter={current_user.email}, invitee_id={invite_data.reviewer_id}"
+        )
+
+        return InviteReviewerResponse(
+            success=True,
+            message=f"Invitation sent to {reviewer.full_name or reviewer.email}",
+            review_request_id=review_id,
+            reviewer_id=invite_data.reviewer_id
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        security_logger.logger.error(
+            f"Failed to send review invitation for review {review_id} "
+            f"from user {current_user.email}: {str(e)}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send invitation"
+        )
+
+

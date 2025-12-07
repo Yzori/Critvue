@@ -195,3 +195,45 @@ export interface UpdateReviewRequest {
 export async function updateReview(id: number, data: UpdateReviewRequest): Promise<CreateReviewResponse> {
   return apiClient.patch<CreateReviewResponse>(`/reviews/${id}`, data);
 }
+
+// ===== Review Invitation Types =====
+
+export interface InviteReviewerRequest {
+  reviewer_id: number;
+  message?: string;
+}
+
+export interface InviteReviewerResponse {
+  success: boolean;
+  message: string;
+  review_request_id: number;
+  reviewer_id: number;
+}
+
+export interface ReviewsWithOpenSlotsResponse {
+  items: CreateReviewResponse[];
+  total: number;
+  skip: number;
+  limit: number;
+  has_more: boolean;
+}
+
+// ===== Review Invitation Functions =====
+
+/**
+ * Get the current user's review requests that have open slots
+ * Used for the "Request Review" feature on profiles
+ */
+export async function getReviewsWithOpenSlots(skip = 0, limit = 20): Promise<ReviewsWithOpenSlotsResponse> {
+  return apiClient.get<ReviewsWithOpenSlotsResponse>(`/reviews/with-open-slots?skip=${skip}&limit=${limit}`);
+}
+
+/**
+ * Invite a specific user to review one of your requests
+ */
+export async function inviteReviewer(
+  reviewId: number,
+  data: InviteReviewerRequest
+): Promise<InviteReviewerResponse> {
+  return apiClient.post<InviteReviewerResponse>(`/reviews/${reviewId}/invite`, data);
+}
