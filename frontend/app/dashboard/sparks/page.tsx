@@ -43,6 +43,12 @@ import {
   History,
   RefreshCw,
   ArrowLeft,
+  Sparkles,
+  Star,
+  ThumbsUp,
+  Flame,
+  Target,
+  Gift,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -253,7 +259,7 @@ export default function KarmaPage() {
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-6 space-y-6">
           <KarmaDashboard
             summary={summary || undefined}
             breakdown={breakdown || undefined}
@@ -262,6 +268,9 @@ export default function KarmaPage() {
             onViewBadges={() => setActiveTab('badges')}
             onViewLeaderboard={() => setActiveTab('leaderboard')}
           />
+
+          {/* How to Earn Sparks Explainer */}
+          <HowToEarnSparks />
         </TabsContent>
 
         {/* Badges Tab */}
@@ -467,5 +476,113 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+/**
+ * How to Earn Sparks Explainer
+ * Shows the different ways users can earn sparks with visual indicators
+ */
+const HowToEarnSparks: React.FC = () => {
+  const sparkActions = [
+    {
+      icon: Star,
+      title: 'Complete Reviews',
+      description: 'Submit and get reviews accepted by creators',
+      points: '+5 to +40',
+      color: 'text-yellow-500',
+      bgColor: 'bg-yellow-50',
+    },
+    {
+      icon: ThumbsUp,
+      title: 'Get High Ratings',
+      description: 'Earn bonus sparks when creators rate your feedback highly',
+      points: '+5 to +40',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50',
+    },
+    {
+      icon: Flame,
+      title: 'Build Streaks',
+      description: 'Review consistently to earn streak bonuses',
+      points: '+25 to +200',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50',
+    },
+    {
+      icon: Target,
+      title: 'Hit Weekly Goals',
+      description: 'Complete your weekly review targets',
+      points: '+30 to +50',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50',
+    },
+    {
+      icon: Gift,
+      title: 'Earn Badges',
+      description: 'Unlock achievements for milestone rewards',
+      points: 'Variable',
+      color: 'text-pink-500',
+      bgColor: 'bg-pink-50',
+    },
+    {
+      icon: Award,
+      title: 'Complete Your Profile',
+      description: 'Fill out your profile and add portfolio items',
+      points: '+10 to +50',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50',
+    },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-accent-blue" />
+          <CardTitle>How to Earn Sparks</CardTitle>
+        </div>
+        <CardDescription>
+          Sparks measure your contribution to the community. Here&apos;s how to earn more:
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {sparkActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <div
+                key={action.title}
+                className="flex items-start gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+              >
+                <div className={cn('rounded-lg p-2', action.bgColor)}>
+                  <Icon className={cn('h-5 w-5', action.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-medium text-sm">{action.title}</h4>
+                    <span className="text-xs font-semibold text-green-600 whitespace-nowrap">
+                      {action.points}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {action.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pro tip */}
+        <div className="mt-4 rounded-lg bg-accent-blue/5 border border-accent-blue/20 p-4">
+          <p className="text-sm">
+            <span className="font-semibold text-accent-blue">Pro tip:</span>{' '}
+            Quality matters! Reviews rated 4-5 stars by creators earn significantly more sparks
+            than lower-rated ones. Focus on giving actionable, thoughtful feedback.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

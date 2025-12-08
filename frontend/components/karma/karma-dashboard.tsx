@@ -171,15 +171,15 @@ export const KarmaDashboard: React.FC<KarmaDashboardProps> = ({
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {summary.total_karma.toLocaleString()}
+                {summary.total_sparks.toLocaleString()}
               </div>
               {breakdown && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-green-600">
-                    +{breakdown.positive_karma_earned}
+                    +{breakdown.positive_sparks_earned || 0}
                   </span>
                   <span className="text-red-500">
-                    -{Math.abs(breakdown.negative_karma_incurred)}
+                    -{Math.abs(breakdown.negative_sparks_incurred || 0)}
                   </span>
                 </div>
               )}
