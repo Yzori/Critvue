@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LeaderboardUser, formatRank } from '@/lib/types/leaderboard';
-import { TIER_CONFIG } from '@/lib/types/tier';
+import { TIER_CONFIG, UserTier } from '@/lib/types/tier';
+import { TieredAvatar } from '@/components/tier/tiered-avatar';
 import { Crown, Medal, Trophy } from 'lucide-react';
 import { BadgeIcon } from '@/components/karma/badge-icon';
 
@@ -57,15 +57,6 @@ const RANK_CONFIG = {
   },
 };
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 interface PodiumUserProps {
   user: LeaderboardUser;
   rank: 1 | 2 | 3;
@@ -88,46 +79,32 @@ function PodiumUser({ user, rank, onClick }: PodiumUserProps) {
       )}
       onClick={onClick}
     >
-      {/* User Avatar with Tier Ring */}
+      {/* User Avatar with Tier Effects */}
       <div className="relative mb-2">
-        {/* Glow effect for #1 */}
+        {/* Additional glow effect for #1 podium */}
         {rank === 1 && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 blur-xl opacity-50"
-            animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.7, 0.5] }}
+            className="absolute inset-0 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 blur-xl opacity-40 z-0"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.6, 0.4] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
         )}
 
-        {/* Tier-colored ring */}
-        <div
-          className={cn(
-            'relative rounded-full p-1',
-            'bg-gradient-to-r',
-            config.gradient
-          )}
-          style={{ boxShadow: `0 0 20px ${tierInfo.color}40` }}
-        >
-          <Avatar
-            className={cn(
-              config.avatarSize,
-              'border-2 border-background transition-transform group-hover:scale-105'
-            )}
-          >
-            <AvatarImage src={user.avatarUrl} alt={user.displayName} />
-            <AvatarFallback
-              className="text-lg font-bold"
-              style={{ backgroundColor: tierInfo.color, color: 'white' }}
-            >
-              {getInitials(user.displayName)}
-            </AvatarFallback>
-          </Avatar>
+        {/* TieredAvatar with premium effects */}
+        <div className="relative z-10 transition-transform group-hover:scale-105">
+          <TieredAvatar
+            avatarUrl={user.avatarUrl}
+            fullName={user.displayName}
+            tier={user.tier as UserTier}
+            size={rank === 1 ? 'xl' : rank === 2 ? 'lg' : 'md'}
+            showTierEffects={true}
+          />
         </div>
 
         {/* Rank Badge */}
         <motion.div
           className={cn(
-            'absolute -top-2 -right-2 rounded-full p-1.5',
+            'absolute -top-2 -right-2 rounded-full p-1.5 z-20',
             'bg-gradient-to-r',
             config.gradient,
             'shadow-lg'

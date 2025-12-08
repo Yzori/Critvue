@@ -3,7 +3,6 @@
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -11,8 +10,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { UserProfilePreview as UserProfilePreviewType } from '@/lib/types/leaderboard';
-import { TIER_CONFIG } from '@/lib/types/tier';
+import { TIER_CONFIG, UserTier } from '@/lib/types/tier';
 import { BadgeIcon } from '@/components/karma/badge-icon';
+import { TieredAvatar } from '@/components/tier/tiered-avatar';
 import {
   Star,
   MessageSquare,
@@ -126,15 +126,6 @@ function MiniDnaRadar({
   );
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function PreviewContent({
   user,
   isLoading,
@@ -175,27 +166,18 @@ function PreviewContent({
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <div
-          className="rounded-full p-0.5"
-          style={{
-            background: `linear-gradient(135deg, ${tierInfo.color}, ${tierInfo.color}80)`,
-          }}
-        >
-          <Avatar className="h-12 w-12 border-2 border-white">
-            <AvatarImage src={user.avatarUrl} alt={user.displayName} />
-            <AvatarFallback
-              className="text-sm font-semibold text-white"
-              style={{ backgroundColor: tierInfo.color }}
-            >
-              {getInitials(user.displayName)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        <TieredAvatar
+          avatarUrl={user.avatarUrl}
+          fullName={user.displayName}
+          tier={user.tier as UserTier}
+          size="md"
+          showTierEffects={true}
+        />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 truncate">
+          <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
             {user.displayName}
           </p>
-          <p className="text-sm text-gray-500">@{user.username}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</p>
           <span
             className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium mt-1"
             style={{

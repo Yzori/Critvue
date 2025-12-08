@@ -22,120 +22,7 @@ import {
   type CompressionResult,
 } from "@/lib/utils/image-compression";
 import { UserTier, TIER_CONFIG } from "@/lib/types/tier";
-
-// Laurel wreath SVG component for Curator and Visionary tiers
-function LaurelWreath({
-  size,
-  color,
-  isVisionary,
-}: {
-  size: number;
-  color: string;
-  isVisionary: boolean;
-}) {
-  const laurelColor = isVisionary ? '#FFD700' : color;
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      className="absolute inset-0 z-0 pointer-events-none"
-      style={{ transform: 'scale(1.15)' }}
-    >
-      {/* Left laurel branch */}
-      <g transform="translate(10, 50)">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <ellipse
-            key={`left-${i}`}
-            cx={8 + i * 2}
-            cy={-5 - i * 7}
-            rx={4}
-            ry={8}
-            fill={laurelColor}
-            opacity={0.8 + i * 0.03}
-            transform={`rotate(${-20 - i * 8}, ${8 + i * 2}, ${-5 - i * 7})`}
-          />
-        ))}
-        {/* Stem */}
-        <path
-          d="M 5 0 Q 15 -25 20 -45"
-          stroke={laurelColor}
-          strokeWidth="2"
-          fill="none"
-          opacity={0.6}
-        />
-      </g>
-
-      {/* Right laurel branch (mirrored) */}
-      <g transform="translate(90, 50) scale(-1, 1)">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <ellipse
-            key={`right-${i}`}
-            cx={8 + i * 2}
-            cy={-5 - i * 7}
-            rx={4}
-            ry={8}
-            fill={laurelColor}
-            opacity={0.8 + i * 0.03}
-            transform={`rotate(${-20 - i * 8}, ${8 + i * 2}, ${-5 - i * 7})`}
-          />
-        ))}
-        {/* Stem */}
-        <path
-          d="M 5 0 Q 15 -25 20 -45"
-          stroke={laurelColor}
-          strokeWidth="2"
-          fill="none"
-          opacity={0.6}
-        />
-      </g>
-
-      {/* Sparkle effects for Visionary */}
-      {isVisionary && (
-        <>
-          <circle cx="50" cy="5" r="2" fill="#FFD700" className="animate-pulse" />
-          <circle cx="20" cy="25" r="1.5" fill="#FFD700" className="animate-pulse" style={{ animationDelay: '0.3s' }} />
-          <circle cx="80" cy="25" r="1.5" fill="#FFD700" className="animate-pulse" style={{ animationDelay: '0.6s' }} />
-        </>
-      )}
-    </svg>
-  );
-}
-
-// Crown SVG component for Visionary tier
-function Crown({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size * 0.7}
-      viewBox="0 0 24 17"
-      className={cn('drop-shadow-lg', className)}
-    >
-      {/* Crown shape */}
-      <path
-        d="M2 14 L4 6 L8 10 L12 4 L16 10 L20 6 L22 14 Z"
-        fill="url(#crownGradientUpload)"
-        stroke="#B8860B"
-        strokeWidth="0.5"
-      />
-      {/* Crown base */}
-      <rect x="2" y="14" width="20" height="3" rx="1" fill="url(#crownGradientUpload)" stroke="#B8860B" strokeWidth="0.5" />
-      {/* Jewels */}
-      <circle cx="12" cy="9" r="1.5" fill="#DC2626" />
-      <circle cx="6" cy="11" r="1" fill="#3B82F6" />
-      <circle cx="18" cy="11" r="1" fill="#3B82F6" />
-
-      <defs>
-        <linearGradient id="crownGradientUpload" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#FFD700" />
-          <stop offset="50%" stopColor="#FFA500" />
-          <stop offset="100%" stopColor="#FFD700" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
+import { TieredAvatar } from "@/components/tier/tiered-avatar";
 
 /**
  * Mobile-First Avatar Upload Component
@@ -354,61 +241,15 @@ export function AvatarUpload({
 
       {/* Avatar Preview with Edit Button */}
       <div className="relative inline-block">
-        {/* Tier glow effect for higher tiers */}
-        {tier !== UserTier.NEWCOMER && (
-          <div
-            className={`absolute inset-0 rounded-full blur-md opacity-40 ${
-              tier === UserTier.MENTOR || tier === UserTier.CURATOR || tier === UserTier.VISIONARY
-                ? 'animate-pulse'
-                : ''
-            }`}
-            style={{ backgroundColor: tierColor }}
+        {/* TieredAvatar with premium effects */}
+        <div className="relative">
+          <TieredAvatar
+            avatarUrl={previewUrl}
+            fullName={fullName}
+            tier={tier}
+            size="2xl"
+            showTierEffects={true}
           />
-        )}
-
-        {/* Laurel wreath for Curator and Visionary tiers */}
-        {(tier === UserTier.CURATOR || tier === UserTier.VISIONARY) && (
-          <LaurelWreath
-            size={160} // lg:size-40 = 160px
-            color={tierColor}
-            isVisionary={tier === UserTier.VISIONARY}
-          />
-        )}
-
-        {/* Crown for Visionary tier */}
-        {tier === UserTier.VISIONARY && (
-          <Crown size={28} className="absolute -top-3 left-1/2 -translate-x-1/2 z-20" />
-        )}
-
-        {/* Avatar Display */}
-        <div
-          className="relative size-24 sm:size-32 lg:size-40 rounded-full overflow-hidden shadow-xl"
-          style={{
-            borderWidth: tier === UserTier.NEWCOMER ? '3px' : '4px',
-            borderStyle: 'solid',
-            borderColor: tierColor,
-            background: `linear-gradient(135deg, ${tierColor}20, ${tierColor}40)`,
-          }}
-        >
-          {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="Avatar"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-                {fullName
-                  .split(' ')
-                  .map((n) => n[0])
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase()}
-              </span>
-            </div>
-          )}
 
           {/* Upload State Overlay */}
           <AnimatePresence>
@@ -417,7 +258,7 @@ export function AvatarUpload({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 flex items-center justify-center"
+                className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center z-20"
               >
                 {uploadState === "compressing" && (
                   <div className="text-white text-center">
@@ -475,7 +316,7 @@ export function AvatarUpload({
         {/* Edit Button - Touch-friendly 48px minimum */}
         <motion.button
           onClick={openUploadOptions}
-          className="absolute bottom-0 right-0 size-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center touch-manipulation transition-colors z-10"
+          className="absolute bottom-1 right-1 size-12 rounded-full border-4 border-background shadow-lg flex items-center justify-center touch-manipulation transition-colors z-30"
           style={{ backgroundColor: tierColor }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

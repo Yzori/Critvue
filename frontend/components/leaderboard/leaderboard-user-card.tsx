@@ -3,9 +3,9 @@
 import * as React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LeaderboardUser, formatRank } from '@/lib/types/leaderboard';
-import { TIER_CONFIG } from '@/lib/types/tier';
+import { TIER_CONFIG, UserTier } from '@/lib/types/tier';
+import { TieredAvatar } from '@/components/tier/tiered-avatar';
 import { RankChangeIndicator } from './rank-change-indicator';
 import { BadgeIcon } from '@/components/karma/badge-icon';
 import { Star, Flame, MessageSquare } from 'lucide-react';
@@ -16,15 +16,6 @@ interface LeaderboardUserCardProps {
   onUserClick?: (user: LeaderboardUser) => void;
   onUserHover?: (user: LeaderboardUser | null) => void;
   className?: string;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 export function LeaderboardUserCard({
@@ -68,28 +59,19 @@ export function LeaderboardUserCard({
         </span>
       </div>
 
-      {/* Avatar with Tier Ring */}
+      {/* Avatar with Tier Effects */}
       <div className="relative flex-shrink-0">
-        <div
-          className="rounded-full p-0.5"
-          style={{
-            background: `linear-gradient(135deg, ${tierInfo.color}, ${tierInfo.color}80)`,
-          }}
-        >
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border-2 border-background">
-            <AvatarImage src={user.avatarUrl} alt={user.displayName} />
-            <AvatarFallback
-              className="text-sm font-semibold text-white"
-              style={{ backgroundColor: tierInfo.color }}
-            >
-              {getInitials(user.displayName)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        <TieredAvatar
+          avatarUrl={user.avatarUrl}
+          fullName={user.displayName}
+          tier={user.tier as UserTier}
+          size="sm"
+          showTierEffects={true}
+        />
 
         {/* Current user indicator */}
         {isCurrentUser && (
-          <div className="absolute -bottom-1 -right-1 bg-accent-peach text-white text-[10px] font-bold px-1 py-0.5 rounded">
+          <div className="absolute -bottom-1 -right-1 bg-accent-peach text-white text-[10px] font-bold px-1 py-0.5 rounded z-20">
             YOU
           </div>
         )}
