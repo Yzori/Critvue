@@ -32,7 +32,7 @@ interface RoleChangeModalProps {
 
 const roleDescriptions: Record<UserRole, string> = {
   creator: "Can submit work for review and participate in challenges",
-  reviewer: "Can review work, earn karma, and participate in challenges",
+  reviewer: "Can review work, earn sparks, and participate in challenges",
   admin: "Full platform access including user management and moderation",
 };
 

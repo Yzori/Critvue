@@ -707,7 +707,7 @@ export default function AdminChallengesPage() {
               <Input
                 value={prizeDescription}
                 onChange={(e) => setPrizeDescription(e.target.value)}
-                placeholder="e.g., 500 karma points"
+                placeholder="e.g., 500 sparks"
                 className="bg-background border-border text-foreground mt-1"
               />
             </div>

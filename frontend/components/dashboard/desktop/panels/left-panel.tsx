@@ -334,7 +334,7 @@ export function DesktopLeftPanel({
         {/* Progress bar */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground font-medium">750 / 1000 Karma</span>
+            <span className="text-muted-foreground font-medium">750 / 1000 Sparks</span>
             <span className="text-foreground font-semibold">75%</span>
           </div>
           <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -349,7 +349,7 @@ export function DesktopLeftPanel({
 
         {/* Next milestone */}
         <p className="text-xs text-muted-foreground">
-          250 karma to <span className="text-foreground font-semibold">Silver Tier</span>
+          250 sparks to <span className="text-foreground font-semibold">Silver Tier</span>
         </p>
       </div>
     </div>

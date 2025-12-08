@@ -379,7 +379,7 @@ export default function PublicProfilePage({ params }: PageProps) {
                   </span>
                   <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
-                    <span className="font-semibold text-foreground">{profileData.karma_points}</span> karma
+                    <span className="font-semibold text-foreground">{profileData.karma_points}</span> sparks
                   </span>
                   <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground text-xs">
@@ -470,7 +470,7 @@ export default function PublicProfilePage({ params }: PageProps) {
               transition={{ delay: 0.2 }}
             >
               <ContextualStatCard
-                label="Karma Points"
+                label="Sparks"
                 value={profileData.karma_points}
                 icon={<Star className="size-6 text-white" />}
                 iconBg="bg-gradient-to-br from-purple-500 to-indigo-600"

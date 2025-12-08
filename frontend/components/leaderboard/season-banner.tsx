@@ -187,7 +187,7 @@ export function SeasonBanner({
               >
                 <Trophy className="h-4 w-4 text-yellow-300" />
                 <span className="text-white/90">
-                  Top prizes: {season.prizes[0].karmaReward.toLocaleString()}+ karma
+                  Top prizes: {season.prizes[0].karmaReward.toLocaleString()}+ sparks
                 </span>
               </motion.div>
             )}

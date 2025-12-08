@@ -73,7 +73,7 @@ export function BatchAcceptButton({
 
       if (failedCount === 0) {
         toast.success(`Successfully accepted ${successCount} reviews!`, {
-          description: `You awarded ${result.summary.total_karma_awarded} karma points total.`,
+          description: `You awarded ${result.summary.total_karma_awarded} sparks total.`,
         });
 
         // Success haptic

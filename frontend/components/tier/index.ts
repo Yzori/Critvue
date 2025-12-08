@@ -8,8 +8,14 @@
 export { TierBadge } from './tier-badge';
 export type { TierBadgeProps } from './tier-badge';
 
-export { KarmaProgress } from './karma-progress';
-export type { KarmaProgressProps } from './karma-progress';
+export { TieredAvatar } from './tiered-avatar';
+export type { TieredAvatarProps, TieredAvatarSize } from './tiered-avatar';
+
+export { SparksProgress } from './sparks-progress';
+export type { SparksProgressProps } from './sparks-progress';
+// Alias for backward compatibility
+export { SparksProgress as KarmaProgress } from './sparks-progress';
+export type { SparksProgressProps as KarmaProgressProps } from './sparks-progress';
 
 export {
   TierStatsCards,
@@ -40,8 +46,11 @@ export type {
 export {
   showTierUnlockNotification,
   showBenefitUnlockNotification,
-  showKarmaMilestoneNotification,
+  showSparksMilestoneNotification,
   showStreakNotification,
   useTierUnlockCheck,
 } from './tier-unlock-notification';
+// Alias for backward compatibility
+export { showSparksMilestoneNotification as showKarmaMilestoneNotification } from './tier-unlock-notification';
 export type { TierUnlockData } from './tier-unlock-notification';
+

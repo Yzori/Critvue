@@ -665,7 +665,7 @@ export default function ChallengesPage() {
                               {challenge.winnerKarmaReward && (
                                 <div className="flex items-center gap-1 text-accent-peach">
                                   <Trophy className="w-3.5 h-3.5" />
-                                  <span>{challenge.winnerKarmaReward} karma</span>
+                                  <span>{challenge.winnerKarmaReward} sparks</span>
                                 </div>
                               )}
                             </div>
@@ -835,8 +835,8 @@ export default function ChallengesPage() {
                 />
                 <HowItWorksItem
                   icon={Trophy}
-                  title="Win Karma"
-                  description="Winners earn karma and climb the leaderboard"
+                  title="Win Sparks"
+                  description="Winners earn sparks and climb the leaderboard"
                   color="text-accent-sage"
                   bg="bg-accent-sage/10"
                 />

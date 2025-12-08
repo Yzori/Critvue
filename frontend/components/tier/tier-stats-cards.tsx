@@ -69,7 +69,7 @@ export const TierStatsCards: React.FC<TierStatsCardsProps> = ({
               <div className="text-2xl font-bold">
                 {status.karma.toLocaleString()}
               </div>
-              <div className="text-xs text-muted-foreground">Karma</div>
+              <div className="text-xs text-muted-foreground">Sparks</div>
             </div>
           </div>
 
@@ -89,7 +89,7 @@ export const TierStatsCards: React.FC<TierStatsCardsProps> = ({
                 size="sm"
               />
               <p className="text-xs text-muted-foreground">
-                {progress.karmaNeededForNext.toLocaleString()} karma to go
+                {progress.karmaNeededForNext.toLocaleString()} sparks to go
               </p>
             </div>
           )}
@@ -118,7 +118,7 @@ export const TierStatsCards: React.FC<TierStatsCardsProps> = ({
               <div className="text-3xl font-bold text-accent-blue">
                 +{weeklyKarma.toLocaleString()}
               </div>
-              <div className="text-sm text-muted-foreground">karma</div>
+              <div className="text-sm text-muted-foreground">sparks</div>
             </div>
 
             <div className="flex items-center gap-1.5 text-sm">
@@ -142,7 +142,7 @@ export const TierStatsCards: React.FC<TierStatsCardsProps> = ({
               <p className="text-xs text-muted-foreground mt-1">
                 {weeklyKarma >= 100
                   ? 'Goal achieved!'
-                  : `${100 - weeklyKarma} karma to weekly goal`}
+                  : `${100 - weeklyKarma} sparks to weekly goal`}
               </p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export const CompactTierCard: React.FC<CompactTierCardProps> = ({
             <div className="text-xl font-bold">
               {status.karma.toLocaleString()}
             </div>
-            <div className="text-xs text-muted-foreground">Karma</div>
+            <div className="text-xs text-muted-foreground">Sparks</div>
           </div>
         </div>
 
@@ -333,7 +333,7 @@ export const TierProgressCard: React.FC<TierProgressCardProps> = ({
             <div className="flex-1">
               <p className="font-medium">Maximum Tier Achieved!</p>
               <p className="text-sm text-muted-foreground">
-                {status.karma.toLocaleString()} total karma
+                {status.karma.toLocaleString()} total sparks
               </p>
             </div>
           </div>
@@ -381,13 +381,13 @@ export const TierProgressCard: React.FC<TierProgressCardProps> = ({
         {/* Stats */}
         <div className="rounded-lg bg-muted/50 p-3 space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Current Karma</span>
+            <span className="text-muted-foreground">Current Sparks</span>
             <span className="font-semibold">
               {status.karma.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Karma Needed</span>
+            <span className="text-muted-foreground">Sparks Needed</span>
             <span className="font-semibold text-accent-blue">
               +{progress.karmaNeededForNext.toLocaleString()}
             </span>

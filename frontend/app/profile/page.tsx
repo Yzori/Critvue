@@ -55,7 +55,7 @@ import {
 } from "@/components/profile/error-states";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { useAuth } from "@/contexts/AuthContext";
-import { TierBadge } from "@/components/tier/tier-badge";
+import { TierBadge, TieredAvatar } from "@/components/tier";
 import { UserTier, getTierInfo } from "@/lib/types/tier";
 
 // New premium components
@@ -415,21 +415,16 @@ export default function ProfilePage() {
                         updateUserAvatar(newAvatarUrl);
                       }}
                       onUploadError={(error) => console.error("Avatar upload error:", error)}
+                      tier={profileData.user_tier as UserTier}
+                      fullName={profileData.full_name}
                     />
                   ) : (
-                    <>
-                      {profileData.avatar_url ? (
-                        <img
-                          src={profileData.avatar_url}
-                          alt={profileData.full_name}
-                          className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg object-cover"
-                        />
-                      ) : (
-                        <div className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <User className="size-10 sm:size-12 text-white" />
-                        </div>
-                      )}
-                    </>
+                    <TieredAvatar
+                      avatarUrl={profileData.avatar_url}
+                      fullName={profileData.full_name}
+                      tier={profileData.user_tier as UserTier}
+                      size="xl"
+                    />
                   )}
 
                   {profileData.verified && (

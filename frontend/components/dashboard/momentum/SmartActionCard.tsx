@@ -232,7 +232,7 @@ export function generateSmartActions(params: {
       actions.push({
         type: 'keep_going',
         title: 'Keep the momentum going',
-        description: 'You hit your goal! Extra reviews earn bonus karma.',
+        description: 'You hit your goal! Extra reviews earn bonus sparks.',
         ctaLabel: 'Find More',
         ctaHref: '/browse',
         priority: 'low',

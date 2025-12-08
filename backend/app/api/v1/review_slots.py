@@ -987,7 +987,7 @@ async def accept_review(
         karma_earned = 50  # Base karma for accepted review
         if accept_data.helpful_rating >= 4:
             karma_earned += 10
-        new_karma = reviewer.karma_points if reviewer else karma_earned
+        new_karma = reviewer.sparks_points if reviewer else karma_earned
 
         # Send notification to reviewer
         await notify_review_accepted(
@@ -1086,7 +1086,7 @@ async def reject_review(
         )
         user_tier = result.scalar_one_or_none()
         karma_penalty = 25  # Karma penalty for rejected review
-        new_karma = user_tier.karma_points if user_tier else 0
+        new_karma = user_tier.sparks_points if user_tier else 0
 
         # Send notification to reviewer
         await notify_review_rejected(

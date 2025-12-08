@@ -160,13 +160,13 @@ export const KarmaDashboard: React.FC<KarmaDashboardProps> = ({
             </CardContent>
           </Card>
 
-          {/* Karma Card */}
+          {/* Sparks Card */}
           <Card className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent" />
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
                 <Award className="h-4 w-4 text-purple-500" />
-                Total Karma
+                Total Sparks
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -306,7 +306,7 @@ export const KarmaDashboard: React.FC<KarmaDashboardProps> = ({
                     You have {breakdown.warning_count} warning{breakdown.warning_count !== 1 ? 's' : ''}
                   </p>
                   <p className="text-xs text-amber-700">
-                    Further violations will result in karma penalties.
+                    Further violations will result in sparks penalties.
                     {breakdown.warnings_expire_at && (
                       <> Warnings expire after 30 days of good standing.</>
                     )}
@@ -321,7 +321,7 @@ export const KarmaDashboard: React.FC<KarmaDashboardProps> = ({
         <div className="flex flex-wrap gap-2">
           {onViewDetails && (
             <Button variant="outline" size="sm" onClick={onViewDetails}>
-              View Karma History
+              View Sparks History
               <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           )}

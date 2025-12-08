@@ -93,7 +93,7 @@ const eventConfig: Record<TimelineEventType, {
     icon: TrendingUp,
     color: 'text-indigo-600 dark:text-indigo-400',
     bgColor: 'bg-indigo-100 dark:bg-indigo-900/50',
-    label: 'Karma',
+    label: 'Sparks',
   },
 };
 

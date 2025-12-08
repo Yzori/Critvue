@@ -340,7 +340,7 @@ class LeaderboardService:
                     # Award karma and XP
                     user = await self.db.get(User, entry.user_id)
                     if user:
-                        user.karma_points = (user.karma_points or 0) + reward["karma"]
+                        user.sparks_points = (user.sparks_points or 0) + reward["karma"]
                         user.xp_points = (user.xp_points or 0) + reward["xp"]
 
                         # Record transaction
@@ -348,7 +348,7 @@ class LeaderboardService:
                             user_id=user.id,
                             action=KarmaAction.LEADERBOARD_REWARD,
                             points=reward["karma"],
-                            balance_after=user.karma_points,
+                            balance_after=user.sparks_points,
                             reason=f"Seasonal reward: {reward['title']} in {category.value} ({season.name})",
                             created_at=datetime.utcnow()
                         )

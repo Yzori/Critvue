@@ -187,7 +187,7 @@ const TierBadge = React.forwardRef<HTMLDivElement, TierBadgeProps>(
                   <li>Unlimited review pricing</li>
                 )}
                 {tierInfo.benefits.karmaBonus > 0 && (
-                  <li>+{tierInfo.benefits.karmaBonus}% karma bonus</li>
+                  <li>+{tierInfo.benefits.karmaBonus}% sparks bonus</li>
                 )}
                 {tierInfo.benefits.prioritySupport && (
                   <li>Priority support</li>

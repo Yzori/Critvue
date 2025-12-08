@@ -935,8 +935,8 @@ class ApplicationService:
                 user.expert_application_approved = True
 
                 # Award minimum karma if below threshold
-                if (user.karma_points or 0) < 15000:
-                    user.karma_points = 15000
+                if (user.sparks_points or 0) < 15000:
+                    user.sparks_points = 15000
 
                 # Promote to MASTER tier
                 user.user_tier = UserTier.MASTER
@@ -949,7 +949,7 @@ class ApplicationService:
                     from_tier=UserTier.NOVICE,  # Assuming they started as novice
                     to_tier=UserTier.MASTER,
                     reason="Expert application approved (fast-track)",
-                    karma_at_promotion=user.karma_points or 0,
+                    karma_at_promotion=user.sparks_points or 0,
                     achieved_at=datetime.utcnow()
                 )
                 self.db.add(milestone)

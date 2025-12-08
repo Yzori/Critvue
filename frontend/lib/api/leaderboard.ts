@@ -254,7 +254,7 @@ function transformToLeaderboardUser(
   switch (category) {
     case LeaderboardCategory.OVERALL:
       score = entry.karma_points || 0;
-      scoreLabel = `${score.toLocaleString()} karma`;
+      scoreLabel = `${score.toLocaleString()} sparks`;
       break;
     case LeaderboardCategory.QUALITY:
       // Weighted average of acceptance rate and helpful rating
@@ -269,7 +269,7 @@ function transformToLeaderboardUser(
       break;
     default:
       score = entry.karma_points || 0;
-      scoreLabel = `${score.toLocaleString()} karma`;
+      scoreLabel = `${score.toLocaleString()} sparks`;
   }
 
   // Use actual username if set, otherwise fallback to generated slug or ID
@@ -807,7 +807,7 @@ export function formatLeaderboardStat(
  */
 export function getStatTypeLabel(statType: LeaderboardStatType): string {
   const labels: Record<LeaderboardStatType, string> = {
-    [LeaderboardStatType.KARMA]: 'Karma',
+    [LeaderboardStatType.KARMA]: 'Sparks',
     [LeaderboardStatType.ACCEPTANCE_RATE]: 'Acceptance Rate',
     [LeaderboardStatType.STREAK]: 'Streak',
     [LeaderboardStatType.REVIEWS]: 'Reviews',

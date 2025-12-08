@@ -210,7 +210,7 @@ export default function KarmaPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Karma & Achievements</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Sparks & Achievements</h1>
             <p className="text-muted-foreground mt-1">
               Track your progress, earn badges, and climb the leaderboard
             </p>
@@ -295,7 +295,7 @@ export default function KarmaPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Net Karma
+                  Net Sparks
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -312,7 +312,7 @@ export default function KarmaPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                   <TrendingUp className="h-4 w-4 text-green-600" />
-                  Karma Gained
+                  Sparks Gained
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -329,7 +329,7 @@ export default function KarmaPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
                   <TrendingDown className="h-4 w-4 text-red-600" />
-                  Karma Lost
+                  Sparks Lost
                 </CardTitle>
               </CardHeader>
               <CardContent>

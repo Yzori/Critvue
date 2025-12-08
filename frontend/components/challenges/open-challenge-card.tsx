@@ -136,7 +136,7 @@ export function OpenChallengeCard({
           </span>
           {winnerKarmaReward && (
             <span className="flex items-center gap-1.5 text-accent-peach font-medium">
-              +{winnerKarmaReward} karma
+              +{winnerKarmaReward} sparks
             </span>
           )}
         </div>

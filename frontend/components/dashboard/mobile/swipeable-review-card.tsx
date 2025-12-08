@@ -362,7 +362,7 @@ export function SwipeableReviewCard(props: SwipeableReviewCardProps) {
                   {props.earnings.karma && (
                     <div className="flex items-center gap-1.5 text-accent-blue font-semibold">
                       <TrendingUp className="size-4" />
-                      <span>{props.earnings.karma} karma</span>
+                      <span>{props.earnings.karma} sparks</span>
                     </div>
                   )}
                 </div>

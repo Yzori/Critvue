@@ -158,13 +158,13 @@ async def get_reviewer_directory(
 
     # Apply sorting
     sort_column_map = {
-        "karma": User.karma_points,
+        "karma": User.sparks_points,
         "rating": User.avg_rating,
         "reviews": User.total_reviews_given,
         "response_time": User.avg_response_time_hours,
         "acceptance_rate": User.acceptance_rate,
     }
-    sort_column = sort_column_map.get(sort_by, User.karma_points)
+    sort_column = sort_column_map.get(sort_by, User.sparks_points)
 
     if sort_order == "desc":
         # For response_time, nulls should be last (slower is worse)
@@ -214,7 +214,7 @@ async def get_reviewer_directory(
             acceptance_rate=float(user.acceptance_rate) if user.acceptance_rate else None,
             avg_rating=float(user.avg_rating) if user.avg_rating else None,
             avg_response_time_hours=user.avg_response_time_hours,
-            karma_points=user.karma_points or 0,
+            karma_points=user.sparks_points or 0,
             current_streak=user.current_streak or 0,
         )
         reviewers.append(entry)

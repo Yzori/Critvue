@@ -9,7 +9,7 @@ import {
   TierProgressCard,
   showTierUnlockNotification,
   showBenefitUnlockNotification,
-  showKarmaMilestoneNotification,
+  showSparksMilestoneNotification,
   showStreakNotification,
 } from '@/components/tier';
 import {
@@ -96,19 +96,19 @@ export default function TierDemoPage() {
             onClick={() => setSelectedStatus(MOCK_USER_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Contributor (250 karma)
+            Contributor (250 sparks)
           </button>
           <button
             onClick={() => setSelectedStatus(MOCK_SKILLED_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Skilled (850 karma)
+            Skilled (850 sparks)
           </button>
           <button
             onClick={() => setSelectedStatus(MOCK_MASTER_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Master (18,500 karma)
+            Master (18,500 sparks)
           </button>
         </CardContent>
       </Card>
@@ -191,10 +191,10 @@ export default function TierDemoPage() {
         <TierStatsCards status={selectedStatus} weeklyKarma={45} />
       </section>
 
-      {/* Karma Progress Widget */}
+      {/* Sparks Progress Widget */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Karma Progress Widget</h2>
+          <h2 className="text-2xl font-bold mb-2">Sparks Progress Widget</h2>
           <p className="text-sm text-muted-foreground">
             Detailed progress with expandable requirements
           </p>
@@ -311,7 +311,7 @@ export default function TierDemoPage() {
                   'Accept reviews up to $250',
                   'Verified reviewer badge',
                   'Custom profile customization',
-                  '+10% karma bonus on all reviews',
+                  '+10% sparks bonus on all reviews',
                 ],
               })
             }
@@ -332,10 +332,10 @@ export default function TierDemoPage() {
           </button>
 
           <button
-            onClick={() => showKarmaMilestoneNotification(1000, 50)}
+            onClick={() => showSparksMilestoneNotification(1000, 50)}
             className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
           >
-            Show Karma Milestone
+            Show Sparks Milestone
           </button>
 
           <button

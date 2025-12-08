@@ -477,7 +477,7 @@ export default function LeaderboardPage() {
                   No Rankings Yet
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  Be the first to earn karma and climb the leaderboard!
+                  Be the first to earn sparks and climb the leaderboard!
                 </p>
               </motion.div>
             ) : (

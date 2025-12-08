@@ -2,7 +2,7 @@
 Leaderboard API Endpoints
 
 Provides rankings for users based on various metrics:
-- Karma points
+- Sparks points
 - Acceptance rate
 - Review streaks
 - Number of accepted reviews
@@ -210,7 +210,7 @@ async def build_leaderboard(
 
     Args:
         db: Database session
-        stat_column: SQLAlchemy column to rank by (e.g., User.karma_points)
+        stat_column: SQLAlchemy column to rank by (e.g., User.sparks_points)
         period: Time period (weekly, monthly, all_time)
         tier: Optional tier filter
         limit: Number of entries to return
@@ -268,7 +268,7 @@ async def build_leaderboard(
             user_tier=user.user_tier.value,
             rank=rank,
             rank_change=None,  # TODO: Implement by comparing to cached previous period rankings
-            karma_points=user.karma_points if stat_column.key == "karma_points" else None,
+            karma_points=user.sparks_points if stat_column.key == "sparks_points" else None,
             acceptance_rate=float(user.acceptance_rate) if stat_column.key == "acceptance_rate" and user.acceptance_rate else None,
             current_streak=user.current_streak if stat_column.key == "current_streak" else None,
             accepted_reviews_count=user.accepted_reviews_count if stat_column.key == "accepted_reviews_count" else None,
@@ -346,7 +346,7 @@ async def get_karma_leaderboard(
 
     return await build_leaderboard(
         db=db,
-        stat_column=User.karma_points,
+        stat_column=User.sparks_points,
         period=period,
         tier=tier,
         limit=limit,
@@ -524,7 +524,7 @@ async def get_my_position(
 
     # Define all categories to check
     categories = [
-        ("karma", User.karma_points, 0),
+        ("karma", User.sparks_points, 0),
         ("acceptance_rate", User.acceptance_rate, 5),
         ("streak", User.current_streak, 0),
         ("reviews", User.accepted_reviews_count, 0),
@@ -557,7 +557,7 @@ async def get_my_position(
     tier_rank_data = await get_user_rank(
         db=db,
         user_id=current_user.id,
-        stat_column=User.karma_points,
+        stat_column=User.sparks_points,
         period="all_time",
         tier=current_user.user_tier.value,
         min_reviews=0

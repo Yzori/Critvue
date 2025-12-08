@@ -392,8 +392,8 @@ class CommitteeService:
             user.user_tier = UserTier.EXPERT
             user.tier_achieved_at = datetime.utcnow()
             # Ensure karma meets expert threshold (5000) for consistency
-            if (user.karma_points or 0) < 5000:
-                user.karma_points = 5000
+            if (user.sparks_points or 0) < 5000:
+                user.sparks_points = 5000
 
         await self.db.commit()
 

@@ -172,7 +172,7 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
                 <div className="grid grid-cols-2 gap-4">
                   <StatItem
                     icon={Star}
-                    label="Karma"
+                    label="Sparks"
                     value={user.karma_points.toLocaleString()}
                     color="text-amber-500"
                   />

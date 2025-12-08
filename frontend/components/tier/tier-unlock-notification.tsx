@@ -151,11 +151,11 @@ export function showBenefitUnlockNotification(benefitText: string) {
 }
 
 /**
- * Show notification for karma milestone
+ * Show notification for sparks milestone
  */
-export function showKarmaMilestoneNotification(
+export function showSparksMilestoneNotification(
   milestone: number,
-  bonusKarma?: number
+  bonusSparks?: number
 ) {
   toast.custom(
     (t) => (
@@ -167,11 +167,11 @@ export function showKarmaMilestoneNotification(
           <div className="flex-1">
             <h4 className="font-semibold text-sm">Milestone Reached!</h4>
             <p className="text-xs text-muted-foreground mt-0.5">
-              You've earned {milestone.toLocaleString()} karma points
+              You've earned {milestone.toLocaleString()} sparks
             </p>
-            {bonusKarma && (
+            {bonusSparks && (
               <p className="text-xs font-medium text-accent-blue mt-1">
-                +{bonusKarma} bonus karma awarded!
+                +{bonusSparks} bonus sparks awarded!
               </p>
             )}
           </div>
@@ -190,7 +190,7 @@ export function showKarmaMilestoneNotification(
  */
 export function showStreakNotification(
   streakDays: number,
-  bonusKarma: number
+  bonusSparks: number
 ) {
   toast.custom(
     (t) => (
@@ -202,7 +202,7 @@ export function showStreakNotification(
               {streakDays} Day Streak!
             </h4>
             <p className="text-xs text-amber-700 mt-0.5">
-              Keep it up! You've earned +{bonusKarma} bonus karma
+              Keep it up! You've earned +{bonusSparks} bonus sparks
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ export function useTierUnlockCheck(
         newTierInfo.benefits.karmaBonus > oldTierInfo.benefits.karmaBonus
       ) {
         unlockedBenefits.push(
-          `${newTierInfo.benefits.karmaBonus}% karma bonus on all reviews`
+          `${newTierInfo.benefits.karmaBonus}% sparks bonus on all reviews`
         );
       }
 

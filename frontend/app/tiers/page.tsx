@@ -85,15 +85,15 @@ export default function TiersPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">How It Works</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Earn karma through quality reviews and progress through six tiers
+              Earn sparks through quality reviews and progress through six tiers
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <FeatureCard
               icon={<TrendingUp className="h-8 w-8 text-accent-blue" />}
-              title="Earn Karma"
-              description="Submit quality reviews and earn karma points based on acceptance rates and helpful ratings"
+              title="Earn Sparks"
+              description="Submit quality reviews and earn sparks based on acceptance rates and helpful ratings"
             />
             <FeatureCard
               icon={<Award className="h-8 w-8 text-accent-peach" />}
@@ -259,7 +259,7 @@ export default function TiersPage() {
                   })}
                 />
                 <BenefitRow
-                  label="Karma Bonus"
+                  label="Sparks Bonus"
                   values={tierOrder.slice(0, 4).map(
                     (tier) => `+${TIER_CONFIG[tier].benefits.karmaBonus}%`
                   )}
@@ -391,7 +391,7 @@ const TierCard: React.FC<TierCardProps> = ({ tierInfo, isFirst, isLast }) => {
                   {tierInfo.requirements.minKarma.toLocaleString()}
                   {tierInfo.requirements.maxKarma &&
                     `-${tierInfo.requirements.maxKarma.toLocaleString()}`}{' '}
-                  karma
+                  sparks
                 </span>
                 <span className="px-2 py-1 bg-muted rounded">
                   {tierInfo.requirements.minReviews}+ reviews
@@ -426,7 +426,7 @@ const TierCard: React.FC<TierCardProps> = ({ tierInfo, isFirst, isLast }) => {
             )}
             {tierInfo.benefits.karmaBonus > 0 && (
               <div className="text-sm">
-                +{tierInfo.benefits.karmaBonus}% karma bonus
+                +{tierInfo.benefits.karmaBonus}% sparks bonus
               </div>
             )}
             {tierInfo.benefits.exclusiveReviews && (

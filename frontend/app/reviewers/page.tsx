@@ -58,7 +58,7 @@ const tierInfo: Record<string, { label: string; color: string; bgColor: string }
 };
 
 const sortOptions: { value: ReviewerSortBy; label: string }[] = [
-  { value: 'karma', label: 'Karma Points' },
+  { value: 'karma', label: 'Sparks' },
   { value: 'rating', label: 'Avg Rating' },
   { value: 'reviews', label: 'Reviews Given' },
   { value: 'response_time', label: 'Response Time' },
@@ -578,11 +578,11 @@ function ReviewerCard({
 
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 flex items-center justify-center">
-            <span className="text-accent-peach text-xs font-bold">K</span>
+            <span className="text-accent-peach text-xs font-bold">S</span>
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">{reviewer.karmaPoints}</p>
-            <p className="text-[10px] text-muted-foreground">Karma</p>
+            <p className="text-[10px] text-muted-foreground">Sparks</p>
           </div>
         </div>
       </div>

@@ -79,7 +79,7 @@ class AdminUsersService:
             "email": User.email,
             "full_name": User.full_name,
             "role": User.role,
-            "karma_points": User.karma_points,
+            "karma_points": User.sparks_points,
             "last_login": User.last_login,
             "user_tier": User.user_tier,
         }

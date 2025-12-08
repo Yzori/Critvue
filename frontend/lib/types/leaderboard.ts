@@ -311,10 +311,10 @@ export const CATEGORY_CONFIG: Record<LeaderboardCategory, CategoryConfig> = {
   [LeaderboardCategory.OVERALL]: {
     id: LeaderboardCategory.OVERALL,
     label: 'Overall',
-    description: 'Combined score based on karma and reputation',
+    description: 'Combined score based on sparks and reputation',
     icon: 'Trophy',
     color: 'amber',
-    formatValue: (u) => `${u.stats.karma.toLocaleString()} karma`,
+    formatValue: (u) => `${u.stats.karma.toLocaleString()} sparks`,
   },
   [LeaderboardCategory.QUALITY]: {
     id: LeaderboardCategory.QUALITY,

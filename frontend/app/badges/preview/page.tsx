@@ -105,7 +105,7 @@ const BADGE_PREVIEW_DATA: {
   { code: 'milestone_200_reviews', name: 'Double Century', rarity: 'rare', category: 'Milestone' },
   { code: 'milestone_500_reviews', name: 'Review Legend', rarity: 'epic', category: 'Milestone' },
   { code: 'milestone_1000_reviews', name: 'Thousand Club', rarity: 'legendary', category: 'Milestone' },
-  { code: 'milestone_karma_king', name: 'Karma King', rarity: 'epic', category: 'Milestone' },
+  { code: 'milestone_karma_king', name: 'Sparks King', rarity: 'epic', category: 'Milestone' },
   { code: 'milestone_xp_master', name: 'XP Master', rarity: 'legendary', category: 'Milestone' },
 
   // ============================================
@@ -255,7 +255,7 @@ export default function BadgePreviewPage() {
             User Tiers
           </h2>
           <p className="text-sm text-gray-500 mb-6">
-            Progression tiers based on reviews completed, karma earned, and acceptance rate
+            Progression tiers based on reviews completed, sparks earned, and acceptance rate
           </p>
 
           {/* All Tiers */}

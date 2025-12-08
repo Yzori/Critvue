@@ -289,7 +289,7 @@ export default function AdminUsersPage() {
                 <TableHead className="text-muted-foreground">User</TableHead>
                 <TableHead className="text-muted-foreground">Role</TableHead>
                 <TableHead className="text-muted-foreground">Tier</TableHead>
-                <TableHead className="text-muted-foreground">Karma</TableHead>
+                <TableHead className="text-muted-foreground">Sparks</TableHead>
                 <TableHead className="text-muted-foreground">Status</TableHead>
                 <TableHead className="text-muted-foreground">Joined</TableHead>
                 <TableHead className="text-muted-foreground text-right">Actions</TableHead>

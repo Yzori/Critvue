@@ -240,7 +240,7 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
                 <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                   <div className="flex items-center gap-2 text-sm text-foreground">
                     <CheckCircle2 className="size-4 text-green-500" />
-                    <span>Earn karma and build your reputation</span>
+                    <span>Earn sparks and build your reputation</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-foreground">
                     <CheckCircle2 className="size-4 text-green-500" />

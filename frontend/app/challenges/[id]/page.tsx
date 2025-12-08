@@ -877,7 +877,7 @@ export default function ChallengeDetailPage() {
                       {challenge.winnerKarmaReward && (
                         <div className="text-center">
                           <div className="text-2xl font-bold text-accent-sage">+{challenge.winnerKarmaReward}</div>
-                          <div className="text-sm text-muted-foreground">Karma</div>
+                          <div className="text-sm text-muted-foreground">Sparks</div>
                         </div>
                       )}
                     </div>

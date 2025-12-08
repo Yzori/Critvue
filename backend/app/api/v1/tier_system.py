@@ -172,7 +172,7 @@ async def get_my_karma_history(
 
     return KarmaHistoryResponse(
         transactions=transaction_responses,
-        total_karma=current_user.karma_points or 0,
+        total_karma=current_user.sparks_points or 0,
         acceptance_rate=float(current_user.acceptance_rate) if current_user.acceptance_rate else None,
         accepted_reviews_count=current_user.accepted_reviews_count,
         current_streak=current_user.current_streak,
