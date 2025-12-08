@@ -24,6 +24,7 @@ from app.models.user import Base
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.review_request import ReviewRequest
+    from app.models.slot_application import SlotApplication
 
 
 class ReviewSlotStatus(str, enum.Enum):
@@ -176,6 +177,7 @@ class ReviewSlot(Base):
     # Relationships
     review_request = relationship("ReviewRequest", back_populates="slots")
     reviewer = relationship("User", foreign_keys=[reviewer_id])
+    application = relationship("SlotApplication", back_populates="assigned_slot", uselist=False)
 
     def __repr__(self) -> str:
         return f"<ReviewSlot {self.id}: {self.status}>"

@@ -99,6 +99,12 @@ class NotificationType(str, enum.Enum):
     CHALLENGE_REMINDER_SUBMIT = "challenge_reminder_submit"  # Submission deadline approaching
     CHALLENGE_REMINDER_VOTE = "challenge_reminder_vote"      # Voting deadline approaching
 
+    # Slot Applications (for paid/expert reviews)
+    SLOT_APPLICATION_RECEIVED = "slot_application_received"    # Creator receives application from expert
+    SLOT_APPLICATION_ACCEPTED = "slot_application_accepted"    # Expert's application is accepted
+    SLOT_APPLICATION_REJECTED = "slot_application_rejected"    # Expert's application is rejected
+    SLOT_APPLICATION_WITHDRAWN = "slot_application_withdrawn"  # Expert withdraws their application
+
 
 class NotificationPriority(str, enum.Enum):
     """Priority levels for notifications"""
@@ -122,6 +128,7 @@ class EntityType(str, enum.Enum):
     REVIEW_SLOT = "review_slot"
     USER = "user"
     EXPERT_APPLICATION = "expert_application"
+    SLOT_APPLICATION = "slot_application"  # Expert's application for a paid review slot
     SUBSCRIPTION = "subscription"
     PAYMENT = "payment"
     DISPUTE = "dispute"

@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from app.models.review_file import ReviewFile
     from app.models.review_slot import ReviewSlot
     from app.models.nda_signature import NDASignature
+    from app.models.slot_application import SlotApplication
 
 
 class ContentType(str, enum.Enum):
@@ -241,6 +242,12 @@ class ReviewRequest(Base):
     )
     nda_signatures = relationship(
         "NDASignature",
+        back_populates="review_request",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+    slot_applications = relationship(
+        "SlotApplication",
         back_populates="review_request",
         cascade="all, delete-orphan",
         lazy="selectin"

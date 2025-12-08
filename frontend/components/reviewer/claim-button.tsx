@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils";
 import { claimReviewByRequestId, formatPayment } from "@/lib/api/reviewer";
 import { getNDAStatus } from "@/lib/api/nda";
 import { NDAModal } from "@/components/nda/nda-modal";
+import { ApplicationModal } from "@/components/reviewer/application-modal";
+import { isApplicationRequiredError } from "@/lib/api/slot-applications";
 
 export interface ClaimButtonProps {
   reviewRequestId: number;
@@ -57,6 +59,7 @@ export function ClaimButton({
   const [claiming, setClaiming] = React.useState(false);
   const [showModal, setShowModal] = React.useState(false);
   const [showNDAModal, setShowNDAModal] = React.useState(false);
+  const [showApplicationModal, setShowApplicationModal] = React.useState(false);
   const [hasSignedNDA, setHasSignedNDA] = React.useState(false);
   const [checkingNDA, setCheckingNDA] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -125,6 +128,15 @@ export function ClaimButton({
     } catch (err: any) {
       console.error("Claim failed:", err);
 
+      // Check if this is an APPLICATION_REQUIRED error (paid reviews need application)
+      if (isApplicationRequiredError(err)) {
+        // Close claim modal and open application modal
+        setShowModal(false);
+        setClaiming(false);
+        setShowApplicationModal(true);
+        return;
+      }
+
       // Extract error message
       let errorMessage = "Failed to claim review. Please try again.";
       if (err?.data?.detail) {
@@ -181,6 +193,16 @@ export function ClaimButton({
         isOpen={showNDAModal}
         onClose={() => setShowNDAModal(false)}
         onSigned={handleNDASigned}
+      />
+
+      {/* Application Modal (for paid reviews) */}
+      <ApplicationModal
+        reviewRequestId={reviewRequestId}
+        reviewTitle={title}
+        paymentAmount={paymentAmount}
+        isOpen={showApplicationModal}
+        onClose={() => setShowApplicationModal(false)}
+        onSuccess={onClaimSuccess}
       />
 
       {/* Confirmation Modal */}

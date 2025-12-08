@@ -35,7 +35,7 @@ export function getFileUrl(path: string | null | undefined): string {
 }
 
 export type ApiError = {
-  detail?: string | Array<{ msg: string; type: string }>;
+  detail?: string | Array<{ msg: string; type: string }> | Record<string, any>;
   message?: string;
 };
 
@@ -175,6 +175,18 @@ function getErrorMessageFromApiError(status: number, apiError: ApiError): string
   // Handle string error messages from API
   if (typeof apiError?.detail === "string") {
     return apiError.detail;
+  }
+
+  // Handle structured error objects (e.g., APPLICATION_REQUIRED, TIER_PERMISSION_DENIED)
+  if (typeof apiError?.detail === "object" && apiError?.detail !== null) {
+    // Extract message from structured error
+    if (apiError.detail.message) {
+      return apiError.detail.message;
+    }
+    // Some structured errors might have a different field name
+    if (apiError.detail.msg) {
+      return apiError.detail.msg;
+    }
   }
 
   if (apiError?.message) {

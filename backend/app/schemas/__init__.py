@@ -8,6 +8,20 @@ from app.schemas.expert_application import (
     ExpertApplicationStatusResponse,
     ExpertApplicationListResponse,
 )
+from app.schemas.slot_application import (
+    SlotApplicationCreate,
+    SlotApplicationAccept,
+    SlotApplicationReject,
+    SlotApplicationWithdraw,
+    SlotApplicationResponse,
+    SlotApplicationWithApplicant,
+    SlotApplicationBrief,
+    SlotApplicationListResponse,
+    RequestApplicationsResponse,
+    MyApplicationsResponse,
+    SlotApplicationStats,
+    ApplicantInfo,
+)
 from app.schemas.challenge import (
     ChallengePromptCreate,
     ChallengePromptUpdate,
@@ -73,4 +87,17 @@ __all__ = [
     "ChallengeFilters",
     "ActivateChallengeRequest",
     "ReplaceInvitationRequest",
+    # Slot Application schemas
+    "SlotApplicationCreate",
+    "SlotApplicationAccept",
+    "SlotApplicationReject",
+    "SlotApplicationWithdraw",
+    "SlotApplicationResponse",
+    "SlotApplicationWithApplicant",
+    "SlotApplicationBrief",
+    "SlotApplicationListResponse",
+    "RequestApplicationsResponse",
+    "MyApplicationsResponse",
+    "SlotApplicationStats",
+    "ApplicantInfo",
 ]

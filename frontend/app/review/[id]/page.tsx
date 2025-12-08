@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClaimButton } from "@/components/reviewer/claim-button";
 import { TierLockedButton } from "@/components/tier/tier-locked-review";
+import { ApplicationsPanel } from "@/components/reviewer/applications-panel";
 import { UserTier } from "@/lib/types/tier";
 import { WatermarkOverlay, LightboxWatermark } from "@/components/ui/watermark-overlay";
 import {
@@ -75,24 +76,26 @@ const contentTypeIcons: Record<ContentType, React.ReactNode> = {
 };
 
 // Tier limits for paid reviews
+// NEWCOMER, SUPPORTER, GUIDE can't accept paid reviews
+// MENTOR can accept up to $25, CURATOR up to $100, VISIONARY unlimited
 const TIER_PAID_LIMITS: Record<UserTier, { canAcceptPaid: boolean; maxPrice: number | null }> = {
-  [UserTier.NOVICE]: { canAcceptPaid: false, maxPrice: null },
-  [UserTier.CONTRIBUTOR]: { canAcceptPaid: false, maxPrice: null },
-  [UserTier.SKILLED]: { canAcceptPaid: false, maxPrice: null },
-  [UserTier.TRUSTED_ADVISOR]: { canAcceptPaid: true, maxPrice: 25 },
-  [UserTier.EXPERT]: { canAcceptPaid: true, maxPrice: 100 },
-  [UserTier.MASTER]: { canAcceptPaid: true, maxPrice: null },
+  [UserTier.NEWCOMER]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.SUPPORTER]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.GUIDE]: { canAcceptPaid: false, maxPrice: null },
+  [UserTier.MENTOR]: { canAcceptPaid: true, maxPrice: 25 },
+  [UserTier.CURATOR]: { canAcceptPaid: true, maxPrice: 100 },
+  [UserTier.VISIONARY]: { canAcceptPaid: true, maxPrice: null },
 };
 
 function getRequiredTierForPrice(price: number): UserTier {
-  if (price <= 25) return UserTier.TRUSTED_ADVISOR;
-  if (price <= 100) return UserTier.EXPERT;
-  return UserTier.MASTER;
+  if (price <= 25) return UserTier.MENTOR;
+  if (price <= 100) return UserTier.CURATOR;
+  return UserTier.VISIONARY;
 }
 
 function canTierClaimPrice(tier: UserTier, price: number): boolean {
   const limits = TIER_PAID_LIMITS[tier];
-  if (!limits.canAcceptPaid) return false;
+  if (!limits || !limits.canAcceptPaid) return false;
   if (limits.maxPrice === null) return true;
   return price <= limits.maxPrice;
 }
@@ -136,32 +139,32 @@ export default function ReviewDetailPage() {
 
   const currentUserId = user?.id;
   const isOwner = review?.user_id === currentUserId;
-  const userTier = (user?.user_tier as UserTier) || UserTier.NOVICE;
+  const userTier = (user?.user_tier as UserTier) || UserTier.NEWCOMER;
 
   // Fetch review details
-  React.useEffect(() => {
+  const fetchReview = React.useCallback(async (showLoading = true) => {
     if (!reviewId || isNaN(reviewId)) {
       setError("Invalid review ID");
       setLoading(false);
       return;
     }
 
-    async function fetchReview() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getReviewDetail(reviewId);
-        setReview(data);
-      } catch (err) {
-        console.error("Error fetching review:", err);
-        setError(err instanceof Error ? err.message : "Failed to load review request");
-      } finally {
-        setLoading(false);
-      }
+    try {
+      if (showLoading) setLoading(true);
+      setError(null);
+      const data = await getReviewDetail(reviewId);
+      setReview(data);
+    } catch (err) {
+      console.error("Error fetching review:", err);
+      setError(err instanceof Error ? err.message : "Failed to load review request");
+    } finally {
+      if (showLoading) setLoading(false);
     }
-
-    fetchReview();
   }, [reviewId]);
+
+  React.useEffect(() => {
+    fetchReview();
+  }, [fetchReview]);
 
   // Get image files for lightbox navigation - MUST be before early returns
   const imageFiles = React.useMemo(() => {
@@ -932,6 +935,17 @@ export default function ReviewDetailPage() {
                   })}
                 </div>
               </section>
+            )}
+
+            {/* Applications Panel - Only for owners of paid reviews */}
+            {isOwner && isPaidReview && (
+              <div id="applications">
+                <ApplicationsPanel
+                  reviewRequestId={review.id}
+                  availableSlots={availableSlots}
+                  onApplicationAccepted={() => fetchReview(false)}
+                />
+              </div>
             )}
 
             {/* Review Slots Section - Compact Design */}

@@ -815,3 +815,252 @@ async def notify_review_invitation(
 
     except Exception as e:
         logger.error(f"Error creating review invitation notification: {e}", exc_info=True)
+
+
+# ==================== Slot Application Events ====================
+
+async def notify_slot_application_received(
+    db: AsyncSession,
+    application_id: int,
+    applicant_id: int
+) -> None:
+    """
+    Notify creator when an expert applies for a paid review slot.
+
+    Args:
+        db: Database session
+        application_id: ID of the slot application
+        applicant_id: ID of the expert who applied
+    """
+    try:
+        from app.models.slot_application import SlotApplication
+
+        # Get application with review request
+        application = await db.get(SlotApplication, application_id)
+        if not application:
+            logger.error(f"Application {application_id} not found")
+            return
+
+        # Get review request
+        review_request = await db.get(ReviewRequest, application.review_request_id)
+        if not review_request:
+            logger.error(f"Review request {application.review_request_id} not found")
+            return
+
+        # Get applicant info
+        applicant = await db.get(User, applicant_id)
+        if not applicant:
+            logger.error(f"Applicant {applicant_id} not found")
+            return
+
+        # Create notification for creator
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=review_request.user_id,
+            notification_type=NotificationType.SLOT_APPLICATION_RECEIVED,
+            title=f"New application for '{review_request.title}'",
+            message=f"{applicant.full_name or applicant.email} has applied to review your project. Review their profile and decide if you want to accept them.",
+            data={
+                "application_id": application.id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "applicant_id": applicant.id,
+                "applicant_name": applicant.full_name or applicant.email,
+                "applicant_avatar": applicant.avatar_url,
+                "pitch_message": application.pitch_message[:200] if application.pitch_message else None,
+            },
+            priority=NotificationPriority.HIGH,
+            action_url=f"/review/{review_request.id}/applications",
+            action_label="Review Applications",
+            entity_type=EntityType.SLOT_APPLICATION,
+            entity_id=application.id,
+        )
+
+        logger.info(f"Created slot application received notification for user {review_request.user_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating slot application received notification: {e}", exc_info=True)
+
+
+async def notify_slot_application_accepted(
+    db: AsyncSession,
+    application_id: int,
+    slot_id: int
+) -> None:
+    """
+    Notify expert when their application is accepted.
+
+    Args:
+        db: Database session
+        application_id: ID of the accepted slot application
+        slot_id: ID of the assigned slot
+    """
+    try:
+        from app.models.slot_application import SlotApplication
+
+        # Get application
+        application = await db.get(SlotApplication, application_id)
+        if not application:
+            logger.error(f"Application {application_id} not found")
+            return
+
+        # Get review request
+        review_request = await db.get(ReviewRequest, application.review_request_id)
+        if not review_request:
+            logger.error(f"Review request {application.review_request_id} not found")
+            return
+
+        # Get creator info
+        creator = await db.get(User, review_request.user_id)
+        if not creator:
+            logger.error(f"Creator {review_request.user_id} not found")
+            return
+
+        # Create notification for applicant
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=application.applicant_id,
+            notification_type=NotificationType.SLOT_APPLICATION_ACCEPTED,
+            title=f"Application accepted for '{review_request.title}'",
+            message=f"{creator.full_name or creator.email} has accepted your application! You can now start working on your review.",
+            data={
+                "application_id": application.id,
+                "slot_id": slot_id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "creator_id": creator.id,
+                "creator_name": creator.full_name or creator.email,
+            },
+            priority=NotificationPriority.HIGH,
+            action_url=f"/reviewer/review/{slot_id}",
+            action_label="Start Review",
+            entity_type=EntityType.SLOT_APPLICATION,
+            entity_id=application.id,
+        )
+
+        logger.info(f"Created slot application accepted notification for user {application.applicant_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating slot application accepted notification: {e}", exc_info=True)
+
+
+async def notify_slot_application_rejected(
+    db: AsyncSession,
+    application_id: int,
+    rejection_reason: str = None
+) -> None:
+    """
+    Notify expert when their application is rejected.
+
+    Args:
+        db: Database session
+        application_id: ID of the rejected slot application
+        rejection_reason: Optional reason for rejection
+    """
+    try:
+        from app.models.slot_application import SlotApplication
+
+        # Get application
+        application = await db.get(SlotApplication, application_id)
+        if not application:
+            logger.error(f"Application {application_id} not found")
+            return
+
+        # Get review request
+        review_request = await db.get(ReviewRequest, application.review_request_id)
+        if not review_request:
+            logger.error(f"Review request {application.review_request_id} not found")
+            return
+
+        # Build message
+        message = f"Your application for '{review_request.title}' was not accepted."
+        if rejection_reason:
+            message += f" Feedback: {rejection_reason[:200]}"
+        else:
+            message += " The creator has selected other reviewers for this project."
+
+        # Create notification for applicant
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=application.applicant_id,
+            notification_type=NotificationType.SLOT_APPLICATION_REJECTED,
+            title=f"Application not accepted for '{review_request.title}'",
+            message=message,
+            data={
+                "application_id": application.id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "rejection_reason": rejection_reason,
+            },
+            priority=NotificationPriority.MEDIUM,
+            action_url="/browse",
+            action_label="Find Other Reviews",
+            entity_type=EntityType.SLOT_APPLICATION,
+            entity_id=application.id,
+        )
+
+        logger.info(f"Created slot application rejected notification for user {application.applicant_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating slot application rejected notification: {e}", exc_info=True)
+
+
+async def notify_slot_application_withdrawn(
+    db: AsyncSession,
+    application_id: int,
+    applicant_id: int
+) -> None:
+    """
+    Notify creator when an expert withdraws their application.
+
+    Args:
+        db: Database session
+        application_id: ID of the withdrawn slot application
+        applicant_id: ID of the expert who withdrew
+    """
+    try:
+        from app.models.slot_application import SlotApplication
+
+        # Get application
+        application = await db.get(SlotApplication, application_id)
+        if not application:
+            logger.error(f"Application {application_id} not found")
+            return
+
+        # Get review request
+        review_request = await db.get(ReviewRequest, application.review_request_id)
+        if not review_request:
+            logger.error(f"Review request {application.review_request_id} not found")
+            return
+
+        # Get applicant info
+        applicant = await db.get(User, applicant_id)
+        if not applicant:
+            logger.error(f"Applicant {applicant_id} not found")
+            return
+
+        # Create notification for creator
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=review_request.user_id,
+            notification_type=NotificationType.SLOT_APPLICATION_WITHDRAWN,
+            title=f"Application withdrawn for '{review_request.title}'",
+            message=f"{applicant.full_name or applicant.email} has withdrawn their application for your review request.",
+            data={
+                "application_id": application.id,
+                "review_request_id": review_request.id,
+                "review_request_title": review_request.title,
+                "applicant_id": applicant.id,
+                "applicant_name": applicant.full_name or applicant.email,
+            },
+            priority=NotificationPriority.LOW,
+            action_url=f"/review/{review_request.id}/applications",
+            action_label="View Applications",
+            entity_type=EntityType.SLOT_APPLICATION,
+            entity_id=application.id,
+        )
+
+        logger.info(f"Created slot application withdrawn notification for user {review_request.user_id}")
+
+    except Exception as e:
+        logger.error(f"Error creating slot application withdrawn notification: {e}", exc_info=True)

@@ -11,6 +11,7 @@ from app.models.review_request import (
     FeedbackPriority
 )
 from app.models.expert_application import ExpertApplication, ApplicationStatus
+from app.models.slot_application import SlotApplication, SlotApplicationStatus
 from app.models.sparks_transaction import SparksTransaction, SparksAction
 # Backward compatibility aliases
 KarmaTransaction = SparksTransaction
@@ -61,6 +62,8 @@ __all__ = [
     "DisputeResolution",
     "ExpertApplication",
     "ApplicationStatus",
+    "SlotApplication",
+    "SlotApplicationStatus",
     "SparksTransaction",
     "SparksAction",
     "KarmaTransaction",  # Backward compatibility

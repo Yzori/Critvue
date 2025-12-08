@@ -24,8 +24,66 @@ class TierPermissionError(ValueError):
     pass
 
 
+class ApplicationRequiredError(ValueError):
+    """Raised when a paid review requires application instead of direct claim"""
+    pass
+
+
 class ClaimService:
     """Service for managing review slot claims"""
+
+    @staticmethod
+    def is_paid_slot(slot: ReviewSlot) -> bool:
+        """Check if a slot is for a paid/expert review."""
+        return slot.payment_amount is not None and slot.payment_amount > 0
+
+    @staticmethod
+    async def check_application_required(
+        db: AsyncSession,
+        slot: ReviewSlot,
+        reviewer_id: int
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Check if this slot requires an application instead of direct claiming.
+
+        For paid/expert reviews, experts must apply and be accepted by the creator
+        before they can claim a slot.
+
+        Args:
+            db: Database session
+            slot: Review slot to check
+            reviewer_id: User attempting to claim
+
+        Returns:
+            Tuple of (requires_application, error_message)
+        """
+        # Free reviews don't require applications
+        if not ClaimService.is_paid_slot(slot):
+            return False, None
+
+        # Check if user has an accepted application for this request
+        from app.models.slot_application import SlotApplication, SlotApplicationStatus
+
+        accepted_app_query = select(SlotApplication).where(
+            and_(
+                SlotApplication.review_request_id == slot.review_request_id,
+                SlotApplication.applicant_id == reviewer_id,
+                SlotApplication.status == SlotApplicationStatus.ACCEPTED.value
+            )
+        )
+
+        result = await db.execute(accepted_app_query)
+        accepted_application = result.scalar_one_or_none()
+
+        if accepted_application:
+            # User has been accepted - they can claim
+            return False, None
+
+        # User needs to apply first
+        return True, (
+            "This is a paid expert review. You must apply and be accepted by the creator "
+            "before you can claim this slot. Use the application form to submit your pitch."
+        )
 
     @staticmethod
     async def check_tier_permissions(
@@ -151,6 +209,16 @@ class ClaimService:
                 f"{review.reviews_claimed}/{review.reviews_requested} slots filled."
             )
 
+        # APPLICATION CHECK: For paid reviews, require application approval
+        requires_app, app_error = await ClaimService.check_application_required(
+            db=db,
+            slot=slot,
+            reviewer_id=reviewer_id
+        )
+
+        if requires_app:
+            raise ApplicationRequiredError(app_error or "Application required for paid reviews")
+
         # Check if reviewer already has a slot for this request
         existing_claim_query = select(ReviewSlot).where(
             and_(
@@ -257,6 +325,16 @@ class ClaimService:
             raise ClaimValidationError(
                 "You cannot claim review slots for your own requests"
             )
+
+        # APPLICATION CHECK: For paid reviews, require application approval
+        requires_app, app_error = await ClaimService.check_application_required(
+            db=db,
+            slot=slot,
+            reviewer_id=reviewer_id
+        )
+
+        if requires_app:
+            raise ApplicationRequiredError(app_error or "Application required for paid reviews")
 
         # Check if reviewer already has a slot for this request
         existing_claim_query = select(ReviewSlot).where(

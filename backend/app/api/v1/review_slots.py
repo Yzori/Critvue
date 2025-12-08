@@ -34,7 +34,7 @@ from app.schemas.review_slot import (
     SmartReviewDraft,
     SmartReviewSubmit,
 )
-from app.services.claim_service import claim_service, ClaimValidationError
+from app.services.claim_service import claim_service, ClaimValidationError, ApplicationRequiredError, TierPermissionError
 from app.services.review_sparks_hooks import (
     on_review_submitted,
     on_review_accepted,
@@ -102,6 +102,25 @@ async def claim_review_slot(
 
         return claimed_slot
 
+    except ApplicationRequiredError as e:
+        # For paid reviews, redirect to application workflow
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "APPLICATION_REQUIRED",
+                "message": str(e),
+                "action": "apply"
+            }
+        )
+    except TierPermissionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "TIER_PERMISSION_DENIED",
+                "message": str(e),
+                "action": "upgrade"
+            }
+        )
     except ClaimValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

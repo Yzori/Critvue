@@ -18,7 +18,7 @@ from app.models.review_request import ContentType, ReviewType
 from app.models.user import User
 from app.core.logging_config import security_logger
 from app.api.deps import get_current_active_user
-from app.services.claim_service import claim_service, ClaimValidationError
+from app.services.claim_service import claim_service, ClaimValidationError, ApplicationRequiredError, TierPermissionError
 
 router = APIRouter(prefix="/reviews", tags=["Browse"])
 
@@ -257,6 +257,37 @@ async def claim_review_slot(
             reviews_claimed=review.reviews_claimed,
             available_slots=review.available_slots,
             is_fully_claimed=review.is_fully_claimed
+        )
+
+    except ApplicationRequiredError as e:
+        # For paid reviews, redirect to application workflow
+        error_msg = str(e)
+        security_logger.logger.info(
+            f"User {current_user.id} redirected to application flow for review {review_id}: {error_msg}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "APPLICATION_REQUIRED",
+                "message": error_msg,
+                "action": "apply",
+                "review_id": review_id
+            }
+        )
+
+    except TierPermissionError as e:
+        # User's tier doesn't allow claiming this paid review
+        error_msg = str(e)
+        security_logger.logger.info(
+            f"User {current_user.id} tier permission denied for review {review_id}: {error_msg}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "TIER_PERMISSION_DENIED",
+                "message": error_msg,
+                "action": "upgrade"
+            }
         )
 
     except ClaimValidationError as e:
