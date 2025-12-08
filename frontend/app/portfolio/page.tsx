@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Plus,
   Upload,
+  BadgeCheck,
 } from "lucide-react";
 
 // Portfolio Components
@@ -33,6 +34,7 @@ import { ReviewerNetwork } from "@/components/portfolio/reviewer-network";
 import { GrowthMilestones } from "@/components/portfolio/growth-milestones";
 import { PortfolioHero } from "@/components/portfolio/portfolio-hero";
 import { PortfolioUploadDialog } from "@/components/portfolio/portfolio-upload-dialog";
+import { AddFromReviewsDialog } from "@/components/portfolio/add-from-reviews-dialog";
 
 // API & Auth
 import { useAuth } from "@/contexts/AuthContext";
@@ -146,6 +148,7 @@ export default function PortfolioPage() {
 
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addFromReviewsOpen, setAddFromReviewsOpen] = useState(false);
   const [portfolioSlots, setPortfolioSlots] = useState<PortfolioSlotsResponse | null>(null);
   const [featuredSlots, setFeaturedSlots] = useState<FeaturedSlotsResponse | null>(null);
 
@@ -304,6 +307,13 @@ export default function PortfolioPage() {
         onSuccess={loadPortfolio}
       />
 
+      {/* Add from Reviews Dialog */}
+      <AddFromReviewsDialog
+        open={addFromReviewsOpen}
+        onOpenChange={setAddFromReviewsOpen}
+        onSuccess={loadPortfolio}
+      />
+
       {/* Floating Progress Indicator */}
       <motion.div
         className="fixed top-20 left-1/2 -translate-x-1/2 z-40 px-4 py-2 rounded-full bg-background/80 backdrop-blur-md border border-border/50 shadow-lg"
@@ -328,10 +338,19 @@ export default function PortfolioPage() {
             size="sm"
             variant="ghost"
             className="h-7 gap-1.5 text-xs"
+            onClick={() => setAddFromReviewsOpen(true)}
+          >
+            <BadgeCheck className="size-3.5 text-emerald-500" />
+            Add Verified
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1.5 text-xs"
             onClick={() => setUploadDialogOpen(true)}
           >
             <Plus className="size-3.5" />
-            Add Work
+            Upload
             {portfolioSlots && (
               <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
                 {portfolioSlots.remaining}/3
@@ -468,14 +487,22 @@ export default function PortfolioPage() {
                   </Button>
                   <Button
                     variant="outline"
+                    onClick={() => setAddFromReviewsOpen(true)}
+                    className="gap-2"
+                  >
+                    <BadgeCheck className="size-4" />
+                    Add from Reviews
+                  </Button>
+                  <Button
+                    variant="outline"
                     onClick={() => setUploadDialogOpen(true)}
                     className="gap-2"
                   >
                     <Upload className="size-4" />
-                    Add Self-Documented Work
+                    Upload Work
                     {portfolioSlots && portfolioSlots.remaining > 0 && (
                       <Badge variant="secondary" className="ml-1">
-                        {portfolioSlots.remaining} left
+                        {portfolioSlots.remaining}/3
                       </Badge>
                     )}
                   </Button>

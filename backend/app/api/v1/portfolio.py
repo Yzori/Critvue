@@ -1,14 +1,18 @@
 """Portfolio API endpoints"""
 
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.db.session import get_db
 from app.models.user import User
+from app.models.review_request import ReviewRequest, ReviewStatus
+from app.models.portfolio import Portfolio
 from app.api.deps import get_current_user
 from app.schemas.portfolio import (
     PortfolioCreate,
@@ -124,6 +128,199 @@ async def create_portfolio_item(
     logger.info(f"Portfolio item {portfolio.id} created by user {current_user.id}")
 
     return _portfolio_to_response(portfolio)
+
+
+# ============= Verified Portfolio from Reviews =============
+# NOTE: These endpoints MUST be defined BEFORE /{portfolio_id} to avoid route conflicts
+
+class EligibleReviewFile(BaseModel):
+    """File info for eligible review"""
+    id: int
+    filename: str
+    original_filename: str
+    file_type: str
+    file_url: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class EligibleReviewResponse(BaseModel):
+    """A completed review that can be added to portfolio"""
+    id: int
+    title: str
+    description: str
+    content_type: str
+    created_at: str
+    completed_at: Optional[str]
+    files: List[EligibleReviewFile]
+    has_portfolio_item: bool
+
+
+class CreateVerifiedPortfolioRequest(BaseModel):
+    """Request to create a verified portfolio item from a review"""
+    title: Optional[str] = Field(None, max_length=255, description="Override title (uses review title if not provided)")
+    description: Optional[str] = Field(None, max_length=2000, description="Override description")
+    image_url: str = Field(..., description="Main image URL for the portfolio item")
+    before_image_url: Optional[str] = Field(None, description="Before image URL for comparison")
+    project_url: Optional[str] = Field(None, max_length=500, description="External project URL")
+
+
+@router.get("/eligible-reviews", response_model=List[EligibleReviewResponse])
+async def get_eligible_reviews(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[EligibleReviewResponse]:
+    """
+    Get user's completed review requests eligible for portfolio
+
+    Returns review requests that:
+    - Are owned by the current user
+    - Have status COMPLETED
+    - May or may not already have a portfolio item
+
+    Returns:
+        List of eligible reviews with their files
+    """
+    # Get completed review requests for the user
+    result = await db.execute(
+        select(ReviewRequest)
+        .options(selectinload(ReviewRequest.files))
+        .where(
+            and_(
+                ReviewRequest.user_id == current_user.id,
+                ReviewRequest.status == ReviewStatus.COMPLETED,
+                ReviewRequest.deleted_at.is_(None),
+            )
+        )
+        .order_by(ReviewRequest.completed_at.desc())
+    )
+    reviews = result.scalars().all()
+
+    # Get all portfolio items linked to these reviews
+    review_ids = [r.id for r in reviews]
+    if review_ids:
+        portfolio_result = await db.execute(
+            select(Portfolio.review_request_id).where(
+                Portfolio.review_request_id.in_(review_ids)
+            )
+        )
+        reviews_with_portfolio = set(portfolio_result.scalars().all())
+    else:
+        reviews_with_portfolio = set()
+
+    # Build response
+    eligible_reviews = []
+    for review in reviews:
+        files = [
+            EligibleReviewFile(
+                id=f.id,
+                filename=f.filename,
+                original_filename=f.original_filename,
+                file_type=f.file_type,
+                file_url=f.file_url,
+            )
+            for f in review.files
+        ]
+
+        eligible_reviews.append(
+            EligibleReviewResponse(
+                id=review.id,
+                title=review.title,
+                description=review.description,
+                content_type=review.content_type.value if hasattr(review.content_type, 'value') else review.content_type,
+                created_at=review.created_at.isoformat(),
+                completed_at=review.completed_at.isoformat() if review.completed_at else None,
+                files=files,
+                has_portfolio_item=review.id in reviews_with_portfolio,
+            )
+        )
+
+    return eligible_reviews
+
+
+@router.post("/from-review/{review_request_id}", response_model=PortfolioResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/minute")
+async def create_portfolio_from_review(
+    request: Request,
+    review_request_id: int,
+    portfolio_data: CreateVerifiedPortfolioRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PortfolioResponse:
+    """
+    Create a verified portfolio item from a completed review request
+
+    The review request must:
+    - Be owned by the current user
+    - Have status COMPLETED
+    - Not already have a portfolio item linked to it
+
+    Args:
+        review_request_id: ID of the completed review request
+        portfolio_data: Portfolio item data
+
+    Returns:
+        Created portfolio item
+
+    Raises:
+        HTTPException: If review not found, not owned, not completed, or already has portfolio
+    """
+    # Get the review request
+    result = await db.execute(
+        select(ReviewRequest).where(
+            and_(
+                ReviewRequest.id == review_request_id,
+                ReviewRequest.user_id == current_user.id,
+                ReviewRequest.deleted_at.is_(None),
+            )
+        )
+    )
+    review = result.scalar_one_or_none()
+
+    if not review:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Review request not found or you don't have permission to access it",
+        )
+
+    if review.status != ReviewStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only completed reviews can be added to portfolio",
+        )
+
+    # Check if already has a portfolio item
+    existing = await portfolio_crud.get_portfolio_by_review_request(db, review_request_id)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This review already has a portfolio item",
+        )
+
+    # Create the verified portfolio item
+    content_type = review.content_type.value if hasattr(review.content_type, 'value') else review.content_type
+
+    portfolio = await portfolio_crud.create_verified_portfolio_item(
+        db=db,
+        user_id=current_user.id,
+        review_request_id=review_request_id,
+        title=portfolio_data.title or review.title,
+        description=portfolio_data.description or review.description,
+        content_type=content_type,
+        image_url=portfolio_data.image_url,
+        before_image_url=portfolio_data.before_image_url,
+        project_url=portfolio_data.project_url,
+    )
+
+    logger.info(
+        f"Verified portfolio item {portfolio.id} created from review {review_request_id} by user {current_user.id}"
+    )
+
+    return _portfolio_to_response(portfolio)
+
+
+# ============= End Verified Portfolio from Reviews =============
 
 
 @router.get("/{portfolio_id}", response_model=PortfolioResponse)

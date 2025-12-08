@@ -370,6 +370,25 @@ async def get_user_featured_items(
     return list(result.scalars().all())
 
 
+async def get_portfolio_by_review_request(
+    db: AsyncSession, review_request_id: int
+) -> Optional[Portfolio]:
+    """
+    Get a portfolio item by review request ID
+
+    Args:
+        db: Database session
+        review_request_id: Review request ID
+
+    Returns:
+        Portfolio item or None if not found
+    """
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.review_request_id == review_request_id)
+    )
+    return result.scalar_one_or_none()
+
+
 async def toggle_portfolio_featured(
     db: AsyncSession,
     portfolio_id: int,

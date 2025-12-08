@@ -193,3 +193,59 @@ export async function togglePortfolioFeatured(
 ): Promise<PortfolioItem> {
   return await apiClient.post<PortfolioItem>(`/portfolio/${portfolioId}/feature`, { featured });
 }
+
+
+// ============= Verified Portfolio from Reviews =============
+
+/**
+ * File info from an eligible review
+ */
+export interface EligibleReviewFile {
+  id: number;
+  filename: string;
+  original_filename: string;
+  file_type: string;
+  file_url: string | null;
+}
+
+/**
+ * A completed review that can be added to portfolio
+ */
+export interface EligibleReview {
+  id: number;
+  title: string;
+  description: string;
+  content_type: PortfolioContentType;
+  created_at: string;
+  completed_at: string | null;
+  files: EligibleReviewFile[];
+  has_portfolio_item: boolean;
+}
+
+/**
+ * Data for creating a verified portfolio item from a review
+ */
+export interface CreateVerifiedPortfolioData {
+  title?: string; // Override title (uses review title if not provided)
+  description?: string; // Override description
+  image_url: string; // Required - main image for the portfolio item
+  before_image_url?: string; // Optional before image for comparison
+  project_url?: string; // Optional external project URL
+}
+
+/**
+ * Get user's completed reviews that can be added to portfolio
+ */
+export async function getEligibleReviews(): Promise<EligibleReview[]> {
+  return await apiClient.get<EligibleReview[]>("/portfolio/eligible-reviews");
+}
+
+/**
+ * Create a verified portfolio item from a completed review
+ */
+export async function createPortfolioFromReview(
+  reviewRequestId: number,
+  data: CreateVerifiedPortfolioData
+): Promise<PortfolioItem> {
+  return await apiClient.post<PortfolioItem>(`/portfolio/from-review/${reviewRequestId}`, data);
+}
