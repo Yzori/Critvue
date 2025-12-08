@@ -102,18 +102,18 @@ export function TieredAvatar({
         )}
         style={{
           background: tierStyles.ringGradient,
-          padding: config.ring,
         }}
-      >
-        <div className="w-full h-full rounded-full bg-background" />
-      </div>
+      />
 
       {/* Avatar image */}
       <div
         className={cn(
           config.avatar,
-          'relative rounded-full overflow-hidden z-10 border-2 border-background'
+          'relative rounded-full overflow-hidden z-10'
         )}
+        style={{
+          boxShadow: `0 0 0 ${config.ring} var(--background)`,
+        }}
       >
         {avatarUrl ? (
           <img

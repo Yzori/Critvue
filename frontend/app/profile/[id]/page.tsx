@@ -46,7 +46,7 @@ import {
   NetworkError,
 } from "@/components/profile/error-states";
 import { useAuth } from "@/contexts/AuthContext";
-import { TierBadge } from "@/components/tier/tier-badge";
+import { TierBadge, TieredAvatar } from "@/components/tier";
 import { UserTier, getTierInfo } from "@/lib/types/tier";
 
 // Premium components
@@ -142,8 +142,9 @@ export default function PublicProfilePage({ params }: PageProps) {
   const { user: currentUser } = useAuth();
 
   // Check if viewing own profile - redirect to /profile if so
-  // Only compare if we have a numeric ID
-  const isOwnProfile = isNumericId && currentUser?.id === numericId;
+  // Compare by numeric ID or by username
+  const isOwnProfile = (isNumericId && currentUser?.id === numericId) ||
+    (!isNumericId && currentUser?.username?.toLowerCase() === identifier.toLowerCase());
 
   // State management
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -279,21 +280,16 @@ export default function PublicProfilePage({ params }: PageProps) {
                 transition={{ duration: prefersReducedMotion ? 0 : 0.4 }}
               >
                 <div className="relative">
-                  {profileData.avatar_url ? (
-                    <img
-                      src={profileData.avatar_url}
-                      alt={profileData.full_name}
-                      className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg object-cover"
-                    />
-                  ) : (
-                    <div className="size-20 sm:size-24 rounded-2xl border-2 border-background shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                      <User className="size-10 sm:size-12 text-white" />
-                    </div>
-                  )}
+                  <TieredAvatar
+                    avatarUrl={profileData.avatar_url}
+                    fullName={profileData.full_name}
+                    tier={profileData.user_tier as UserTier}
+                    size="xl"
+                  />
 
                   {profileData.verified && (
                     <motion.div
-                      className="absolute -bottom-1 -right-1 size-7 rounded-full bg-blue-500 border-2 border-background shadow flex items-center justify-center"
+                      className="absolute -bottom-1 -right-1 size-7 rounded-full bg-blue-500 border-2 border-background shadow flex items-center justify-center z-20"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.3, type: "spring", bounce: 0.5 }}
