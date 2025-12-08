@@ -352,7 +352,7 @@ class AdminUsersService:
         logger.info(f"User {user_id} verified by admin {admin.id}")
         return user
 
-    async def adjust_karma(
+    async def adjust_sparks(
         self,
         user_id: int,
         amount: int,
@@ -360,23 +360,23 @@ class AdminUsersService:
         admin: User,
         ip_address: Optional[str] = None,
     ) -> User:
-        """Adjust a user's karma points"""
+        """Adjust a user's sparks points"""
         user = await self.get_user_by_id(user_id)
         if not user:
             raise ValueError("User not found")
 
-        old_karma = user.karma_points
-        user.karma_points = max(0, user.karma_points + amount)  # Prevent negative karma
+        old_sparks = user.sparks_points
+        user.sparks_points = max(0, user.sparks_points + amount)  # Prevent negative sparks
         user.updated_at = datetime.utcnow()
 
         # Log the action
         await self._log_action(
             admin=admin,
-            action=AdminAction.KARMA_ADJUST,
+            action=AdminAction.SPARKS_ADJUST,
             target_user=user,
             details={
-                "old_karma": old_karma,
-                "new_karma": user.karma_points,
+                "old_sparks": old_sparks,
+                "new_sparks": user.sparks_points,
                 "amount": amount,
                 "reason": reason,
             },
@@ -386,8 +386,11 @@ class AdminUsersService:
         await self.db.commit()
         await self.db.refresh(user)
 
-        logger.info(f"User {user_id} karma adjusted by {amount} by admin {admin.id}: {reason}")
+        logger.info(f"User {user_id} sparks adjusted by {amount} by admin {admin.id}: {reason}")
         return user
+
+    # Backward compatibility alias
+    adjust_karma = adjust_sparks
 
     async def override_tier(
         self,

@@ -21,8 +21,9 @@ class AdminAction(str, enum.Enum):
     USER_EDIT = "user_edit"
     USER_FORCE_LOGOUT = "user_force_logout"
 
-    # Karma/tier management
-    KARMA_ADJUST = "karma_adjust"
+    # Sparks/tier management
+    SPARKS_ADJUST = "sparks_adjust"
+    KARMA_ADJUST = "sparks_adjust"  # Backward compatibility alias
     TIER_OVERRIDE = "tier_override"
 
     # Application management

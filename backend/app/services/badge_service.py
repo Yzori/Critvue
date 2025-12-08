@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
-from app.models.karma_transaction import KarmaAction
+from app.models.sparks_transaction import SparksAction
 
 
 class BadgeService:
@@ -27,375 +27,59 @@ class BadgeService:
     # Total: 75 badges across 7 categories
     DEFAULT_BADGES = [
         # ============================================
-        # SKILL BADGES - Development (20 badges)
+        # SKILL BADGES - Visual Arts (16 badges)
         # ============================================
 
-        # React
+        # Photography
         {
-            "code": "skill_react_apprentice",
-            "name": "React Apprentice",
-            "description": "Completed 5 reviews for React projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "React",
-        },
-        {
-            "code": "skill_react_expert",
-            "name": "React Expert",
-            "description": "Completed 25 reviews for React projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "React",
-        },
-
-        # TypeScript
-        {
-            "code": "skill_typescript_apprentice",
-            "name": "TypeScript Apprentice",
-            "description": "Completed 5 reviews for TypeScript projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "TypeScript",
-        },
-        {
-            "code": "skill_typescript_expert",
-            "name": "TypeScript Expert",
-            "description": "Completed 25 reviews for TypeScript projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "TypeScript",
-        },
-
-        # Python
-        {
-            "code": "skill_python_apprentice",
-            "name": "Python Apprentice",
-            "description": "Completed 5 reviews for Python projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Python",
-        },
-        {
-            "code": "skill_python_expert",
-            "name": "Python Expert",
-            "description": "Completed 25 reviews for Python projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Python",
-        },
-
-        # Vue.js
-        {
-            "code": "skill_vue_apprentice",
-            "name": "Vue.js Apprentice",
-            "description": "Completed 5 reviews for Vue.js projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Vue",
-        },
-        {
-            "code": "skill_vue_expert",
-            "name": "Vue.js Expert",
-            "description": "Completed 25 reviews for Vue.js projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Vue",
-        },
-
-        # Angular
-        {
-            "code": "skill_angular_apprentice",
-            "name": "Angular Apprentice",
-            "description": "Completed 5 reviews for Angular projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Angular",
-        },
-        {
-            "code": "skill_angular_expert",
-            "name": "Angular Expert",
-            "description": "Completed 25 reviews for Angular projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Angular",
-        },
-
-        # Node.js
-        {
-            "code": "skill_nodejs_apprentice",
-            "name": "Node.js Apprentice",
-            "description": "Completed 5 reviews for Node.js projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Node",
-        },
-        {
-            "code": "skill_nodejs_expert",
-            "name": "Node.js Expert",
-            "description": "Completed 25 reviews for Node.js projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Node",
-        },
-
-        # Go
-        {
-            "code": "skill_go_apprentice",
-            "name": "Go Apprentice",
-            "description": "Completed 5 reviews for Go projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Go",
-        },
-        {
-            "code": "skill_go_expert",
-            "name": "Go Expert",
-            "description": "Completed 25 reviews for Go projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Go",
-        },
-
-        # Rust
-        {
-            "code": "skill_rust_apprentice",
-            "name": "Rust Apprentice",
-            "description": "Completed 5 reviews for Rust projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Rust",
-        },
-        {
-            "code": "skill_rust_expert",
-            "name": "Rust Expert",
-            "description": "Completed 25 reviews for Rust projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Rust",
-        },
-
-        # Swift/iOS
-        {
-            "code": "skill_swift_apprentice",
-            "name": "Swift/iOS Apprentice",
-            "description": "Completed 5 reviews for Swift/iOS projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Swift",
-        },
-        {
-            "code": "skill_swift_expert",
-            "name": "Swift/iOS Expert",
-            "description": "Completed 25 reviews for Swift/iOS projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Swift",
-        },
-
-        # Kotlin/Android
-        {
-            "code": "skill_kotlin_apprentice",
-            "name": "Kotlin/Android Apprentice",
-            "description": "Completed 5 reviews for Kotlin/Android projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Kotlin",
-        },
-        {
-            "code": "skill_kotlin_expert",
-            "name": "Kotlin/Android Expert",
-            "description": "Completed 25 reviews for Kotlin/Android projects",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Kotlin",
-        },
-
-        # ============================================
-        # SKILL BADGES - Design (10 badges)
-        # ============================================
-
-        # Design (general)
-        {
-            "code": "skill_design_apprentice",
-            "name": "Design Apprentice",
-            "description": "Completed 5 design reviews",
+            "code": "skill_photography_apprentice",
+            "name": "Photography Apprentice",
+            "description": "Completed 5 photography reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
             "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "design",
+            "requirement_skill": "photography",
         },
         {
-            "code": "skill_design_expert",
-            "name": "Design Expert",
-            "description": "Completed 25 design reviews",
+            "code": "skill_photography_expert",
+            "name": "Photography Expert",
+            "description": "Completed 25 photography reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
             "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "design",
+            "requirement_skill": "photography",
         },
 
-        # UI Design
+        # Digital Art
         {
-            "code": "skill_ui_apprentice",
-            "name": "UI Design Apprentice",
-            "description": "Completed 5 UI design reviews",
+            "code": "skill_digital_art_apprentice",
+            "name": "Digital Art Apprentice",
+            "description": "Completed 5 digital art reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
-            "requirement_type": "skill_reviews",
+            "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "UI Design",
+            "requirement_skill": "digital_art",
         },
         {
-            "code": "skill_ui_expert",
-            "name": "UI Design Expert",
-            "description": "Completed 25 UI design reviews",
+            "code": "skill_digital_art_expert",
+            "name": "Digital Art Expert",
+            "description": "Completed 25 digital art reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
-            "requirement_type": "skill_reviews",
+            "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "UI Design",
-        },
-
-        # UX Design
-        {
-            "code": "skill_ux_apprentice",
-            "name": "UX Design Apprentice",
-            "description": "Completed 5 UX design reviews",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "UX Design",
-        },
-        {
-            "code": "skill_ux_expert",
-            "name": "UX Design Expert",
-            "description": "Completed 25 UX design reviews",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "UX Design",
-        },
-
-        # Brand/Logo
-        {
-            "code": "skill_brand_apprentice",
-            "name": "Branding Apprentice",
-            "description": "Completed 5 branding/logo reviews",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.COMMON,
-            "karma_reward": 10,
-            "xp_reward": 10,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 5,
-            "requirement_skill": "Branding",
-        },
-        {
-            "code": "skill_brand_expert",
-            "name": "Branding Expert",
-            "description": "Completed 25 branding/logo reviews",
-            "category": BadgeCategory.SKILL,
-            "rarity": BadgeRarity.RARE,
-            "karma_reward": 50,
-            "xp_reward": 50,
-            "requirement_type": "skill_reviews",
-            "requirement_value": 25,
-            "requirement_skill": "Branding",
+            "requirement_skill": "digital_art",
         },
 
         # Illustration
@@ -407,9 +91,9 @@ class BadgeService:
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
-            "requirement_type": "skill_reviews",
+            "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "Illustration",
+            "requirement_skill": "illustration",
         },
         {
             "code": "skill_illustration_expert",
@@ -419,91 +103,381 @@ class BadgeService:
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
-            "requirement_type": "skill_reviews",
+            "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "Illustration",
+            "requirement_skill": "illustration",
+        },
+
+        # Graphic Design
+        {
+            "code": "skill_graphic_design_apprentice",
+            "name": "Graphic Design Apprentice",
+            "description": "Completed 5 graphic design reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "graphic_design",
+        },
+        {
+            "code": "skill_graphic_design_expert",
+            "name": "Graphic Design Expert",
+            "description": "Completed 25 graphic design reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "graphic_design",
+        },
+
+        # Character Design
+        {
+            "code": "skill_character_design_apprentice",
+            "name": "Character Design Apprentice",
+            "description": "Completed 5 character design reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "character_design",
+        },
+        {
+            "code": "skill_character_design_expert",
+            "name": "Character Design Expert",
+            "description": "Completed 25 character design reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "character_design",
+        },
+
+        # Concept Art
+        {
+            "code": "skill_concept_art_apprentice",
+            "name": "Concept Art Apprentice",
+            "description": "Completed 5 concept art reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "concept_art",
+        },
+        {
+            "code": "skill_concept_art_expert",
+            "name": "Concept Art Expert",
+            "description": "Completed 25 concept art reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "concept_art",
+        },
+
+        # Traditional Art
+        {
+            "code": "skill_traditional_art_apprentice",
+            "name": "Traditional Art Apprentice",
+            "description": "Completed 5 traditional art reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "traditional_art",
+        },
+        {
+            "code": "skill_traditional_art_expert",
+            "name": "Traditional Art Expert",
+            "description": "Completed 25 traditional art reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "traditional_art",
         },
 
         # ============================================
-        # SKILL BADGES - Content (6 badges)
+        # SKILL BADGES - Video & Streaming (10 badges)
         # ============================================
 
-        # Writing
+        # Video Editing
         {
-            "code": "skill_writing_apprentice",
-            "name": "Writing Apprentice",
-            "description": "Completed 5 writing/copy reviews",
+            "code": "skill_video_editing_apprentice",
+            "name": "Video Editing Apprentice",
+            "description": "Completed 5 video editing reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
             "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "writing",
+            "requirement_skill": "video_editing",
         },
         {
-            "code": "skill_writing_expert",
-            "name": "Writing Expert",
-            "description": "Completed 25 writing/copy reviews",
+            "code": "skill_video_editing_expert",
+            "name": "Video Editing Expert",
+            "description": "Completed 25 video editing reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
             "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "writing",
+            "requirement_skill": "video_editing",
         },
 
-        # Video/Stream
+        # YouTube Content
         {
-            "code": "skill_video_apprentice",
-            "name": "Video Apprentice",
-            "description": "Completed 5 video/stream reviews",
+            "code": "skill_youtube_apprentice",
+            "name": "YouTube Apprentice",
+            "description": "Completed 5 YouTube content reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
             "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "video",
+            "requirement_skill": "youtube",
         },
         {
-            "code": "skill_video_expert",
-            "name": "Video Expert",
-            "description": "Completed 25 video/stream reviews",
+            "code": "skill_youtube_expert",
+            "name": "YouTube Expert",
+            "description": "Completed 25 YouTube content reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
             "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "video",
+            "requirement_skill": "youtube",
         },
 
-        # Music/Audio
+        # TikTok/Reels
         {
-            "code": "skill_audio_apprentice",
-            "name": "Audio Apprentice",
-            "description": "Completed 5 music/audio reviews",
+            "code": "skill_short_form_apprentice",
+            "name": "Short-Form Apprentice",
+            "description": "Completed 5 TikTok/Reels/Shorts reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.COMMON,
             "karma_reward": 10,
             "xp_reward": 10,
             "requirement_type": "content_type_reviews",
             "requirement_value": 5,
-            "requirement_skill": "audio",
+            "requirement_skill": "short_form",
         },
         {
-            "code": "skill_audio_expert",
-            "name": "Audio Expert",
-            "description": "Completed 25 music/audio reviews",
+            "code": "skill_short_form_expert",
+            "name": "Short-Form Expert",
+            "description": "Completed 25 TikTok/Reels/Shorts reviews",
             "category": BadgeCategory.SKILL,
             "rarity": BadgeRarity.RARE,
             "karma_reward": 50,
             "xp_reward": 50,
             "requirement_type": "content_type_reviews",
             "requirement_value": 25,
-            "requirement_skill": "audio",
+            "requirement_skill": "short_form",
+        },
+
+        # Streaming/Live
+        {
+            "code": "skill_streaming_apprentice",
+            "name": "Streaming Apprentice",
+            "description": "Completed 5 stream/live content reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "streaming",
+        },
+        {
+            "code": "skill_streaming_expert",
+            "name": "Streaming Expert",
+            "description": "Completed 25 stream/live content reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "streaming",
+        },
+
+        # Animation/Motion
+        {
+            "code": "skill_animation_apprentice",
+            "name": "Animation Apprentice",
+            "description": "Completed 5 animation/motion reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "animation",
+        },
+        {
+            "code": "skill_animation_expert",
+            "name": "Animation Expert",
+            "description": "Completed 25 animation/motion reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "animation",
+        },
+
+        # ============================================
+        # SKILL BADGES - Writing & Audio (10 badges)
+        # ============================================
+
+        # Creative Writing
+        {
+            "code": "skill_creative_writing_apprentice",
+            "name": "Creative Writing Apprentice",
+            "description": "Completed 5 creative writing reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "creative_writing",
+        },
+        {
+            "code": "skill_creative_writing_expert",
+            "name": "Creative Writing Expert",
+            "description": "Completed 25 creative writing reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "creative_writing",
+        },
+
+        # Copywriting
+        {
+            "code": "skill_copywriting_apprentice",
+            "name": "Copywriting Apprentice",
+            "description": "Completed 5 copywriting reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "copywriting",
+        },
+        {
+            "code": "skill_copywriting_expert",
+            "name": "Copywriting Expert",
+            "description": "Completed 25 copywriting reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "copywriting",
+        },
+
+        # Poetry
+        {
+            "code": "skill_poetry_apprentice",
+            "name": "Poetry Apprentice",
+            "description": "Completed 5 poetry reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "poetry",
+        },
+        {
+            "code": "skill_poetry_expert",
+            "name": "Poetry Expert",
+            "description": "Completed 25 poetry reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "poetry",
+        },
+
+        # Music Production
+        {
+            "code": "skill_music_production_apprentice",
+            "name": "Music Production Apprentice",
+            "description": "Completed 5 music production reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "music_production",
+        },
+        {
+            "code": "skill_music_production_expert",
+            "name": "Music Production Expert",
+            "description": "Completed 25 music production reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "music_production",
+        },
+
+        # Podcasting
+        {
+            "code": "skill_podcasting_apprentice",
+            "name": "Podcasting Apprentice",
+            "description": "Completed 5 podcast reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.COMMON,
+            "karma_reward": 10,
+            "xp_reward": 10,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 5,
+            "requirement_skill": "podcasting",
+        },
+        {
+            "code": "skill_podcasting_expert",
+            "name": "Podcasting Expert",
+            "description": "Completed 25 podcast reviews",
+            "category": BadgeCategory.SKILL,
+            "rarity": BadgeRarity.RARE,
+            "karma_reward": 50,
+            "xp_reward": 50,
+            "requirement_type": "content_type_reviews",
+            "requirement_value": 25,
+            "requirement_skill": "podcasting",
         },
 
         # ============================================
@@ -807,14 +781,14 @@ class BadgeService:
             "requirement_value": 1000,
         },
         {
-            "code": "milestone_karma_king",
-            "name": "Karma King",
-            "description": "Reached 5,000 karma points",
+            "code": "milestone_sparks_legend",
+            "name": "Sparks Legend",
+            "description": "Reached 5,000 Sparks",
             "category": BadgeCategory.MILESTONE,
             "rarity": BadgeRarity.EPIC,
             "karma_reward": 100,
             "xp_reward": 100,
-            "requirement_type": "total_karma",
+            "requirement_type": "total_sparks",
             "requirement_value": 5000,
         },
         {
@@ -1189,8 +1163,8 @@ class BadgeService:
             count = await self._count_content_type_reviews(user.id, badge.requirement_skill)
             return count >= req_value
 
-        elif req_type == "total_karma":
-            return (user.karma_points or 0) >= req_value
+        elif req_type == "total_sparks":
+            return (user.sparks_points or 0) >= req_value
 
         elif req_type == "total_xp":
             return (user.xp_points or 0) >= req_value
@@ -1578,7 +1552,7 @@ class BadgeService:
         return False
 
     async def _award_badge(self, user: User, badge: Badge) -> UserBadge:
-        """Award a badge to user and grant karma/XP rewards."""
+        """Award a badge to user and grant sparks/XP rewards."""
         # Create user badge record
         user_badge = UserBadge(
             user_id=user.id,
@@ -1588,20 +1562,20 @@ class BadgeService:
         )
         self.db.add(user_badge)
 
-        # Award karma and XP
+        # Award sparks and XP
         if badge.karma_reward > 0:
-            user.karma_points = (user.karma_points or 0) + badge.karma_reward
+            user.sparks_points = (user.sparks_points or 0) + badge.karma_reward
         if badge.xp_reward > 0:
             user.xp_points = (user.xp_points or 0) + badge.xp_reward
 
-        # Create karma transaction for tracking
-        from app.models.karma_transaction import KarmaTransaction
+        # Create sparks transaction for tracking
+        from app.models.sparks_transaction import SparksTransaction
 
-        transaction = KarmaTransaction(
+        transaction = SparksTransaction(
             user_id=user.id,
-            action=KarmaAction.BADGE_EARNED,
+            action=SparksAction.BADGE_EARNED,
             points=badge.karma_reward,
-            balance_after=user.karma_points,
+            balance_after=user.sparks_points,
             reason=f"Earned badge: {badge.name}",
             created_at=datetime.utcnow()
         )
@@ -1735,8 +1709,8 @@ class BadgeService:
         elif req_type == "content_type_reviews":
             current = await self._count_content_type_reviews(user.id, badge.requirement_skill)
 
-        elif req_type == "total_karma":
-            current = user.karma_points or 0
+        elif req_type == "total_sparks":
+            current = user.sparks_points or 0
 
         elif req_type == "total_xp":
             current = user.xp_points or 0
@@ -1863,8 +1837,8 @@ class BadgeService:
         )
         self.db.add(user_badge)
 
-        # Award karma and XP
-        user.karma_points = (user.karma_points or 0) + badge.karma_reward
+        # Award sparks and XP
+        user.sparks_points = (user.sparks_points or 0) + badge.karma_reward
         user.xp_points = (user.xp_points or 0) + badge.xp_reward
 
         await self.db.commit()

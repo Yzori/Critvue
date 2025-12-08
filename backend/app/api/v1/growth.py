@@ -13,8 +13,8 @@ from app.models.user import User
 from app.models.portfolio import Portfolio
 from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
-from app.models.karma_transaction import KarmaTransaction
-from app.services.karma_service import KarmaService
+from app.models.sparks_transaction import SparksTransaction as KarmaTransaction
+from app.services.sparks_service import SparksService as KarmaService
 from app.services.badge_service import BadgeService
 
 router = APIRouter(prefix="/growth", tags=["Growth Analytics"])

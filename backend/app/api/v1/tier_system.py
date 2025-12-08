@@ -13,9 +13,9 @@ from pydantic import BaseModel, Field
 from app.db.session import get_db
 from app.api.auth import get_current_user
 from app.models.user import User, UserTier
-from app.models.karma_transaction import KarmaTransaction, KarmaAction
+from app.models.sparks_transaction import SparksTransaction as KarmaTransaction, SparksAction as KarmaAction
 from app.models.tier_milestone import TierMilestone
-from app.services.karma_service import KarmaService
+from app.services.sparks_service import SparksService as KarmaService
 from app.services.tier_service import TierService
 
 router = APIRouter(prefix="/tier-system", tags=["Tier System"])

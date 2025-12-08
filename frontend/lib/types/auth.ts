@@ -13,7 +13,7 @@ export interface User {
   is_verified: boolean;
   created_at?: string;
   user_tier?: string;
-  karma_points?: number;
+  sparks_points?: number;
   role?: "creator" | "reviewer" | "admin";
   // Onboarding fields
   onboarding_completed?: boolean;

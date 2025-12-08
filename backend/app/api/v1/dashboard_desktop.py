@@ -734,8 +734,8 @@ async def get_desktop_reviewer_submitted(
             if urgency_filter and urgency_level not in urgency_filter:
                 continue
 
-            # Calculate potential karma
-            potential_karma = 50  # Base karma
+            # Calculate potential sparks
+            potential_sparks = 50  # Base sparks
             potential_bonus = 10 if slot.rating and slot.rating >= 4 else 0
 
             payment_amount = float(slot.payment_amount) if slot.payment_amount else 0
@@ -755,7 +755,7 @@ async def get_desktop_reviewer_submitted(
                 "urgency_seconds": urgency_seconds,
                 "countdown_text": countdown_text,
                 "rating": slot.rating,
-                "potential_karma": potential_karma,
+                "potential_sparks": potential_sparks,
                 "potential_bonus": potential_bonus,
                 "payment_amount": payment_amount,
                 "status": slot.status
@@ -1490,8 +1490,8 @@ async def batch_reject_reviews(
                     rejection_notes
                 )
 
-                # Deduct karma
-                from app.services.review_karma_hooks import on_review_rejected
+                # Deduct sparks
+                from app.services.review_sparks_hooks import on_review_rejected
                 await on_review_rejected(db, rejected_slot.id, rejected_slot.reviewer_id)
 
                 rejected.append({

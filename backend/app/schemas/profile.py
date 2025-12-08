@@ -228,9 +228,9 @@ class ProfileResponse(BaseModel):
     avg_rating: Optional[Decimal] = None
     avg_response_time_hours: Optional[int] = None
 
-    # Tier/Karma System
-    user_tier: str  # Tier level (novice, contributor, skilled, etc.)
-    karma_points: int = 0
+    # Tier/Sparks System
+    user_tier: str  # Tier level (newcomer, supporter, guide, etc.)
+    sparks_points: int = 0
     tier_achieved_at: Optional[datetime] = None
 
     # Onboarding

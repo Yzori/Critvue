@@ -27,7 +27,7 @@ export interface ProfileResponse {
   avg_rating: number | null;
   avg_response_time_hours: number | null;
   user_tier: string;
-  karma_points: number;
+  sparks_points: number;
   tier_achieved_at: string | null;
   created_at: string;
   updated_at: string;
@@ -53,7 +53,7 @@ export interface ProfileData {
   badges: string[];
   specialty_tags: string[];
   user_tier: string;
-  karma_points: number;
+  sparks_points: number;
   tier_achieved_at?: string;
   role?: "creator" | "reviewer" | "admin";
 }
@@ -127,7 +127,7 @@ export function transformProfileResponse(response: ProfileResponse): ProfileData
     badges: response.badges,
     specialty_tags: response.specialty_tags,
     user_tier: response.user_tier,
-    karma_points: response.karma_points,
+    sparks_points: response.sparks_points,
     tier_achieved_at: response.tier_achieved_at || undefined,
     role: response.role as "creator" | "reviewer" | "admin",
   };

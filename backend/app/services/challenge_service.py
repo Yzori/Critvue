@@ -14,9 +14,9 @@ from app.models.challenge_vote import ChallengeVote
 from app.models.challenge_invitation import ChallengeInvitation, InvitationStatus
 from app.models.challenge_participant import ChallengeParticipant
 from app.models.challenge_prompt import ChallengePrompt
-from app.models.karma_transaction import KarmaAction
+from app.models.sparks_transaction import SparksAction as KarmaAction
 from app.models.notification import NotificationType, NotificationPriority, EntityType
-from app.services.karma_service import KarmaService
+from app.services.sparks_service import SparksService as KarmaService
 from app.services.notification_service import NotificationService
 
 

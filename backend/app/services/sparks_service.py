@@ -1,4 +1,4 @@
-"""Karma Service for managing user reputation points - Modern System"""
+"""Sparks Service for managing user reputation points - Modern System"""
 
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -6,85 +6,85 @@ from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy import func, select, case, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.karma_transaction import KarmaAction, KarmaTransaction
+from app.models.sparks_transaction import SparksAction, SparksTransaction
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 
 
-class KarmaService:
+class SparksService:
     """
-    Modern Karma Service for managing XP, reputation, and engagement.
+    Modern Sparks Service for managing XP, reputation, and engagement.
 
     Key improvements over legacy system:
     - XP (permanent) + Reputation (variable) split
     - Graduated penalty system with warnings
     - Streak shields and weekend grace
     - Weekly goal system
-    - Low rating karma reduction
+    - Low rating sparks reduction
     - Reputation decay for inactivity
     """
 
-    # Karma point values for different actions
-    KARMA_VALUES = {
+    # Sparks point values for different actions
+    SPARKS_VALUES = {
         # Core review actions
-        KarmaAction.REVIEW_SUBMITTED: 5,
-        KarmaAction.REVIEW_ACCEPTED: 20,  # Base value, adjusted by rating
-        KarmaAction.REVIEW_AUTO_ACCEPTED: 15,
-        KarmaAction.REVIEW_REJECTED: -10,
+        SparksAction.REVIEW_SUBMITTED: 5,
+        SparksAction.REVIEW_ACCEPTED: 20,  # Base value, adjusted by rating
+        SparksAction.REVIEW_AUTO_ACCEPTED: 15,
+        SparksAction.REVIEW_REJECTED: -10,
 
-        # Rating-based karma (replaces flat REVIEW_ACCEPTED)
-        KarmaAction.HELPFUL_RATING_5: 40,
-        KarmaAction.HELPFUL_RATING_4: 30,
-        KarmaAction.HELPFUL_RATING_3: 20,
-        KarmaAction.HELPFUL_RATING_2: 5,   # Reduced for poor ratings
-        KarmaAction.HELPFUL_RATING_1: 0,   # No reward for very poor
+        # Rating-based sparks (replaces flat REVIEW_ACCEPTED)
+        SparksAction.HELPFUL_RATING_5: 40,
+        SparksAction.HELPFUL_RATING_4: 30,
+        SparksAction.HELPFUL_RATING_3: 20,
+        SparksAction.HELPFUL_RATING_2: 5,   # Reduced for poor ratings
+        SparksAction.HELPFUL_RATING_1: 0,   # No reward for very poor
 
         # Disputes
-        KarmaAction.DISPUTE_WON: 50,
-        KarmaAction.DISPUTE_LOST: -30,
+        SparksAction.DISPUTE_WON: 50,
+        SparksAction.DISPUTE_LOST: -30,
 
         # Penalties (graduated system)
-        KarmaAction.WARNING_ISSUED: 0,  # Just a warning, no karma
-        KarmaAction.CLAIM_ABANDONED: -20,
-        KarmaAction.CLAIM_ABANDONED_REPEAT: -40,  # Harsher for repeat offenders
-        KarmaAction.SPAM_PENALTY: -100,
+        SparksAction.WARNING_ISSUED: 0,  # Just a warning, no sparks
+        SparksAction.CLAIM_ABANDONED: -20,
+        SparksAction.CLAIM_ABANDONED_REPEAT: -40,  # Harsher for repeat offenders
+        SparksAction.SPAM_PENALTY: -100,
 
         # Daily streaks
-        KarmaAction.STREAK_BONUS_5: 25,
-        KarmaAction.STREAK_BONUS_10: 75,
-        KarmaAction.STREAK_BONUS_25: 200,
-        KarmaAction.STREAK_SHIELD_USED: 0,
-        KarmaAction.STREAK_SHIELD_EARNED: 0,
+        SparksAction.STREAK_BONUS_5: 25,
+        SparksAction.STREAK_BONUS_10: 75,
+        SparksAction.STREAK_BONUS_25: 200,
+        SparksAction.STREAK_SHIELD_USED: 0,
+        SparksAction.STREAK_SHIELD_EARNED: 0,
 
         # Weekly goals
-        KarmaAction.WEEKLY_GOAL_MET: 30,
-        KarmaAction.WEEKLY_GOAL_EXCEEDED: 50,
-        KarmaAction.WEEKLY_STREAK_BONUS_4: 100,
-        KarmaAction.WEEKLY_STREAK_BONUS_12: 500,
+        SparksAction.WEEKLY_GOAL_MET: 30,
+        SparksAction.WEEKLY_GOAL_EXCEEDED: 50,
+        SparksAction.WEEKLY_STREAK_BONUS_4: 100,
+        SparksAction.WEEKLY_STREAK_BONUS_12: 500,
 
         # Badges (base value, actual varies by badge)
-        KarmaAction.BADGE_EARNED: 25,
+        SparksAction.BADGE_EARNED: 25,
 
         # Profile
-        KarmaAction.PROFILE_COMPLETED: 50,
-        KarmaAction.PORTFOLIO_ADDED: 10,
-        KarmaAction.PORTFOLIO_FEATURED: 25,
+        SparksAction.PROFILE_COMPLETED: 50,
+        SparksAction.PORTFOLIO_ADDED: 10,
+        SparksAction.PORTFOLIO_FEATURED: 25,
 
         # Misc
-        KarmaAction.DAILY_BONUS: 5,
-        KarmaAction.TIER_PROMOTION: 100,
-        KarmaAction.QUALITY_BONUS: 10,
+        SparksAction.DAILY_BONUS: 5,
+        SparksAction.TIER_PROMOTION: 100,
+        SparksAction.QUALITY_BONUS: 10,
 
-        # Reputation (not karma points)
-        KarmaAction.REPUTATION_DECAY: 0,  # Affects reputation_score, not karma
-        KarmaAction.REPUTATION_RESTORED: 0,
+        # Reputation (not sparks points)
+        SparksAction.REPUTATION_DECAY: 0,  # Affects reputation_score, not sparks
+        SparksAction.REPUTATION_RESTORED: 0,
 
         # Seasonal
-        KarmaAction.LEADERBOARD_REWARD: 0,  # Variable based on rank
-        KarmaAction.SEASONAL_BONUS: 0,  # Variable
+        SparksAction.LEADERBOARD_REWARD: 0,  # Variable based on rank
+        SparksAction.SEASONAL_BONUS: 0,  # Variable
     }
 
-    # XP multipliers (XP = karma * multiplier for positive actions)
+    # XP multipliers (XP = sparks * multiplier for positive actions)
     XP_MULTIPLIER = 1.0  # 1:1 ratio by default
 
     # Reputation decay settings
@@ -98,33 +98,33 @@ class KarmaService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def award_karma(
+    async def award_sparks(
         self,
         user_id: int,
-        action: KarmaAction,
+        action: SparksAction,
         reason: str,
         review_slot_id: Optional[int] = None,
         helpful_rating: Optional[int] = None,
         custom_points: Optional[int] = None
-    ) -> KarmaTransaction:
+    ) -> SparksTransaction:
         """
-        Award or deduct karma/XP points for a user action.
+        Award or deduct sparks/XP points for a user action.
 
         Modern system:
-        - Positive actions add to both karma_points and xp_points
-        - Negative actions only reduce karma_points (XP is permanent)
+        - Positive actions add to both sparks_points and xp_points
+        - Negative actions only reduce sparks_points (XP is permanent)
         - reputation_score is updated separately via decay/activity
 
         Args:
-            user_id: User to award karma to
-            action: The action that triggered karma change
+            user_id: User to award sparks to
+            action: The action that triggered sparks change
             reason: Human-readable description for user display
             review_slot_id: Optional related review slot
             helpful_rating: Optional helpful rating (1-5) for review acceptance
             custom_points: Override default points (for badges, rewards)
 
         Returns:
-            The created KarmaTransaction
+            The created SparksTransaction
         """
         user = await self.db.get(User, user_id)
         if not user:
@@ -134,24 +134,24 @@ class KarmaService:
         if custom_points is not None:
             points = custom_points
         else:
-            points = self.KARMA_VALUES.get(action, 0)
+            points = self.SPARKS_VALUES.get(action, 0)
 
         # Use rating-specific action if helpful_rating provided
-        if action == KarmaAction.REVIEW_ACCEPTED and helpful_rating:
+        if action == SparksAction.REVIEW_ACCEPTED and helpful_rating:
             rating_action = {
-                5: KarmaAction.HELPFUL_RATING_5,
-                4: KarmaAction.HELPFUL_RATING_4,
-                3: KarmaAction.HELPFUL_RATING_3,
-                2: KarmaAction.HELPFUL_RATING_2,
-                1: KarmaAction.HELPFUL_RATING_1,
+                5: SparksAction.HELPFUL_RATING_5,
+                4: SparksAction.HELPFUL_RATING_4,
+                3: SparksAction.HELPFUL_RATING_3,
+                2: SparksAction.HELPFUL_RATING_2,
+                1: SparksAction.HELPFUL_RATING_1,
             }.get(helpful_rating, action)
-            points = self.KARMA_VALUES.get(rating_action, points)
+            points = self.SPARKS_VALUES.get(rating_action, points)
             action = rating_action
 
-        # Update user's karma (can go negative temporarily)
-        user.karma_points = (user.karma_points or 0) + points
-        if user.karma_points < 0:
-            user.karma_points = 0
+        # Update user's sparks (can go negative temporarily)
+        user.sparks_points = (user.sparks_points or 0) + points
+        if user.sparks_points < 0:
+            user.sparks_points = 0
 
         # Update XP (only for positive actions - XP never decreases)
         if points > 0:
@@ -165,10 +165,10 @@ class KarmaService:
         if user.reputation_score < 100:
             user.reputation_score = min(100, user.reputation_score + 5)
 
-        balance_after = user.karma_points
+        balance_after = user.sparks_points
 
         # Create transaction record
-        transaction = KarmaTransaction(
+        transaction = SparksTransaction(
             user_id=user_id,
             related_review_slot_id=review_slot_id,
             action=action,
@@ -188,13 +188,13 @@ class KarmaService:
         self,
         user_id: int,
         review_slot_id: Optional[int] = None
-    ) -> Tuple[KarmaTransaction, bool]:
+    ) -> Tuple[SparksTransaction, bool]:
         """
         Process an abandoned claim with graduated penalty system.
 
-        First offense: Warning only (no karma loss)
-        Second offense within 30 days: -20 karma
-        Third+ offense: -40 karma
+        First offense: Warning only (no sparks loss)
+        Second offense within 30 days: -20 sparks
+        Third+ offense: -40 sparks
 
         Args:
             user_id: User who abandoned the claim
@@ -220,10 +220,10 @@ class KarmaService:
             # First offense: warning only
             user.warning_count = 1
             user.last_warning_at = datetime.utcnow()
-            transaction = await self.award_karma(
+            transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.WARNING_ISSUED,
-                reason="Warning: Abandoned claim. Future abandonments will result in karma penalties.",
+                action=SparksAction.WARNING_ISSUED,
+                reason="Heads up: This review wasn't completed. Future incomplete reviews may affect your Sparks.",
                 review_slot_id=review_slot_id
             )
             return transaction, True  # Was warning only
@@ -231,10 +231,10 @@ class KarmaService:
             # Second offense: standard penalty
             user.warning_count = 2
             user.last_warning_at = datetime.utcnow()
-            transaction = await self.award_karma(
+            transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.CLAIM_ABANDONED,
-                reason="Penalty: Abandoned claim (second offense within 30 days)",
+                action=SparksAction.CLAIM_ABANDONED,
+                reason="Incomplete review (second time within 30 days) - Sparks adjusted",
                 review_slot_id=review_slot_id
             )
             return transaction, False
@@ -243,15 +243,15 @@ class KarmaService:
             user.warning_count += 1
             user.last_warning_at = datetime.utcnow()
             user.penalty_multiplier = min(Decimal("2.0"), (user.penalty_multiplier or Decimal("1.0")) + Decimal("0.25"))
-            transaction = await self.award_karma(
+            transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.CLAIM_ABANDONED_REPEAT,
-                reason=f"Penalty: Abandoned claim (repeat offense #{user.warning_count})",
+                action=SparksAction.CLAIM_ABANDONED_REPEAT,
+                reason=f"Incomplete review (#{user.warning_count}) - Sparks adjusted",
                 review_slot_id=review_slot_id
             )
             return transaction, False
 
-    async def update_streak(self, user_id: int) -> Optional[KarmaTransaction]:
+    async def update_streak(self, user_id: int) -> Optional[SparksTransaction]:
         """
         Update user's review streak with shield and weekend grace support.
 
@@ -264,7 +264,7 @@ class KarmaService:
             user_id: User to update streak for
 
         Returns:
-            KarmaTransaction if streak bonus was awarded, None otherwise
+            SparksTransaction if streak bonus was awarded, None otherwise
         """
         user = await self.db.get(User, user_id)
         if not user:
@@ -306,9 +306,9 @@ class KarmaService:
                 user.streak_shield_used_at = now
                 user.last_review_date = now
                 # Don't increment streak, but don't reset either
-                await self.award_karma(
+                await self.award_sparks(
                     user_id=user_id,
-                    action=KarmaAction.STREAK_SHIELD_USED,
+                    action=SparksAction.STREAK_SHIELD_USED,
                     reason=f"Streak shield used! Your {user.current_streak}-day streak is protected."
                 )
             else:
@@ -327,24 +327,24 @@ class KarmaService:
         streak = user.current_streak
 
         if streak == 25:
-            bonus_transaction = await self.award_karma(
+            bonus_transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.STREAK_BONUS_25,
+                action=SparksAction.STREAK_BONUS_25,
                 reason="25-day review streak! Amazing dedication!"
             )
             # Award a bonus streak shield
             user.streak_shield_count = (user.streak_shield_count or 0) + 1
             await self.db.commit()
         elif streak == 10:
-            bonus_transaction = await self.award_karma(
+            bonus_transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.STREAK_BONUS_10,
+                action=SparksAction.STREAK_BONUS_10,
                 reason="10-day review streak! You're on fire!"
             )
         elif streak == 5:
-            bonus_transaction = await self.award_karma(
+            bonus_transaction = await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.STREAK_BONUS_5,
+                action=SparksAction.STREAK_BONUS_5,
                 reason="5-day review streak! Great consistency!"
             )
 
@@ -376,7 +376,7 @@ class KarmaService:
 
         return False
 
-    async def update_weekly_goal(self, user_id: int) -> Optional[KarmaTransaction]:
+    async def update_weekly_goal(self, user_id: int) -> Optional[SparksTransaction]:
         """
         Update user's weekly review goal progress.
 
@@ -387,7 +387,7 @@ class KarmaService:
             user_id: User to update
 
         Returns:
-            KarmaTransaction if goal achieved, None otherwise
+            SparksTransaction if goal achieved, None otherwise
         """
         user = await self.db.get(User, user_id)
         if not user:
@@ -413,15 +413,15 @@ class KarmaService:
 
                 # Award weekly streak bonuses
                 if user.weekly_goal_streak == 12:
-                    await self.award_karma(
+                    await self.award_sparks(
                         user_id=user_id,
-                        action=KarmaAction.WEEKLY_STREAK_BONUS_12,
+                        action=SparksAction.WEEKLY_STREAK_BONUS_12,
                         reason="12 consecutive weeks meeting your goal! Quarterly champion!"
                     )
                 elif user.weekly_goal_streak == 4:
-                    await self.award_karma(
+                    await self.award_sparks(
                         user_id=user_id,
-                        action=KarmaAction.WEEKLY_STREAK_BONUS_4,
+                        action=SparksAction.WEEKLY_STREAK_BONUS_4,
                         reason="4 consecutive weeks meeting your goal! Monthly milestone!"
                     )
             else:
@@ -436,22 +436,22 @@ class KarmaService:
 
         # Check if goal just achieved this review
         if user.weekly_reviews_count == user.weekly_goal_target:
-            return await self.award_karma(
+            return await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.WEEKLY_GOAL_MET,
+                action=SparksAction.WEEKLY_GOAL_MET,
                 reason=f"Weekly goal of {user.weekly_goal_target} reviews achieved!"
             )
         elif user.weekly_reviews_count == user.weekly_goal_target + 2:
             # Bonus for significantly exceeding goal
-            return await self.award_karma(
+            return await self.award_sparks(
                 user_id=user_id,
-                action=KarmaAction.WEEKLY_GOAL_EXCEEDED,
-                reason=f"Exceeded weekly goal by 2+ reviews! Bonus karma earned!"
+                action=SparksAction.WEEKLY_GOAL_EXCEEDED,
+                reason=f"Exceeded weekly goal by 2+ reviews! Bonus Sparks earned!"
             )
 
         return None
 
-    async def apply_reputation_decay(self, user_id: int) -> Optional[KarmaTransaction]:
+    async def apply_reputation_decay(self, user_id: int) -> Optional[SparksTransaction]:
         """
         Apply reputation decay for inactive users.
 
@@ -463,7 +463,7 @@ class KarmaService:
             user_id: User to check for decay
 
         Returns:
-            KarmaTransaction if decay applied, None otherwise
+            SparksTransaction if decay applied, None otherwise
         """
         user = await self.db.get(User, user_id)
         if not user or not user.last_active_date:
@@ -490,12 +490,12 @@ class KarmaService:
         # Apply decay
         user.reputation_score -= decay_amount
 
-        transaction = KarmaTransaction(
+        transaction = SparksTransaction(
             user_id=user_id,
-            action=KarmaAction.REPUTATION_DECAY,
-            points=0,  # Doesn't affect karma
-            balance_after=user.karma_points,
-            reason=f"Reputation decreased by {decay_amount} due to {days_inactive} days of inactivity",
+            action=SparksAction.REPUTATION_DECAY,
+            points=0,  # Doesn't affect sparks
+            balance_after=user.sparks_points,
+            reason=f"Reputation adjusted by {decay_amount} after {days_inactive} days away",
             created_at=datetime.utcnow()
         )
 
@@ -552,17 +552,17 @@ class KarmaService:
 
         return acceptance_rate
 
-    async def get_karma_history(
+    async def get_sparks_history(
         self,
         user_id: int,
         limit: int = 50,
         offset: int = 0
-    ) -> List[KarmaTransaction]:
-        """Get karma transaction history for a user."""
+    ) -> List[SparksTransaction]:
+        """Get sparks transaction history for a user."""
         stmt = (
-            select(KarmaTransaction)
-            .where(KarmaTransaction.user_id == user_id)
-            .order_by(KarmaTransaction.created_at.desc())
+            select(SparksTransaction)
+            .where(SparksTransaction.user_id == user_id)
+            .order_by(SparksTransaction.created_at.desc())
             .limit(limit)
             .offset(offset)
         )
@@ -570,11 +570,11 @@ class KarmaService:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_karma_breakdown(self, user_id: int) -> Dict[str, Any]:
+    async def get_sparks_breakdown(self, user_id: int) -> Dict[str, Any]:
         """
-        Get detailed karma breakdown for transparency.
+        Get detailed sparks breakdown for transparency.
 
-        Shows exactly where karma came from and provides
+        Shows exactly where sparks came from and provides
         percentile ranking among all users.
         """
         user = await self.db.get(User, user_id)
@@ -583,13 +583,13 @@ class KarmaService:
 
         # Get totals by action type
         stmt = select(
-            KarmaTransaction.action,
-            func.count(KarmaTransaction.id).label("count"),
-            func.sum(KarmaTransaction.points).label("total_points")
+            SparksTransaction.action,
+            func.count(SparksTransaction.id).label("count"),
+            func.sum(SparksTransaction.points).label("total_points")
         ).where(
-            KarmaTransaction.user_id == user_id
+            SparksTransaction.user_id == user_id
         ).group_by(
-            KarmaTransaction.action
+            SparksTransaction.action
         )
 
         result = await self.db.execute(stmt)
@@ -609,15 +609,15 @@ class KarmaService:
                 negative_total += abs(points)
 
         # Calculate percentile
-        percentile = await self._calculate_karma_percentile(user.karma_points)
+        percentile = await self._calculate_sparks_percentile(user.sparks_points)
 
         return {
-            "total_karma": user.karma_points,
+            "total_sparks": user.sparks_points,
             "total_xp": user.xp_points,
             "reputation_score": user.reputation_score,
-            "positive_karma_earned": positive_total,
-            "negative_karma_incurred": negative_total,
-            "net_karma": positive_total - negative_total,
+            "positive_sparks_earned": positive_total,
+            "negative_sparks_incurred": negative_total,
+            "net_sparks": positive_total - negative_total,
             "breakdown_by_action": breakdown_by_action,
             "percentile": percentile,
             "acceptance_rate": float(user.acceptance_rate) if user.acceptance_rate else None,
@@ -636,11 +636,11 @@ class KarmaService:
             )
         }
 
-    async def _calculate_karma_percentile(self, karma: int) -> int:
-        """Calculate what percentile a karma score falls into."""
-        # Count users with less karma
+    async def _calculate_sparks_percentile(self, sparks: int) -> int:
+        """Calculate what percentile a sparks score falls into."""
+        # Count users with less sparks
         stmt = select(func.count(User.id)).where(
-            User.karma_points < karma,
+            User.sparks_points < sparks,
             User.is_active == True
         )
         result = await self.db.execute(stmt)
@@ -654,14 +654,14 @@ class KarmaService:
         percentile = int((users_below / total_users) * 100)
         return min(99, percentile)  # Cap at 99
 
-    async def get_karma_summary(self, user_id: int) -> Dict[str, Any]:
-        """Get a summary of user's karma statistics."""
+    async def get_sparks_summary(self, user_id: int) -> Dict[str, Any]:
+        """Get a summary of user's sparks statistics."""
         user = await self.db.get(User, user_id)
         if not user:
             return {}
 
         return {
-            "total_karma": user.karma_points,
+            "total_sparks": user.sparks_points,
             "total_xp": user.xp_points,
             "reputation_score": user.reputation_score,
             "acceptance_rate": float(user.acceptance_rate) if user.acceptance_rate else None,
@@ -676,7 +676,7 @@ class KarmaService:
             "last_active_date": user.last_active_date.isoformat() if user.last_active_date else None,
         }
 
-    async def award_daily_bonus(self, user_id: int) -> Optional[KarmaTransaction]:
+    async def award_daily_bonus(self, user_id: int) -> Optional[SparksTransaction]:
         """Award daily bonus if this is the user's first review of the day."""
         user = await self.db.get(User, user_id)
         if not user:
@@ -690,9 +690,9 @@ class KarmaService:
             if last_review_date == today:
                 return None
 
-        return await self.award_karma(
+        return await self.award_sparks(
             user_id=user_id,
-            action=KarmaAction.DAILY_BONUS,
+            action=SparksAction.DAILY_BONUS,
             reason="First review of the day!"
         )
 
@@ -702,3 +702,9 @@ class KarmaService:
 
         tier_service = TierService(self.db)
         return await tier_service.check_and_promote_user(user_id)
+
+
+# Backward compatibility aliases
+KarmaService = SparksService
+KarmaAction = SparksAction
+KarmaTransaction = SparksTransaction

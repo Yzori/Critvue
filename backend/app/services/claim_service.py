@@ -342,12 +342,12 @@ class ClaimService:
         # Abandon the slot (this validates status internally)
         slot.abandon()
 
-        # KARMA PENALTY: Deduct karma for abandoning claim
+        # SPARKS PENALTY: Deduct sparks for abandoning claim
         try:
-            from app.services.review_karma_hooks import deduct_karma_for_abandonment
-            await deduct_karma_for_abandonment(db, slot)
+            from app.services.review_sparks_hooks import deduct_sparks_for_abandonment
+            await deduct_sparks_for_abandonment(db, slot)
         except ImportError:
-            # Karma system not available
+            # Sparks system not available
             pass
 
         # Update review request's claimed counter

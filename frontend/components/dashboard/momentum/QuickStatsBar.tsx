@@ -35,8 +35,8 @@ import {
 import { type Badge, getBadgeRarityColor } from '@/lib/api/karma';
 
 export interface QuickStatsBarProps {
-  karma: number;
-  karmaChange?: number; // Change from last period
+  sparks: number;
+  sparksChange?: number; // Change from last period
   xp: number;
   leaderboardRank?: number | null;
   leaderboardTotal?: number;
@@ -46,8 +46,8 @@ export interface QuickStatsBarProps {
 }
 
 export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
-  karma,
-  karmaChange = 0,
+  sparks,
+  sparksChange = 0,
   xp,
   leaderboardRank,
   leaderboardTotal,
@@ -77,41 +77,41 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
           className
         )}
       >
-        {/* Karma - Primary stat with gradient highlight */}
+        {/* Sparks - Primary stat with gradient highlight */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/dashboard/karma"
-              className="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/15 hover:to-purple-500/10 transition-all duration-200"
+              href="/dashboard/sparks"
+              className="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 hover:border-amber-500/40 hover:from-amber-500/15 hover:to-orange-500/10 transition-all duration-200"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30">
                 <Zap className="h-4 w-4 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-purple-600/70">Karma</span>
-                <span className="font-bold text-sm text-foreground leading-none">{karma.toLocaleString()}</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-amber-600/70">Sparks</span>
+                <span className="font-bold text-sm text-foreground leading-none">{sparks.toLocaleString()}</span>
               </div>
-              {karmaChange !== 0 && (
+              {sparksChange !== 0 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className={cn(
                     'flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold',
-                    karmaChange > 0 ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-500'
+                    sparksChange > 0 ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-500'
                   )}
                 >
-                  {karmaChange > 0 ? (
+                  {sparksChange > 0 ? (
                     <TrendingUp className="h-3 w-3" />
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  <span>{karmaChange > 0 ? '+' : ''}{karmaChange}</span>
+                  <span>{sparksChange > 0 ? '+' : ''}{sparksChange}</span>
                 </motion.div>
               )}
             </Link>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="bg-card/95 backdrop-blur-xl border-border/50">
-            <p className="font-medium">Total Karma</p>
+            <p className="font-medium">Total Sparks</p>
             <p className="text-xs text-muted-foreground">Click to view full breakdown</p>
           </TooltipContent>
         </Tooltip>
@@ -120,7 +120,7 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/dashboard/karma"
+              href="/dashboard/sparks"
               className="group flex items-center gap-2.5 px-4 py-2.5 rounded-xl hover:bg-blue-500/5 border border-transparent hover:border-blue-500/20 transition-all duration-200"
             >
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/25">
@@ -144,7 +144,7 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Link
-              href="/dashboard/karma?tab=badges"
+              href="/dashboard/sparks?tab=badges"
               className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-amber-500/5 border border-transparent hover:border-amber-500/20 transition-all duration-200 min-w-[120px]"
             >
               <div className="relative h-8 w-8">
@@ -215,7 +215,7 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/dashboard/karma?tab=badges"
+                  href="/dashboard/sparks?tab=badges"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl hover:bg-accent-blue/5 border border-transparent hover:border-accent-blue/20 transition-all duration-200"
                 >
                   <div className="relative h-8 w-8">
@@ -273,7 +273,7 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="/dashboard/karma?tab=leaderboard"
+                  href="/dashboard/sparks?tab=leaderboard"
                   className={cn(
                     'group flex items-center gap-2.5 px-4 py-2.5 rounded-xl border transition-all duration-200',
                     leaderboardRank <= 3
@@ -318,7 +318,7 @@ export const QuickStatsBar: React.FC<QuickStatsBarProps> = ({
 
         {/* View all link - subtle but clear */}
         <Link
-          href="/dashboard/karma"
+          href="/dashboard/sparks"
           className="flex items-center gap-1.5 px-3 py-2 ml-auto rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 group"
         >
           <span>View All</span>

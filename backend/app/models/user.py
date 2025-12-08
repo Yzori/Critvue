@@ -40,13 +40,13 @@ class SubscriptionStatus(str, enum.Enum):
 
 
 class UserTier(str, enum.Enum):
-    """User tier/reputation levels"""
-    NOVICE = "novice"
-    CONTRIBUTOR = "contributor"
-    SKILLED = "skilled"
-    TRUSTED_ADVISOR = "trusted_advisor"
-    EXPERT = "expert"
-    MASTER = "master"
+    """User tier/reputation levels - Creative community focused"""
+    NEWCOMER = "newcomer"          # Was NOVICE - Fresh eyes on the platform
+    SUPPORTER = "supporter"        # Was CONTRIBUTOR - Active community member
+    GUIDE = "guide"                # Was SKILLED - Trusted feedback giver
+    MENTOR = "mentor"              # Was TRUSTED_ADVISOR - Experienced voice
+    CURATOR = "curator"            # Was EXPERT - Recognized tastemaker
+    VISIONARY = "visionary"        # Was MASTER - Creative community leader
 
 
 class ReviewerAvailability(str, enum.Enum):
@@ -95,10 +95,10 @@ class User(Base):
     avg_response_time_hours = Column(Integer, nullable=True)
 
     # Tier/Reputation System
-    user_tier = Column(Enum(UserTier, values_callable=lambda x: [e.value for e in x]), default=UserTier.NOVICE, nullable=False, index=True)
-    karma_points = Column(Integer, default=0, nullable=False, server_default='0', index=True)
+    user_tier = Column(Enum(UserTier, values_callable=lambda x: [e.value for e in x]), default=UserTier.NEWCOMER, nullable=False, index=True)
+    sparks_points = Column(Integer, default=0, nullable=False, server_default='0', index=True)
     tier_achieved_at = Column(DateTime, nullable=True)  # When current tier was achieved
-    expert_application_approved = Column(Boolean, default=False, nullable=False)  # Fast-track to MASTER
+    expert_application_approved = Column(Boolean, default=False, nullable=False)  # Fast-track to VISIONARY
     acceptance_rate = Column(Numeric(5, 2), nullable=True)  # Cached % of accepted reviews
     accepted_reviews_count = Column(Integer, default=0, nullable=False, server_default='0')  # Count of accepted reviews
     current_streak = Column(Integer, default=0, nullable=False, server_default='0')  # Current consecutive review days
@@ -190,7 +190,7 @@ class User(Base):
     # Relationships
     review_requests = relationship("ReviewRequest", back_populates="user", cascade="all, delete-orphan")
     expert_applications = relationship("ExpertApplication", back_populates="user", cascade="all, delete-orphan")
-    karma_transactions = relationship("KarmaTransaction", back_populates="user", cascade="all, delete-orphan")
+    sparks_transactions = relationship("SparksTransaction", back_populates="user", cascade="all, delete-orphan")
     tier_milestones = relationship("TierMilestone", back_populates="user", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
     notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan")

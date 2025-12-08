@@ -98,7 +98,7 @@ async def get_my_profile(
         avg_rating=current_user.avg_rating,
         avg_response_time_hours=current_user.avg_response_time_hours,
         user_tier=current_user.user_tier.value,
-        karma_points=current_user.karma_points,
+        sparks_points=current_user.sparks_points,
         tier_achieved_at=current_user.tier_achieved_at,
         onboarding_completed=current_user.onboarding_completed,
         primary_interest=current_user.primary_interest,

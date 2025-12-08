@@ -11,10 +11,13 @@ from app.models.review_request import (
     FeedbackPriority
 )
 from app.models.expert_application import ExpertApplication, ApplicationStatus
-from app.models.karma_transaction import KarmaTransaction, KarmaAction
+from app.models.sparks_transaction import SparksTransaction, SparksAction
+# Backward compatibility aliases
+KarmaTransaction = SparksTransaction
+KarmaAction = SparksAction
 from app.models.tier_milestone import TierMilestone
 from app.models.notification import Notification, NotificationPreferences, NotificationType, NotificationPriority, EntityType
-# New karma system models
+# Sparks system models
 from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
 from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, LeaderboardCategory
 from app.models.requester_rating import RequesterRating, RequesterStats
@@ -58,15 +61,17 @@ __all__ = [
     "DisputeResolution",
     "ExpertApplication",
     "ApplicationStatus",
-    "KarmaTransaction",
-    "KarmaAction",
+    "SparksTransaction",
+    "SparksAction",
+    "KarmaTransaction",  # Backward compatibility
+    "KarmaAction",  # Backward compatibility
     "TierMilestone",
     "Notification",
     "NotificationPreferences",
     "NotificationType",
     "NotificationPriority",
     "EntityType",
-    # New karma system
+    # Sparks system
     "Badge",
     "UserBadge",
     "BadgeCategory",

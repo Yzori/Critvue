@@ -21,7 +21,7 @@ from app.schemas.admin_users import (
     UserRoleChangeRequest,
     BanUserRequest,
     SuspendUserRequest,
-    KarmaAdjustRequest,
+    SparksAdjustRequest,
     TierOverrideRequest,
     ModerationActionResponse,
     AdminStatsResponse,
@@ -347,24 +347,24 @@ async def verify_user(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-# ============ Karma Management ============
+# ============ Sparks Management ============
 
-@router.post("/{user_id}/karma", response_model=ModerationActionResponse)
+@router.post("/{user_id}/sparks", response_model=ModerationActionResponse)
 @limiter.limit("10/minute")
-async def adjust_karma(
+async def adjust_sparks(
     request: Request,
     user_id: int,
-    request_body: KarmaAdjustRequest,
+    request_body: SparksAdjustRequest,
     admin: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Adjust a user's karma points.
+    Adjust a user's sparks points.
     """
     service = AdminUsersService(db)
 
     try:
-        user = await service.adjust_karma(
+        user = await service.adjust_sparks(
             user_id=user_id,
             amount=request_body.amount,
             reason=request_body.reason,
@@ -373,9 +373,9 @@ async def adjust_karma(
         )
         return ModerationActionResponse(
             success=True,
-            message=f"Karma adjusted. New karma: {user.karma_points}",
+            message=f"Sparks adjusted. New sparks: {user.sparks_points}",
             user_id=user_id,
-            action="karma_adjust",
+            action="sparks_adjust",
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

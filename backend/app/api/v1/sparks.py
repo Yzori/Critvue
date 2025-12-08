@@ -1,4 +1,4 @@
-"""Karma API endpoints for reputation system"""
+"""Sparks API endpoints for reputation system"""
 
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -8,23 +8,23 @@ from pydantic import BaseModel, Field
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
-from app.services.karma_service import KarmaService
+from app.services.sparks_service import SparksService
 from app.services.badge_service import BadgeService
 from app.services.leaderboard_service import LeaderboardService
 from app.services.requester_rating_service import RequesterRatingService
 from app.models.leaderboard import SeasonType, LeaderboardCategory
 
-router = APIRouter(prefix="/karma", tags=["Karma"])
+router = APIRouter(prefix="/sparks", tags=["Sparks"])
 
 
 # ============= Schemas =============
 
-class KarmaSummaryResponse(BaseModel):
-    """Summary of user's karma statistics"""
-    total_karma: int
+class SparksSummaryResponse(BaseModel):
+    """Summary of user's sparks statistics"""
+    total_sparks: int
     total_xp: int
     reputation_score: int
-    user_tier: str  # Actual tier from database (not calculated from karma)
+    user_tier: str  # Actual tier from database (not calculated from sparks)
     acceptance_rate: Optional[float]
     accepted_reviews_count: int
     current_streak: int
@@ -37,14 +37,14 @@ class KarmaSummaryResponse(BaseModel):
     last_active_date: Optional[str]
 
 
-class KarmaBreakdownResponse(BaseModel):
-    """Detailed karma breakdown"""
-    total_karma: int
+class SparksBreakdownResponse(BaseModel):
+    """Detailed sparks breakdown"""
+    total_sparks: int
     total_xp: int
     reputation_score: int
-    positive_karma_earned: int
-    negative_karma_incurred: int
-    net_karma: int
+    positive_sparks_earned: int
+    negative_sparks_incurred: int
+    net_sparks: int
     breakdown_by_action: dict
     percentile: int
     acceptance_rate: Optional[float]
@@ -124,42 +124,42 @@ class WeeklyGoalUpdateRequest(BaseModel):
     target: int = Field(..., ge=1, le=20, description="Weekly review target (1-20)")
 
 
-# ============= Karma Endpoints =============
+# ============= Sparks Endpoints =============
 
-@router.get("/summary", response_model=KarmaSummaryResponse)
-async def get_karma_summary(
+@router.get("/summary", response_model=SparksSummaryResponse)
+async def get_sparks_summary(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get user's karma summary."""
-    karma_service = KarmaService(db)
-    summary = await karma_service.get_karma_summary(current_user.id)
-    # Add actual user tier from database (not calculated from karma)
+    """Get user's sparks summary."""
+    sparks_service = SparksService(db)
+    summary = await sparks_service.get_sparks_summary(current_user.id)
+    # Add actual user tier from database (not calculated from sparks)
     summary["user_tier"] = current_user.user_tier.value
     return summary
 
 
-@router.get("/breakdown", response_model=KarmaBreakdownResponse)
-async def get_karma_breakdown(
+@router.get("/breakdown", response_model=SparksBreakdownResponse)
+async def get_sparks_breakdown(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get detailed karma breakdown for transparency."""
-    karma_service = KarmaService(db)
-    breakdown = await karma_service.get_karma_breakdown(current_user.id)
+    """Get detailed sparks breakdown for transparency."""
+    sparks_service = SparksService(db)
+    breakdown = await sparks_service.get_sparks_breakdown(current_user.id)
     return breakdown
 
 
 @router.get("/history")
-async def get_karma_history(
+async def get_sparks_history(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get karma transaction history."""
-    karma_service = KarmaService(db)
-    transactions = await karma_service.get_karma_history(
+    """Get sparks transaction history."""
+    sparks_service = SparksService(db)
+    transactions = await sparks_service.get_sparks_history(
         current_user.id,
         limit=limit,
         offset=offset

@@ -255,8 +255,8 @@ async def notify_review_accepted(
     slot_id: int,
     reviewer_id: int,
     helpful_rating: int,
-    karma_earned: int,
-    new_karma_balance: int
+    sparks_earned: int,
+    new_sparks_balance: int
 ) -> None:
     """
     Notify reviewer when their review is accepted.
@@ -266,8 +266,8 @@ async def notify_review_accepted(
         slot_id: ID of accepted slot
         reviewer_id: ID of reviewer
         helpful_rating: How helpful the review was (1-5)
-        karma_earned: Amount of karma earned
-        new_karma_balance: Reviewer's new karma balance
+        sparks_earned: Amount of sparks earned
+        new_sparks_balance: Reviewer's new sparks balance
     """
     try:
         # Get slot and review request
@@ -298,13 +298,13 @@ async def notify_review_accepted(
             user_id=reviewer_id,
             notification_type=NotificationType.REVIEW_ACCEPTED,
             title="Your review was accepted!",
-            message=f"Your review for '{review_request.title}' has been accepted. You earned {karma_earned} karma points!",
+            message=f"Your review for '{review_request.title}' has been accepted. You earned {sparks_earned} sparks!",
             data={
                 "slot_id": slot.id,
                 "review_request_id": review_request.id,
                 "review_request_title": review_request.title,
-                "karma_earned": karma_earned,
-                "new_karma_balance": new_karma_balance,
+                "sparks_earned": sparks_earned,
+                "new_sparks_balance": new_sparks_balance,
                 "helpful_rating": helpful_rating,
                 "acceptance_type": "manual",
             },
@@ -329,8 +329,8 @@ async def notify_review_rejected(
     reviewer_id: int,
     rejection_reason: str,
     rejection_notes: Optional[str],
-    karma_penalty: int,
-    new_karma_balance: int
+    sparks_penalty: int,
+    new_sparks_balance: int
 ) -> None:
     """
     Notify reviewer when their review is rejected.
@@ -341,8 +341,8 @@ async def notify_review_rejected(
         reviewer_id: ID of reviewer
         rejection_reason: Reason for rejection
         rejection_notes: Additional notes from requester
-        karma_penalty: Amount of karma deducted
-        new_karma_balance: Reviewer's new karma balance
+        sparks_penalty: Amount of sparks deducted
+        new_sparks_balance: Reviewer's new sparks balance
     """
     try:
         # Get slot and review request
@@ -383,8 +383,8 @@ async def notify_review_rejected(
                 "review_request_title": review_request.title,
                 "rejection_reason": rejection_reason,
                 "rejection_notes": rejection_notes,
-                "karma_penalty": karma_penalty,
-                "new_karma_balance": new_karma_balance,
+                "sparks_penalty": sparks_penalty,
+                "new_sparks_balance": new_sparks_balance,
                 "can_dispute": True,
                 "dispute_deadline": dispute_deadline.isoformat(),
             },

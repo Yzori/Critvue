@@ -15,13 +15,13 @@ import { TierBadge } from './tier-badge';
 import { CheckCircle2, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 /**
- * KarmaProgress Component
+ * SparksProgress Component
  *
- * Displays current karma points, progress to next tier, and expandable
+ * Displays current sparks points, progress to next tier, and expandable
  * requirements checklist showing what's needed to advance.
  */
 
-export interface KarmaProgressProps {
+export interface SparksProgressProps {
   /**
    * User's current tier status
    */
@@ -36,7 +36,7 @@ export interface KarmaProgressProps {
   className?: string;
 }
 
-export const KarmaProgress: React.FC<KarmaProgressProps> = ({
+export const SparksProgress: React.FC<SparksProgressProps> = ({
   status,
   compact = false,
   className,
@@ -62,8 +62,8 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
               size="md"
             />
             <div className="text-right">
-              <p className="text-2xl font-bold">{status.karma.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Karma Points</p>
+              <p className="text-2xl font-bold">{status.sparks.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Sparks</p>
             </div>
           </div>
 
@@ -72,7 +72,7 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
               You've reached the highest tier!
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Keep earning karma to maintain your status
+              Keep earning Sparks to maintain your status
             </p>
           </div>
         </CardContent>
@@ -88,10 +88,10 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
-              {status.karma.toLocaleString()} karma
+              {status.sparks.toLocaleString()} Sparks
             </span>
             <span className="text-muted-foreground">
-              {progress.karmaNeededForNext.toLocaleString()} more to{' '}
+              {progress.sparksNeededForNext.toLocaleString()} more to{' '}
               {nextTierInfo.name}
             </span>
           </div>
@@ -111,14 +111,14 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
         <CardTitle className="text-sm font-medium">Tier Progress</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Current Karma & Progress */}
+        {/* Current Sparks & Progress */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-3xl font-bold">
-                {status.karma.toLocaleString()}
+                {status.sparks.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">Karma Points</p>
+              <p className="text-sm text-muted-foreground">Sparks</p>
             </div>
             <TierBadge
               tier={status.currentTier}
@@ -142,7 +142,7 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
               size="lg"
             />
             <p className="text-xs text-muted-foreground">
-              {progress.karmaNeededForNext.toLocaleString()} more karma needed
+              {progress.sparksNeededForNext.toLocaleString()} more Sparks needed
             </p>
           </div>
         </div>
@@ -163,12 +163,12 @@ export const KarmaProgress: React.FC<KarmaProgressProps> = ({
 
           {expanded && (
             <div className="mt-3 space-y-2 animate-in slide-in-from-top-4 fade-in duration-300">
-              {/* Karma Requirement */}
+              {/* Sparks Requirement */}
               <RequirementItem
-                met={progress.requirementsMet.karma}
-                label="Karma Points"
-                current={status.karma.toLocaleString()}
-                required={nextTierInfo.requirements.minKarma.toLocaleString()}
+                met={progress.requirementsMet.sparks}
+                label="Sparks"
+                current={status.sparks.toLocaleString()}
+                required={nextTierInfo.requirements.minSparks.toLocaleString()}
               />
 
               {/* Reviews Requirement */}
@@ -273,3 +273,7 @@ const RequirementItem: React.FC<RequirementItemProps> = ({
     </div>
   );
 };
+
+// Backward compatibility exports
+export const KarmaProgress = SparksProgress;
+export type KarmaProgressProps = SparksProgressProps;

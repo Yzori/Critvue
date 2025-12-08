@@ -1,4 +1,4 @@
-"""Karma Transaction database model for tracking reputation changes"""
+"""Sparks Transaction database model for tracking reputation changes"""
 
 import enum
 from datetime import datetime
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from app.models.review_slot import ReviewSlot
 
 
-class KarmaAction(str, enum.Enum):
-    """Types of actions that award or deduct karma points"""
+class SparksAction(str, enum.Enum):
+    """Types of actions that award or deduct sparks points"""
 
     # Review lifecycle actions
     REVIEW_SUBMITTED = "review_submitted"                # +5 when review is submitted
@@ -83,15 +83,15 @@ class KarmaAction(str, enum.Enum):
     CHALLENGE_CATEGORY_WIN = "challenge_category_win"    # +25-75 for category challenge placement
 
 
-class KarmaTransaction(Base):
+class SparksTransaction(Base):
     """
-    Records all karma point changes for audit trail and analytics.
+    Records all sparks point changes for audit trail and analytics.
 
-    Every karma change is logged with the action type, point delta, and context.
+    Every sparks change is logged with the action type, point delta, and context.
     This provides full transparency and allows for dispute resolution.
     """
 
-    __tablename__ = "karma_transactions"
+    __tablename__ = "sparks_transactions"
 
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
@@ -107,21 +107,21 @@ class KarmaTransaction(Base):
 
     # Transaction details
     action = Column(
-        Enum(KarmaAction, values_callable=lambda x: [e.value for e in x]),
+        Enum(SparksAction, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True
     )
     points = Column(Integer, nullable=False)  # Can be negative
-    balance_after = Column(Integer, nullable=False)  # Snapshot of total karma after this transaction
+    balance_after = Column(Integer, nullable=False)  # Snapshot of total sparks after this transaction
     reason = Column(Text, nullable=True)  # Human-readable description for user display
 
     # Timestamp
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     # Relationships
-    user = relationship("User", back_populates="karma_transactions")
-    review_slot = relationship("ReviewSlot", backref="karma_transactions")
+    user = relationship("User", back_populates="sparks_transactions")
+    review_slot = relationship("ReviewSlot", backref="sparks_transactions")
 
     def __repr__(self) -> str:
         sign = "+" if self.points >= 0 else ""
-        return f"<KarmaTransaction {self.id}: {self.user_id} {sign}{self.points} ({self.action})>"
+        return f"<SparksTransaction {self.id}: {self.user_id} {sign}{self.points} ({self.action})>"

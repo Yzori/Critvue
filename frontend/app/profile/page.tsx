@@ -41,7 +41,7 @@ import {
 // API imports
 import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
 import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
-import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/karma";
+import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/sparks";
 import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/activity";
 import { ApiClientError } from "@/lib/api/client";
 
@@ -85,7 +85,7 @@ interface ProfileData {
   badges: string[];
   specialty_tags: string[];
   user_tier: string;
-  karma_points: number;
+  sparks_points: number;
   tier_achieved_at?: string;
   role?: "creator" | "reviewer" | "admin";
 }
@@ -331,7 +331,7 @@ export default function ProfilePage() {
           date: day.date,
           reviewsGiven: day.reviewsGiven,
           reviewsReceived: day.reviewsReceived,
-          commentsGiven: day.karmaEvents, // Use karma events as a proxy for activity
+          commentsGiven: day.sparksEvents, // Use sparks events as a proxy for activity
           total: day.total,
         }));
         setActivityData(transformedActivity);
@@ -535,7 +535,7 @@ export default function ProfilePage() {
                   </span>
                   <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground">
-                    <span className="font-semibold text-foreground">{profileData.karma_points}</span> karma
+                    <span className="font-semibold text-foreground">{profileData.sparks_points}</span> sparks
                   </span>
                   <span className="text-muted-foreground hidden sm:inline">|</span>
                   <span className="text-muted-foreground text-xs">
@@ -637,13 +637,13 @@ export default function ProfilePage() {
               transition={{ delay: 0.2 }}
             >
               <ContextualStatCard
-                label="Karma Points"
-                value={profileData.karma_points}
+                label="Sparks"
+                value={profileData.sparks_points}
                 icon={<Star className="size-6 text-white" />}
-                iconBg="bg-gradient-to-br from-purple-500 to-indigo-600"
-                trend={enhancedStats?.karmaPoints.trend}
-                percentile={enhancedStats?.karmaPoints.percentile}
-                sparklineData={enhancedStats?.karmaPoints.sparklineData}
+                iconBg="bg-gradient-to-br from-amber-500 to-orange-600"
+                trend={enhancedStats?.sparksPoints.trend}
+                percentile={enhancedStats?.sparksPoints.percentile}
+                sparklineData={enhancedStats?.sparksPoints.sparklineData}
                 size="md"
               />
             </motion.div>
@@ -697,7 +697,7 @@ export default function ProfilePage() {
                 <h2 className="text-lg font-bold text-foreground">Achievements</h2>
                 <p className="text-sm text-muted-foreground">Your journey and progress</p>
               </div>
-              <Link href="/dashboard/karma">
+              <Link href="/dashboard/sparks">
                 <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50">
                   View All
                   <ArrowRight className="size-4 ml-1" />

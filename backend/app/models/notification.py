@@ -43,9 +43,12 @@ class NotificationType(str, enum.Enum):
     DISPUTE_RESOLVED_REVIEWER_WINS = "dispute_resolved_reviewer_wins"
     DISPUTE_RESOLVED_CREATOR_WINS = "dispute_resolved_creator_wins"
 
-    # Karma & Tier
-    KARMA_EARNED = "karma_earned"
-    KARMA_LOST = "karma_lost"
+    # Sparks & Tier
+    SPARKS_EARNED = "sparks_earned"
+    SPARKS_LOST = "sparks_lost"
+    # Backward compatibility aliases
+    KARMA_EARNED = "sparks_earned"
+    KARMA_LOST = "sparks_lost"
     STREAK_MILESTONE = "streak_milestone"
     TIER_PROMOTED = "tier_promoted"
     TIER_PROGRESS = "tier_progress"

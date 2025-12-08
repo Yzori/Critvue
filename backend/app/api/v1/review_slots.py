@@ -35,7 +35,7 @@ from app.schemas.review_slot import (
     SmartReviewSubmit,
 )
 from app.services.claim_service import claim_service, ClaimValidationError
-from app.services.review_karma_hooks import (
+from app.services.review_sparks_hooks import (
     on_review_submitted,
     on_review_accepted,
     on_review_rejected,

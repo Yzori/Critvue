@@ -20,8 +20,8 @@ class TierService:
 
     # Tier requirements structure
     TIER_REQUIREMENTS = {
-        UserTier.NOVICE: {
-            "karma_min": 0,
+        UserTier.NEWCOMER: {
+            "sparks_min": 0,
             "accepted_reviews_min": 0,
             "acceptance_rate_min": None,
             "avg_helpful_rating_min": None,
@@ -30,8 +30,8 @@ class TierService:
             "paid_tier_min": None,
             "paid_tier_max": None,
         },
-        UserTier.CONTRIBUTOR: {
-            "karma_min": 100,
+        UserTier.SUPPORTER: {
+            "sparks_min": 100,
             "accepted_reviews_min": 5,
             "acceptance_rate_min": None,
             "avg_helpful_rating_min": None,
@@ -40,8 +40,8 @@ class TierService:
             "paid_tier_min": None,
             "paid_tier_max": None,
         },
-        UserTier.SKILLED: {
-            "karma_min": 500,
+        UserTier.GUIDE: {
+            "sparks_min": 500,
             "accepted_reviews_min": 25,
             "acceptance_rate_min": 75.0,
             "avg_helpful_rating_min": None,
@@ -50,8 +50,8 @@ class TierService:
             "paid_tier_min": None,
             "paid_tier_max": None,
         },
-        UserTier.TRUSTED_ADVISOR: {
-            "karma_min": 1500,
+        UserTier.MENTOR: {
+            "sparks_min": 1500,
             "accepted_reviews_min": 75,
             "acceptance_rate_min": 80.0,
             "avg_helpful_rating_min": 4.0,
@@ -60,8 +60,8 @@ class TierService:
             "paid_tier_min": None,  # Can accept any budget up to $25
             "paid_tier_max": 25,
         },
-        UserTier.EXPERT: {
-            "karma_min": 5000,
+        UserTier.CURATOR: {
+            "sparks_min": 5000,
             "accepted_reviews_min": 200,
             "acceptance_rate_min": 85.0,
             "avg_helpful_rating_min": 4.3,
@@ -70,8 +70,8 @@ class TierService:
             "paid_tier_min": None,  # Can accept any budget up to $100
             "paid_tier_max": 100,
         },
-        UserTier.MASTER: {
-            "karma_min": 15000,
+        UserTier.VISIONARY: {
+            "sparks_min": 15000,
             "accepted_reviews_min": 500,
             "acceptance_rate_min": 90.0,
             "avg_helpful_rating_min": 4.5,
@@ -84,12 +84,12 @@ class TierService:
 
     # Tier order for progression
     TIER_ORDER = [
-        UserTier.NOVICE,
-        UserTier.CONTRIBUTOR,
-        UserTier.SKILLED,
-        UserTier.TRUSTED_ADVISOR,
-        UserTier.EXPERT,
-        UserTier.MASTER,
+        UserTier.NEWCOMER,
+        UserTier.SUPPORTER,
+        UserTier.GUIDE,
+        UserTier.MENTOR,
+        UserTier.CURATOR,
+        UserTier.VISIONARY,
     ]
 
     def __init__(self, db: AsyncSession):
@@ -121,12 +121,12 @@ class TierService:
         requirements = self.TIER_REQUIREMENTS[tier]
         details = {}
 
-        # Check karma
-        karma_met = (user.karma_points or 0) >= requirements["karma_min"]
-        details["karma"] = {
-            "required": requirements["karma_min"],
-            "current": user.karma_points or 0,
-            "met": karma_met
+        # Check sparks
+        sparks_met = (user.sparks_points or 0) >= requirements["sparks_min"]
+        details["sparks"] = {
+            "required": requirements["sparks_min"],
+            "current": user.sparks_points or 0,
+            "met": sparks_met
         }
 
         # Check accepted reviews count
@@ -174,7 +174,7 @@ class TierService:
 
         # All requirements must be met
         meets_requirements = all([
-            karma_met,
+            sparks_met,
             accepted_count_met,
             acceptance_rate_met,
             avg_rating_met
@@ -242,7 +242,7 @@ class TierService:
             from_tier=old_tier,
             to_tier=new_tier,
             reason=reason,
-            karma_at_promotion=user.karma_points or 0,
+            sparks_at_promotion=user.sparks_points or 0,
             achieved_at=datetime.utcnow()
         )
 
@@ -310,7 +310,7 @@ class TierService:
 
         # Check if tier allows paid reviews at all
         if not requirements["can_accept_paid"]:
-            return False, f"Tier {user.user_tier.value} cannot accept paid reviews. Reach {UserTier.TRUSTED_ADVISOR.value} tier to unlock paid reviews."
+            return False, f"Tier {user.user_tier.value} cannot accept paid reviews. Reach {UserTier.MENTOR.value} tier to unlock paid reviews."
 
         # Check budget range for tier
         min_budget = requirements["paid_tier_min"]
@@ -333,11 +333,11 @@ class TierService:
 
     def _get_next_paid_tier(self, current_tier: UserTier) -> UserTier:
         """Get the next tier that allows higher paid reviews"""
-        if current_tier == UserTier.TRUSTED_ADVISOR:
-            return UserTier.EXPERT
-        elif current_tier == UserTier.EXPERT:
-            return UserTier.MASTER
-        return UserTier.MASTER
+        if current_tier == UserTier.MENTOR:
+            return UserTier.CURATOR
+        elif current_tier == UserTier.CURATOR:
+            return UserTier.VISIONARY
+        return UserTier.VISIONARY
 
     async def _count_weekly_claims(self, user_id: int) -> int:
         """
@@ -388,7 +388,7 @@ class TierService:
         result = {
             "current_tier": current_tier.value,
             "tier_achieved_at": user.tier_achieved_at.isoformat() if user.tier_achieved_at else None,
-            "karma_points": user.karma_points,
+            "sparks_points": user.sparks_points,
             "can_accept_paid": self.TIER_REQUIREMENTS[current_tier]["can_accept_paid"],
             "weekly_paid_limit": self.TIER_REQUIREMENTS[current_tier]["weekly_paid_limit"],
         }
@@ -434,15 +434,15 @@ class TierService:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def fast_track_to_master(
+    async def fast_track_to_visionary(
         self,
         user_id: int,
-        reason: str = "Expert application approved"
+        reason: str = "Visionary application approved"
     ) -> TierMilestone:
         """
-        Fast-track user to MASTER tier (expert application path).
+        Fast-track user to VISIONARY tier (expert application path).
 
-        Sets expert_application_approved flag and awards 15,000 karma
+        Sets expert_application_approved flag and awards 15,000 sparks
         to match the minimum requirement.
 
         Args:
@@ -459,14 +459,14 @@ class TierService:
         # Set expert application flag
         user.expert_application_approved = True
 
-        # Award minimum karma if below threshold
-        if (user.karma_points or 0) < 15000:
-            user.karma_points = 15000
+        # Award minimum sparks if below threshold
+        if (user.sparks_points or 0) < 15000:
+            user.sparks_points = 15000
 
-        # Promote to MASTER
+        # Promote to VISIONARY
         milestone = await self.promote_to_tier(
             user_id=user_id,
-            new_tier=UserTier.MASTER,
+            new_tier=UserTier.VISIONARY,
             reason=reason
         )
 

@@ -37,12 +37,12 @@ import { cn } from '@/lib/utils';
  */
 
 const tierOrder: UserTier[] = [
-  UserTier.NOVICE,
-  UserTier.CONTRIBUTOR,
-  UserTier.SKILLED,
-  UserTier.TRUSTED_ADVISOR,
-  UserTier.EXPERT,
-  UserTier.MASTER,
+  UserTier.NEWCOMER,
+  UserTier.SUPPORTER,
+  UserTier.GUIDE,
+  UserTier.MENTOR,
+  UserTier.CURATOR,
+  UserTier.VISIONARY,
 ];
 
 export default function TiersPage() {
@@ -59,7 +59,7 @@ export default function TiersPage() {
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Build your reputation, unlock benefits, and earn rewards as you
-            grow from Novice to Master
+            grow from Newcomer to Visionary
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
@@ -139,7 +139,7 @@ export default function TiersPage() {
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Two Paths to Master</h2>
+            <h2 className="text-3xl font-bold mb-4">Two Paths to Visionary</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Choose the path that works best for you
             </p>
@@ -161,13 +161,13 @@ export default function TiersPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Get verified as a certified expert and jump directly to Master
+                  Get verified as a certified expert and jump directly to Visionary
                   tier
                 </p>
 
                 <div className="space-y-2">
                   <BenefitItem text="Skip intermediate tiers" />
-                  <BenefitItem text="Certified Master badge" />
+                  <BenefitItem text="Certified Visionary badge" />
                   <BenefitItem text="Immediate access to all benefits" />
                   <BenefitItem text="Requires portfolio verification" />
                 </div>
@@ -205,8 +205,8 @@ export default function TiersPage() {
                 </p>
 
                 <div className="space-y-2">
-                  <BenefitItem text="Earn karma through reviews" />
-                  <BenefitItem text="Community Master badge" />
+                  <BenefitItem text="Earn Sparks through reviews" />
+                  <BenefitItem text="Community Visionary badge" />
                   <BenefitItem text="Gradual benefit unlocks" />
                   <BenefitItem text="Build proven track record" />
                 </div>

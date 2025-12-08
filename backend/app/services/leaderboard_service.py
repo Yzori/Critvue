@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, LeaderboardCategory
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
-from app.models.karma_transaction import KarmaAction, KarmaTransaction
+from app.models.sparks_transaction import SparksAction as KarmaAction, SparksTransaction as KarmaTransaction
 
 
 class LeaderboardService:

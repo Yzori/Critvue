@@ -27,10 +27,14 @@ class SuspendUserRequest(BaseModel):
     duration_hours: int = Field(..., ge=1, le=8760, description="Suspension duration in hours (max 1 year)")
 
 
-class KarmaAdjustRequest(BaseModel):
-    """Request to adjust a user's karma"""
+class SparksAdjustRequest(BaseModel):
+    """Request to adjust a user's sparks"""
     amount: int = Field(..., description="Amount to add (positive) or subtract (negative)")
-    reason: str = Field(..., min_length=5, description="Reason for karma adjustment")
+    reason: str = Field(..., min_length=5, description="Reason for sparks adjustment")
+
+
+# Backward compatibility alias
+KarmaAdjustRequest = SparksAdjustRequest
 
 
 class TierOverrideRequest(BaseModel):
@@ -65,7 +69,7 @@ class UserListItem(BaseModel):
     role: UserRole
     user_tier: UserTier
     subscription_tier: SubscriptionTier
-    karma_points: int
+    sparks_points: int
     is_active: bool
     is_verified: bool
     is_banned: bool
@@ -103,7 +107,7 @@ class UserDetailResponse(BaseModel):
     subscription_status: Optional[str]
 
     # Stats
-    karma_points: int
+    sparks_points: int
     xp_points: int
     reputation_score: int
     total_reviews_given: int

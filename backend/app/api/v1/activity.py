@@ -19,7 +19,7 @@ from app.api.deps import get_current_user
 from app.models.user import User
 from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
-from app.models.karma_transaction import KarmaTransaction, KarmaAction
+from app.models.sparks_transaction import SparksTransaction, SparksAction
 from app.models.notification import Notification
 from app.models.challenge_entry import ChallengeEntry
 from app.models.challenge_vote import ChallengeVote
@@ -37,7 +37,7 @@ class DayActivity(BaseModel):
     date: str  # YYYY-MM-DD
     reviews_given: int
     reviews_received: int
-    karma_events: int
+    sparks_events: int
     challenge_entries: int
     challenge_votes: int
     review_requests_created: int
@@ -55,7 +55,7 @@ class ActivityHeatmapResponse(BaseModel):
 class TimelineEvent(BaseModel):
     """A single timeline event"""
     id: str
-    type: str  # review_given, review_received, badge_earned, milestone, karma_change
+    type: str  # review_given, review_received, badge_earned, milestone, sparks_change
     title: str
     description: Optional[str] = None
     timestamp: str
@@ -125,23 +125,23 @@ async def get_activity_heatmap(
     reviews_received_result = await db.execute(reviews_received_query)
     reviews_received_by_date = {str(row.date): row.count for row in reviews_received_result.all()}
 
-    # Get karma events grouped by date
-    karma_query = (
+    # Get sparks events grouped by date
+    sparks_query = (
         select(
-            func.date(KarmaTransaction.created_at).label('date'),
-            func.count(KarmaTransaction.id).label('count')
+            func.date(SparksTransaction.created_at).label('date'),
+            func.count(SparksTransaction.id).label('count')
         )
         .where(
             and_(
-                KarmaTransaction.user_id == current_user.id,
-                func.date(KarmaTransaction.created_at) >= start_date,
-                func.date(KarmaTransaction.created_at) <= end_date,
+                SparksTransaction.user_id == current_user.id,
+                func.date(SparksTransaction.created_at) >= start_date,
+                func.date(SparksTransaction.created_at) <= end_date,
             )
         )
-        .group_by(func.date(KarmaTransaction.created_at))
+        .group_by(func.date(SparksTransaction.created_at))
     )
-    karma_result = await db.execute(karma_query)
-    karma_by_date = {str(row.date): row.count for row in karma_result.all()}
+    sparks_result = await db.execute(sparks_query)
+    sparks_by_date = {str(row.date): row.count for row in sparks_result.all()}
 
     # Get challenge entries (submissions) grouped by date
     challenge_entries_query = (
@@ -208,18 +208,18 @@ async def get_activity_heatmap(
         date_str = str(current_date)
         reviews_given = reviews_given_by_date.get(date_str, 0)
         reviews_received = reviews_received_by_date.get(date_str, 0)
-        karma_events = karma_by_date.get(date_str, 0)
+        sparks_events = sparks_by_date.get(date_str, 0)
         challenge_entries = challenge_entries_by_date.get(date_str, 0)
         challenge_votes = challenge_votes_by_date.get(date_str, 0)
         review_requests_created = review_requests_by_date.get(date_str, 0)
-        total = (reviews_given + reviews_received + karma_events +
+        total = (reviews_given + reviews_received + sparks_events +
                  challenge_entries + challenge_votes + review_requests_created)
 
         activity_data.append(DayActivity(
             date=date_str,
             reviews_given=reviews_given,
             reviews_received=reviews_received,
-            karma_events=karma_events,
+            sparks_events=sparks_events,
             challenge_entries=challenge_entries,
             challenge_votes=challenge_votes,
             review_requests_created=review_requests_created,
@@ -262,7 +262,7 @@ class StatWithContext(BaseModel):
 class ProfileStatsWithContextResponse(BaseModel):
     """Enhanced profile stats with trends and percentiles"""
     reviews_given: StatWithContext
-    karma_points: StatWithContext
+    sparks_points: StatWithContext
     avg_rating: StatWithContext
     avg_response_time: StatWithContext
 
@@ -277,7 +277,7 @@ async def get_enhanced_stats(
 
     Returns:
     - Reviews given with monthly trend and percentile
-    - Karma points with trend and percentile
+    - Sparks points with trend and percentile
     - Average rating with percentile
     - Average response time with trend and percentile
     """
@@ -378,58 +378,58 @@ async def get_enhanced_stats(
         count = (await db.execute(count_query)).scalar() or 0
         reviews_sparkline.append(count)
 
-    # ========== KARMA POINTS ==========
-    karma_current = current_user.karma_points or 0
+    # ========== SPARKS POINTS ==========
+    sparks_current = current_user.sparks_points or 0
 
-    # Get karma gained this month vs last month
-    karma_this_month_query = (
-        select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+    # Get sparks gained this month vs last month
+    sparks_this_month_query = (
+        select(func.coalesce(func.sum(SparksTransaction.points), 0))
         .where(
             and_(
-                KarmaTransaction.user_id == current_user.id,
-                func.date(KarmaTransaction.created_at) >= current_month_start,
+                SparksTransaction.user_id == current_user.id,
+                func.date(SparksTransaction.created_at) >= current_month_start,
             )
         )
     )
-    karma_this_month = (await db.execute(karma_this_month_query)).scalar() or 0
+    sparks_this_month = (await db.execute(sparks_this_month_query)).scalar() or 0
 
-    karma_last_month_query = (
-        select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+    sparks_last_month_query = (
+        select(func.coalesce(func.sum(SparksTransaction.points), 0))
         .where(
             and_(
-                KarmaTransaction.user_id == current_user.id,
-                func.date(KarmaTransaction.created_at) >= prev_month_start,
-                func.date(KarmaTransaction.created_at) <= prev_month_end,
+                SparksTransaction.user_id == current_user.id,
+                func.date(SparksTransaction.created_at) >= prev_month_start,
+                func.date(SparksTransaction.created_at) <= prev_month_end,
             )
         )
     )
-    karma_last_month = (await db.execute(karma_last_month_query)).scalar() or 0
+    sparks_last_month = (await db.execute(sparks_last_month_query)).scalar() or 0
 
-    if karma_last_month > 0:
-        karma_trend_pct = int(((karma_this_month - karma_last_month) / karma_last_month) * 100)
+    if sparks_last_month > 0:
+        sparks_trend_pct = int(((sparks_this_month - sparks_last_month) / sparks_last_month) * 100)
     else:
-        karma_trend_pct = 100 if karma_this_month > 0 else 0
+        sparks_trend_pct = 100 if sparks_this_month > 0 else 0
 
-    karma_trend_direction = 'up' if karma_trend_pct > 0 else ('down' if karma_trend_pct < 0 else 'neutral')
+    sparks_trend_direction = 'up' if sparks_trend_pct > 0 else ('down' if sparks_trend_pct < 0 else 'neutral')
 
-    # Karma percentile
-    karma_percentile_query = (
+    # Sparks percentile
+    sparks_percentile_query = (
         select(func.count(User.id))
-        .where(User.karma_points < karma_current)
+        .where(User.sparks_points < sparks_current)
     )
-    karma_users_below = (await db.execute(karma_percentile_query)).scalar() or 0
+    sparks_users_below = (await db.execute(sparks_percentile_query)).scalar() or 0
 
     total_users_query = select(func.count(User.id)).where(User.is_active == True)
     total_users = (await db.execute(total_users_query)).scalar() or 1
 
-    karma_percentile = int((karma_users_below / total_users) * 100) if total_users > 0 else 50
+    sparks_percentile = int((sparks_users_below / total_users) * 100) if total_users > 0 else 50
 
-    # Karma sparkline (monthly totals for last 12 months, cumulative style)
-    karma_sparkline = []
-    cumulative_karma = karma_current
-    # Work backwards to calculate what karma was at each month
+    # Sparks sparkline (monthly totals for last 12 months, cumulative style)
+    sparks_sparkline = []
+    cumulative_sparks = sparks_current
+    # Work backwards to calculate what sparks was at each month
     for i in range(11, -1, -1):
-        karma_sparkline.append(max(0, cumulative_karma))
+        sparks_sparkline.append(max(0, cumulative_sparks))
         # For simplicity, subtract this month's gains to approximate previous totals
         if i > 0:
             month_offset = today.month - i
@@ -442,20 +442,20 @@ async def get_enhanced_stats(
             else:
                 month_end = date(year, month + 1, 1) - timedelta(days=1)
 
-            monthly_karma_query = (
-                select(func.coalesce(func.sum(KarmaTransaction.points), 0))
+            monthly_sparks_query = (
+                select(func.coalesce(func.sum(SparksTransaction.points), 0))
                 .where(
                     and_(
-                        KarmaTransaction.user_id == current_user.id,
-                        func.date(KarmaTransaction.created_at) >= month_start,
-                        func.date(KarmaTransaction.created_at) <= month_end,
+                        SparksTransaction.user_id == current_user.id,
+                        func.date(SparksTransaction.created_at) >= month_start,
+                        func.date(SparksTransaction.created_at) <= month_end,
                     )
                 )
             )
-            monthly_karma = (await db.execute(monthly_karma_query)).scalar() or 0
-            cumulative_karma -= monthly_karma
+            monthly_sparks = (await db.execute(monthly_sparks_query)).scalar() or 0
+            cumulative_sparks -= monthly_sparks
 
-    karma_sparkline.reverse()
+    sparks_sparkline.reverse()
 
     # ========== AVERAGE RATING ==========
     avg_rating_current = float(current_user.avg_rating or 0)
@@ -531,15 +531,15 @@ async def get_enhanced_stats(
             comparison=f"Top {100 - reviews_percentile}% of reviewers" if reviews_percentile >= 50 else None,
             sparkline_data=reviews_sparkline,
         ),
-        karma_points=StatWithContext(
-            value=karma_current,
+        sparks_points=StatWithContext(
+            value=sparks_current,
             trend=TrendInfo(
-                value=abs(karma_trend_pct),
-                direction=karma_trend_direction,
+                value=abs(sparks_trend_pct),
+                direction=sparks_trend_direction,
                 label="from last month",
-            ) if karma_trend_pct != 0 else None,
-            percentile=karma_percentile,
-            sparkline_data=karma_sparkline,
+            ) if sparks_trend_pct != 0 else None,
+            percentile=sparks_percentile,
+            sparkline_data=sparks_sparkline,
         ),
         avg_rating=StatWithContext(
             value=avg_rating_current,
@@ -569,7 +569,7 @@ async def get_activity_timeline(
     """
     Get activity timeline for the current user.
 
-    Returns recent activity events including reviews, karma changes,
+    Returns recent activity events including reviews, sparks changes,
     and milestones in chronological order (newest first).
     """
     events: List[TimelineEvent] = []
@@ -646,59 +646,59 @@ async def get_activity_timeline(
             }
         ))
 
-    # Get significant karma transactions
-    karma_query = (
-        select(KarmaTransaction)
+    # Get significant sparks transactions
+    sparks_query = (
+        select(SparksTransaction)
         .where(
             and_(
-                KarmaTransaction.user_id == current_user.id,
-                # Only include significant karma events
+                SparksTransaction.user_id == current_user.id,
+                # Only include significant sparks events
                 or_(
-                    KarmaTransaction.action.in_([
-                        KarmaAction.REVIEW_ACCEPTED,
-                        KarmaAction.REVIEW_REJECTED,
-                        KarmaAction.BADGE_EARNED,
-                        KarmaAction.TIER_PROMOTION,
-                        KarmaAction.STREAK_BONUS_5,
-                        KarmaAction.STREAK_BONUS_10,
-                        KarmaAction.STREAK_BONUS_25,
-                        KarmaAction.WEEKLY_GOAL_MET,
-                        KarmaAction.DISPUTE_WON,
-                        KarmaAction.DISPUTE_LOST,
+                    SparksTransaction.action.in_([
+                        SparksAction.REVIEW_ACCEPTED,
+                        SparksAction.REVIEW_REJECTED,
+                        SparksAction.BADGE_EARNED,
+                        SparksAction.TIER_PROMOTION,
+                        SparksAction.STREAK_BONUS_5,
+                        SparksAction.STREAK_BONUS_10,
+                        SparksAction.STREAK_BONUS_25,
+                        SparksAction.WEEKLY_GOAL_MET,
+                        SparksAction.DISPUTE_WON,
+                        SparksAction.DISPUTE_LOST,
                     ]),
-                    # Or any karma change >= 20 or <= -20
-                    KarmaTransaction.points >= 20,
-                    KarmaTransaction.points <= -20,
+                    # Or any sparks change >= 20 or <= -20
+                    SparksTransaction.points >= 20,
+                    SparksTransaction.points <= -20,
                 )
             )
         )
-        .order_by(KarmaTransaction.created_at.desc())
+        .order_by(SparksTransaction.created_at.desc())
         .limit(limit)
     )
-    karma_result = await db.execute(karma_query)
+    sparks_result = await db.execute(sparks_query)
 
-    for transaction in karma_result.scalars().all():
+    for transaction in sparks_result.scalars().all():
         sign = "+" if transaction.points >= 0 else ""
 
         # Generate appropriate title based on action
-        if transaction.action == KarmaAction.BADGE_EARNED:
+        if transaction.action == SparksAction.BADGE_EARNED:
             title = "Earned a new badge"
             event_type = "badge_earned"
-        elif transaction.action == KarmaAction.TIER_PROMOTION:
+        elif transaction.action == SparksAction.TIER_PROMOTION:
             title = "Tier promotion!"
             event_type = "milestone"
-        elif transaction.action in [KarmaAction.STREAK_BONUS_5, KarmaAction.STREAK_BONUS_10, KarmaAction.STREAK_BONUS_25]:
+        elif transaction.action in [SparksAction.STREAK_BONUS_5, SparksAction.STREAK_BONUS_10, SparksAction.STREAK_BONUS_25]:
             title = "Streak milestone reached"
             event_type = "milestone"
-        elif transaction.action == KarmaAction.WEEKLY_GOAL_MET:
+        elif transaction.action == SparksAction.WEEKLY_GOAL_MET:
             title = "Weekly goal achieved"
             event_type = "milestone"
         else:
-            title = f"{sign}{transaction.points} karma"
-            event_type = "karma_change"
+            title = f"{sign}{transaction.points} sparks"
+            event_type = "sparks_change"
 
         events.append(TimelineEvent(
-            id=f"karma_{transaction.id}",
+            id=f"sparks_{transaction.id}",
             type=event_type,
             title=title,
             description=transaction.reason,

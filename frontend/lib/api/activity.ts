@@ -14,7 +14,7 @@ export interface DayActivity {
   date: string;  // YYYY-MM-DD
   reviewsGiven: number;
   reviewsReceived: number;
-  karmaEvents: number;
+  sparksEvents: number;
   challengeEntries: number;
   challengeVotes: number;
   reviewRequestsCreated: number;
@@ -30,7 +30,7 @@ export interface ActivityHeatmapResponse {
 
 export interface TimelineEvent {
   id: string;
-  type: 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'karma_change' | 'rating' | 'challenge_entry' | 'challenge_vote' | 'review_request_created';
+  type: 'review_given' | 'review_received' | 'badge_earned' | 'milestone' | 'sparks_change' | 'rating' | 'challenge_entry' | 'challenge_vote' | 'review_request_created';
   title: string;
   description?: string;
   timestamp: string;
@@ -69,7 +69,7 @@ interface ApiDayActivity {
   date: string;
   reviews_given: number;
   reviews_received: number;
-  karma_events: number;
+  sparks_events: number;
   challenge_entries: number;
   challenge_votes: number;
   review_requests_created: number;
@@ -114,7 +114,7 @@ export async function getActivityHeatmap(days: number = 365): Promise<ActivityHe
       date: day.date,
       reviewsGiven: day.reviews_given,
       reviewsReceived: day.reviews_received,
-      karmaEvents: day.karma_events,
+      sparksEvents: day.sparks_events,
       challengeEntries: day.challenge_entries,
       challengeVotes: day.challenge_votes,
       reviewRequestsCreated: day.review_requests_created,
@@ -170,7 +170,7 @@ export interface StatWithContext {
 
 export interface EnhancedStatsResponse {
   reviewsGiven: StatWithContext;
-  karmaPoints: StatWithContext;
+  sparksPoints: StatWithContext;
   avgRating: StatWithContext;
   avgResponseTime: StatWithContext;
 }
@@ -192,7 +192,7 @@ interface ApiStatWithContext {
 
 interface ApiEnhancedStatsResponse {
   reviews_given: ApiStatWithContext;
-  karma_points: ApiStatWithContext;
+  sparks_points: ApiStatWithContext;
   avg_rating: ApiStatWithContext;
   avg_response_time: ApiStatWithContext;
 }
@@ -222,7 +222,7 @@ export async function getEnhancedStats(): Promise<EnhancedStatsResponse> {
 
   return {
     reviewsGiven: transformStat(response.reviews_given),
-    karmaPoints: transformStat(response.karma_points),
+    sparksPoints: transformStat(response.sparks_points),
     avgRating: transformStat(response.avg_rating),
     avgResponseTime: transformStat(response.avg_response_time),
   };

@@ -27,7 +27,7 @@ from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, PaymentStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
 from app.schemas.review_slot import ReviewAccept
-from app.services.review_karma_hooks import on_review_accepted
+from app.services.review_sparks_hooks import on_review_accepted
 from app.services.notification_triggers import notify_review_accepted
 
 logger = logging.getLogger(__name__)
@@ -560,8 +560,8 @@ async def get_reviewer_submitted(
         for slot in slots:
             urgency_level, urgency_seconds, countdown_text = calculate_urgency(slot.auto_accept_at)
 
-            # Calculate potential karma (base + bonus)
-            potential_karma = 50  # Base karma for accepted review
+            # Calculate potential sparks (base + bonus)
+            potential_sparks = 50  # Base sparks for accepted review
             potential_bonus = 10 if slot.rating and slot.rating >= 4 else 0
 
             payment_amount = float(slot.payment_amount) if slot.payment_amount else 0
@@ -580,7 +580,7 @@ async def get_reviewer_submitted(
                 "urgency_seconds": urgency_seconds,
                 "countdown_text": countdown_text,
                 "rating": slot.rating,
-                "potential_karma": potential_karma,
+                "potential_sparks": potential_sparks,
                 "potential_bonus": potential_bonus,
                 "payment_amount": payment_amount,
                 "status": slot.status
@@ -708,7 +708,7 @@ async def get_dashboard_stats(
                 "avg_rating": round(float(row.avg_rating), 1) if row.avg_rating else None,
                 "avg_response_time_hours": None,  # TODO: Calculate from acceptance timestamps
                 "total_spent": float(total_spent),
-                "karma_change": 0  # TODO: Calculate from karma transactions
+                "sparks_change": 0  # TODO: Calculate from sparks transactions
             }
 
         else:  # reviewer
@@ -756,7 +756,7 @@ async def get_dashboard_stats(
                 "acceptance_rate": round(acceptance_rate, 3),
                 "avg_rating": round(float(row.avg_rating), 1) if row.avg_rating else None,
                 "total_earned": float(total_earned),
-                "karma_change": 0  # TODO: Calculate from karma transactions
+                "sparks_change": 0  # TODO: Calculate from sparks transactions
             }
 
         return {
@@ -832,7 +832,7 @@ async def batch_accept_reviews(
         # Track results
         accepted = []
         failed = []
-        total_karma_awarded = 0
+        total_sparks_awarded = 0
 
         # Process each slot
         for slot in slots:
@@ -855,7 +855,7 @@ async def batch_accept_reviews(
                     helpful_rating
                 )
 
-                # Award karma
+                # Award sparks
                 await on_review_accepted(
                     db,
                     accepted_slot.id,
@@ -863,11 +863,11 @@ async def batch_accept_reviews(
                     helpful_rating=helpful_rating
                 )
 
-                # Calculate karma awarded
-                karma_awarded = 50  # Base karma
+                # Calculate sparks awarded
+                sparks_awarded = 50  # Base sparks
                 if helpful_rating and helpful_rating >= 4:
-                    karma_awarded += 10
-                total_karma_awarded += karma_awarded
+                    sparks_awarded += 10
+                total_sparks_awarded += sparks_awarded
 
                 # Send notification
                 await notify_review_accepted(
@@ -875,15 +875,15 @@ async def batch_accept_reviews(
                     accepted_slot.id,
                     accepted_slot.reviewer_id,
                     helpful_rating or 0,
-                    karma_awarded,
-                    karma_awarded  # Simplified
+                    sparks_awarded,
+                    sparks_awarded  # Simplified
                 )
 
                 accepted.append({
                     "slot_id": accepted_slot.id,
                     "status": "accepted",
                     "reviewer_id": accepted_slot.reviewer_id,
-                    "karma_awarded": karma_awarded
+                    "sparks_awarded": sparks_awarded
                 })
 
             except Exception as e:
@@ -904,7 +904,7 @@ async def batch_accept_reviews(
                 "total_requested": len(slot_ids),
                 "successful": len(accepted),
                 "failed": len(failed),
-                "total_karma_awarded": total_karma_awarded
+                "total_sparks_awarded": total_sparks_awarded
             }
         }
 
