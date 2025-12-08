@@ -6,7 +6,8 @@ import { User, Settings, CreditCard, HelpCircle, LogOut, ChevronDown, FileEdit, 
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User as UserType } from "@/lib/types/auth";
-import { Avatar } from "@/components/profile/avatar-display";
+import { TieredAvatar } from "@/components/tier/tiered-avatar";
+import { UserTier } from "@/lib/types/tier";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,12 +77,12 @@ export function UserMenu({ user }: UserMenuProps) {
           )}
           aria-label="User menu"
         >
-          {/* Avatar with brand-consistent styling */}
-          <Avatar
+          {/* Avatar with tier-based styling */}
+          <TieredAvatar
             avatarUrl={user.avatar_url}
             fullName={user.full_name || user.email}
-            size="md"
-            verified={user.is_verified}
+            tier={(user.user_tier as UserTier) || UserTier.NEWCOMER}
+            size="sm"
           />
 
           {/* User name - hidden on smaller screens */}

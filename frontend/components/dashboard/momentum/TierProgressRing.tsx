@@ -16,19 +16,19 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
   UserTier,
-  MasterTierType,
+  VisionaryTierType,
   getTierByKarma,
   getTierInfo,
   getNextTier,
 } from '@/lib/types/tier';
 
 export interface TierProgressRingProps {
-  /** Current karma points */
+  /** Current sparks points */
   karma: number;
   /** Actual user tier from database (takes precedence over karma calculation) */
   userTier?: UserTier | string;
-  /** For Master tier, specify if Certified or Community */
-  masterType?: MasterTierType;
+  /** For Visionary tier, specify if Certified or Community */
+  masterType?: VisionaryTierType;
   /** Size of the ring */
   size?: 'sm' | 'md' | 'lg';
   /** Optional className */
@@ -62,23 +62,23 @@ export const TierProgressRing: React.FC<TierProgressRingProps> = ({
   const tierInfo = getTierInfo(currentTier);
   const nextTier = getNextTier(currentTier);
 
-  // Get the appropriate badge image (use certified badge for Master Certified)
-  const badgeImage = currentTier === UserTier.MASTER &&
-    masterType === MasterTierType.CERTIFIED &&
+  // Get the appropriate badge image (use certified badge for Visionary Certified)
+  const badgeImage = currentTier === UserTier.VISIONARY &&
+    masterType === VisionaryTierType.CERTIFIED &&
     tierInfo.badgeImageCertified
       ? tierInfo.badgeImageCertified
       : tierInfo.badgeImage;
 
   // Calculate progress percentage
   let progressPercent = 100;
-  let karmaToNext = 0;
+  let sparksToNext = 0;
 
   if (nextTier) {
     const nextTierInfo = getTierInfo(nextTier);
-    const karmaInTier = karma - tierInfo.requirements.minKarma;
-    const tierRange = nextTierInfo.requirements.minKarma - tierInfo.requirements.minKarma;
-    progressPercent = Math.min(100, (karmaInTier / tierRange) * 100);
-    karmaToNext = nextTierInfo.requirements.minKarma - karma;
+    const sparksInTier = karma - tierInfo.requirements.minSparks;
+    const tierRange = nextTierInfo.requirements.minSparks - tierInfo.requirements.minSparks;
+    progressPercent = Math.min(100, (sparksInTier / tierRange) * 100);
+    sparksToNext = nextTierInfo.requirements.minSparks - karma;
   }
 
   const offset = circumference - (progressPercent / 100) * circumference;
@@ -161,9 +161,9 @@ export const TierProgressRing: React.FC<TierProgressRingProps> = ({
         <p className="text-[10px] text-muted-foreground/70 leading-tight">
           {nextTier ? 'Progress to next tier' : 'Max tier reached'}
         </p>
-        {nextTier && karmaToNext > 0 && (
+        {nextTier && sparksToNext > 0 && (
           <p className="text-[10px] font-medium text-muted-foreground leading-tight">
-            {karmaToNext} karma remaining
+            {sparksToNext} sparks remaining
           </p>
         )}
       </div>

@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
+from app.models.reviewer_rating import ReviewerRating, ReviewerStats
 from app.schemas.profile import ProfileUpdate, is_username_reserved
 
 
@@ -286,19 +287,24 @@ async def calculate_user_stats(db: AsyncSession, user_id: int) -> Dict[str, Any]
     )
     total_reviews_received = reviews_received_result.scalar() or 0
 
-    # Calculate average rating (from reviews given by this user)
+    # Calculate average rating from reviewer ratings (two-way rating system)
+    # This is the rating the reviewer RECEIVES from requesters
     avg_rating_result = await db.execute(
-        select(func.avg(ReviewSlot.rating)).where(
-            and_(
-                ReviewSlot.reviewer_id == user_id,
-                ReviewSlot.status == ReviewSlotStatus.ACCEPTED.value,
-                ReviewSlot.rating.isnot(None),
-            )
+        select(func.avg(ReviewerRating.overall_rating)).where(
+            ReviewerRating.reviewer_id == user_id
         )
     )
     avg_rating = avg_rating_result.scalar()
     if avg_rating:
         avg_rating = round(float(avg_rating), 2)
+    else:
+        # Fallback: check reviewer_stats table for cached avg_overall
+        stats_result = await db.execute(
+            select(ReviewerStats.avg_overall).where(ReviewerStats.user_id == user_id)
+        )
+        cached_avg = stats_result.scalar()
+        if cached_avg:
+            avg_rating = round(float(cached_avg), 2)
 
     # Calculate average response time (time from claimed to submitted)
     response_times_result = await db.execute(

@@ -487,7 +487,7 @@ export function ElevatedDashboard({
                         {getGreeting()}, {user?.full_name || user?.email?.split('@')[0] || 'there'}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        {karmaSummary ? `${karmaSummary.total_karma} karma · ${karmaSummary.user_tier}` : 'Building momentum...'}
+                        {karmaSummary ? `${karmaSummary.total_karma} sparks · ${karmaSummary.user_tier}` : 'Building momentum...'}
                       </p>
                     </div>
                   </div>

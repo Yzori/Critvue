@@ -12,6 +12,7 @@ from app.services.sparks_service import SparksService
 from app.services.badge_service import BadgeService
 from app.services.leaderboard_service import LeaderboardService
 from app.services.requester_rating_service import RequesterRatingService
+from app.services.reviewer_rating_service import ReviewerRatingService
 from app.models.leaderboard import SeasonType, LeaderboardCategory
 
 router = APIRouter(prefix="/sparks", tags=["Sparks"])
@@ -116,6 +117,30 @@ class RequesterStatsResponse(BaseModel):
     total_reviews_requested: int
     is_responsive: bool
     is_fair: bool
+    badges: List[str]
+
+
+class ReviewerRatingRequest(BaseModel):
+    """Request to rate a reviewer"""
+    quality_rating: int = Field(..., ge=1, le=5)
+    professionalism_rating: int = Field(..., ge=1, le=5)
+    helpfulness_rating: int = Field(..., ge=1, le=5)
+    feedback_text: Optional[str] = None
+    is_anonymous: bool = True
+
+
+class ReviewerStatsResponse(BaseModel):
+    """Reviewer statistics from ratings"""
+    avg_quality: Optional[float]
+    avg_professionalism: Optional[float]
+    avg_helpfulness: Optional[float]
+    avg_overall: Optional[float]
+    total_ratings: int
+    total_reviews_completed: int
+    reviews_accepted: int
+    reviews_rejected: int
+    is_high_quality: bool
+    is_professional: bool
     badges: List[str]
 
 
@@ -462,6 +487,103 @@ async def get_requester_ratings(
     include_anonymous = current_user and current_user.id == user_id
 
     ratings = await rating_service.get_ratings_for_requester(
+        user_id,
+        limit=limit,
+        include_anonymous=include_anonymous
+    )
+
+    return {"ratings": ratings}
+
+
+# ============= Reviewer Rating Endpoints =============
+
+@router.post("/reviewer-rating/{review_slot_id}")
+async def submit_reviewer_rating(
+    review_slot_id: int,
+    request: ReviewerRatingRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Submit a rating for a reviewer after they complete a review."""
+    rating_service = ReviewerRatingService(db)
+
+    try:
+        rating = await rating_service.submit_rating(
+            review_slot_id=review_slot_id,
+            requester_id=current_user.id,
+            quality_rating=request.quality_rating,
+            professionalism_rating=request.professionalism_rating,
+            helpfulness_rating=request.helpfulness_rating,
+            feedback_text=request.feedback_text,
+            is_anonymous=request.is_anonymous
+        )
+
+        return {
+            "message": "Rating submitted successfully",
+            "rating_id": rating.id,
+            "overall_rating": rating.overall_rating,
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.get("/reviewer-rating/can-rate/{review_slot_id}")
+async def can_rate_reviewer(
+    review_slot_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Check if user can rate reviewer for a review slot."""
+    rating_service = ReviewerRatingService(db)
+    result = await rating_service.can_rate_reviewer(current_user.id, review_slot_id)
+    return result
+
+
+@router.get("/reviewer-stats/{user_id}", response_model=ReviewerStatsResponse)
+async def get_reviewer_stats(
+    user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get aggregated rating stats for a reviewer (public)."""
+    rating_service = ReviewerRatingService(db)
+    stats = await rating_service.get_reviewer_stats(user_id)
+
+    if not stats:
+        return ReviewerStatsResponse(
+            avg_quality=None,
+            avg_professionalism=None,
+            avg_helpfulness=None,
+            avg_overall=None,
+            total_ratings=0,
+            total_reviews_completed=0,
+            reviews_accepted=0,
+            reviews_rejected=0,
+            is_high_quality=True,
+            is_professional=True,
+            badges=[]
+        )
+
+    return stats
+
+
+@router.get("/reviewer-ratings/{user_id}")
+async def get_reviewer_ratings(
+    user_id: int,
+    limit: int = Query(10, ge=1, le=50),
+    current_user: Optional[User] = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get individual ratings for a reviewer."""
+    rating_service = ReviewerRatingService(db)
+
+    # Include full details if viewing own ratings
+    include_anonymous = current_user and current_user.id == user_id
+
+    ratings = await rating_service.get_ratings_for_reviewer(
         user_id,
         limit=limit,
         include_anonymous=include_anonymous

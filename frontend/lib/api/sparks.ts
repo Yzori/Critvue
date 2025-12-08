@@ -176,6 +176,41 @@ export interface CanRateResponse {
   already_rated?: boolean;
 }
 
+// Reviewer rating types (Requesters rate reviewers)
+export interface ReviewerRatingRequest {
+  quality_rating: number;        // 1-5 rating for review quality/thoroughness
+  professionalism_rating: number; // 1-5 rating for professional tone
+  helpfulness_rating: number;     // 1-5 rating for responsiveness to questions
+  feedback_text?: string;
+  is_anonymous?: boolean;
+}
+
+export interface ReviewerStats {
+  avg_quality: number | null;
+  avg_professionalism: number | null;
+  avg_helpfulness: number | null;
+  avg_overall: number | null;
+  total_ratings: number;
+  total_reviews_completed: number;
+  reviews_accepted: number;
+  reviews_rejected: number;
+  is_high_quality: boolean;
+  is_professional: boolean;
+  badges: string[];
+}
+
+export interface ReviewerRating {
+  id: number;
+  quality_rating: number;
+  professionalism_rating: number;
+  helpfulness_rating: number;
+  overall_rating: number;
+  feedback_text?: string;
+  requester_name?: string;
+  requester_avatar?: string;
+  created_at: string;
+}
+
 // ============= API Functions =============
 
 /**
@@ -285,6 +320,33 @@ export async function getRequesterRatings(
 ): Promise<{ ratings: RequesterRating[] }> {
   return apiClient.get<{ ratings: RequesterRating[] }>(
     `/sparks/requester-ratings/${userId}?limit=${limit}`
+  );
+}
+
+/**
+ * Reviewer Ratings (Two-sided reputation - Requesters rate reviewers)
+ */
+export async function submitReviewerRating(
+  reviewSlotId: number,
+  rating: ReviewerRatingRequest
+): Promise<{ message: string; rating_id: number; overall_rating: number }> {
+  return apiClient.post(`/sparks/reviewer-rating/${reviewSlotId}`, rating);
+}
+
+export async function canRateReviewer(reviewSlotId: number): Promise<CanRateResponse> {
+  return apiClient.get<CanRateResponse>(`/sparks/reviewer-rating/can-rate/${reviewSlotId}`);
+}
+
+export async function getReviewerStats(userId: number): Promise<ReviewerStats> {
+  return apiClient.get<ReviewerStats>(`/sparks/reviewer-stats/${userId}`);
+}
+
+export async function getReviewerRatings(
+  userId: number,
+  limit: number = 10
+): Promise<{ ratings: ReviewerRating[] }> {
+  return apiClient.get<{ ratings: ReviewerRating[] }>(
+    `/sparks/reviewer-ratings/${userId}?limit=${limit}`
   );
 }
 

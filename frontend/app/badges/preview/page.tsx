@@ -261,13 +261,13 @@ export default function BadgePreviewPage() {
           {/* All Tiers */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
             {[
-              { tier: UserTier.NOVICE, label: '0 reviews' },
-              { tier: UserTier.CONTRIBUTOR, label: '10+ reviews' },
-              { tier: UserTier.SKILLED, label: '50+ reviews' },
-              { tier: UserTier.TRUSTED_ADVISOR, label: '100+ reviews' },
-              { tier: UserTier.EXPERT, label: '250+ reviews' },
-              { tier: UserTier.MASTER, masterType: MasterTierType.COMMUNITY, label: '500+ reviews' },
-              { tier: UserTier.MASTER, masterType: MasterTierType.CERTIFIED, label: 'Verified expert' },
+              { tier: UserTier.NEWCOMER, label: '0 sparks' },
+              { tier: UserTier.SUPPORTER, label: '100+ sparks' },
+              { tier: UserTier.GUIDE, label: '500+ sparks' },
+              { tier: UserTier.MENTOR, label: '1,500+ sparks' },
+              { tier: UserTier.CURATOR, label: '5,000+ sparks' },
+              { tier: UserTier.VISIONARY, masterType: MasterTierType.COMMUNITY, label: '15,000+ sparks' },
+              { tier: UserTier.VISIONARY, masterType: MasterTierType.CERTIFIED, label: 'Verified expert' },
             ].map((item, idx) => (
               <div key={idx} className="flex flex-col items-center text-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
                 <TierBadge
@@ -290,7 +290,7 @@ export default function BadgePreviewPage() {
             <div className="flex items-center gap-6 flex-wrap">
               {(['sm', 'md', 'lg', 'xl'] as const).map(size => (
                 <div key={size} className="flex flex-col items-center gap-2">
-                  <TierBadge tier={UserTier.EXPERT} size={size} showTooltip={false} />
+                  <TierBadge tier={UserTier.CURATOR} size={size} showTooltip={false} />
                   <span className="text-xs text-gray-500">{size}</span>
                 </div>
               ))}

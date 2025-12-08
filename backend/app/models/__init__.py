@@ -22,6 +22,7 @@ from app.models.notification import Notification, NotificationPreferences, Notif
 from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
 from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, LeaderboardCategory
 from app.models.requester_rating import RequesterRating, RequesterStats
+from app.models.reviewer_rating import ReviewerRating, ReviewerStats
 from app.models.reviewer_dna import ReviewerDNA
 # Committee system models
 from app.models.committee_member import CommitteeMember, CommitteeRole
@@ -85,6 +86,8 @@ __all__ = [
     "LeaderboardCategory",
     "RequesterRating",
     "RequesterStats",
+    "ReviewerRating",
+    "ReviewerStats",
     "ReviewerDNA",
     # Committee system
     "CommitteeMember",

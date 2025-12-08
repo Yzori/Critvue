@@ -42,6 +42,11 @@ export interface RejectReviewModalProps {
 export interface RejectReviewData {
   rejection_reason: RejectionReason;
   rejection_notes?: string;
+  // Optional reviewer ratings (requester can still rate reviewer when rejecting)
+  quality_rating?: number;
+  professionalism_rating?: number;
+  helpfulness_rating?: number;
+  is_anonymous?: boolean;
 }
 
 const REJECTION_REASONS = [

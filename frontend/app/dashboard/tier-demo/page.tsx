@@ -35,33 +35,33 @@ import {
 
 // Mock user data for demo
 const MOCK_USER_STATUS: UserTierStatus = {
-  currentTier: UserTier.CONTRIBUTOR,
-  karma: 250,
+  currentTier: UserTier.SUPPORTER,
+  sparks: 250,
   totalReviews: 12,
   acceptanceRate: 85.5,
   helpfulRating: 4.2,
   currentStreak: 5,
   longestStreak: 12,
-  nextTier: UserTier.SKILLED,
-  karmaToNextTier: 250,
+  nextTier: UserTier.GUIDE,
+  sparksToNextTier: 250,
 };
 
-const MOCK_SKILLED_STATUS: UserTierStatus = {
-  currentTier: UserTier.SKILLED,
-  karma: 850,
+const MOCK_GUIDE_STATUS: UserTierStatus = {
+  currentTier: UserTier.GUIDE,
+  sparks: 850,
   totalReviews: 28,
   acceptanceRate: 88.2,
   helpfulRating: 4.5,
   currentStreak: 14,
   longestStreak: 14,
-  nextTier: UserTier.TRUSTED_ADVISOR,
-  karmaToNextTier: 650,
+  nextTier: UserTier.MENTOR,
+  sparksToNextTier: 650,
 };
 
-const MOCK_MASTER_STATUS: UserTierStatus = {
-  currentTier: UserTier.MASTER,
+const MOCK_VISIONARY_STATUS: UserTierStatus = {
+  currentTier: UserTier.VISIONARY,
   masterType: MasterTierType.COMMUNITY,
-  karma: 18500,
+  sparks: 18500,
   totalReviews: 225,
   acceptanceRate: 94.5,
   helpfulRating: 4.8,
@@ -96,19 +96,19 @@ export default function TierDemoPage() {
             onClick={() => setSelectedStatus(MOCK_USER_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Contributor (250 sparks)
+            Supporter (250 sparks)
           </button>
           <button
-            onClick={() => setSelectedStatus(MOCK_SKILLED_STATUS)}
+            onClick={() => setSelectedStatus(MOCK_GUIDE_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Skilled (850 sparks)
+            Guide (850 sparks)
           </button>
           <button
-            onClick={() => setSelectedStatus(MOCK_MASTER_STATUS)}
+            onClick={() => setSelectedStatus(MOCK_VISIONARY_STATUS)}
             className="px-4 py-2 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
           >
-            Master (18,500 sparks)
+            Visionary (18,500 sparks)
           </button>
         </CardContent>
       </Card>
@@ -128,18 +128,18 @@ export default function TierDemoPage() {
               <CardTitle className="text-sm">All Tiers - Medium Size</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <TierBadge tier={UserTier.NOVICE} size="md" />
-              <TierBadge tier={UserTier.CONTRIBUTOR} size="md" />
-              <TierBadge tier={UserTier.SKILLED} size="md" />
-              <TierBadge tier={UserTier.TRUSTED_ADVISOR} size="md" />
-              <TierBadge tier={UserTier.EXPERT} size="md" />
+              <TierBadge tier={UserTier.NEWCOMER} size="md" />
+              <TierBadge tier={UserTier.SUPPORTER} size="md" />
+              <TierBadge tier={UserTier.GUIDE} size="md" />
+              <TierBadge tier={UserTier.MENTOR} size="md" />
+              <TierBadge tier={UserTier.CURATOR} size="md" />
               <TierBadge
-                tier={UserTier.MASTER}
+                tier={UserTier.VISIONARY}
                 masterType={MasterTierType.CERTIFIED}
                 size="md"
               />
               <TierBadge
-                tier={UserTier.MASTER}
+                tier={UserTier.VISIONARY}
                 masterType={MasterTierType.COMMUNITY}
                 size="md"
               />
@@ -228,7 +228,7 @@ export default function TierDemoPage() {
                   Locked Badge
                 </p>
                 <TierLockedBadge
-                  requiredTier={UserTier.EXPERT}
+                  requiredTier={UserTier.CURATOR}
                   currentTier={selectedStatus.currentTier}
                 />
               </div>
@@ -238,7 +238,7 @@ export default function TierDemoPage() {
                   Locked Button - Small
                 </p>
                 <TierLockedButton
-                  requiredTier={UserTier.EXPERT}
+                  requiredTier={UserTier.CURATOR}
                   currentTier={selectedStatus.currentTier}
                   size="sm"
                 />
@@ -249,7 +249,7 @@ export default function TierDemoPage() {
                   Locked Button - Medium
                 </p>
                 <TierLockedButton
-                  requiredTier={UserTier.EXPERT}
+                  requiredTier={UserTier.CURATOR}
                   currentTier={selectedStatus.currentTier}
                   size="md"
                 />
@@ -260,7 +260,7 @@ export default function TierDemoPage() {
                   Locked Button - Large
                 </p>
                 <TierLockedButton
-                  requiredTier={UserTier.EXPERT}
+                  requiredTier={UserTier.CURATOR}
                   currentTier={selectedStatus.currentTier}
                   size="lg"
                 />
@@ -275,7 +275,7 @@ export default function TierDemoPage() {
             <CardContent>
               <div className="relative h-64 rounded-lg border bg-muted/30">
                 <TierLockedOverlay
-                  requiredTier={UserTier.TRUSTED_ADVISOR}
+                  requiredTier={UserTier.MENTOR}
                   reviewPrice={500}
                 />
               </div>
@@ -284,7 +284,7 @@ export default function TierDemoPage() {
         </div>
 
         <TierUpgradeMessage
-          requiredTier={UserTier.EXPERT}
+          requiredTier={UserTier.CURATOR}
           currentTier={selectedStatus.currentTier}
         />
       </section>
@@ -304,8 +304,8 @@ export default function TierDemoPage() {
           <button
             onClick={() =>
               showTierUnlockNotification({
-                oldTier: UserTier.CONTRIBUTOR,
-                newTier: UserTier.SKILLED,
+                oldTier: UserTier.SUPPORTER,
+                newTier: UserTier.GUIDE,
                 karma: 500,
                 unlockedBenefits: [
                   'Accept reviews up to $250',
@@ -317,7 +317,7 @@ export default function TierDemoPage() {
             }
             className="px-6 py-3 bg-accent-blue text-white font-medium rounded-lg hover:bg-accent-blue/90 transition-colors"
           >
-            Show Tier Unlock (Skilled)
+            Show Tier Unlock (Guide)
           </button>
 
           <button

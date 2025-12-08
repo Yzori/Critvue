@@ -32,6 +32,7 @@ import {
   ReviewSlotResponse,
 } from "@/lib/api/review-slots";
 import { getReviewDetail, ReviewRequestDetail } from "@/lib/api/reviews";
+import { submitReviewerRating } from "@/lib/api/sparks";
 import { getErrorMessage } from "@/lib/api/client";
 import { ReviewStudio } from "@/components/reviewer/review-studio/ReviewStudio";
 
@@ -93,9 +94,25 @@ export default function ReviewAcceptancePage() {
   const handleAccept = async (data: AcceptReviewData) => {
     try {
       setIsSubmitting(true);
+
+      // First, accept the review with the helpful rating
       await acceptReview(slotId, {
         helpful_rating: data.rating,
       });
+
+      // Then submit the detailed reviewer rating
+      try {
+        await submitReviewerRating(slotId, {
+          quality_rating: data.quality_rating,
+          professionalism_rating: data.professionalism_rating,
+          helpfulness_rating: data.helpfulness_rating,
+          feedback_text: data.feedback_text,
+          is_anonymous: data.is_anonymous,
+        });
+      } catch (ratingErr) {
+        // Log but don't fail the accept if rating submission fails
+        console.warn("Failed to submit reviewer rating:", ratingErr);
+      }
 
       // Success - redirect to dashboard
       router.push("/dashboard?success=review-accepted");
@@ -112,7 +129,27 @@ export default function ReviewAcceptancePage() {
   const handleReject = async (data: RejectReviewData) => {
     try {
       setIsSubmitting(true);
-      await rejectReview(slotId, data);
+
+      // First, reject the review
+      await rejectReview(slotId, {
+        rejection_reason: data.rejection_reason,
+        rejection_notes: data.rejection_notes,
+      });
+
+      // Then submit reviewer rating if provided
+      if (data.quality_rating && data.professionalism_rating && data.helpfulness_rating) {
+        try {
+          await submitReviewerRating(slotId, {
+            quality_rating: data.quality_rating,
+            professionalism_rating: data.professionalism_rating,
+            helpfulness_rating: data.helpfulness_rating,
+            is_anonymous: data.is_anonymous,
+          });
+        } catch (ratingErr) {
+          // Log but don't fail the reject if rating submission fails
+          console.warn("Failed to submit reviewer rating:", ratingErr);
+        }
+      }
 
       // Success - redirect to dashboard
       router.push("/dashboard?success=review-rejected");
