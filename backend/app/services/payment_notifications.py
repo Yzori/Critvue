@@ -5,6 +5,8 @@ This module provides notification triggers for payment-related events:
 - Payment released (for reviewers)
 - Refund issued (for creators)
 - Connect action required
+
+Refactored to use the shared notification trigger helper pattern.
 """
 
 import logging
@@ -13,17 +15,57 @@ from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import (
-    Notification,
     NotificationType,
     NotificationPriority,
-    NotificationChannel,
     EntityType
 )
 from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
 from app.models.user import User
+from app.services.notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
+
+
+async def _send_payment_notification(
+    db: AsyncSession,
+    user_id: int,
+    notification_type: NotificationType,
+    title: str,
+    message: str,
+    data: dict,
+    action_url: str,
+    action_label: str,
+    priority: NotificationPriority,
+    entity_id: int,
+) -> bool:
+    """
+    Internal helper to send payment notifications via NotificationService.
+
+    Returns True on success, False on error.
+    """
+    try:
+        service = NotificationService(db)
+        await service.create_notification(
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            data=data,
+            priority=priority,
+            action_url=action_url,
+            action_label=action_label,
+            entity_type=EntityType.PAYMENT,
+            entity_id=entity_id,
+        )
+        logger.info(f"Sent {notification_type.value} notification to user {user_id}")
+        return True
+    except Exception as e:
+        logger.error(
+            f"Error sending {notification_type.value} notification to user {user_id}: {e}",
+            exc_info=True
+        )
+        return False
 
 
 async def notify_payment_captured(
@@ -31,7 +73,7 @@ async def notify_payment_captured(
     review_request: ReviewRequest,
     creator: User,
     amount: Decimal
-) -> Optional[Notification]:
+) -> bool:
     """
     Notify creator that their payment has been captured.
 
@@ -42,37 +84,25 @@ async def notify_payment_captured(
         amount: Payment amount
 
     Returns:
-        Created notification or None on error
+        True if notification was sent successfully
     """
-    try:
-        notification = Notification(
-            user_id=creator.id,
-            type=NotificationType.PAYMENT_SUCCEEDED,
-            title="Payment Successful",
-            message=f"Your payment of ${amount:.2f} for '{review_request.title}' has been processed. Your review request is now live!",
-            data={
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "amount": float(amount),
-                "currency": "usd"
-            },
-            action_url=f"/review/{review_request.id}",
-            action_label="View Request",
-            priority=NotificationPriority.HIGH,
-            channels=[NotificationChannel.IN_APP.value, NotificationChannel.EMAIL.value],
-            entity_type=EntityType.PAYMENT,
-            entity_id=review_request.id
-        )
-
-        db.add(notification)
-        await db.flush()
-
-        logger.info(f"Created payment captured notification for user {creator.id}")
-        return notification
-
-    except Exception as e:
-        logger.error(f"Error creating payment captured notification: {e}")
-        return None
+    return await _send_payment_notification(
+        db=db,
+        user_id=creator.id,
+        notification_type=NotificationType.PAYMENT_SUCCEEDED,
+        title="Payment Successful",
+        message=f"Your payment of ${amount:.2f} for '{review_request.title}' has been processed. Your review request is now live!",
+        data={
+            "review_request_id": review_request.id,
+            "review_request_title": review_request.title,
+            "amount": float(amount),
+            "currency": "usd"
+        },
+        action_url=f"/review/{review_request.id}",
+        action_label="View Request",
+        priority=NotificationPriority.HIGH,
+        entity_id=review_request.id,
+    )
 
 
 async def notify_payment_released(
@@ -81,7 +111,7 @@ async def notify_payment_released(
     reviewer: User,
     net_amount: Decimal,
     platform_fee: Decimal
-) -> Optional[Notification]:
+) -> bool:
     """
     Notify reviewer that payment has been released to their account.
 
@@ -93,44 +123,32 @@ async def notify_payment_released(
         platform_fee: Platform fee amount
 
     Returns:
-        Created notification or None on error
+        True if notification was sent successfully
     """
-    try:
-        # Get review request title
-        review_request = await db.get(ReviewRequest, slot.review_request_id)
-        title = review_request.title if review_request else "Review"
+    # Get review request title
+    review_request = await db.get(ReviewRequest, slot.review_request_id)
+    title = review_request.title if review_request else "Review"
 
-        notification = Notification(
-            user_id=reviewer.id,
-            type=NotificationType.EXPERT_PAYMENT_RELEASED,
-            title="Payment Released!",
-            message=f"You've earned ${net_amount:.2f} for your review of '{title}'. The payment has been transferred to your connected account.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": slot.review_request_id,
-                "review_request_title": title,
-                "net_amount": float(net_amount),
-                "platform_fee": float(platform_fee),
-                "gross_amount": float(net_amount + platform_fee),
-                "currency": "usd"
-            },
-            action_url="/reviewer/settings/payouts",
-            action_label="View Earnings",
-            priority=NotificationPriority.HIGH,
-            channels=[NotificationChannel.IN_APP.value, NotificationChannel.EMAIL.value],
-            entity_type=EntityType.PAYMENT,
-            entity_id=slot.id
-        )
-
-        db.add(notification)
-        await db.flush()
-
-        logger.info(f"Created payment released notification for reviewer {reviewer.id}")
-        return notification
-
-    except Exception as e:
-        logger.error(f"Error creating payment released notification: {e}")
-        return None
+    return await _send_payment_notification(
+        db=db,
+        user_id=reviewer.id,
+        notification_type=NotificationType.EXPERT_PAYMENT_RELEASED,
+        title="Payment Released!",
+        message=f"You've earned ${net_amount:.2f} for your review of '{title}'. The payment has been transferred to your connected account.",
+        data={
+            "slot_id": slot.id,
+            "review_request_id": slot.review_request_id,
+            "review_request_title": title,
+            "net_amount": float(net_amount),
+            "platform_fee": float(platform_fee),
+            "gross_amount": float(net_amount + platform_fee),
+            "currency": "usd"
+        },
+        action_url="/reviewer/settings/payouts",
+        action_label="View Earnings",
+        priority=NotificationPriority.HIGH,
+        entity_id=slot.id,
+    )
 
 
 async def notify_refund_issued(
@@ -139,7 +157,7 @@ async def notify_refund_issued(
     creator: User,
     amount: Decimal,
     reason: str = "Review rejected"
-) -> Optional[Notification]:
+) -> bool:
     """
     Notify creator that a refund has been issued.
 
@@ -151,43 +169,31 @@ async def notify_refund_issued(
         reason: Reason for refund
 
     Returns:
-        Created notification or None on error
+        True if notification was sent successfully
     """
-    try:
-        # Get review request title
-        review_request = await db.get(ReviewRequest, slot.review_request_id)
-        title = review_request.title if review_request else "Review"
+    # Get review request title
+    review_request = await db.get(ReviewRequest, slot.review_request_id)
+    title = review_request.title if review_request else "Review"
 
-        notification = Notification(
-            user_id=creator.id,
-            type=NotificationType.EXPERT_PAYMENT_REFUNDED,
-            title="Refund Processed",
-            message=f"A refund of ${amount:.2f} has been issued for '{title}'. Reason: {reason}. It may take 5-10 business days to appear on your statement.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": slot.review_request_id,
-                "review_request_title": title,
-                "amount": float(amount),
-                "reason": reason,
-                "currency": "usd"
-            },
-            action_url=f"/review/{slot.review_request_id}",
-            action_label="View Details",
-            priority=NotificationPriority.MEDIUM,
-            channels=[NotificationChannel.IN_APP.value, NotificationChannel.EMAIL.value],
-            entity_type=EntityType.PAYMENT,
-            entity_id=slot.id
-        )
-
-        db.add(notification)
-        await db.flush()
-
-        logger.info(f"Created refund notification for creator {creator.id}")
-        return notification
-
-    except Exception as e:
-        logger.error(f"Error creating refund notification: {e}")
-        return None
+    return await _send_payment_notification(
+        db=db,
+        user_id=creator.id,
+        notification_type=NotificationType.EXPERT_PAYMENT_REFUNDED,
+        title="Refund Processed",
+        message=f"A refund of ${amount:.2f} has been issued for '{title}'. Reason: {reason}. It may take 5-10 business days to appear on your statement.",
+        data={
+            "slot_id": slot.id,
+            "review_request_id": slot.review_request_id,
+            "review_request_title": title,
+            "amount": float(amount),
+            "reason": reason,
+            "currency": "usd"
+        },
+        action_url=f"/review/{slot.review_request_id}",
+        action_label="View Details",
+        priority=NotificationPriority.MEDIUM,
+        entity_id=slot.id,
+    )
 
 
 async def notify_payment_failed(
@@ -195,7 +201,7 @@ async def notify_payment_failed(
     review_request: ReviewRequest,
     creator: User,
     error_message: str = "Your payment could not be processed"
-) -> Optional[Notification]:
+) -> bool:
     """
     Notify creator that their payment failed.
 
@@ -206,43 +212,31 @@ async def notify_payment_failed(
         error_message: Error message from payment processor
 
     Returns:
-        Created notification or None on error
+        True if notification was sent successfully
     """
-    try:
-        notification = Notification(
-            user_id=creator.id,
-            type=NotificationType.PAYMENT_FAILED,
-            title="Payment Failed",
-            message=f"We couldn't process your payment for '{review_request.title}'. {error_message}. Please try again or use a different payment method.",
-            data={
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "error_message": error_message
-            },
-            action_url=f"/review/{review_request.id}/checkout",
-            action_label="Retry Payment",
-            priority=NotificationPriority.URGENT,
-            channels=[NotificationChannel.IN_APP.value, NotificationChannel.EMAIL.value],
-            entity_type=EntityType.PAYMENT,
-            entity_id=review_request.id
-        )
-
-        db.add(notification)
-        await db.flush()
-
-        logger.info(f"Created payment failed notification for user {creator.id}")
-        return notification
-
-    except Exception as e:
-        logger.error(f"Error creating payment failed notification: {e}")
-        return None
+    return await _send_payment_notification(
+        db=db,
+        user_id=creator.id,
+        notification_type=NotificationType.PAYMENT_FAILED,
+        title="Payment Failed",
+        message=f"We couldn't process your payment for '{review_request.title}'. {error_message}. Please try again or use a different payment method.",
+        data={
+            "review_request_id": review_request.id,
+            "review_request_title": review_request.title,
+            "error_message": error_message
+        },
+        action_url=f"/review/{review_request.id}/checkout",
+        action_label="Retry Payment",
+        priority=NotificationPriority.URGENT,
+        entity_id=review_request.id,
+    )
 
 
 async def notify_connect_action_required(
     db: AsyncSession,
     user: User,
     action_type: str = "complete_onboarding"
-) -> Optional[Notification]:
+) -> bool:
     """
     Notify reviewer that action is required on their Connect account.
 
@@ -252,40 +246,28 @@ async def notify_connect_action_required(
         action_type: Type of action required
 
     Returns:
-        Created notification or None on error
+        True if notification was sent successfully
     """
-    try:
-        messages = {
-            "complete_onboarding": "Please complete your payout setup to start receiving payments for expert reviews.",
-            "provide_info": "Stripe needs additional information to enable your payouts. Please update your account.",
-            "verify_identity": "Please verify your identity to continue receiving payments.",
-            "update_bank": "There's an issue with your bank account. Please update your payment details."
-        }
+    messages = {
+        "complete_onboarding": "Please complete your payout setup to start receiving payments for expert reviews.",
+        "provide_info": "Stripe needs additional information to enable your payouts. Please update your account.",
+        "verify_identity": "Please verify your identity to continue receiving payments.",
+        "update_bank": "There's an issue with your bank account. Please update your payment details."
+    }
 
-        message = messages.get(action_type, messages["complete_onboarding"])
+    message = messages.get(action_type, messages["complete_onboarding"])
 
-        notification = Notification(
-            user_id=user.id,
-            type=NotificationType.SUBSCRIPTION_CANCELED,  # Reusing as "account action required"
-            title="Payout Setup Required",
-            message=message,
-            data={
-                "action_type": action_type
-            },
-            action_url="/reviewer/settings/payouts",
-            action_label="Update Settings",
-            priority=NotificationPriority.HIGH,
-            channels=[NotificationChannel.IN_APP.value, NotificationChannel.EMAIL.value],
-            entity_type=EntityType.PAYMENT,
-            entity_id=user.id
-        )
-
-        db.add(notification)
-        await db.flush()
-
-        logger.info(f"Created Connect action required notification for user {user.id}")
-        return notification
-
-    except Exception as e:
-        logger.error(f"Error creating Connect action required notification: {e}")
-        return None
+    return await _send_payment_notification(
+        db=db,
+        user_id=user.id,
+        notification_type=NotificationType.SUBSCRIPTION_CANCELED,  # Reusing as "account action required"
+        title="Payout Setup Required",
+        message=message,
+        data={
+            "action_type": action_type
+        },
+        action_url="/reviewer/settings/payouts",
+        action_label="Update Settings",
+        priority=NotificationPriority.HIGH,
+        entity_id=user.id,
+    )
