@@ -3,13 +3,14 @@
 import logging
 from typing import Any, Dict
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.db.session import get_db
 from app.services.subscription_service import SubscriptionService
 from app.services.payment_service import PaymentService
+from app.core.exceptions import InvalidInputError, InternalError
 
 logger = logging.getLogger(__name__)
 
@@ -51,17 +52,11 @@ async def stripe_webhook(
 
     if not sig_header:
         logger.warning("Stripe webhook received without signature header")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing stripe-signature header"
-        )
+        raise InvalidInputError(message="Missing stripe-signature header")
 
     if not settings.STRIPE_WEBHOOK_SECRET:
         logger.error("Stripe webhook secret not configured")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Webhook secret not configured"
-        )
+        raise InternalError(message="Webhook secret not configured")
 
     try:
         # Verify webhook signature
@@ -71,17 +66,11 @@ async def stripe_webhook(
     except ValueError as e:
         # Invalid payload
         logger.warning(f"Invalid webhook payload: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid payload"
-        )
+        raise InvalidInputError(message="Invalid payload")
     except stripe.SignatureVerificationError as e:
         # Invalid signature
         logger.warning(f"Invalid webhook signature: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid signature"
-        )
+        raise InvalidInputError(message="Invalid signature")
 
     # Get event type and data
     event_type = event["type"]

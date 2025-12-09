@@ -7,9 +7,9 @@ from typing import Optional, Tuple
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, delete
-from fastapi import HTTPException, status
 
 from app.models.user import User
+from app.core.exceptions import InvalidInputError
 from app.models.password_reset import PasswordResetToken
 from app.core.security import get_password_hash
 
@@ -204,9 +204,8 @@ async def reset_password(
     reset_token, user = await verify_reset_token(db, token)
 
     if not reset_token or not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired password reset token"
+        raise InvalidInputError(
+            message="Invalid or expired password reset token"
         )
 
     # Update user's password

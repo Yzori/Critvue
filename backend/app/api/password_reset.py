@@ -1,7 +1,7 @@
 """Password reset API endpoints"""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from slowapi import Limiter
@@ -26,6 +26,7 @@ from app.services.password_reset import (
 from app.services.email import send_password_reset_email
 from app.core.logging_config import security_logger
 from app.core.config import settings
+from app.core.exceptions import InvalidInputError, InternalError
 
 
 router = APIRouter(prefix="/auth/password-reset", tags=["Password Reset"])
@@ -288,15 +289,15 @@ async def confirm_password_reset(
                 detail="Your password has been updated. You can now log in with your new password."
             )
 
-    except HTTPException as http_exc:
+    except InvalidInputError:
         # Log failed password reset attempt
         security_logger.log_auth_failure(
             "unknown",
             request,
-            reason=str(http_exc.detail),
+            reason="invalid_or_expired_token",
             event_type="password_reset_confirm"
         )
-        # Re-raise HTTP exceptions (like invalid token)
+        # Re-raise custom exceptions
         raise
     except Exception as e:
         # Log unexpected errors
@@ -304,16 +305,12 @@ async def confirm_password_reset(
         logger = logging.getLogger(__name__)
         logger.error(f"Unexpected error during password reset: {e}")
 
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred. Please try again later."
+        raise InternalError(
+            message="An unexpected error occurred. Please try again later."
         )
 
     # Should never reach here, but just in case
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Password reset failed"
-    )
+    raise InvalidInputError(message="Password reset failed")
 
 
 # Optional: Admin endpoint to revoke all reset tokens for a user

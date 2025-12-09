@@ -5,7 +5,8 @@ import os
 import uuid
 from pathlib import Path
 from typing import Optional, Tuple
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile
+from app.core.exceptions import InvalidInputError
 from PIL import Image
 import magic  # python-magic for file type detection
 import aiofiles
@@ -316,12 +317,12 @@ async def process_upload(
     # Validate file type using content
     is_valid_type, detected_mime, type_error = await validate_file_type(file_content, content_type)
     if not is_valid_type:
-        raise HTTPException(status_code=400, detail=type_error)
+        raise InvalidInputError(message=type_error)
 
     # Validate file size using content
     is_valid_size, file_size, size_error = await validate_file_size(file_content, content_type)
     if not is_valid_size:
-        raise HTTPException(status_code=400, detail=size_error)
+        raise InvalidInputError(message=size_error)
 
     # Generate unique filename
     unique_filename = generate_unique_filename(file.filename or "unnamed")
