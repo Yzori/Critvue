@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Optional, List, Any, Literal
 from pydantic import BaseModel, Field, field_validator
 
+from app.constants.time import SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE
 from app.models.review_slot import (
     ReviewSlotStatus,
     AcceptanceType,
@@ -911,9 +912,9 @@ class ReviewSlotResponse(BaseModel):
     def _format_timedelta(delta: timedelta) -> str:
         """Format timedelta to human-readable string"""
         total_seconds = int(delta.total_seconds())
-        days = total_seconds // 86400
-        hours = (total_seconds % 86400) // 3600
-        minutes = (total_seconds % 3600) // 60
+        days = total_seconds // SECONDS_PER_DAY
+        hours = (total_seconds % SECONDS_PER_DAY) // SECONDS_PER_HOUR
+        minutes = (total_seconds % SECONDS_PER_HOUR) // SECONDS_PER_MINUTE
 
         if days > 0:
             return f"{days}d {hours}h"

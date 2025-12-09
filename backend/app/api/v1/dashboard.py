@@ -9,9 +9,8 @@ Optimized endpoints for mobile dashboard with:
 - Efficient queries (no N+1)
 """
 
-import logging
-import hashlib
 import json
+import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query, Response
@@ -23,12 +22,15 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.deps import get_current_user, get_db
+from app.constants import RateLimits, PaginationDefaults
+from app.core.exceptions import InternalError, InvalidInputError
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, PaymentStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
 from app.schemas.review_slot import ReviewAccept
 from app.services.review_sparks_hooks import on_review_accepted
 from app.services.notification_triggers import notify_review_accepted
+from app.utils import calculate_urgency, generate_etag
 
 logger = logging.getLogger(__name__)
 
@@ -36,64 +38,14 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 limiter = Limiter(key_func=get_remote_address)
 
 
-# ===== Urgency Calculation =====
-
-def calculate_urgency(deadline: Optional[datetime]) -> tuple[str, int, str]:
-    """
-    Calculate urgency level, seconds remaining, and human-readable countdown.
-
-    Returns:
-        (urgency_level, seconds_remaining, countdown_text)
-    """
-    if deadline is None:
-        return "NONE", 0, "No deadline"
-
-    now = datetime.utcnow()
-    delta = deadline - now
-    seconds = int(delta.total_seconds())
-
-    if seconds < 0:
-        return "EXPIRED", 0, "Expired"
-
-    # Calculate urgency level
-    if seconds < 86400:  # < 24 hours
-        urgency_level = "CRITICAL"
-    elif seconds < 259200:  # < 3 days
-        urgency_level = "HIGH"
-    elif seconds < 604800:  # < 7 days
-        urgency_level = "MEDIUM"
-    else:
-        urgency_level = "LOW"
-
-    # Format countdown text
-    days = seconds // 86400
-    hours = (seconds % 86400) // 3600
-    minutes = (seconds % 3600) // 60
-
-    if days > 0:
-        countdown_text = f"{days}d {hours}h"
-    elif hours > 0:
-        countdown_text = f"{hours}h {minutes}m"
-    else:
-        countdown_text = f"{minutes}m"
-
-    return urgency_level, seconds, countdown_text
-
-
-def generate_etag(data: Any) -> str:
-    """Generate ETag for response caching"""
-    content = json.dumps(data, sort_keys=True, default=str)
-    return hashlib.sha256(content.encode()).hexdigest()
-
-
 # ===== Creator Dashboard Endpoints =====
 
 @router.get("/creator/actions-needed")
-@limiter.limit("100/minute")
+@limiter.limit(RateLimits.DASHBOARD_READ)
 async def get_creator_actions_needed(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
-    limit: int = Query(10, ge=1, le=50, description="Items per page"),
+    limit: int = Query(PaginationDefaults.MOBILE_PAGE_SIZE, ge=1, le=PaginationDefaults.MOBILE_MAX_PAGE_SIZE, description="Items per page"),
     fields: Optional[str] = Query(None, description="Comma-separated field list"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
@@ -228,12 +180,12 @@ async def get_creator_actions_needed(
 
 
 @router.get("/creator/my-requests")
-@limiter.limit("100/minute")
+@limiter.limit(RateLimits.DASHBOARD_READ)
 async def get_creator_my_requests(
     request: Request,
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=50),
+    limit: int = Query(PaginationDefaults.MOBILE_PAGE_SIZE, ge=1, le=PaginationDefaults.MOBILE_MAX_PAGE_SIZE),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -359,11 +311,11 @@ async def get_creator_my_requests(
 # ===== Reviewer Dashboard Endpoints =====
 
 @router.get("/reviewer/active")
-@limiter.limit("100/minute")
+@limiter.limit(RateLimits.DASHBOARD_READ)
 async def get_reviewer_active(
     request: Request,
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=50),
+    limit: int = Query(PaginationDefaults.MOBILE_PAGE_SIZE, ge=1, le=PaginationDefaults.MOBILE_MAX_PAGE_SIZE),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -492,11 +444,11 @@ async def get_reviewer_active(
 
 
 @router.get("/reviewer/submitted")
-@limiter.limit("100/minute")
+@limiter.limit(RateLimits.DASHBOARD_READ)
 async def get_reviewer_submitted(
     request: Request,
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=50),
+    limit: int = Query(PaginationDefaults.MOBILE_PAGE_SIZE, ge=1, le=PaginationDefaults.MOBILE_MAX_PAGE_SIZE),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -611,7 +563,7 @@ async def get_reviewer_submitted(
 # ===== Dashboard Stats =====
 
 @router.get("/stats")
-@limiter.limit("30/minute")
+@limiter.limit(RateLimits.DASHBOARD_WRITE)
 async def get_dashboard_stats(
     request: Request,
     role: str = Query(..., description="Role: creator or reviewer"),
@@ -764,7 +716,7 @@ async def get_dashboard_stats(
 # ===== Batch Operations =====
 
 @router.post("/batch-accept")
-@limiter.limit("10/minute")
+@limiter.limit(RateLimits.DASHBOARD_BATCH)
 async def batch_accept_reviews(
     request: Request,
     slot_ids: List[int] = Query(..., description="List of slot IDs to accept"),

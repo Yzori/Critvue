@@ -6,6 +6,7 @@ from typing import Optional, List, Dict, Any, Tuple
 from sqlalchemy import func, select, case, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.constants import SparksConfig
 from app.models.sparks_transaction import SparksAction, SparksTransaction
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
@@ -22,9 +23,13 @@ class SparksService:
     - Weekly goal system
     - Low rating sparks reduction
     - Reputation decay for inactivity
+
+    Configuration values are centralized in app.constants.SparksConfig
     """
 
     # Sparks point values for different actions
+    # Note: These values are intentionally kept here as they are tightly coupled
+    # to the SparksAction enum. See app.constants.sparks.SparksRewards for documentation.
     SPARKS_VALUES = {
         # Core review actions
         SparksAction.REVIEW_SUBMITTED: 5,
@@ -84,16 +89,12 @@ class SparksService:
         SparksAction.SEASONAL_BONUS: 0,  # Variable
     }
 
-    # XP multipliers (XP = sparks * multiplier for positive actions)
-    XP_MULTIPLIER = 1.0  # 1:1 ratio by default
-
-    # Reputation decay settings
-    DECAY_START_DAYS = 14  # Start decaying after 14 days inactive
-    DECAY_RATE_PER_WEEK = 5  # Lose 5 reputation points per week
-    DECAY_FLOOR = 50  # Reputation can't go below 50
-
-    # Warning expiry
-    WARNING_EXPIRY_DAYS = 30  # Warnings expire after 30 days
+    # Configuration values from centralized constants
+    XP_MULTIPLIER = SparksConfig.XP_MULTIPLIER
+    DECAY_START_DAYS = SparksConfig.DECAY_START_DAYS
+    DECAY_RATE_PER_WEEK = SparksConfig.DECAY_RATE_PER_WEEK
+    DECAY_FLOOR = SparksConfig.DECAY_FLOOR
+    WARNING_EXPIRY_DAYS = SparksConfig.WARNING_EXPIRY_DAYS
 
     def __init__(self, db: AsyncSession):
         self.db = db
