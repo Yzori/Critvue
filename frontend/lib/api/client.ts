@@ -37,6 +37,7 @@ export function getFileUrl(path: string | null | undefined): string {
 export type ApiError = {
   detail?: string | Array<{ msg: string; type: string }> | Record<string, any>;
   message?: string;
+  error?: { code?: string; message?: string; details?: Record<string, any> };
 };
 
 /**
@@ -186,6 +187,13 @@ function getErrorMessageFromApiError(status: number, apiError: ApiError): string
     // Some structured errors might have a different field name
     if (apiError.detail.msg) {
       return apiError.detail.msg;
+    }
+  }
+
+  // Handle CritvueException format: {"error": {"code": "...", "message": "..."}}
+  if (typeof apiError?.error === "object" && apiError?.error !== null) {
+    if (apiError.error.message) {
+      return apiError.error.message;
     }
   }
 
