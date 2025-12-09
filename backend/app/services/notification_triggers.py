@@ -2,254 +2,129 @@
 Notification Triggers for Review Lifecycle
 
 Handles automatic notification creation for key events in the review workflow.
+Refactored to use NotificationTriggerHelper for reduced duplication.
 """
 
-import logging
 from datetime import datetime, timedelta
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from app.models.notification import NotificationType, NotificationPriority, EntityType
-from app.models.review_slot import ReviewSlot
-from app.models.review_request import ReviewRequest
-from app.models.user import User
-from app.services.notification_service import NotificationService
-
-logger = logging.getLogger(__name__)
+from app.services.notification_trigger_helper import (
+    NotificationContext,
+    fetch_slot_context,
+    fetch_request_context,
+    fetch_application_context,
+    send_notification,
+    notification_trigger,
+    count_available_slots,
+    get_review_preview,
+)
 
 
 # ==================== Review Slot Claim Events ====================
 
+
+@notification_trigger
 async def notify_slot_claimed(db: AsyncSession, slot_id: int, reviewer_id: int) -> None:
-    """
-    Notify requester when a reviewer claims one of their review slots.
+    """Notify requester when a reviewer claims one of their review slots."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of claimed slot
-        reviewer_id: ID of reviewer who claimed the slot
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
+    available_slots = await count_available_slots(db, ctx.review_request.id)
 
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for claim notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get reviewer info
-        reviewer = await db.get(User, reviewer_id)
-        if not reviewer:
-            logger.error(f"Reviewer {reviewer_id} not found")
-            return
-
-        # Calculate remaining slots
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.review_request_id == slot.review_request_id)
-        )
-        all_slots = result.scalars().all()
-        available_slots = sum(1 for s in all_slots if s.status == "available")
-
-        # Create notification for requester
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.REVIEW_SLOT_CLAIMED,
-            title=f"Review slot claimed by {reviewer.full_name or reviewer.email}",
-            message=f"{reviewer.full_name or reviewer.email} has claimed a review slot for '{review_request.title}'. They will submit their review soon.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "reviewer_id": reviewer.id,
-                "reviewer_name": reviewer.full_name or reviewer.email,
-                "reviewer_avatar": reviewer.avatar_url,
-                "remaining_slots": available_slots,
-            },
-            priority=NotificationPriority.MEDIUM,
-            action_url=f"/review/{review_request.id}",
-            action_label="View Request",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created slot claimed notification for user {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot claimed notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.REVIEW_SLOT_CLAIMED,
+        title=f"Review slot claimed by {ctx.reviewer_name}",
+        message=f"{ctx.reviewer_name} has claimed a review slot for '{ctx.request_title}'. They will submit their review soon.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "reviewer_id": ctx.reviewer.id,
+            "reviewer_name": ctx.reviewer_name,
+            "reviewer_avatar": ctx.reviewer_avatar,
+            "remaining_slots": available_slots,
+        },
+        priority=NotificationPriority.MEDIUM,
+        action_url=f"/review/{ctx.review_request.id}",
+        action_label="View Request",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
+@notification_trigger
 async def notify_slot_abandoned(db: AsyncSession, slot_id: int, reviewer_id: int) -> None:
-    """
-    Notify requester when a reviewer abandons a claimed slot.
+    """Notify requester when a reviewer abandons a claimed slot."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of abandoned slot
-        reviewer_id: ID of reviewer who abandoned the slot
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
-
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for abandon notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get reviewer info
-        reviewer = await db.get(User, reviewer_id)
-        if not reviewer:
-            logger.error(f"Reviewer {reviewer_id} not found")
-            return
-
-        # Create notification for requester
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.REVIEW_SLOT_AVAILABLE,
-            title="Review slot available again",
-            message=f"A reviewer has released a slot for '{review_request.title}'. The slot is now available for another reviewer to claim.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-            },
-            priority=NotificationPriority.MEDIUM,
-            action_url=f"/review/{review_request.id}",
-            action_label="View Request",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created slot abandoned notification for user {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot abandoned notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.REVIEW_SLOT_AVAILABLE,
+        title="Review slot available again",
+        message=f"A reviewer has released a slot for '{ctx.request_title}'. The slot is now available for another reviewer to claim.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+        },
+        priority=NotificationPriority.MEDIUM,
+        action_url=f"/review/{ctx.review_request.id}",
+        action_label="View Request",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Review Submission Events ====================
 
+
+@notification_trigger
 async def notify_review_submitted(db: AsyncSession, slot_id: int, reviewer_id: int) -> None:
-    """
-    Notify requester when a reviewer submits their review.
+    """Notify requester when a reviewer submits their review."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of slot with submitted review
-        reviewer_id: ID of reviewer who submitted
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
+    review_preview = get_review_preview(ctx.slot)
 
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for submission notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get reviewer info
-        reviewer = await db.get(User, reviewer_id)
-        if not reviewer:
-            logger.error(f"Reviewer {reviewer_id} not found")
-            return
-
-        # Create review preview (first 150 chars)
-        # For Studio reviews, review_text may be None - try to get summary from draft_sections
-        review_preview = None
-        if slot.review_text:
-            review_preview = slot.review_text[:150] + "..." if len(slot.review_text) > 150 else slot.review_text
-        elif slot.draft_sections:
-            # Try to extract summary from Studio draft (verdictCard.summary)
-            try:
-                import json
-                draft_data = slot.draft_sections if isinstance(slot.draft_sections, dict) else json.loads(slot.draft_sections)
-                if draft_data.get("verdictCard", {}).get("summary"):
-                    summary = draft_data["verdictCard"]["summary"]
-                    review_preview = summary[:150] + "..." if len(summary) > 150 else summary
-            except (json.JSONDecodeError, TypeError, KeyError):
-                pass
-        if not review_preview:
-            review_preview = "Review submitted - check the details in your dashboard"
-
-        # Create notification for requester
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.REVIEW_SUBMITTED,
-            title=f"Review submitted by {reviewer.full_name or reviewer.email}",
-            message=f"{reviewer.full_name or reviewer.email} has submitted their review for '{review_request.title}'. Review it and accept or reject within 7 days.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "reviewer_id": reviewer.id,
-                "reviewer_name": reviewer.full_name or reviewer.email,
-                "reviewer_avatar": reviewer.avatar_url,
-                "rating_given": slot.rating,
-                "review_preview": review_preview,
-                "auto_accept_deadline": slot.auto_accept_at.isoformat() if slot.auto_accept_at else None,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/dashboard/reviews/{slot.id}/review",
-            action_label="Review Submission",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created review submitted notification for user {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating review submitted notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.REVIEW_SUBMITTED,
+        title=f"Review submitted by {ctx.reviewer_name}",
+        message=f"{ctx.reviewer_name} has submitted their review for '{ctx.request_title}'. Review it and accept or reject within 7 days.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "reviewer_id": ctx.reviewer.id,
+            "reviewer_name": ctx.reviewer_name,
+            "reviewer_avatar": ctx.reviewer_avatar,
+            "rating_given": ctx.slot.rating,
+            "review_preview": review_preview,
+            "auto_accept_deadline": ctx.slot.auto_accept_at.isoformat() if ctx.slot.auto_accept_at else None,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/dashboard/reviews/{ctx.slot.id}/review",
+        action_label="Review Submission",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Review Acceptance Events ====================
 
+
+@notification_trigger
 async def notify_review_accepted(
     db: AsyncSession,
     slot_id: int,
@@ -258,71 +133,38 @@ async def notify_review_accepted(
     sparks_earned: int,
     new_sparks_balance: int
 ) -> None:
-    """
-    Notify reviewer when their review is accepted.
+    """Notify reviewer when their review is accepted."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of accepted slot
-        reviewer_id: ID of reviewer
-        helpful_rating: How helpful the review was (1-5)
-        sparks_earned: Amount of sparks earned
-        new_sparks_balance: Reviewer's new sparks balance
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
-
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for acceptance notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Create notification for reviewer
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=reviewer_id,
-            notification_type=NotificationType.REVIEW_ACCEPTED,
-            title="Your review was accepted!",
-            message=f"Your review for '{review_request.title}' has been accepted. You earned {sparks_earned} sparks!",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "sparks_earned": sparks_earned,
-                "new_sparks_balance": new_sparks_balance,
-                "helpful_rating": helpful_rating,
-                "acceptance_type": "manual",
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/reviewer/review/{slot.id}",
-            action_label="View Review",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created review accepted notification for user {reviewer_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating review accepted notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=reviewer_id,
+        notification_type=NotificationType.REVIEW_ACCEPTED,
+        title="Your review was accepted!",
+        message=f"Your review for '{ctx.request_title}' has been accepted. You earned {sparks_earned} sparks!",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "sparks_earned": sparks_earned,
+            "new_sparks_balance": new_sparks_balance,
+            "helpful_rating": helpful_rating,
+            "acceptance_type": "manual",
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/review/{ctx.slot.id}",
+        action_label="View Review",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Review Rejection Events ====================
 
+
+@notification_trigger
 async def notify_review_rejected(
     db: AsyncSession,
     slot_id: int,
@@ -332,146 +174,71 @@ async def notify_review_rejected(
     sparks_penalty: int,
     new_sparks_balance: int
 ) -> None:
-    """
-    Notify reviewer when their review is rejected.
+    """Notify reviewer when their review is rejected."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of rejected slot
-        reviewer_id: ID of reviewer
-        rejection_reason: Reason for rejection
-        rejection_notes: Additional notes from requester
-        sparks_penalty: Amount of sparks deducted
-        new_sparks_balance: Reviewer's new sparks balance
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
+    dispute_deadline = datetime.utcnow() + timedelta(days=7)
 
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for rejection notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Calculate dispute deadline (7 days from now)
-        dispute_deadline = datetime.utcnow() + timedelta(days=7)
-
-        # Create notification for reviewer
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=reviewer_id,
-            notification_type=NotificationType.REVIEW_REJECTED,
-            title="Your review was rejected",
-            message=f"Your review for '{review_request.title}' was rejected. Reason: {rejection_reason}. You can dispute this decision within 7 days.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "rejection_reason": rejection_reason,
-                "rejection_notes": rejection_notes,
-                "sparks_penalty": sparks_penalty,
-                "new_sparks_balance": new_sparks_balance,
-                "can_dispute": True,
-                "dispute_deadline": dispute_deadline.isoformat(),
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/reviewer/review/{slot.id}",
-            action_label="View Details & Dispute",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created review rejected notification for user {reviewer_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating review rejected notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=reviewer_id,
+        notification_type=NotificationType.REVIEW_REJECTED,
+        title="Your review was rejected",
+        message=f"Your review for '{ctx.request_title}' was rejected. Reason: {rejection_reason}. You can dispute this decision within 7 days.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "rejection_reason": rejection_reason,
+            "rejection_notes": rejection_notes,
+            "sparks_penalty": sparks_penalty,
+            "new_sparks_balance": new_sparks_balance,
+            "can_dispute": True,
+            "dispute_deadline": dispute_deadline.isoformat(),
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/review/{ctx.slot.id}",
+        action_label="View Details & Dispute",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Dispute Events ====================
 
+
+@notification_trigger
 async def notify_dispute_created(db: AsyncSession, slot_id: int, reviewer_id: int) -> None:
-    """
-    Notify admin and requester when a dispute is created.
+    """Notify requester when a dispute is created."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of disputed slot
-        reviewer_id: ID of reviewer who created dispute
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
-
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for dispute notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get reviewer info
-        reviewer = await db.get(User, reviewer_id)
-        if not reviewer:
-            logger.error(f"Reviewer {reviewer_id} not found")
-            return
-
-        service = NotificationService(db)
-
-        # Notify requester
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.DISPUTE_CREATED,
-            title=f"Review dispute created",
-            message=f"{reviewer.full_name or reviewer.email} has disputed your rejection of their review for '{review_request.title}'. An admin will review the dispute.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "reviewer_id": reviewer.id,
-                "reviewer_name": reviewer.full_name or reviewer.email,
-                "dispute_reason": slot.dispute_reason,
-            },
-            priority=NotificationPriority.MEDIUM,
-            action_url=f"/dashboard/reviews/{slot.id}/review",
-            action_label="View Dispute",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        # TODO: Notify all admins (would need to query for admin users)
-        # For now, just log it
-        logger.info(f"Dispute created for slot {slot_id} - admins should be notified")
-
-    except Exception as e:
-        logger.error(f"Error creating dispute notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.DISPUTE_CREATED,
+        title="Review dispute created",
+        message=f"{ctx.reviewer_name} has disputed your rejection of their review for '{ctx.request_title}'. An admin will review the dispute.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "reviewer_id": ctx.reviewer.id,
+            "reviewer_name": ctx.reviewer_name,
+            "dispute_reason": ctx.slot.dispute_reason,
+        },
+        priority=NotificationPriority.MEDIUM,
+        action_url=f"/dashboard/reviews/{ctx.slot.id}/review",
+        action_label="View Dispute",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
+@notification_trigger
 async def notify_dispute_resolved(
     db: AsyncSession,
     slot_id: int,
@@ -479,259 +246,145 @@ async def notify_dispute_resolved(
     resolution: str,
     admin_notes: Optional[str]
 ) -> None:
-    """
-    Notify reviewer and requester when a dispute is resolved.
+    """Notify reviewer and requester when a dispute is resolved."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of disputed slot
-        reviewer_id: ID of reviewer
-        resolution: Resolution decision (approved/denied)
-        admin_notes: Admin's notes on the decision
-    """
-    try:
-        # Get slot and review request
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
+    # Notify reviewer based on resolution
+    if resolution == "approved":
+        title = "Dispute resolved in your favor"
+        message = f"Your dispute for '{ctx.request_title}' was approved. The review has been accepted and you've received karma."
+    else:
+        title = "Dispute resolved"
+        message = f"Your dispute for '{ctx.request_title}' was reviewed. The original rejection stands."
 
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for dispute resolution notification")
-            return
+    await send_notification(
+        ctx=ctx,
+        recipient_id=reviewer_id,
+        notification_type=NotificationType.DISPUTE_RESOLVED,
+        title=title,
+        message=message,
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "resolution": resolution,
+            "admin_notes": admin_notes,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/review/{ctx.slot.id}",
+        action_label="View Review" if resolution == "approved" else "View Details",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        service = NotificationService(db)
-
-        # Notify reviewer
-        if resolution == "approved":
-            await service.create_notification(
-                user_id=reviewer_id,
-                notification_type=NotificationType.DISPUTE_RESOLVED,
-                title="Dispute resolved in your favor",
-                message=f"Your dispute for '{review_request.title}' was approved. The review has been accepted and you've received karma.",
-                data={
-                    "slot_id": slot.id,
-                    "review_request_id": review_request.id,
-                    "review_request_title": review_request.title,
-                    "resolution": resolution,
-                    "admin_notes": admin_notes,
-                },
-                priority=NotificationPriority.HIGH,
-                action_url=f"/reviewer/review/{slot.id}",
-                action_label="View Review",
-                entity_type=EntityType.REVIEW_SLOT,
-                entity_id=slot.id,
-            )
-        else:
-            await service.create_notification(
-                user_id=reviewer_id,
-                notification_type=NotificationType.DISPUTE_RESOLVED,
-                title="Dispute resolved",
-                message=f"Your dispute for '{review_request.title}' was reviewed. The original rejection stands.",
-                data={
-                    "slot_id": slot.id,
-                    "review_request_id": review_request.id,
-                    "review_request_title": review_request.title,
-                    "resolution": resolution,
-                    "admin_notes": admin_notes,
-                },
-                priority=NotificationPriority.HIGH,
-                action_url=f"/reviewer/review/{slot.id}",
-                action_label="View Details",
-                entity_type=EntityType.REVIEW_SLOT,
-                entity_id=slot.id,
-            )
-
-        # Notify requester
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.DISPUTE_RESOLVED,
-            title="Review dispute resolved",
-            message=f"The dispute for '{review_request.title}' has been resolved. Resolution: {resolution}",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "resolution": resolution,
-                "admin_notes": admin_notes,
-            },
-            priority=NotificationPriority.MEDIUM,
-            action_url=f"/dashboard/reviews/{slot.id}/review",
-            action_label="View Review",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created dispute resolution notifications for slot {slot_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating dispute resolution notification: {e}", exc_info=True)
+    # Notify requester
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.DISPUTE_RESOLVED,
+        title="Review dispute resolved",
+        message=f"The dispute for '{ctx.request_title}' has been resolved. Resolution: {resolution}",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "resolution": resolution,
+            "admin_notes": admin_notes,
+        },
+        priority=NotificationPriority.MEDIUM,
+        action_url=f"/dashboard/reviews/{ctx.slot.id}/review",
+        action_label="View Review",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Elaboration Request Events ====================
 
+
+@notification_trigger
 async def notify_elaboration_requested(
     db: AsyncSession,
     slot_id: int,
     requester_id: int
 ) -> None:
-    """
-    Notify reviewer when the creator requests elaboration on their submitted review.
+    """Notify reviewer when the creator requests elaboration on their submitted review."""
+    ctx = await fetch_slot_context(db, slot_id)
+    if not ctx or not ctx.slot.reviewer_id:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of slot needing elaboration
-        requester_id: ID of the review request creator
-    """
-    try:
-        # Get slot
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
+    # Fetch requester info
+    requester = await ctx.db.get(User, requester_id)
+    if not requester:
+        return
 
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for elaboration request notification")
-            return
+    requester_name = requester.full_name or requester.email
 
-        if not slot.reviewer_id:
-            logger.error(f"Slot {slot_id} has no reviewer")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get requester info
-        requester = await db.get(User, requester_id)
-        if not requester:
-            logger.error(f"Requester {requester_id} not found")
-            return
-
-        # Create notification for reviewer
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=slot.reviewer_id,
-            notification_type=NotificationType.ELABORATION_REQUESTED,
-            title="Elaboration requested on your review",
-            message=f"{requester.full_name or requester.email} would like more detail on your review for '{review_request.title}'. Please respond within 48 hours.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "requester_id": requester.id,
-                "requester_name": requester.full_name or requester.email,
-                "requester_avatar": requester.avatar_url,
-                "elaboration_request": slot.elaboration_request,
-                "elaboration_count": slot.elaboration_count,
-                "elaboration_deadline": slot.elaboration_deadline.isoformat() if slot.elaboration_deadline else None,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/reviewer/hub?slot={slot.id}",
-            action_label="Respond to Request",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created elaboration requested notification for reviewer {slot.reviewer_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating elaboration requested notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.slot.reviewer_id,
+        notification_type=NotificationType.ELABORATION_REQUESTED,
+        title="Elaboration requested on your review",
+        message=f"{requester_name} would like more detail on your review for '{ctx.request_title}'. Please respond within 48 hours.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "requester_id": requester.id,
+            "requester_name": requester_name,
+            "requester_avatar": requester.avatar_url,
+            "elaboration_request": ctx.slot.elaboration_request,
+            "elaboration_count": ctx.slot.elaboration_count,
+            "elaboration_deadline": ctx.slot.elaboration_deadline.isoformat() if ctx.slot.elaboration_deadline else None,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/hub?slot={ctx.slot.id}",
+        action_label="Respond to Request",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
+@notification_trigger
 async def notify_elaboration_submitted(
     db: AsyncSession,
     slot_id: int,
     reviewer_id: int
 ) -> None:
-    """
-    Notify creator when reviewer responds to an elaboration request.
+    """Notify creator when reviewer responds to an elaboration request."""
+    ctx = await fetch_slot_context(db, slot_id, reviewer_id=reviewer_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        slot_id: ID of slot with elaboration response
-        reviewer_id: ID of the reviewer who responded
-    """
-    try:
-        # Get slot
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.id == slot_id)
-        )
-        slot = result.scalar_one_or_none()
-
-        if not slot:
-            logger.error(f"Slot {slot_id} not found for elaboration submitted notification")
-            return
-
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == slot.review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
-
-        if not review_request:
-            logger.error(f"Review request {slot.review_request_id} not found")
-            return
-
-        # Get reviewer info
-        reviewer = await db.get(User, reviewer_id)
-        if not reviewer:
-            logger.error(f"Reviewer {reviewer_id} not found")
-            return
-
-        # Create notification for requester/creator
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.ELABORATION_SUBMITTED,
-            title="Elaboration received on your review",
-            message=f"{reviewer.full_name or reviewer.email} has provided additional detail on their review for '{review_request.title}'.",
-            data={
-                "slot_id": slot.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "reviewer_id": reviewer.id,
-                "reviewer_name": reviewer.full_name or reviewer.email,
-                "reviewer_avatar": reviewer.avatar_url,
-                "elaboration_count": slot.elaboration_count,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/reviewer/hub?slot={slot.id}&mode=creator",
-            action_label="View Updated Review",
-            entity_type=EntityType.REVIEW_SLOT,
-            entity_id=slot.id,
-        )
-
-        logger.info(f"Created elaboration submitted notification for requester {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating elaboration submitted notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.ELABORATION_SUBMITTED,
+        title="Elaboration received on your review",
+        message=f"{ctx.reviewer_name} has provided additional detail on their review for '{ctx.request_title}'.",
+        data={
+            "slot_id": ctx.slot.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "reviewer_id": ctx.reviewer.id,
+            "reviewer_name": ctx.reviewer_name,
+            "reviewer_avatar": ctx.reviewer_avatar,
+            "elaboration_count": ctx.slot.elaboration_count,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/hub?slot={ctx.slot.id}&mode=creator",
+        action_label="View Updated Review",
+        entity_type=EntityType.REVIEW_SLOT,
+        entity_id=ctx.slot.id,
+    )
 
 
 # ==================== Review Invitation Events ====================
 
+
+@notification_trigger
 async def notify_review_invitation(
     db: AsyncSession,
     review_request_id: int,
@@ -739,328 +392,184 @@ async def notify_review_invitation(
     invitee_id: int,
     message: Optional[str] = None
 ) -> None:
-    """
-    Notify a user when they receive a review invitation from a creator.
+    """Notify a user when they receive a review invitation from a creator."""
+    ctx = await fetch_request_context(
+        db,
+        review_request_id,
+        extra_user_ids={"inviter": inviter_id, "invitee": invitee_id}
+    )
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        review_request_id: ID of the review request
-        inviter_id: ID of the user sending the invitation (creator)
-        invitee_id: ID of the user being invited (reviewer)
-        message: Optional personal message from inviter
-    """
-    try:
-        # Get review request
-        result = await db.execute(
-            select(ReviewRequest)
-            .where(ReviewRequest.id == review_request_id)
-        )
-        review_request = result.scalar_one_or_none()
+    inviter = ctx.extra_users.get("inviter")
+    inviter_name = inviter.full_name or inviter.email if inviter else "Someone"
 
-        if not review_request:
-            logger.error(f"Review request {review_request_id} not found for invitation notification")
-            return
+    available_slots = await count_available_slots(db, review_request_id)
 
-        # Get inviter info
-        inviter = await db.get(User, inviter_id)
-        if not inviter:
-            logger.error(f"Inviter {inviter_id} not found")
-            return
+    notification_message = f"{inviter_name} has invited you to review '{ctx.request_title}'."
+    if message:
+        truncated = message[:100] + "..." if len(message) > 100 else message
+        notification_message += f' Message: "{truncated}"'
 
-        # Get invitee to verify they exist
-        invitee = await db.get(User, invitee_id)
-        if not invitee:
-            logger.error(f"Invitee {invitee_id} not found")
-            return
-
-        # Calculate available slots
-        result = await db.execute(
-            select(ReviewSlot)
-            .where(ReviewSlot.review_request_id == review_request_id)
-        )
-        all_slots = result.scalars().all()
-        available_slots = sum(1 for s in all_slots if s.status == "available")
-
-        # Compose notification message
-        notification_message = f"{inviter.full_name or inviter.email} has invited you to review '{review_request.title}'."
-        if message:
-            notification_message += f" Message: \"{message[:100]}{'...' if len(message) > 100 else ''}\""
-
-        # Create notification for invitee
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=invitee_id,
-            notification_type=NotificationType.REVIEW_INVITATION,
-            title=f"Review invitation from {inviter.full_name or inviter.email}",
-            message=notification_message,
-            data={
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "content_type": review_request.content_type.value if review_request.content_type else None,
-                "review_type": review_request.review_type.value if review_request.review_type else None,
-                "inviter_id": inviter.id,
-                "inviter_name": inviter.full_name or inviter.email,
-                "inviter_avatar": inviter.avatar_url,
-                "available_slots": available_slots,
-                "personal_message": message,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/review/{review_request.id}",
-            action_label="View Request",
-            entity_type=EntityType.REVIEW_REQUEST,
-            entity_id=review_request.id,
-        )
-
-        logger.info(f"Created review invitation notification for user {invitee_id} from {inviter_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating review invitation notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=invitee_id,
+        notification_type=NotificationType.REVIEW_INVITATION,
+        title=f"Review invitation from {inviter_name}",
+        message=notification_message,
+        data={
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "content_type": ctx.review_request.content_type.value if ctx.review_request.content_type else None,
+            "review_type": ctx.review_request.review_type.value if ctx.review_request.review_type else None,
+            "inviter_id": inviter.id if inviter else None,
+            "inviter_name": inviter_name,
+            "inviter_avatar": inviter.avatar_url if inviter else None,
+            "available_slots": available_slots,
+            "personal_message": message,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/review/{ctx.review_request.id}",
+        action_label="View Request",
+        entity_type=EntityType.REVIEW_REQUEST,
+        entity_id=ctx.review_request.id,
+    )
 
 
 # ==================== Slot Application Events ====================
 
+
+@notification_trigger
 async def notify_slot_application_received(
     db: AsyncSession,
     application_id: int,
     applicant_id: int
 ) -> None:
-    """
-    Notify creator when an expert applies for a paid review slot.
+    """Notify creator when an expert applies for a paid review slot."""
+    ctx = await fetch_application_context(db, application_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        application_id: ID of the slot application
-        applicant_id: ID of the expert who applied
-    """
-    try:
-        from app.models.slot_application import SlotApplication
-
-        # Get application with review request
-        application = await db.get(SlotApplication, application_id)
-        if not application:
-            logger.error(f"Application {application_id} not found")
-            return
-
-        # Get review request
-        review_request = await db.get(ReviewRequest, application.review_request_id)
-        if not review_request:
-            logger.error(f"Review request {application.review_request_id} not found")
-            return
-
-        # Get applicant info
-        applicant = await db.get(User, applicant_id)
-        if not applicant:
-            logger.error(f"Applicant {applicant_id} not found")
-            return
-
-        # Create notification for creator
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.SLOT_APPLICATION_RECEIVED,
-            title=f"New application for '{review_request.title}'",
-            message=f"{applicant.full_name or applicant.email} has applied to review your project. Review their profile and decide if you want to accept them.",
-            data={
-                "application_id": application.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "applicant_id": applicant.id,
-                "applicant_name": applicant.full_name or applicant.email,
-                "applicant_avatar": applicant.avatar_url,
-                "pitch_message": application.pitch_message[:200] if application.pitch_message else None,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/review/{review_request.id}/applications",
-            action_label="Review Applications",
-            entity_type=EntityType.SLOT_APPLICATION,
-            entity_id=application.id,
-        )
-
-        logger.info(f"Created slot application received notification for user {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot application received notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.SLOT_APPLICATION_RECEIVED,
+        title=f"New application for '{ctx.request_title}'",
+        message=f"{ctx.reviewer_name} has applied to review your project. Review their profile and decide if you want to accept them.",
+        data={
+            "application_id": ctx.application.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "applicant_id": ctx.reviewer.id,
+            "applicant_name": ctx.reviewer_name,
+            "applicant_avatar": ctx.reviewer_avatar,
+            "pitch_message": ctx.application.pitch_message[:200] if ctx.application.pitch_message else None,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/review/{ctx.review_request.id}/applications",
+        action_label="Review Applications",
+        entity_type=EntityType.SLOT_APPLICATION,
+        entity_id=ctx.application.id,
+    )
 
 
+@notification_trigger
 async def notify_slot_application_accepted(
     db: AsyncSession,
     application_id: int,
     slot_id: int
 ) -> None:
-    """
-    Notify expert when their application is accepted.
+    """Notify expert when their application is accepted."""
+    ctx = await fetch_application_context(db, application_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        application_id: ID of the accepted slot application
-        slot_id: ID of the assigned slot
-    """
-    try:
-        from app.models.slot_application import SlotApplication
-
-        # Get application
-        application = await db.get(SlotApplication, application_id)
-        if not application:
-            logger.error(f"Application {application_id} not found")
-            return
-
-        # Get review request
-        review_request = await db.get(ReviewRequest, application.review_request_id)
-        if not review_request:
-            logger.error(f"Review request {application.review_request_id} not found")
-            return
-
-        # Get creator info
-        creator = await db.get(User, review_request.user_id)
-        if not creator:
-            logger.error(f"Creator {review_request.user_id} not found")
-            return
-
-        # Create notification for applicant
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=application.applicant_id,
-            notification_type=NotificationType.SLOT_APPLICATION_ACCEPTED,
-            title=f"Application accepted for '{review_request.title}'",
-            message=f"{creator.full_name or creator.email} has accepted your application! You can now start working on your review.",
-            data={
-                "application_id": application.id,
-                "slot_id": slot_id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "creator_id": creator.id,
-                "creator_name": creator.full_name or creator.email,
-            },
-            priority=NotificationPriority.HIGH,
-            action_url=f"/reviewer/review/{slot_id}",
-            action_label="Start Review",
-            entity_type=EntityType.SLOT_APPLICATION,
-            entity_id=application.id,
-        )
-
-        logger.info(f"Created slot application accepted notification for user {application.applicant_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot application accepted notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.application.applicant_id,
+        notification_type=NotificationType.SLOT_APPLICATION_ACCEPTED,
+        title=f"Application accepted for '{ctx.request_title}'",
+        message=f"{ctx.requester_name} has accepted your application! You can now start working on your review.",
+        data={
+            "application_id": ctx.application.id,
+            "slot_id": slot_id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "creator_id": ctx.requester.id,
+            "creator_name": ctx.requester_name,
+        },
+        priority=NotificationPriority.HIGH,
+        action_url=f"/reviewer/review/{slot_id}",
+        action_label="Start Review",
+        entity_type=EntityType.SLOT_APPLICATION,
+        entity_id=ctx.application.id,
+    )
 
 
+@notification_trigger
 async def notify_slot_application_rejected(
     db: AsyncSession,
     application_id: int,
     rejection_reason: str = None
 ) -> None:
-    """
-    Notify expert when their application is rejected.
+    """Notify expert when their application is rejected."""
+    ctx = await fetch_application_context(db, application_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        application_id: ID of the rejected slot application
-        rejection_reason: Optional reason for rejection
-    """
-    try:
-        from app.models.slot_application import SlotApplication
+    message = f"Your application for '{ctx.request_title}' was not accepted."
+    if rejection_reason:
+        message += f" Feedback: {rejection_reason[:200]}"
+    else:
+        message += " The creator has selected other reviewers for this project."
 
-        # Get application
-        application = await db.get(SlotApplication, application_id)
-        if not application:
-            logger.error(f"Application {application_id} not found")
-            return
-
-        # Get review request
-        review_request = await db.get(ReviewRequest, application.review_request_id)
-        if not review_request:
-            logger.error(f"Review request {application.review_request_id} not found")
-            return
-
-        # Build message
-        message = f"Your application for '{review_request.title}' was not accepted."
-        if rejection_reason:
-            message += f" Feedback: {rejection_reason[:200]}"
-        else:
-            message += " The creator has selected other reviewers for this project."
-
-        # Create notification for applicant
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=application.applicant_id,
-            notification_type=NotificationType.SLOT_APPLICATION_REJECTED,
-            title=f"Application not accepted for '{review_request.title}'",
-            message=message,
-            data={
-                "application_id": application.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "rejection_reason": rejection_reason,
-            },
-            priority=NotificationPriority.MEDIUM,
-            action_url="/browse",
-            action_label="Find Other Reviews",
-            entity_type=EntityType.SLOT_APPLICATION,
-            entity_id=application.id,
-        )
-
-        logger.info(f"Created slot application rejected notification for user {application.applicant_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot application rejected notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.application.applicant_id,
+        notification_type=NotificationType.SLOT_APPLICATION_REJECTED,
+        title=f"Application not accepted for '{ctx.request_title}'",
+        message=message,
+        data={
+            "application_id": ctx.application.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "rejection_reason": rejection_reason,
+        },
+        priority=NotificationPriority.MEDIUM,
+        action_url="/browse",
+        action_label="Find Other Reviews",
+        entity_type=EntityType.SLOT_APPLICATION,
+        entity_id=ctx.application.id,
+    )
 
 
+@notification_trigger
 async def notify_slot_application_withdrawn(
     db: AsyncSession,
     application_id: int,
     applicant_id: int
 ) -> None:
-    """
-    Notify creator when an expert withdraws their application.
+    """Notify creator when an expert withdraws their application."""
+    ctx = await fetch_application_context(db, application_id)
+    if not ctx:
+        return
 
-    Args:
-        db: Database session
-        application_id: ID of the withdrawn slot application
-        applicant_id: ID of the expert who withdrew
-    """
-    try:
-        from app.models.slot_application import SlotApplication
-
-        # Get application
-        application = await db.get(SlotApplication, application_id)
-        if not application:
-            logger.error(f"Application {application_id} not found")
-            return
-
-        # Get review request
-        review_request = await db.get(ReviewRequest, application.review_request_id)
-        if not review_request:
-            logger.error(f"Review request {application.review_request_id} not found")
-            return
-
-        # Get applicant info
-        applicant = await db.get(User, applicant_id)
-        if not applicant:
-            logger.error(f"Applicant {applicant_id} not found")
-            return
-
-        # Create notification for creator
-        service = NotificationService(db)
-        await service.create_notification(
-            user_id=review_request.user_id,
-            notification_type=NotificationType.SLOT_APPLICATION_WITHDRAWN,
-            title=f"Application withdrawn for '{review_request.title}'",
-            message=f"{applicant.full_name or applicant.email} has withdrawn their application for your review request.",
-            data={
-                "application_id": application.id,
-                "review_request_id": review_request.id,
-                "review_request_title": review_request.title,
-                "applicant_id": applicant.id,
-                "applicant_name": applicant.full_name or applicant.email,
-            },
-            priority=NotificationPriority.LOW,
-            action_url=f"/review/{review_request.id}/applications",
-            action_label="View Applications",
-            entity_type=EntityType.SLOT_APPLICATION,
-            entity_id=application.id,
-        )
-
-        logger.info(f"Created slot application withdrawn notification for user {review_request.user_id}")
-
-    except Exception as e:
-        logger.error(f"Error creating slot application withdrawn notification: {e}", exc_info=True)
+    await send_notification(
+        ctx=ctx,
+        recipient_id=ctx.review_request.user_id,
+        notification_type=NotificationType.SLOT_APPLICATION_WITHDRAWN,
+        title=f"Application withdrawn for '{ctx.request_title}'",
+        message=f"{ctx.reviewer_name} has withdrawn their application for your review request.",
+        data={
+            "application_id": ctx.application.id,
+            "review_request_id": ctx.review_request.id,
+            "review_request_title": ctx.request_title,
+            "applicant_id": ctx.reviewer.id,
+            "applicant_name": ctx.reviewer_name,
+        },
+        priority=NotificationPriority.LOW,
+        action_url=f"/review/{ctx.review_request.id}/applications",
+        action_label="View Applications",
+        entity_type=EntityType.SLOT_APPLICATION,
+        entity_id=ctx.application.id,
+    )
