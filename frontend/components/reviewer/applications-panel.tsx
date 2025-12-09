@@ -36,6 +36,7 @@ import {
   ThumbsDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/api/client";
 import {
   getRequestApplications,
   acceptApplication,
@@ -120,8 +121,7 @@ export function ApplicationsPanel({
       onApplicationAccepted?.();
     } catch (err: any) {
       console.error("Failed to accept application:", err);
-      const message = err?.data?.detail || "Failed to accept application";
-      setError(typeof message === "string" ? message : "Failed to accept application");
+      setError(getErrorMessage(err));
     } finally {
       setProcessingId(null);
     }
@@ -137,8 +137,7 @@ export function ApplicationsPanel({
       await fetchApplications();
     } catch (err: any) {
       console.error("Failed to reject application:", err);
-      const message = err?.data?.detail || "Failed to reject application";
-      setError(typeof message === "string" ? message : "Failed to reject application");
+      setError(getErrorMessage(err));
     } finally {
       setProcessingId(null);
     }

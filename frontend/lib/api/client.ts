@@ -227,6 +227,31 @@ export function getErrorMessage(error: unknown): string {
 }
 
 /**
+ * Extract error message from a raw API error response object.
+ * Use this when parsing error responses from raw fetch calls (not using apiClient).
+ * Handles both legacy format (detail) and new CritvueException format (error.message).
+ */
+export function extractApiErrorMessage(errorData: any, fallback: string = "An error occurred"): string {
+  // Handle CritvueException format: {"error": {"message": "..."}}
+  if (errorData?.error?.message) {
+    return errorData.error.message;
+  }
+  // Handle legacy/FastAPI format: {"detail": "..."}
+  if (typeof errorData?.detail === "string") {
+    return errorData.detail;
+  }
+  // Handle validation errors: {"detail": [{"msg": "..."}]}
+  if (Array.isArray(errorData?.detail)) {
+    return errorData.detail.map((err: any) => err.msg || err.message).join(", ");
+  }
+  // Handle structured detail with message
+  if (errorData?.detail?.message) {
+    return errorData.detail.message;
+  }
+  return fallback;
+}
+
+/**
  * Check if an error is retryable
  */
 export function isRetryableError(error: unknown): boolean {

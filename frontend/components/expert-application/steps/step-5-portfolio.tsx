@@ -13,6 +13,7 @@ import { Card } from '@/components/ui/card'
 import { FileUpload, UploadedFile } from '@/components/ui/file-upload'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import type { PortfolioItem } from '@/lib/expert-application/types'
+import { extractApiErrorMessage } from '@/lib/api/client'
 
 // Helper to get file type icon based on file type
 function getFileTypeIcon(fileType: string) {
@@ -311,7 +312,7 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
 
         if (!response.ok) {
           const errorData = await response.json()
-          throw new Error(errorData.detail || 'Upload failed')
+          throw new Error(extractApiErrorMessage(errorData, 'Upload failed'))
         }
 
         const uploadResult = await response.json()

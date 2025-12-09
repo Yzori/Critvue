@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { extractApiErrorMessage } from "@/lib/api/client";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import {
   compressImage,
@@ -170,7 +171,7 @@ export function AvatarUpload({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || "Upload failed");
+        throw new Error(extractApiErrorMessage(error, "Upload failed"));
       }
 
       const data = await response.json();

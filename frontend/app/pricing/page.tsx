@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle, ArrowRight, Star, Crown, Shield, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { extractApiErrorMessage } from "@/lib/api/client";
 
 export default function PricingPage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function PricingPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.detail || "Failed to create checkout session");
+        throw new Error(extractApiErrorMessage(error, "Failed to create checkout session"));
       }
 
       const data = await response.json();

@@ -22,6 +22,7 @@ import { Step8SampleReview } from './steps/step-8-sample-review'
 import { useExpertApplicationStore } from '@/stores/expert-application-store'
 import { TOTAL_STEPS } from '@/lib/expert-application/types'
 import { getAnimationDuration, vibrate, vibrationPatterns } from '@/lib/expert-application/auto-save'
+import { extractApiErrorMessage } from '@/lib/api/client'
 
 type CelebrationType = '50-percent' | '100-percent' | null
 
@@ -119,7 +120,7 @@ export function ApplicationContainer() {
           if (!createResponse.ok) {
             const errorData = await createResponse.json()
             console.error('Failed to create draft:', errorData)
-            throw new Error(errorData.detail || 'Failed to create application')
+            throw new Error(extractApiErrorMessage(errorData, 'Failed to create application'))
           }
 
           const createdApp = await createResponse.json()
@@ -143,7 +144,7 @@ export function ApplicationContainer() {
         if (!createResponse.ok) {
           const errorData = await createResponse.json()
           console.error('Failed to create draft:', errorData)
-          throw new Error(errorData.detail || 'Failed to create application')
+          throw new Error(extractApiErrorMessage(errorData, 'Failed to create application'))
         }
 
         const createdApp = await createResponse.json()
@@ -165,7 +166,7 @@ export function ApplicationContainer() {
       if (!submitResponse.ok) {
         const errorData = await submitResponse.json()
         console.error('Failed to submit application:', errorData)
-        throw new Error(errorData.detail || 'Failed to submit application')
+        throw new Error(extractApiErrorMessage(errorData, 'Failed to submit application'))
       }
 
       await submitResponse.json()

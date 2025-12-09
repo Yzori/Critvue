@@ -3,7 +3,7 @@
  * Handles file upload and management for review requests
  */
 
-import apiClient from "./client";
+import apiClient, { extractApiErrorMessage } from "./client";
 
 // File metadata response from the API
 export interface FileResponse {
@@ -59,7 +59,7 @@ export async function uploadFile(
       } else {
         try {
           const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.detail || "Upload failed"));
+          reject(new Error(extractApiErrorMessage(error, "Upload failed")));
         } catch {
           reject(new Error(`Upload failed with status ${xhr.status}`));
         }
@@ -124,7 +124,7 @@ export async function uploadFiles(
       } else {
         try {
           const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.detail || "Upload failed"));
+          reject(new Error(extractApiErrorMessage(error, "Upload failed")));
         } catch {
           reject(new Error(`Upload failed with status ${xhr.status}`));
         }
@@ -224,7 +224,7 @@ export async function uploadGenericFile(
       } else {
         try {
           const error = JSON.parse(xhr.responseText);
-          reject(new Error(error.detail || "Upload failed"));
+          reject(new Error(extractApiErrorMessage(error, "Upload failed")));
         } catch {
           reject(new Error(`Upload failed with status ${xhr.status}`));
         }
