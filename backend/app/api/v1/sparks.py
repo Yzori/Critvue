@@ -262,9 +262,7 @@ async def toggle_badge_featured(
     success = await badge_service.toggle_badge_featured(current_user.id, badge_id)
 
     if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Badge not found or not owned by user"
+        raise NotFoundError(message="Badge not found or not owned by user"
         )
 
     return {"message": "Badge featured status toggled"}
@@ -296,9 +294,7 @@ async def get_leaderboard(
         season_type_enum = SeasonType(season_type)
         category_enum = LeaderboardCategory(category)
     except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid season_type or category"
+        raise InvalidInputError(message="Invalid season_type or category"
         )
 
     leaderboard_service = LeaderboardService(db)
@@ -342,18 +338,14 @@ async def get_my_ranking(
         season_type_enum = SeasonType(season_type)
         category_enum = LeaderboardCategory(category)
     except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid season_type or category"
+        raise InvalidInputError(message="Invalid season_type or category"
         )
 
     leaderboard_service = LeaderboardService(db)
     season = await leaderboard_service.get_active_season(season_type_enum)
 
     if not season:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No active season"
+        raise NotFoundError(message="No active season"
         )
 
     ranking = await leaderboard_service.get_user_ranking(
@@ -364,9 +356,7 @@ async def get_my_ranking(
     )
 
     if not ranking:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No ranking found for this season"
+        raise NotFoundError(message="No ranking found for this season"
         )
 
     return ranking
@@ -385,9 +375,7 @@ async def get_seasons(
         try:
             season_type_enum = SeasonType(season_type)
         except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid season_type"
+            raise InvalidInputError(message="Invalid season_type"
             )
 
     leaderboard_service = LeaderboardService(db)
@@ -430,9 +418,7 @@ async def submit_requester_rating(
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
 
 
@@ -525,9 +511,7 @@ async def submit_reviewer_rating(
         }
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
 
 

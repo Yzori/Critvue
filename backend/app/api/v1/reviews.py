@@ -1,7 +1,16 @@
 """Review Request API endpoints"""
 
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Path as PathParam, Query, status
+from fastapi import APIRouter, Depends, Path as PathParam, Query, status
+from app.core.exceptions import (
+    CritvueException,
+    NotFoundError,
+    InvalidInputError,
+    InternalError,
+    ForbiddenError,
+    NotOwnerError,
+    AdminRequiredError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
@@ -71,22 +80,16 @@ async def create_review_request(
         )
 
         return ReviewRequestResponse.model_validate(review)
-    except HTTPException:
-        # Re-raise HTTPException as-is (preserves status code like 403)
+    except CritvueException:
+        # Re-raise known exceptions as-is (preserves status code)
         raise
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(
             f"Failed to create review request for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create review request"
-        )
+        raise InternalError(message="Failed to create review request")
 
 
 @router.get(
@@ -137,10 +140,7 @@ async def list_review_requests(
         security_logger.logger.error(
             f"Failed to list review requests for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve review requests"
-        )
+        raise InternalError(message="Failed to retrieve review requests")
 
 
 @router.get(
@@ -175,10 +175,7 @@ async def get_review_stats(
         security_logger.logger.error(
             f"Failed to get review stats for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve statistics"
-        )
+        raise InternalError(message="Failed to retrieve statistics")
 
 
 @router.get(
@@ -238,10 +235,7 @@ async def get_reviews_with_open_slots(
         security_logger.logger.error(
             f"Failed to get reviews with open slots for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve review requests"
-        )
+        raise InternalError(message="Failed to retrieve review requests")
 
 
 @router.get(
@@ -282,9 +276,7 @@ async def get_review_request(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check authorization
@@ -304,10 +296,7 @@ async def get_review_request(
 
         # Allow access if user is owner, reviewer, or review is available for claiming
         if not (is_owner or is_reviewer or is_available_for_claiming):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to view this review"
-            )
+            raise ForbiddenError(message="You don't have permission to view this review")
 
         # Prepare response with requester information
         response_data = ReviewRequestResponse.model_validate(review)
@@ -339,16 +328,13 @@ async def get_review_request(
             response_data.slots = filtered_slots
 
         return response_data
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(
             f"Failed to get review request {review_id} for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve review request"
-        )
+        raise InternalError(message="Failed to retrieve review request")
 
 
 @router.patch(
@@ -389,9 +375,7 @@ async def update_review_request(
         )
 
         if not current_review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check if status is changing from DRAFT to PENDING
@@ -408,9 +392,7 @@ async def update_review_request(
         if is_status_changing_to_pending and final_review_type == ReviewType.FREE:
             can_create, error_message = await SubscriptionService.check_review_limit(current_user, db)
             if not can_create:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=error_message
+                raise ForbiddenError(message=error_message
                 )
 
         # Update the review
@@ -422,9 +404,7 @@ async def update_review_request(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Increment review count when free review is submitted (DRAFT → PENDING)
@@ -441,20 +421,14 @@ async def update_review_request(
 
         return ReviewRequestResponse.model_validate(review)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except HTTPException:
+        raise InvalidInputError(message=str(e))
+    except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(
             f"Failed to update review request {review_id} for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update review request"
-        )
+        raise InternalError(message="Failed to update review request")
 
 
 @router.delete(
@@ -489,25 +463,20 @@ async def delete_review_request(
         )
 
         if not deleted:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         delete_type = "hard" if hard_delete else "soft"
         security_logger.logger.info(
             f"Review request {delete_type} deleted: id={review_id}, user={current_user.email}"
         )
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(
             f"Failed to delete review request {review_id} for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete review request"
-        )
+        raise InternalError(message="Failed to delete review request")
 
 
 # ===== Review Invitation Schemas =====
@@ -572,31 +541,19 @@ async def invite_reviewer(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Review request not found or you don't have access"
-            )
+            raise NotFoundError(message="Review request not found or you don't have access")
 
         # Verify user owns this review
         if review.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only invite reviewers to your own review requests"
-            )
+            raise ForbiddenError(message="You can only invite reviewers to your own review requests")
 
         # Check review status - must be PENDING or IN_REVIEW
         if review.status not in [ReviewStatus.PENDING, ReviewStatus.IN_REVIEW]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Can only invite reviewers to pending or in-review requests"
-            )
+            raise InvalidInputError(message="Can only invite reviewers to pending or in-review requests")
 
         # Cannot invite yourself
         if invite_data.reviewer_id == current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You cannot invite yourself to review"
-            )
+            raise InvalidInputError(message="You cannot invite yourself to review")
 
         # Check available slots
         result = await db.execute(
@@ -607,18 +564,12 @@ async def invite_reviewer(
         available_slots = result.scalars().all()
 
         if not available_slots:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No available slots for this review request"
-            )
+            raise InvalidInputError(message="No available slots for this review request")
 
         # Verify the reviewer exists
         reviewer = await db.get(User, invite_data.reviewer_id)
         if not reviewer:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Reviewer not found"
-            )
+            raise NotFoundError(resource="Reviewer")
 
         # Send the invitation notification
         await notify_review_invitation(
@@ -641,16 +592,13 @@ async def invite_reviewer(
             reviewer_id=invite_data.reviewer_id
         )
 
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(
             f"Failed to send review invitation for review {review_id} "
             f"from user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send invitation"
-        )
+        raise InternalError(message="Failed to send invitation")
 
 

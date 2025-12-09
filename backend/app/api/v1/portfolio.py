@@ -120,9 +120,7 @@ async def create_portfolio_item(
             db, current_user.id, portfolio_data
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+        raise InvalidInputError(message=str(e),
         )
 
     logger.info(f"Portfolio item {portfolio.id} created by user {current_user.id}")
@@ -279,23 +277,17 @@ async def create_portfolio_from_review(
     review = result.scalar_one_or_none()
 
     if not review:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Review request not found or you don't have permission to access it",
+        raise NotFoundError(message="Review request not found or you don't have permission to access it",
         )
 
     if review.status != ReviewStatus.COMPLETED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only completed reviews can be added to portfolio",
+        raise InvalidInputError(message="Only completed reviews can be added to portfolio",
         )
 
     # Check if already has a portfolio item
     existing = await portfolio_crud.get_portfolio_by_review_request(db, review_request_id)
     if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This review already has a portfolio item",
+        raise InvalidInputError(message="This review already has a portfolio item",
         )
 
     # Create the verified portfolio item
@@ -343,8 +335,7 @@ async def get_portfolio_item(
     portfolio = await portfolio_crud.get_portfolio_item(db, portfolio_id)
 
     if not portfolio:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Portfolio item not found"
+        raise NotFoundError(message="Portfolio item not found"
         )
 
     # Increment view count
@@ -461,9 +452,7 @@ async def update_portfolio_item(
     )
 
     if not portfolio:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Portfolio item not found or you don't have permission to edit it",
+        raise NotFoundError(message="Portfolio item not found or you don't have permission to edit it",
         )
 
     logger.info(f"Portfolio item {portfolio_id} updated by user {current_user.id}")
@@ -495,9 +484,7 @@ async def delete_portfolio_item(
     )
 
     if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Portfolio item not found or you don't have permission to delete it",
+        raise NotFoundError(message="Portfolio item not found or you don't have permission to delete it",
         )
 
     logger.info(f"Portfolio item {portfolio_id} deleted by user {current_user.id}")
@@ -591,9 +578,7 @@ async def toggle_featured(
     )
 
     if error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error,
+        raise InvalidInputError(message=error,
         )
 
     action = "featured" if toggle_request.featured else "unfeatured"

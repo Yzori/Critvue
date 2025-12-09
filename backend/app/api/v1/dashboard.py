@@ -223,9 +223,7 @@ async def get_creator_actions_needed(
 
     except Exception as e:
         logger.error(f"Error getting actions needed for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load pending reviews"
+        raise InternalError(message="Failed to load pending reviews"
         )
 
 
@@ -266,9 +264,7 @@ async def get_creator_my_requests(
                 status_enum = ReviewStatus(status_filter)
                 query = query.where(ReviewRequest.status == status_enum)
             except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status: {status_filter}"
+                raise InvalidInputError(message=f"Invalid status: {status_filter}"
                 )
 
         # Order by most recent first
@@ -356,9 +352,7 @@ async def get_creator_my_requests(
         raise
     except Exception as e:
         logger.error(f"Error getting requests for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load review requests"
+        raise InternalError(message="Failed to load review requests"
         )
 
 
@@ -493,9 +487,7 @@ async def get_reviewer_active(
 
     except Exception as e:
         logger.error(f"Error getting active reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load active reviews"
+        raise InternalError(message="Failed to load active reviews"
         )
 
 
@@ -612,9 +604,7 @@ async def get_reviewer_submitted(
 
     except Exception as e:
         logger.error(f"Error getting submitted reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load submitted reviews"
+        raise InternalError(message="Failed to load submitted reviews"
         )
 
 
@@ -641,9 +631,7 @@ async def get_dashboard_stats(
     try:
         # Validate role
         if role not in ["creator", "reviewer"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Role must be 'creator' or 'reviewer'"
+            raise InvalidInputError(message="Role must be 'creator' or 'reviewer'"
             )
 
         # Calculate period boundaries
@@ -655,9 +643,7 @@ async def get_dashboard_stats(
         elif period == "all_time":
             period_start = datetime(2000, 1, 1)  # Far past
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Period must be 'week', 'month', or 'all_time'"
+            raise InvalidInputError(message="Period must be 'week', 'month', or 'all_time'"
             )
 
         period_end = now
@@ -771,9 +757,7 @@ async def get_dashboard_stats(
         raise
     except Exception as e:
         logger.error(f"Error getting stats for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load statistics"
+        raise InternalError(message="Failed to load statistics"
         )
 
 
@@ -802,15 +786,11 @@ async def batch_accept_reviews(
     try:
         # Validate batch size
         if len(slot_ids) > 50:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum 50 reviews can be batch accepted at once"
+            raise InvalidInputError(message="Maximum 50 reviews can be batch accepted at once"
             )
 
         if not slot_ids:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="slot_ids cannot be empty"
+            raise InvalidInputError(message="slot_ids cannot be empty"
             )
 
         # Get all slots
@@ -912,7 +892,5 @@ async def batch_accept_reviews(
         raise
     except Exception as e:
         logger.error(f"Error in batch accept for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to batch accept reviews"
+        raise InternalError(message="Failed to batch accept reviews"
         )

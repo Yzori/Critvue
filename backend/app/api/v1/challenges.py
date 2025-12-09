@@ -1,12 +1,18 @@
 """Challenge API endpoints for platform-curated creative competitions"""
 
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Path as PathParam, Query, status
+from fastapi import APIRouter, Depends, Path as PathParam, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.api.deps import get_current_user, get_current_user_optional
 from app.models.user import User, UserRole
+from app.core.exceptions import (
+    AdminRequiredError,
+    NotFoundError,
+    InvalidInputError,
+    InternalError,
+)
 from app.models.review_request import ContentType
 from app.models.challenge import ChallengeStatus, ChallengeType
 from app.schemas.challenge import (
@@ -50,10 +56,7 @@ async def require_admin(
 ) -> User:
     """Dependency to verify current user is an admin."""
     if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+        raise AdminRequiredError()
     return current_user
 
 
@@ -280,10 +283,7 @@ async def get_prompts(
         )
     except Exception as e:
         security_logger.logger.error(f"Failed to get challenge prompts: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve prompts"
-        )
+        raise InternalError(message="Failed to retrieve prompts")
 
 
 @router.get(
@@ -301,20 +301,14 @@ async def get_prompt(
         prompt = await service.get_prompt(prompt_id)
 
         if not prompt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Prompt not found"
-            )
+            raise NotFoundError(resource="Prompt")
 
         return ChallengePromptResponse.model_validate(prompt)
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to get prompt {prompt_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve prompt"
-        )
+        raise InternalError(message="Failed to retrieve prompt")
 
 
 # ==================== ADMIN: PROMPT MANAGEMENT ====================
@@ -349,10 +343,7 @@ async def create_prompt(
         return ChallengePromptResponse.model_validate(prompt)
     except Exception as e:
         security_logger.logger.error(f"Failed to create prompt: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create prompt"
-        )
+        raise InternalError(message="Failed to create prompt")
 
 
 @router.put(
@@ -375,24 +366,18 @@ async def update_prompt(
         )
 
         if not prompt:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Prompt not found"
-            )
+            raise NotFoundError(resource="Prompt")
 
         security_logger.logger.info(
             f"Challenge prompt updated: id={prompt_id}, by admin={admin_user.email}"
         )
 
         return ChallengePromptResponse.model_validate(prompt)
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to update prompt {prompt_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update prompt"
-        )
+        raise InternalError(message="Failed to update prompt")
 
 
 @router.delete(
@@ -411,22 +396,16 @@ async def delete_prompt(
         success = await service.delete_prompt(prompt_id)
 
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Prompt not found"
-            )
+            raise NotFoundError(resource="Prompt")
 
         security_logger.logger.info(
             f"Challenge prompt deleted: id={prompt_id}, by admin={admin_user.email}"
         )
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to delete prompt {prompt_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete prompt"
-        )
+        raise InternalError(message="Failed to delete prompt")
 
 
 # ==================== ADMIN: CHALLENGE MANAGEMENT ====================
@@ -473,13 +452,10 @@ async def create_challenge(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to create challenge: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create challenge"
-        )
+        raise InternalError(message="Failed to create challenge")
 
 
 @router.put(
@@ -502,10 +478,7 @@ async def update_challenge(
         )
 
         if not challenge:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Challenge not found"
-            )
+            raise NotFoundError(resource="Challenge")
 
         security_logger.logger.info(
             f"Challenge updated: id={challenge_id}, by admin={admin_user.email}"
@@ -513,15 +486,12 @@ async def update_challenge(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except HTTPException:
+        raise InvalidInputError(message=str(e))
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to update challenge {challenge_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update challenge"
-        )
+        raise InternalError(message="Failed to update challenge")
 
 
 @router.post(
@@ -562,13 +532,10 @@ async def invite_creator(
             responded_at=invitation.responded_at
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to invite creator: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to invite creator"
-        )
+        raise InternalError(message="Failed to invite creator")
 
 
 @router.post(
@@ -609,13 +576,10 @@ async def replace_invitation(
             responded_at=invitation.responded_at
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to replace invitation: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to replace invitation"
-        )
+        raise InternalError(message="Failed to replace invitation")
 
 
 @router.post(
@@ -639,13 +603,10 @@ async def activate_challenge(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to activate challenge: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to activate challenge"
-        )
+        raise InternalError(message="Failed to activate challenge")
 
 
 @router.post(
@@ -669,13 +630,10 @@ async def open_challenge(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to open challenge: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to open challenge"
-        )
+        raise InternalError(message="Failed to open challenge")
 
 
 @router.post(
@@ -703,13 +661,10 @@ async def open_challenge_slots(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to open challenge slots: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to open challenge slots"
-        )
+        raise InternalError(message="Failed to open challenge slots")
 
 
 @router.post(
@@ -733,13 +688,10 @@ async def close_submissions(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to close submissions: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to close submissions"
-        )
+        raise InternalError(message="Failed to close submissions")
 
 
 @router.post(
@@ -763,13 +715,10 @@ async def complete_challenge(
 
         return _build_challenge_response(challenge, admin_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to complete challenge: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to complete challenge"
-        )
+        raise InternalError(message="Failed to complete challenge")
 
 
 # ==================== PUBLIC: CHALLENGES ====================
@@ -813,10 +762,7 @@ async def get_challenges(
         )
     except Exception as e:
         security_logger.logger.error(f"Failed to get challenges: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve challenges"
-        )
+        raise InternalError(message="Failed to retrieve challenges")
 
 
 @router.get(
@@ -880,10 +826,7 @@ async def get_open_slot_challenges(
         return responses
     except Exception as e:
         security_logger.logger.error(f"Failed to get open slot challenges: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve open slot challenges"
-        )
+        raise InternalError(message="Failed to retrieve open slot challenges")
 
 
 @router.post(
@@ -917,13 +860,10 @@ async def claim_challenge_slot(
             challenge_activated=result["challenge_activated"]
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to claim slot: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to claim slot"
-        )
+        raise InternalError(message="Failed to claim slot")
 
 
 @router.get(
@@ -950,10 +890,7 @@ async def get_active_challenges(
         return [_build_challenge_response(c, user_id) for c in challenges]
     except Exception as e:
         security_logger.logger.error(f"Failed to get active challenges: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve active challenges"
-        )
+        raise InternalError(message="Failed to retrieve active challenges")
 
 
 @router.get(
@@ -986,10 +923,7 @@ async def get_leaderboard(
         )
     except Exception as e:
         security_logger.logger.error(f"Failed to get leaderboard: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve leaderboard"
-        )
+        raise InternalError(message="Failed to retrieve leaderboard")
 
 
 @router.get(
@@ -1008,10 +942,7 @@ async def get_challenge(
         challenge = await service.get_challenge(challenge_id)
 
         if not challenge:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Challenge not found"
-            )
+            raise NotFoundError(resource="Challenge")
 
         user_id = current_user.id if current_user else None
 
@@ -1019,14 +950,11 @@ async def get_challenge(
         entries = await service.get_entries(challenge_id, user_id)
 
         return _build_challenge_response(challenge, user_id, entries)
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to get challenge {challenge_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve challenge"
-        )
+        raise InternalError(message="Failed to retrieve challenge")
 
 
 # ==================== USER: INVITATIONS ====================
@@ -1062,10 +990,7 @@ async def get_my_invitations(
         ]
     except Exception as e:
         security_logger.logger.error(f"Failed to get invitations: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve invitations"
-        )
+        raise InternalError(message="Failed to retrieve invitations")
 
 
 @router.post(
@@ -1105,13 +1030,10 @@ async def respond_to_invitation(
             responded_at=invitation.responded_at
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to respond to invitation: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to respond to invitation"
-        )
+        raise InternalError(message="Failed to respond to invitation")
 
 
 # ==================== USER: CATEGORY CHALLENGES ====================
@@ -1152,13 +1074,10 @@ async def join_category_challenge(
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to join challenge: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to join challenge"
-        )
+        raise InternalError(message="Failed to join challenge")
 
 
 # ==================== ENTRIES ====================
@@ -1207,13 +1126,10 @@ async def create_entry(
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to create entry: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create entry"
-        )
+        raise InternalError(message="Failed to create entry")
 
 
 @router.post(
@@ -1256,13 +1172,10 @@ async def submit_entry(
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to submit entry: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to submit entry"
-        )
+        raise InternalError(message="Failed to submit entry")
 
 
 @router.get(
@@ -1299,13 +1212,10 @@ async def get_entries(
             for e in entries
         ]
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to get entries: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve entries"
-        )
+        raise InternalError(message="Failed to retrieve entries")
 
 
 # ==================== VOTING ====================
@@ -1344,13 +1254,10 @@ async def cast_vote(
             voted_at=vote.voted_at
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to cast vote: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cast vote"
-        )
+        raise InternalError(message="Failed to cast vote")
 
 
 @router.get(
@@ -1376,13 +1283,10 @@ async def get_vote_stats(
             top_entries=stats.get("top_entries")
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         security_logger.logger.error(f"Failed to get vote stats: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve vote statistics"
-        )
+        raise InternalError(message="Failed to retrieve vote statistics")
 
 
 # ==================== STATISTICS & LEADERBOARD ====================
@@ -1405,10 +1309,7 @@ async def get_my_stats(
         return ChallengeStats(**stats)
     except Exception as e:
         security_logger.logger.error(f"Failed to get user stats: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve statistics"
-        )
+        raise InternalError(message="Failed to retrieve statistics")
 
 
 @router.get(
@@ -1426,17 +1327,11 @@ async def get_user_stats(
         stats = await service.get_user_challenge_stats(user_id)
 
         if not stats:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise NotFoundError(resource="User")
 
         return ChallengeStats(**stats)
-    except HTTPException:
+    except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
         security_logger.logger.error(f"Failed to get user stats: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve statistics"
-        )
+        raise InternalError(message="Failed to retrieve statistics")

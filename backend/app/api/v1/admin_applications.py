@@ -62,9 +62,7 @@ async def get_committee_member(
             await db.refresh(member)
             logger.info(f"Auto-created committee membership for admin user {current_user.id}")
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not a committee member"
+            raise ForbiddenError(message="You are not a committee member"
             )
 
     return member
@@ -77,9 +75,7 @@ async def require_admin(
     Dependency to verify current user is an admin.
     """
     if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+        raise ForbiddenError(message="Admin access required"
         )
     return current_user
 
@@ -193,9 +189,7 @@ async def get_application_details(
     application = await service.get_application_for_review(application_id)
 
     if not application:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+        raise NotFoundError(message="Application not found"
         )
 
     return application
@@ -233,9 +227,7 @@ async def claim_application(
             released_at=review.released_at
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
 
 
@@ -259,9 +251,7 @@ async def release_application(
         await service.release_application(application_id, committee_member, reason)
         return {"message": "Application released successfully"}
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
 
 
@@ -311,9 +301,7 @@ async def submit_vote(
         return response
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
 
 
@@ -334,9 +322,7 @@ async def add_committee_member(
     user = user_result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise NotFoundError(message="User not found"
         )
 
     # Check if already a committee member
@@ -348,9 +334,7 @@ async def add_committee_member(
 
     if existing:
         if existing.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User is already a committee member"
+            raise InvalidInputError(message="User is already a committee member"
             )
         # Reactivate
         existing.is_active = True
@@ -412,9 +396,7 @@ async def update_committee_member(
     member = result.scalar_one_or_none()
 
     if not member:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Committee member not found"
+        raise NotFoundError(message="Committee member not found"
         )
 
     if update_data.role is not None:

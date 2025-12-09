@@ -44,9 +44,7 @@ async def get_subscription_status(
         return SubscriptionStatus(**status_data)
     except Exception as e:
         logger.error(f"Failed to get subscription status for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve subscription status"
+        raise InternalError(message="Failed to retrieve subscription status"
         )
 
 
@@ -85,15 +83,11 @@ async def create_checkout_session(
 
     except ValueError as e:
         logger.warning(f"Invalid checkout request for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
     except Exception as e:
         logger.error(f"Failed to create checkout session for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create checkout session"
+        raise InternalError(message="Failed to create checkout session"
         )
 
 
@@ -132,15 +126,11 @@ async def create_portal_session(
 
     except ValueError as e:
         logger.warning(f"Invalid portal request for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
     except Exception as e:
         logger.error(f"Failed to create portal session for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create portal session"
+        raise InternalError(message="Failed to create portal session"
         )
 
 
@@ -174,7 +164,5 @@ async def sync_subscription(
 
     except Exception as e:
         logger.error(f"Failed to sync subscription for user {current_user.id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to sync subscription status"
+        raise InternalError(message="Failed to sync subscription status"
         )

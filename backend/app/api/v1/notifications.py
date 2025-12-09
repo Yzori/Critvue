@@ -104,9 +104,7 @@ async def get_notifications(
 
     except Exception as e:
         logger.error(f"Error getting notifications for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve notifications"
+        raise InternalError(message="Failed to retrieve notifications"
         )
 
 
@@ -128,9 +126,7 @@ async def get_unread_count(
 
     except Exception as e:
         logger.error(f"Error getting unread count for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get unread count"
+        raise InternalError(message="Failed to get unread count"
         )
 
 
@@ -165,9 +161,7 @@ async def get_notification_stats(
 
     except Exception as e:
         logger.error(f"Error getting notification stats for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get notification statistics"
+        raise InternalError(message="Failed to get notification statistics"
         )
 
 
@@ -185,9 +179,7 @@ async def get_notification(
         notification = await service.get_notification_by_id(notification_id, current_user.id)
 
         if not notification:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Notification not found"
+            raise NotFoundError(message="Notification not found"
             )
 
         return NotificationResponse.model_validate(notification)
@@ -196,9 +188,7 @@ async def get_notification(
         raise
     except Exception as e:
         logger.error(f"Error getting notification {notification_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve notification"
+        raise InternalError(message="Failed to retrieve notification"
         )
 
 
@@ -230,9 +220,7 @@ async def mark_notification_read(
                 await db.refresh(notification)
 
         if not notification:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Notification not found"
+            raise NotFoundError(message="Notification not found"
             )
 
         return NotificationResponse.model_validate(notification)
@@ -241,9 +229,7 @@ async def mark_notification_read(
         raise
     except Exception as e:
         logger.error(f"Error marking notification {notification_id} as read: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update notification"
+        raise InternalError(message="Failed to update notification"
         )
 
 
@@ -269,9 +255,7 @@ async def mark_all_notifications_read(
 
     except Exception as e:
         logger.error(f"Error marking all notifications as read for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to mark all notifications as read"
+        raise InternalError(message="Failed to mark all notifications as read"
         )
 
 
@@ -302,9 +286,7 @@ async def archive_notification(
                 await db.refresh(notification)
 
         if not notification:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Notification not found"
+            raise NotFoundError(message="Notification not found"
             )
 
         return NotificationResponse.model_validate(notification)
@@ -313,9 +295,7 @@ async def archive_notification(
         raise
     except Exception as e:
         logger.error(f"Error archiving notification {notification_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to archive notification"
+        raise InternalError(message="Failed to archive notification"
         )
 
 
@@ -335,9 +315,7 @@ async def delete_notification(
         success = await service.delete_notification(notification_id, current_user.id)
 
         if not success:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Notification not found"
+            raise NotFoundError(message="Notification not found"
             )
 
         return None
@@ -346,9 +324,7 @@ async def delete_notification(
         raise
     except Exception as e:
         logger.error(f"Error deleting notification {notification_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete notification"
+        raise InternalError(message="Failed to delete notification"
         )
 
 
@@ -376,9 +352,7 @@ async def get_notification_preferences(
 
     except Exception as e:
         logger.error(f"Error getting notification preferences for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve notification preferences"
+        raise InternalError(message="Failed to retrieve notification preferences"
         )
 
 
@@ -417,7 +391,5 @@ async def update_notification_preferences(
 
     except Exception as e:
         logger.error(f"Error updating notification preferences for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update notification preferences"
+        raise InternalError(message="Failed to update notification preferences"
         )

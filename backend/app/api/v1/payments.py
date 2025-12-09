@@ -71,23 +71,17 @@ async def create_payment_intent(
     review_request = result.scalar_one_or_none()
 
     if not review_request:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Review request not found"
+        raise NotFoundError(message="Review request not found"
         )
 
     # Verify ownership
     if review_request.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only pay for your own review requests"
+        raise ForbiddenError(message="You can only pay for your own review requests"
         )
 
     # Verify it's an expert review
     if review_request.review_type != ReviewType.EXPERT:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Payment is only required for expert reviews"
+        raise InvalidInputError(message="Payment is only required for expert reviews"
         )
 
     try:
@@ -105,15 +99,11 @@ async def create_payment_intent(
         )
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
     except stripe.StripeError as e:
         logger.error(f"Stripe error creating payment intent: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create payment. Please try again."
+        raise InternalError(message="Failed to create payment. Please try again."
         )
 
 
@@ -137,16 +127,12 @@ async def get_payment_status(
     review_request = result.scalar_one_or_none()
 
     if not review_request:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Review request not found"
+        raise NotFoundError(message="Review request not found"
         )
 
     # Verify ownership
     if review_request.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view payment status for your own requests"
+        raise ForbiddenError(message="You can only view payment status for your own requests"
         )
 
     # Determine payment status
@@ -233,13 +219,8 @@ async def start_connect_onboarding(
         # Check if Connect isn't enabled on the platform
         error_message = str(e)
         if "signed up for Connect" in error_message:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Payout setup is not yet available. Please check back later."
-            )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to start onboarding. Please try again."
+            raise InternalError(message="Payout setup is not yet available. Please check back later.")
+        raise InternalError(message="Failed to start onboarding. Please try again."
         )
 
 
@@ -282,15 +263,11 @@ async def get_connect_dashboard_link(
         return ConnectDashboardLinkResponse(dashboard_url=dashboard_url)
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+        raise InvalidInputError(message=str(e)
         )
     except stripe.StripeError as e:
         logger.error(f"Stripe error getting dashboard link: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get dashboard link. Please try again."
+        raise InternalError(message="Failed to get dashboard link. Please try again."
         )
 
 

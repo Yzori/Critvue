@@ -163,9 +163,7 @@ async def browse_reviews(
             f"Failed to browse reviews: {type(e).__name__}: {str(e)}"
         )
         # Re-raise as generic error to avoid exposing internal details
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve review requests. Please try again later."
+        raise InternalError(message="Failed to retrieve review requests. Please try again later."
         )
 
 
@@ -265,9 +263,7 @@ async def claim_review_slot(
         security_logger.logger.info(
             f"User {current_user.id} redirected to application flow for review {review_id}: {error_msg}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
+        raise ForbiddenError(message={
                 "code": "APPLICATION_REQUIRED",
                 "message": error_msg,
                 "action": "apply",
@@ -281,9 +277,7 @@ async def claim_review_slot(
         security_logger.logger.info(
             f"User {current_user.id} tier permission denied for review {review_id}: {error_msg}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
+        raise ForbiddenError(message={
                 "code": "TIER_PERMISSION_DENIED",
                 "message": error_msg,
                 "action": "upgrade"
@@ -297,18 +291,12 @@ async def claim_review_slot(
             f"Claim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
         )
 
-        # Determine appropriate status code
+        # Raise appropriate custom exception based on error type
         if "cannot claim your own" in error_msg.lower():
-            status_code = status.HTTP_403_FORBIDDEN
-        elif "already claimed" in error_msg.lower() or "all review slots" in error_msg.lower():
-            status_code = status.HTTP_409_CONFLICT
+            raise ForbiddenError(message=error_msg)
         else:
-            status_code = status.HTTP_409_CONFLICT
-
-        raise HTTPException(
-            status_code=status_code,
-            detail=error_msg
-        )
+            # "already claimed" or "all review slots" or other conflict errors
+            raise ConflictError(message=error_msg)
 
     except RuntimeError as e:
         # Handle not found errors
@@ -316,9 +304,7 @@ async def claim_review_slot(
         security_logger.logger.warning(
             f"Review {review_id} not found for claim by user {current_user.id}: {error_msg}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=error_msg
+        raise NotFoundError(message=error_msg
         )
 
     except Exception as e:
@@ -327,9 +313,7 @@ async def claim_review_slot(
             f"Failed to claim review {review_id} for user {current_user.id}: "
             f"{type(e).__name__}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to claim review slot. Please try again later."
+        raise InternalError(message="Failed to claim review slot. Please try again later."
         )
 
 
@@ -402,9 +386,7 @@ async def unclaim_review_slot(
             security_logger.logger.warning(
                 f"No claimed slot found for user {current_user.id} on review {review_id}"
             )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No active claim found for this review request"
+            raise NotFoundError(message="No active claim found for this review request"
             )
 
         # Unclaim the slot using shared service
@@ -441,9 +423,7 @@ async def unclaim_review_slot(
             f"Unclaim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
         )
 
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=error_msg
+        raise ConflictError(message=error_msg
         )
 
     except RuntimeError as e:
@@ -452,9 +432,7 @@ async def unclaim_review_slot(
         security_logger.logger.warning(
             f"Slot not found for unclaim by user {current_user.id}: {error_msg}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=error_msg
+        raise NotFoundError(message=error_msg
         )
 
     except Exception as e:
@@ -463,7 +441,5 @@ async def unclaim_review_slot(
             f"Failed to unclaim review {review_id} for user {current_user.id}: "
             f"{type(e).__name__}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to unclaim review slot. Please try again later."
+        raise InternalError(message="Failed to unclaim review slot. Please try again later."
         )

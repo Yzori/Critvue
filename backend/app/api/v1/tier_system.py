@@ -280,9 +280,7 @@ async def get_tier_requirements(
     try:
         tier = UserTier(tier_name.lower())
     except ValueError:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid tier name. Must be one of: {', '.join([t.value for t in UserTier])}"
+        raise InvalidInputError(message=f"Invalid tier name. Must be one of: {', '.join([t.value for t in UserTier])}"
         )
 
     tier_service = TierService(db)

@@ -94,9 +94,7 @@ async def upload_generic_file(
         security_logger.logger.error(
             f"Failed to upload generic file for user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
+        raise InternalError(message="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
         )
 
 
@@ -143,16 +141,12 @@ async def upload_review_file(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check if review is editable
         if not review.is_editable:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot upload files to review in '{review.status.value}' status"
+            raise InvalidInputError(message=f"Cannot upload files to review in '{review.status.value}' status"
             )
 
         # Process the file upload
@@ -171,9 +165,7 @@ async def upload_review_file(
         )
 
         if not review_file:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to save file metadata"
+            raise InternalError(message="Failed to save file metadata"
             )
 
         security_logger.logger.info(
@@ -189,9 +181,7 @@ async def upload_review_file(
         security_logger.logger.error(
             f"Failed to upload file for review {review_id}, user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
+        raise InternalError(message="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
         )
 
 
@@ -231,23 +221,17 @@ async def upload_review_files_batch(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check if review is editable
         if not review.is_editable:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot upload files to review in '{review.status.value}' status"
+            raise InvalidInputError(message=f"Cannot upload files to review in '{review.status.value}' status"
             )
 
         # Limit number of files in batch
         if len(files) > 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot upload more than 10 files at once"
+            raise InvalidInputError(message="Cannot upload more than 10 files at once"
             )
 
         uploaded_files = []
@@ -281,9 +265,7 @@ async def upload_review_files_batch(
 
         if errors and not uploaded_files:
             # All files failed
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"All file uploads failed: {'; '.join(errors)}"
+            raise InvalidInputError(message=f"All file uploads failed: {'; '.join(errors)}"
             )
 
         security_logger.logger.info(
@@ -302,9 +284,7 @@ async def upload_review_files_batch(
         security_logger.logger.error(
             f"Failed batch upload for review {review_id}, user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to upload files. Please try again."  # Generic message - don't expose internal errors
+        raise InternalError(message="Failed to upload files. Please try again."  # Generic message - don't expose internal errors
         )
 
 
@@ -341,9 +321,7 @@ async def list_review_files(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check if user has access (either owner or reviewer)
@@ -354,9 +332,7 @@ async def list_review_files(
         )
 
         if not (is_owner or is_reviewer):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         return [ReviewFileResponse.model_validate(f) for f in review.files]
@@ -367,9 +343,7 @@ async def list_review_files(
         security_logger.logger.error(
             f"Failed to list files for review {review_id}, user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve files"
+        raise InternalError(message="Failed to retrieve files"
         )
 
 
@@ -405,16 +379,12 @@ async def delete_review_file(
         )
 
         if not review:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Review request with id {review_id} not found"
+            raise NotFoundError(message=f"Review request with id {review_id} not found"
             )
 
         # Check if review is editable
         if not review.is_editable:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot delete files from review in '{review.status.value}' status"
+            raise InvalidInputError(message=f"Cannot delete files from review in '{review.status.value}' status"
             )
 
         # Find the file
@@ -425,9 +395,7 @@ async def delete_review_file(
                 break
 
         if not file_to_delete:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File with id {file_id} not found in this review"
+            raise NotFoundError(message=f"File with id {file_id} not found in this review"
             )
 
         # Delete file from disk
@@ -450,7 +418,5 @@ async def delete_review_file(
             f"Failed to delete file {file_id} for review {review_id}, "
             f"user {current_user.email}: {str(e)}"
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete file"
+        raise InternalError(message="Failed to delete file"
         )

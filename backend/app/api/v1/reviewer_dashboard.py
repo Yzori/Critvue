@@ -222,9 +222,7 @@ async def get_reviewer_dashboard(
 
     except Exception as e:
         logger.error(f"Error getting reviewer dashboard for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load reviewer dashboard"
+        raise InternalError(message="Failed to load reviewer dashboard"
         )
 
 
@@ -252,9 +250,7 @@ async def get_my_reviews(
             try:
                 status_enum = ReviewSlotStatus(status_filter)
             except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status filter: {status_filter}. Valid values: {[s.value for s in ReviewSlotStatus]}"
+                raise InvalidInputError(message=f"Invalid status filter: {status_filter}. Valid values: {[s.value for s in ReviewSlotStatus]}"
                 )
         else:
             status_enum = None
@@ -311,9 +307,7 @@ async def get_my_reviews(
         raise
     except Exception as e:
         logger.error(f"Error getting reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load reviews"
+        raise InternalError(message="Failed to load reviews"
         )
 
 
@@ -417,9 +411,7 @@ async def get_reviewer_earnings(
 
     except Exception as e:
         logger.error(f"Error getting earnings for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load earnings"
+        raise InternalError(message="Failed to load earnings"
         )
 
 
@@ -477,7 +469,5 @@ async def get_reviewer_stats(
 
     except Exception as e:
         logger.error(f"Error getting stats for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load stats"
+        raise InternalError(message="Failed to load stats"
         )

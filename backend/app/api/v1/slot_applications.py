@@ -2,7 +2,16 @@
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
+from app.core.exceptions import (
+    NotFoundError,
+    InvalidInputError,
+    InternalError,
+    ForbiddenError,
+    NotOwnerError,
+    AdminRequiredError,
+    ConflictError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -123,36 +132,18 @@ async def apply_for_slot(
         return _build_application_response(application)
 
     except DuplicateApplicationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=str(e)
-        )
+        raise ConflictError(message=str(e))
     except NotPaidRequestError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except SelfApplicationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except NoSlotsAvailableError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise NotFoundError(message=str(e))
     except Exception as e:
         logger.error(f"Error creating application: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while creating the application"
-        )
+        raise InternalError(message="An error occurred while creating the application")
 
 
 # ===== Get Applications for a Request (Creator View) =====
@@ -182,10 +173,7 @@ async def get_request_applications(
         try:
             app_status = SlotApplicationStatus(status_filter)
         except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status filter: {status_filter}"
-            )
+            raise InvalidInputError(message=f"Invalid status filter: {status_filter}")
 
     # Get applications
     applications, total = await crud_slot_application.get_applications_for_request(
@@ -195,10 +183,7 @@ async def get_request_applications(
     # Verify ownership (check the first application's request, or fetch the request directly)
     if applications:
         if applications[0].review_request.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the request owner can view applications"
-            )
+            raise ForbiddenError(message="Only the request owner can view applications")
     else:
         # No applications yet - verify request exists and user owns it
         from app.models.review_request import ReviewRequest
@@ -209,16 +194,10 @@ async def get_request_applications(
         review_request = result.scalar_one_or_none()
 
         if not review_request:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Review request not found"
-            )
+            raise NotFoundError(resource="Review request")
 
         if review_request.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the request owner can view applications"
-            )
+            raise ForbiddenError(message="Only the request owner can view applications")
 
     # Get counts
     counts = await crud_slot_application.get_application_counts_for_request(
@@ -289,10 +268,7 @@ async def get_my_applications(
         try:
             app_status = SlotApplicationStatus(status_filter)
         except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status filter: {status_filter}"
-            )
+            raise InvalidInputError(message=f"Invalid status filter: {status_filter}")
 
     # Get applications
     applications, total = await crud_slot_application.get_user_applications(
@@ -353,26 +329,14 @@ async def accept_application(
         return _build_application_response(application, include_applicant=True)
 
     except NotRequestOwnerError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
+        raise ForbiddenError(message=str(e))
     except NoSlotsAvailableError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         logger.error(f"Error accepting application {application_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while accepting the application"
-        )
+        raise InternalError(message="An error occurred while accepting the application")
 
 
 # ===== Reject an Application (Creator Action) =====
@@ -414,21 +378,12 @@ async def reject_application(
         return _build_application_response(application, include_applicant=True)
 
     except NotRequestOwnerError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
+        raise ForbiddenError(message=str(e))
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         logger.error(f"Error rejecting application {application_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while rejecting the application"
-        )
+        raise InternalError(message="An error occurred while rejecting the application")
 
 
 # ===== Withdraw an Application (Applicant Action) =====
@@ -466,21 +421,12 @@ async def withdraw_application(
         return _build_application_response(application)
 
     except NotApplicantError as e:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=str(e)
-        )
+        raise ForbiddenError(message=str(e))
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
     except Exception as e:
         logger.error(f"Error withdrawing application {application_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while withdrawing the application"
-        )
+        raise InternalError(message="An error occurred while withdrawing the application")
 
 
 # ===== Get Single Application =====
@@ -505,20 +451,14 @@ async def get_application(
     )
 
     if not application:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
-        )
+        raise NotFoundError(resource="Application")
 
     # Check access: user must be applicant or request owner
     is_applicant = application.applicant_id == current_user.id
     is_owner = application.review_request.user_id == current_user.id
 
     if not (is_applicant or is_owner):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to view this application"
-        )
+        raise ForbiddenError(message="You don't have permission to view this application")
 
     return _build_application_response(application, include_applicant=is_owner)
 
@@ -551,10 +491,7 @@ async def can_apply_to_request(
     review_request = result.scalar_one_or_none()
 
     if not review_request:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Review request not found"
-        )
+        raise NotFoundError(resource="Review request")
 
     # Check if it's a paid review
     if review_request.review_type != ReviewType.EXPERT:

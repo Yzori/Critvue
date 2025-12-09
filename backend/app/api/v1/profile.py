@@ -4,7 +4,17 @@ import os
 import uuid
 from pathlib import Path
 from typing import Optional
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Request, UploadFile, status
+from app.core.exceptions import (
+    CritvueException,
+    NotFoundError,
+    InvalidInputError,
+    InternalError,
+    ForbiddenError,
+    NotOwnerError,
+    AdminRequiredError,
+    ConflictError,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from slowapi import Limiter
@@ -193,9 +203,7 @@ async def get_user_profile(
     user = await profile_crud.get_user_by_identifier(db, identifier)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     # Parse JSON fields
     specialty_tags = profile_crud.parse_user_specialty_tags(user)
@@ -257,10 +265,7 @@ async def update_my_profile(
             db, profile_data.username, exclude_user_id=current_user.id
         )
         if not is_available:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username is already taken"
-            )
+            raise InvalidInputError(message="Username is already taken")
 
     try:
         updated_user = await profile_crud.update_profile(
@@ -270,15 +275,10 @@ async def update_my_profile(
         # Handle race condition where username was taken between check and update
         await db.rollback()
         logger.warning(f"Username conflict for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username was taken by another user. Please try a different username."
-        )
+        raise ConflictError(message="Username was taken by another user. Please try a different username.")
 
     if not updated_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     logger.info(f"Profile updated for user {current_user.id}")
 
@@ -350,10 +350,7 @@ async def upload_avatar(
     """
     # Validate filename exists
     if not file.filename:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No filename provided"
-        )
+        raise InvalidInputError(message="No filename provided")
 
     logger.info(f"Avatar upload initiated for user {current_user.id}: {file.filename}")
 
@@ -367,10 +364,7 @@ async def upload_avatar(
         # 2. Perform content safety check
         is_safe = await image_service.check_image_content(image)
         if not is_safe:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Image failed content safety check"
-            )
+            raise InvalidInputError(message="Image failed content safety check")
 
         # 3. Extract metadata (for logging/analytics)
         metadata = await image_service.extract_metadata(image)
@@ -384,10 +378,7 @@ async def upload_avatar(
         variants_data = await image_service.generate_variants(image, strip_metadata)
 
         if not variants_data:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to generate image variants"
-            )
+            raise InternalError(message="Failed to generate image variants")
 
         # 5. Store old avatar URL for rollback
         old_avatar_url = current_user.avatar_url
@@ -438,10 +429,7 @@ async def upload_avatar(
                     except Exception:
                         pass
 
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Failed to save image: {str(e)}"
-                )
+                raise InternalError(message=f"Failed to save image: {str(e)}")
 
         # 8. Update user avatar URL in database
         # Use the medium variant as the default avatar URL
@@ -458,10 +446,7 @@ async def upload_avatar(
                     except Exception:
                         pass
 
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User not found"
-                )
+                raise NotFoundError(resource="User")
         except Exception as e:
             # Rollback: Clean up uploaded files on database error
             logger.error(f"Database update failed, rolling back file uploads: {e}")
@@ -471,14 +456,10 @@ async def upload_avatar(
                 except Exception as cleanup_error:
                     logger.error(f"Failed to clean up file during rollback: {cleanup_error}")
 
-            # Re-raise the exception
-            if isinstance(e, HTTPException):
+            # Re-raise the exception if it's already a known exception type
+            if isinstance(e, CritvueException):
                 raise
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to update avatar in database"
-                )
+            raise InternalError(message="Failed to update avatar in database")
 
         logger.info(
             f"Avatar uploaded successfully for user {current_user.id}: "
@@ -498,24 +479,15 @@ async def upload_avatar(
 
     except ImageValidationError as e:
         logger.warning(f"Image validation failed for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise InvalidInputError(message=str(e))
 
     except ImageProcessingError as e:
         logger.error(f"Image processing failed for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Image processing failed: {str(e)}"
-        )
+        raise InternalError(message=f"Image processing failed: {str(e)}")
 
     except Exception as e:
         logger.error(f"Unexpected error during avatar upload for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred during upload"
-        )
+        raise InternalError(message="An unexpected error occurred during upload")
 
 
 @router.delete("/me/avatar")
@@ -540,10 +512,7 @@ async def delete_avatar(
     Rate limited to 10 requests per minute
     """
     if not current_user.avatar_url:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No avatar to delete"
-        )
+        raise NotFoundError(message="No avatar to delete")
 
     logger.info(f"Avatar deletion initiated for user {current_user.id}")
 
@@ -555,10 +524,7 @@ async def delete_avatar(
         updated_user = await profile_crud.update_avatar(db, current_user.id, None)
 
         if not updated_user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
+            raise NotFoundError(resource="User")
 
         logger.info(f"Avatar deleted for user {current_user.id}: {deleted_count} files removed")
 
@@ -569,10 +535,7 @@ async def delete_avatar(
 
     except Exception as e:
         logger.error(f"Failed to delete avatar for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete avatar"
-        )
+        raise InternalError(message="Failed to delete avatar")
 
 
 @router.get("/me/avatar")
@@ -593,10 +556,7 @@ async def get_my_avatar(
         HTTPException: If user has no avatar
     """
     if not current_user.avatar_url:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No avatar set"
-        )
+        raise NotFoundError(message="No avatar set")
 
     # Extract base filename from current avatar URL
     # This is a simplified approach - in production you'd store variant paths
@@ -628,9 +588,7 @@ async def get_user_stats(
     user = await profile_crud.get_user_profile(db, user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     return ProfileStatsResponse(
         total_reviews_given=user.total_reviews_given,
@@ -659,9 +617,7 @@ async def refresh_my_stats(
     updated_user = await profile_crud.update_user_stats(db, current_user.id)
 
     if not updated_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     # Also award badges based on updated stats
     await profile_crud.award_badges(db, current_user.id)
@@ -697,9 +653,7 @@ async def get_user_badges(
     user = await profile_crud.get_user_profile(db, user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     badges = profile_crud.parse_user_badges(user)
 
@@ -729,10 +683,7 @@ async def get_my_dna(
     dna_summary = await dna_service.get_dna_summary(current_user.id)
 
     if not dna_summary:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="DNA profile not found"
-        )
+        raise NotFoundError(resource="DNA profile")
 
     return dna_summary
 
@@ -757,19 +708,13 @@ async def get_user_dna(
     user = await profile_crud.get_user_profile(db, user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise NotFoundError(resource="User")
 
     dna_service = ReviewerDNAService(db)
     dna_summary = await dna_service.get_dna_summary(user_id)
 
     if not dna_summary:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="DNA profile not found"
-        )
+        raise NotFoundError(resource="DNA profile")
 
     return dna_summary
 
@@ -796,10 +741,7 @@ async def recalculate_my_dna(
     dna = await dna_service.calculate_dna(current_user.id)
 
     if not dna:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Failed to calculate DNA"
-        )
+        raise NotFoundError(message="Failed to calculate DNA")
 
     logger.info(f"DNA recalculated for user {current_user.id}")
 
@@ -822,10 +764,7 @@ async def compare_my_dna(
     comparison = await dna_service.compare_to_average(current_user.id)
 
     if not comparison:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="DNA profile not found"
-        )
+        raise NotFoundError(resource="DNA profile")
 
     return comparison
 
@@ -947,10 +886,7 @@ async def update_reviewer_settings(
         try:
             current_user.reviewer_availability = ReviewerAvailability(data.reviewer_availability)
         except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid availability status"
-            )
+            raise InvalidInputError(message="Invalid availability status")
 
     if data.reviewer_tagline is not None:
         current_user.reviewer_tagline = data.reviewer_tagline

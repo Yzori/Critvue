@@ -41,9 +41,7 @@ router = APIRouter(prefix="/admin/users", tags=["admin-users"])
 async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Dependency to verify current user is an admin"""
     if current_user.role != UserRole.ADMIN:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
+        raise ForbiddenError(message="Admin access required"
         )
     return current_user
 
@@ -145,9 +143,7 @@ async def get_user_detail(
     user = await service.get_user_by_id(user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+        raise NotFoundError(message="User not found"
         )
 
     return UserDetailResponse.model_validate(user)
@@ -169,9 +165,7 @@ async def change_user_role(
     """
     # Security: Prevent admins from changing their own role
     if user_id == admin.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change your own role. Contact another admin."
+        raise InvalidInputError(message="Cannot change your own role. Contact another admin."
         )
 
     service = AdminUsersService(db)
@@ -191,7 +185,7 @@ async def change_user_role(
             action="role_change",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Ban Management ============
@@ -224,7 +218,7 @@ async def ban_user(
             action="ban",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 @router.post("/{user_id}/unban", response_model=ModerationActionResponse)
@@ -252,7 +246,7 @@ async def unban_user(
             action="unban",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Suspension Management ============
@@ -286,7 +280,7 @@ async def suspend_user(
             action="suspend",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 @router.post("/{user_id}/unsuspend", response_model=ModerationActionResponse)
@@ -314,7 +308,7 @@ async def unsuspend_user(
             action="unsuspend",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Verification ============
@@ -344,7 +338,7 @@ async def verify_user(
             action="verify",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Sparks Management ============
@@ -378,7 +372,7 @@ async def adjust_sparks(
             action="sparks_adjust",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Tier Management ============
@@ -412,7 +406,7 @@ async def override_tier(
             action="tier_override",
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise InvalidInputError(message=str(e))
 
 
 # ============ Moderation Lists ============

@@ -131,9 +131,7 @@ async def get_nda_status(
     review = result.scalar_one_or_none()
 
     if not review:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Review request with id {review_id} not found"
+        raise NotFoundError(message=f"Review request with id {review_id} not found"
         )
 
     # If NDA not required, user can always view
@@ -205,16 +203,12 @@ async def sign_nda(
     review = result.scalar_one_or_none()
 
     if not review:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Review request with id {review_id} not found"
+        raise NotFoundError(message=f"Review request with id {review_id} not found"
         )
 
     # Verify this is an NDA-required review
     if not review.requires_nda:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This review request does not require an NDA"
+        raise InvalidInputError(message="This review request does not require an NDA"
         )
 
     # Determine the user's role
@@ -231,9 +225,7 @@ async def sign_nda(
     existing_sig = existing_sig_result.scalar_one_or_none()
 
     if existing_sig:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You have already signed the NDA for this review request"
+        raise InvalidInputError(message="You have already signed the NDA for this review request"
         )
 
     # Get client IP and user agent for audit trail
@@ -301,9 +293,7 @@ async def get_nda_signatures(
     review = result.scalar_one_or_none()
 
     if not review:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Review request with id {review_id} not found"
+        raise NotFoundError(message=f"Review request with id {review_id} not found"
         )
 
     is_owner = review.user_id == current_user.id

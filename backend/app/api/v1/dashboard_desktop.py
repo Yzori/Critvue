@@ -316,9 +316,7 @@ async def get_desktop_creator_actions_needed(
 
     except Exception as e:
         logger.error(f"Error getting desktop actions needed for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load pending reviews"
+        raise InternalError(message="Failed to load pending reviews"
         )
 
 
@@ -369,9 +367,7 @@ async def get_desktop_creator_my_requests(
                 status_enums = [ReviewStatus(s) for s in status_filter]
                 query = query.where(ReviewRequest.status.in_([s.value for s in status_enums]))
             except ValueError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Invalid status: {e}"
+                raise InvalidInputError(message=f"Invalid status: {e}"
                 )
 
         # Apply content type filter
@@ -493,9 +489,7 @@ async def get_desktop_creator_my_requests(
         raise
     except Exception as e:
         logger.error(f"Error getting desktop requests for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load review requests"
+        raise InternalError(message="Failed to load review requests"
         )
 
 
@@ -663,9 +657,7 @@ async def get_desktop_reviewer_active(
 
     except Exception as e:
         logger.error(f"Error getting desktop active reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load active reviews"
+        raise InternalError(message="Failed to load active reviews"
         )
 
 
@@ -785,9 +777,7 @@ async def get_desktop_reviewer_submitted(
 
     except Exception as e:
         logger.error(f"Error getting desktop submitted reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load submitted reviews"
+        raise InternalError(message="Failed to load submitted reviews"
         )
 
 
@@ -888,9 +878,7 @@ async def get_desktop_reviewer_completed(
 
     except Exception as e:
         logger.error(f"Error getting desktop completed reviews for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load completed reviews"
+        raise InternalError(message="Failed to load completed reviews"
         )
 
 
@@ -918,9 +906,7 @@ async def get_desktop_overview(
     """
     try:
         if role not in ["creator", "reviewer"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Role must be 'creator' or 'reviewer'"
+            raise InvalidInputError(message="Role must be 'creator' or 'reviewer'"
             )
 
         now = datetime.utcnow()
@@ -1123,9 +1109,7 @@ async def get_desktop_overview(
         raise
     except Exception as e:
         logger.error(f"Error getting desktop overview for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load overview"
+        raise InternalError(message="Failed to load overview"
         )
 
 
@@ -1151,9 +1135,7 @@ async def get_activity_timeline(
     """
     try:
         if role not in ["creator", "reviewer"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Role must be 'creator' or 'reviewer'"
+            raise InvalidInputError(message="Role must be 'creator' or 'reviewer'"
             )
 
         activities = []
@@ -1262,9 +1244,7 @@ async def get_activity_timeline(
         raise
     except Exception as e:
         logger.error(f"Error getting activity timeline for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load activity timeline"
+        raise InternalError(message="Failed to load activity timeline"
         )
 
 
@@ -1291,9 +1271,7 @@ async def global_dashboard_search(
     """
     try:
         if role not in ["creator", "reviewer"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Role must be 'creator' or 'reviewer'"
+            raise InvalidInputError(message="Role must be 'creator' or 'reviewer'"
             )
 
         search_pattern = f"%{q}%"
@@ -1403,9 +1381,7 @@ async def global_dashboard_search(
         raise
     except Exception as e:
         logger.error(f"Error in dashboard search for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to perform search"
+        raise InternalError(message="Failed to perform search"
         )
 
 
@@ -1436,15 +1412,11 @@ async def batch_reject_reviews(
     try:
         # Validate batch size
         if len(slot_ids) > 50:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum 50 reviews can be batch rejected at once"
+            raise InvalidInputError(message="Maximum 50 reviews can be batch rejected at once"
             )
 
         if not slot_ids:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="slot_ids cannot be empty"
+            raise InvalidInputError(message="slot_ids cannot be empty"
             )
 
         # Get all slots
@@ -1525,7 +1497,5 @@ async def batch_reject_reviews(
         raise
     except Exception as e:
         logger.error(f"Error in batch reject for user {current_user.id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to batch reject reviews"
+        raise InternalError(message="Failed to batch reject reviews"
         )

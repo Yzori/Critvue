@@ -118,9 +118,7 @@ async def create_application(
     existing_application = await get_active_application(current_user.id, db)
     if existing_application:
         logger.warning(f"User {current_user.id} attempted to create duplicate application. Existing: id={existing_application.id} status={existing_application.status}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"You already have an active application with status: {existing_application.status}"
+        raise InvalidInputError(message=f"You already have an active application with status: {existing_application.status}"
         )
 
     # Create new application in draft status
@@ -164,25 +162,19 @@ async def submit_application(
 
     if not application:
         logger.warning(f"Application {application_id} not found for submission by user {current_user.id}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+        raise NotFoundError(message="Application not found"
         )
 
     # Verify ownership
     if application.user_id != current_user.id:
         logger.warning(f"User {current_user.id} attempted to submit application {application_id} owned by user {application.user_id}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only submit your own applications"
+        raise ForbiddenError(message="You can only submit your own applications"
         )
 
     # Verify application is in draft status
     if application.status != ApplicationStatus.DRAFT.value:
         logger.warning(f"User {current_user.id} attempted to submit application {application_id} with status {application.status}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Application cannot be submitted. Current status: {application.status}"
+        raise InvalidInputError(message=f"Application cannot be submitted. Current status: {application.status}"
         )
 
     # Generate application number
@@ -219,16 +211,12 @@ async def get_application(
     application = result.scalar_one_or_none()
 
     if not application:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+        raise NotFoundError(message="Application not found"
         )
 
     # Verify ownership (could be extended to allow admin access)
     if application.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own applications"
+        raise ForbiddenError(message="You can only view your own applications"
         )
 
     return ExpertApplicationResponse.model_validate(application)
@@ -253,23 +241,17 @@ async def withdraw_application(
     application = result.scalar_one_or_none()
 
     if not application:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Application not found"
+        raise NotFoundError(message="Application not found"
         )
 
     # Verify ownership
     if application.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only withdraw your own applications"
+        raise ForbiddenError(message="You can only withdraw your own applications"
         )
 
     # Verify application can be withdrawn
     if application.status in [ApplicationStatus.APPROVED.value, ApplicationStatus.REJECTED.value, ApplicationStatus.WITHDRAWN.value]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Application cannot be withdrawn. Current status: {application.status}"
+        raise InvalidInputError(message=f"Application cannot be withdrawn. Current status: {application.status}"
         )
 
     # Update status to withdrawn
@@ -310,15 +292,11 @@ async def upload_portfolio_file(
     # Check file size (max 10MB)
     max_size = 10 * 1024 * 1024
     if len(file_content) > max_size:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Maximum size is 10MB."
+        raise InvalidInputError(message=f"File too large. Maximum size is 10MB."
         )
 
     if len(file_content) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File is empty"
+        raise InvalidInputError(message="File is empty"
         )
 
     # Detect file type using magic numbers
@@ -331,9 +309,7 @@ async def upload_portfolio_file(
         detected_mime = file.content_type
 
     if detected_mime not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File type '{detected_mime}' not allowed. Allowed types: images (PNG, JPEG, WebP, GIF), PDF, DOC, DOCX"
+        raise InvalidInputError(message=f"File type '{detected_mime}' not allowed. Allowed types: images (PNG, JPEG, WebP, GIF), PDF, DOC, DOCX"
         )
 
     # Generate unique filename
