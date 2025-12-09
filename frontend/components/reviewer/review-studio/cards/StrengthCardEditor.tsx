@@ -108,7 +108,7 @@ export function StrengthCardEditor({
     return (
       <div
         className={cn(
-          "group rounded-lg border-2 border-green-300 bg-background p-3 transition-all cursor-pointer hover:shadow-md",
+          "group rounded-lg border-2 border-green-300 dark:border-green-500/40 bg-background p-3 transition-all cursor-pointer hover:shadow-md",
           isDragging && "shadow-lg opacity-90"
         )}
         onClick={toggleExpanded}
@@ -124,8 +124,8 @@ export function StrengthCardEditor({
           </div>
 
           {/* Order Badge */}
-          <div className="size-6 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-green-700">
+          <div className="size-6 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center shrink-0">
+            <span className="text-xs font-bold text-green-700 dark:text-green-300">
               #{index + 1}
             </span>
           </div>
@@ -141,7 +141,7 @@ export function StrengthCardEditor({
               </p>
             )}
             {card.impact && (
-              <p className="text-xs text-green-600 line-clamp-1 mt-0.5 flex items-center gap-1">
+              <p className="text-xs text-green-600 dark:text-green-400 line-clamp-1 mt-0.5 flex items-center gap-1">
                 <TrendingUp className="size-3" />
                 {card.impact}
               </p>
@@ -158,7 +158,7 @@ export function StrengthCardEditor({
   return (
     <div
       className={cn(
-        "rounded-lg border-2 border-green-300 bg-background p-4 space-y-4 transition-all",
+        "rounded-lg border-2 border-green-300 dark:border-green-500/40 bg-background p-4 space-y-4 transition-all",
         isDragging && "shadow-lg opacity-90"
       )}
     >
@@ -173,8 +173,8 @@ export function StrengthCardEditor({
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
 
-          <div className="size-7 rounded-full bg-green-100 flex items-center justify-center">
-            <ThumbsUp className="size-4 text-green-600" />
+          <div className="size-7 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+            <ThumbsUp className="size-4 text-green-600 dark:text-green-400" />
           </div>
           <span className="text-sm font-semibold">Strength #{index + 1}</span>
         </div>
@@ -206,7 +206,7 @@ export function StrengthCardEditor({
       {/* What Field */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium flex items-center gap-1.5">
-          <Sparkles className="size-3.5 text-green-600" />
+          <Sparkles className="size-3.5 text-green-600 dark:text-green-400" />
           What's working well?
           <span className="text-red-500">*</span>
         </label>
@@ -227,7 +227,7 @@ export function StrengthCardEditor({
       {/* Why Field */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium flex items-center gap-1.5">
-          <MessageSquare className="size-3.5 text-blue-600" />
+          <MessageSquare className="size-3.5 text-blue-600 dark:text-blue-400" />
           Why does it work?
           <span className="text-xs text-muted-foreground font-normal">
             (optional but encouraged)
@@ -245,7 +245,7 @@ export function StrengthCardEditor({
       {/* Impact Field */}
       <div className="space-y-1.5">
         <label className="text-sm font-medium flex items-center gap-1.5">
-          <TrendingUp className="size-3.5 text-green-600" />
+          <TrendingUp className="size-3.5 text-green-600 dark:text-green-400" />
           Business/UX Impact
           <span className="text-xs text-muted-foreground font-normal">
             (optional)
@@ -263,7 +263,7 @@ export function StrengthCardEditor({
       {/* Completion Status */}
       {isComplete && (
         <div className="flex items-center gap-2 pt-2 border-t border-border">
-          <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+          <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
             <CheckCircle2 className="size-3.5" /> Complete
           </span>
           {!card.why && (

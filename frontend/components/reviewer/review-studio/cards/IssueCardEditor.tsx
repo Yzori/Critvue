@@ -330,7 +330,7 @@ export function IssueCardEditor({
                 {PRIORITY_CONFIG[card.priority].label}
               </span>
               {card.isQuickWin && (
-                <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                <span className="text-xs bg-green-200 dark:bg-green-500/30 text-green-800 dark:text-green-300 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                   <Zap className="size-3" /> Quick Win
                 </span>
               )}
@@ -365,7 +365,7 @@ export function IssueCardEditor({
 
             {/* Expert insight badge */}
             {(card.principle || card.whyItMatters || card.afterState) && (
-              <p className="text-xs text-indigo-600 mt-1 flex items-center gap-1">
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
                 <Sparkles className="size-3" />
                 Expert insight added
               </p>
@@ -398,8 +398,8 @@ export function IssueCardEditor({
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
 
-          <div className="size-7 rounded-full bg-amber-100 flex items-center justify-center">
-            <Wrench className="size-4 text-amber-600" />
+          <div className="size-7 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
+            <Wrench className="size-4 text-amber-600 dark:text-amber-400" />
           </div>
           <span className="text-sm font-semibold">Issue #{index + 1}</span>
 
@@ -578,8 +578,8 @@ export function IssueCardEditor({
       {showExpertFields && (
         <div className="space-y-4 pt-3 animate-in slide-in-from-top-2 duration-200">
           {/* Expert Insight Section */}
-          <div className="p-4 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-800">
+          <div className="p-4 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-200 dark:border-indigo-500/40 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-800 dark:text-indigo-300">
               <Sparkles className="size-4" />
               Expert Insight
             </div>
@@ -657,8 +657,8 @@ export function IssueCardEditor({
                     className={cn(
                       "text-xs px-2.5 py-1 rounded-full border transition-all touch-manipulation",
                       card.impactType === impact
-                        ? "bg-indigo-100 border-indigo-400 text-indigo-800"
-                        : "bg-background border-border text-muted-foreground hover:border-indigo-300"
+                        ? "bg-indigo-100 dark:bg-indigo-500/20 border-indigo-400 dark:border-indigo-500/40 text-indigo-800 dark:text-indigo-300"
+                        : "bg-background border-border text-muted-foreground hover:border-indigo-300 dark:hover:border-indigo-500/40"
                     )}
                   >
                     {IMPACT_TYPE_CONFIG[impact].label}
@@ -705,8 +705,8 @@ export function IssueCardEditor({
                 "flex items-center gap-1.5 px-3 py-2 rounded-lg border-2 transition-all",
                 "text-sm font-medium touch-manipulation",
                 card.isQuickWin
-                  ? "bg-green-100 border-green-400 text-green-700"
-                  : "bg-background border-border text-muted-foreground hover:border-green-300"
+                  ? "bg-green-100 dark:bg-green-500/20 border-green-400 dark:border-green-500/40 text-green-700 dark:text-green-300"
+                  : "bg-background border-border text-muted-foreground hover:border-green-300 dark:hover:border-green-500/40"
               )}
             >
               <Zap className={cn("size-4", card.isQuickWin && "fill-green-500")} />
@@ -817,21 +817,21 @@ export function IssueCardEditor({
                 {card.resources.map((resource, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg text-sm"
+                    className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg text-sm"
                   >
-                    <Link2 className="size-3.5 text-indigo-600 shrink-0" />
+                    <Link2 className="size-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                     <a
                       href={resource.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-700 hover:underline truncate flex-1"
+                      className="text-indigo-700 dark:text-indigo-300 hover:underline truncate flex-1"
                     >
                       {resource.title || resource.url}
                     </a>
                     <button
                       type="button"
                       onClick={() => removeResource(idx)}
-                      className="p-1 text-red-500 hover:bg-red-100 rounded touch-manipulation"
+                      className="p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 rounded touch-manipulation"
                     >
                       <Trash2 className="size-3.5" />
                     </button>
@@ -873,16 +873,16 @@ export function IssueCardEditor({
       {/* Completion Status */}
       {isComplete && (
         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
-          <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+          <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
             <CheckCircle2 className="size-3.5" /> Complete
           </span>
           {(card.principle || card.whyItMatters || card.afterState) && (
-            <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+            <span className="text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
               <Sparkles className="size-3" /> Has Insight
             </span>
           )}
           {card.isQuickWin && (
-            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+            <span className="text-xs bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
               <Zap className="size-3" /> Quick Win
             </span>
           )}

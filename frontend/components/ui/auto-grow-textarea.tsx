@@ -95,11 +95,11 @@ const AutoGrowTextarea = React.forwardRef<
           placeholder={placeholder}
           className={cn(
             // Base styles
-            "w-full rounded-xl border-2 bg-white/80 backdrop-blur-sm px-4 py-3",
-            "text-base leading-relaxed transition-all duration-200",
+            "w-full rounded-xl border-2 bg-background backdrop-blur-sm px-4 py-3",
+            "text-base text-foreground leading-relaxed transition-all duration-200",
             "placeholder:text-muted-foreground/60",
             // Focus styles
-            "focus:outline-none focus:ring-0",
+            "focus:outline-none focus:ring-0 focus:border-accent-blue",
             // Scrollbar styling
             "scrollbar-thin scrollbar-thumb-rounded-full",
             "scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent",

@@ -39,19 +39,19 @@ export function StrengthCardViewer({
   if (!isExpanded) {
     return (
       <div
-        className="rounded-xl border-2 border-green-300 bg-background p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md"
+        className="rounded-xl border-2 border-green-300 dark:border-green-500/40 bg-background p-3 sm:p-4 transition-all cursor-pointer hover:shadow-md"
         onClick={() => setIsExpanded(true)}
       >
         <div className="flex items-start gap-3">
           {/* Icon Badge */}
-          <div className="size-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-            <ThumbsUp className="size-4 text-green-600" />
+          <div className="size-8 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center shrink-0">
+            <ThumbsUp className="size-4 text-green-600 dark:text-green-400" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-500/20 px-2 py-0.5 rounded-full">
                 Strength #{index + 1}
               </span>
             </div>
@@ -59,7 +59,7 @@ export function StrengthCardViewer({
               {card.what}
             </p>
             {card.impact && (
-              <p className="text-xs text-green-600 mt-1 flex items-center gap-1 line-clamp-1">
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1 line-clamp-1">
                 <TrendingUp className="size-3" />
                 {card.impact}
               </p>
@@ -74,21 +74,21 @@ export function StrengthCardViewer({
 
   // ===== Expanded View =====
   return (
-    <div className="rounded-xl border-2 border-green-300 bg-background overflow-hidden">
+    <div className="rounded-xl border-2 border-green-300 dark:border-green-500/40 bg-background overflow-hidden">
       {/* Header */}
       <div
-        className="px-4 py-3 bg-green-100 cursor-pointer flex items-center justify-between"
+        className="px-4 py-3 bg-green-100 dark:bg-green-500/20 cursor-pointer flex items-center justify-between"
         onClick={() => setIsExpanded(false)}
       >
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-full bg-background flex items-center justify-center">
-            <ThumbsUp className="size-4 text-green-600" />
+            <ThumbsUp className="size-4 text-green-600 dark:text-green-400" />
           </div>
-          <span className="text-sm font-semibold text-green-800">
+          <span className="text-sm font-semibold text-green-800 dark:text-green-300">
             Strength #{index + 1}
           </span>
         </div>
-        <ChevronUp className="size-5 text-green-600" />
+        <ChevronUp className="size-5 text-green-600 dark:text-green-400" />
       </div>
 
       {/* Content */}
@@ -96,7 +96,7 @@ export function StrengthCardViewer({
         {/* What's Working */}
         <div className="space-y-1">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-            <Sparkles className="size-3.5 text-green-600" />
+            <Sparkles className="size-3.5 text-green-600 dark:text-green-400" />
             What's Working Well
           </label>
           <p className="text-sm text-foreground">{card.what}</p>
@@ -106,7 +106,7 @@ export function StrengthCardViewer({
         {card.why && (
           <div className="space-y-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <MessageSquare className="size-3.5 text-blue-600" />
+              <MessageSquare className="size-3.5 text-blue-600 dark:text-blue-400" />
               Why It Works
             </label>
             <p className="text-sm text-foreground">{card.why}</p>
@@ -115,12 +115,12 @@ export function StrengthCardViewer({
 
         {/* Business/UX Impact */}
         {card.impact && (
-          <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-            <label className="text-xs font-semibold text-green-700 uppercase tracking-wide flex items-center gap-1.5 mb-1">
+          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-500/20 border border-green-200 dark:border-green-500/40">
+            <label className="text-xs font-semibold text-green-700 dark:text-green-300 uppercase tracking-wide flex items-center gap-1.5 mb-1">
               <TrendingUp className="size-3.5" />
               Business/UX Impact
             </label>
-            <p className="text-sm text-green-800">{card.impact}</p>
+            <p className="text-sm text-green-800 dark:text-green-200">{card.impact}</p>
           </div>
         )}
       </div>

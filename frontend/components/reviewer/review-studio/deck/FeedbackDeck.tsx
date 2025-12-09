@@ -222,7 +222,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
               "text-xs px-1.5 py-0.5 rounded-full",
               activeTab === "issues"
                 ? "bg-white/20 text-white"
-                : "bg-orange-100 text-orange-700"
+                : "bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300"
             )}
           >
             {completeIssues}/{state.issueCards.length}
@@ -242,7 +242,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
               "text-xs px-1.5 py-0.5 rounded-full",
               activeTab === "strengths"
                 ? "bg-white/20 text-white"
-                : "bg-green-100 text-green-700"
+                : "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300"
             )}
           >
             {completeStrengths}/{state.strengthCards.length}
@@ -285,7 +285,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                     "text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1",
                     issueFilter === "quick-wins"
                       ? "bg-green-600 text-white"
-                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                      : "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-500/30"
                   )}
                 >
                   <Zap className="h-3 w-3" />
@@ -298,7 +298,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                   "text-xs px-2.5 py-1 rounded-full transition-colors",
                   issueFilter === "critical"
                     ? "bg-red-600 text-white"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                    : "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-500/30"
                 )}
               >
                 Critical
@@ -309,7 +309,7 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                   "text-xs px-2.5 py-1 rounded-full transition-colors",
                   issueFilter === "important"
                     ? "bg-amber-600 text-white"
-                    : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                    : "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-500/30"
                 )}
               >
                 Important
@@ -379,10 +379,10 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                   <button
                     onClick={() => addIssueCard()}
                     className={cn(
-                      "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-orange-300",
+                      "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-orange-300 dark:border-orange-500/40",
                       "flex items-center justify-center gap-2",
-                      "text-orange-500 font-medium",
-                      "hover:bg-orange-50 hover:border-orange-400",
+                      "text-orange-500 dark:text-orange-400 font-medium",
+                      "hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:border-orange-400 dark:hover:border-orange-500/60",
                       "transition-all duration-200"
                     )}
                   >
@@ -451,10 +451,10 @@ export function FeedbackDeck({ className }: FeedbackDeckProps) {
                 <button
                   onClick={() => addStrengthCard()}
                   className={cn(
-                    "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-green-300",
+                    "w-full mt-3 py-4 rounded-2xl border-2 border-dashed border-green-300 dark:border-green-500/40",
                     "flex items-center justify-center gap-2",
-                    "text-green-500 font-medium",
-                    "hover:bg-green-50 hover:border-green-400",
+                    "text-green-500 dark:text-green-400 font-medium",
+                    "hover:bg-green-50 dark:hover:bg-green-500/10 hover:border-green-400 dark:hover:border-green-500/60",
                     "transition-all duration-200"
                   )}
                 >

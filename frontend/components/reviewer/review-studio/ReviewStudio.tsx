@@ -157,7 +157,7 @@ function ReviewStudioInner({
           /* ===== CREATOR MODE HEADER ===== */
           <>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">
                 <Eye className="h-4 w-4" />
                 <span className="text-xs font-medium hidden sm:inline">Viewing Review</span>
               </div>
@@ -384,7 +384,7 @@ function ReviewStudioInner({
         </div>
 
         {/* RIGHT: Feedback Deck - subtle tint for visual separation */}
-        <div className="w-1/2 overflow-hidden bg-[#fafafa] border-l border-border/50">
+        <div className="w-1/2 overflow-hidden bg-muted/30 border-l border-border/50">
           {isCreatorMode ? (
             <FeedbackDeckViewer className="h-full" />
           ) : (
@@ -424,7 +424,7 @@ function ReviewStudioInner({
               variant="outline"
               size="lg"
               onClick={onReject}
-              className="flex-1 min-h-[48px] border-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+              className="flex-1 min-h-[48px] border-2 border-red-200 dark:border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 hover:border-red-300 dark:hover:border-red-500/60"
             >
               <XCircle className="h-5 w-5 mr-2" />
               <span className="hidden sm:inline">Reject</span>
@@ -435,7 +435,7 @@ function ReviewStudioInner({
               variant="outline"
               size="lg"
               onClick={onRequestRevision}
-              className="flex-1 min-h-[48px] border-2 border-amber-200 text-amber-600 hover:bg-amber-50 hover:border-amber-300"
+              className="flex-1 min-h-[48px] border-2 border-amber-200 dark:border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:border-amber-300 dark:hover:border-amber-500/60"
             >
               <RotateCcw className="h-5 w-5 mr-2" />
               <span className="hidden sm:inline">Request Revision</span>

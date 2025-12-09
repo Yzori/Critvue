@@ -46,23 +46,23 @@ const PRIORITY_CONFIG: Record<
 > = {
   critical: {
     label: "Critical",
-    color: "text-red-700",
-    bg: "bg-red-100",
-    border: "border-red-300",
+    color: "text-red-700 dark:text-red-300",
+    bg: "bg-red-100 dark:bg-red-500/20",
+    border: "border-red-300 dark:border-red-500/40",
     icon: AlertTriangle,
   },
   important: {
     label: "Important",
-    color: "text-amber-700",
-    bg: "bg-amber-100",
-    border: "border-amber-300",
+    color: "text-amber-700 dark:text-amber-300",
+    bg: "bg-amber-100 dark:bg-amber-500/20",
+    border: "border-amber-300 dark:border-amber-500/40",
     icon: AlertCircle,
   },
   "nice-to-have": {
     label: "Nice to Have",
-    color: "text-blue-700",
-    bg: "bg-blue-100",
-    border: "border-blue-300",
+    color: "text-blue-700 dark:text-blue-300",
+    bg: "bg-blue-100 dark:bg-blue-500/20",
+    border: "border-blue-300 dark:border-blue-500/40",
     icon: Lightbulb,
   },
 };
@@ -74,22 +74,22 @@ const EFFORT_CONFIG: Record<
   "quick-fix": {
     label: "Quick Fix",
     description: "< 30 mins",
-    color: "text-green-700",
-    bg: "bg-green-100",
+    color: "text-green-700 dark:text-green-300",
+    bg: "bg-green-100 dark:bg-green-500/20",
     icon: Zap,
   },
   moderate: {
     label: "Moderate",
     description: "1-4 hours",
-    color: "text-amber-700",
-    bg: "bg-amber-100",
+    color: "text-amber-700 dark:text-amber-300",
+    bg: "bg-amber-100 dark:bg-amber-500/20",
     icon: Clock,
   },
   "major-refactor": {
     label: "Major",
     description: "1+ days",
-    color: "text-purple-700",
-    bg: "bg-purple-100",
+    color: "text-purple-700 dark:text-purple-300",
+    bg: "bg-purple-100 dark:bg-purple-500/20",
     icon: HardHat,
   },
 };
@@ -98,8 +98,8 @@ const CONFIDENCE_CONFIG: Record<
   ConfidenceLevel,
   { label: string; color: string; bg: string }
 > = {
-  certain: { label: "Certain", color: "text-green-700", bg: "bg-green-100" },
-  likely: { label: "Likely", color: "text-blue-700", bg: "bg-blue-100" },
+  certain: { label: "Certain", color: "text-green-700 dark:text-green-300", bg: "bg-green-100 dark:bg-green-500/20" },
+  likely: { label: "Likely", color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-100 dark:bg-blue-500/20" },
   suggestion: { label: "Worth Exploring", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
@@ -107,13 +107,13 @@ const CATEGORY_CONFIG: Record<
   ImprovementCategory,
   { label: string; icon: typeof Shield; color: string; bg: string; border: string }
 > = {
-  performance: { label: "Performance", icon: Gauge, color: "text-purple-700", bg: "bg-purple-50", border: "border-purple-300" },
-  ux: { label: "User Experience", icon: Target, color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-300" },
-  security: { label: "Security", icon: Shield, color: "text-red-700", bg: "bg-red-50", border: "border-red-300" },
-  accessibility: { label: "Accessibility", icon: Target, color: "text-teal-700", bg: "bg-teal-50", border: "border-teal-300" },
+  performance: { label: "Performance", icon: Gauge, color: "text-purple-700 dark:text-purple-300", bg: "bg-purple-50 dark:bg-purple-500/20", border: "border-purple-300 dark:border-purple-500/40" },
+  ux: { label: "User Experience", icon: Target, color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-50 dark:bg-blue-500/20", border: "border-blue-300 dark:border-blue-500/40" },
+  security: { label: "Security", icon: Shield, color: "text-red-700 dark:text-red-300", bg: "bg-red-50 dark:bg-red-500/20", border: "border-red-300 dark:border-red-500/40" },
+  accessibility: { label: "Accessibility", icon: Target, color: "text-teal-700 dark:text-teal-300", bg: "bg-teal-50 dark:bg-teal-500/20", border: "border-teal-300 dark:border-teal-500/40" },
   maintainability: { label: "Maintainability", icon: Wrench, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
-  design: { label: "Design", icon: Sparkles, color: "text-pink-700", bg: "bg-pink-50", border: "border-pink-300" },
-  content: { label: "Content", icon: MessageSquare, color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-300" },
+  design: { label: "Design", icon: Sparkles, color: "text-pink-700 dark:text-pink-300", bg: "bg-pink-50 dark:bg-pink-500/20", border: "border-pink-300 dark:border-pink-500/40" },
+  content: { label: "Content", icon: MessageSquare, color: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-500/20", border: "border-amber-300 dark:border-amber-500/40" },
   other: { label: "Other", icon: Lightbulb, color: "text-muted-foreground", bg: "bg-muted", border: "border-border" },
 };
 
@@ -168,7 +168,7 @@ export function IssueCardViewer({
                 {categoryConfig.label}
               </span>
               {card.isQuickWin && (
-                <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                <span className="text-xs bg-green-200 dark:bg-green-500/30 text-green-800 dark:text-green-300 px-2 py-0.5 rounded-full flex items-center gap-0.5">
                   <Zap className="size-3" /> Quick Win
                 </span>
               )}
@@ -189,7 +189,7 @@ export function IssueCardViewer({
 
             {/* Expert insight indicator */}
             {hasExpertInsight && (
-              <p className="text-xs text-indigo-600 mt-1 flex items-center gap-1">
+              <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
                 <Sparkles className="size-3" />
                 Expert insight included
               </p>
@@ -276,30 +276,30 @@ export function IssueCardViewer({
             </span>
           )}
           {card.isQuickWin && (
-            <span className="text-xs bg-green-200 text-green-800 px-2.5 py-1 rounded-full flex items-center gap-1">
-              <Zap className="size-3 fill-green-600" /> Quick Win
+            <span className="text-xs bg-green-200 dark:bg-green-500/30 text-green-800 dark:text-green-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <Zap className="size-3 fill-green-600 dark:fill-green-400" /> Quick Win
             </span>
           )}
         </div>
 
         {/* Expert Insight Section */}
         {hasExpertInsight && (
-          <div className="p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-800">
+          <div className="p-3 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-200 dark:border-indigo-500/40 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-800 dark:text-indigo-300">
               <Sparkles className="size-4" />
               Expert Insight
             </div>
 
             {card.principle && (
               <div className="space-y-1">
-                <label className="text-xs font-medium text-indigo-600">Underlying Principle</label>
+                <label className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Underlying Principle</label>
                 <p className="text-sm text-foreground">{card.principle}</p>
               </div>
             )}
 
             {card.whyItMatters && (
               <div className="space-y-1">
-                <label className="text-xs font-medium text-indigo-600 flex items-center gap-1">
+                <label className="text-xs font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                   <TrendingUp className="size-3" />
                   Impact if Not Fixed
                 </label>
@@ -309,7 +309,7 @@ export function IssueCardViewer({
 
             {card.afterState && (
               <div className="space-y-1">
-                <label className="text-xs font-medium text-indigo-600">After State (Fixed)</label>
+                <label className="text-xs font-medium text-indigo-600 dark:text-indigo-400">After State (Fixed)</label>
                 <p className="text-sm text-foreground">{card.afterState}</p>
               </div>
             )}
@@ -320,7 +320,7 @@ export function IssueCardViewer({
         {card.resources && card.resources.length > 0 && (
           <div className="space-y-2">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-              <Link2 className="size-3.5 text-indigo-600" />
+              <Link2 className="size-3.5 text-indigo-600 dark:text-indigo-400" />
               Reference Links
             </label>
             <div className="space-y-1.5">
@@ -330,7 +330,7 @@ export function IssueCardViewer({
                   href={resource.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 p-2 bg-indigo-50 rounded-lg text-sm text-indigo-700 hover:bg-indigo-100 transition-colors"
+                  className="flex items-center gap-2 p-2 bg-indigo-50 dark:bg-indigo-500/20 rounded-lg text-sm text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-colors"
                 >
                   <Link2 className="size-3.5 shrink-0" />
                   <span className="truncate flex-1">{resource.title || resource.url}</span>

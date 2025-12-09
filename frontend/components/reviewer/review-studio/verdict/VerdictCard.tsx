@@ -110,7 +110,7 @@ function TakeawayItem({ index, takeaway, onChange }: TakeawayItemProps) {
       className={cn(
         "p-3 sm:p-4 rounded-lg border-2 transition-all",
         isComplete
-          ? "border-green-200 bg-green-50/50"
+          ? "border-green-200 dark:border-green-500/40 bg-green-50/50 dark:bg-green-500/10"
           : "border-border bg-background"
       )}
     >
@@ -210,7 +210,7 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
           Final Verdict
         </h2>
         {isComplete && (
-          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+          <span className="text-xs bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300 px-2 py-1 rounded-full flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             Ready to submit
           </span>
@@ -218,7 +218,7 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
       </div>
 
       {/* Overall Rating */}
-      <div className="p-4 rounded-lg border bg-gradient-to-br from-amber-50 to-yellow-50">
+      <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-500/40 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-500/20 dark:to-yellow-500/20">
         <label className="text-sm font-medium mb-3 block">
           Overall Rating <span className="text-red-500">*</span>
         </label>
@@ -303,13 +303,13 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
       {showAdvanced && (
         <div className="space-y-6 pt-4 border-t animate-in slide-in-from-top-2 duration-200">
           {/* Executive Summary */}
-          <div className="p-4 rounded-lg border bg-gradient-to-br from-indigo-50 to-purple-50 space-y-4">
+          <div className="p-4 rounded-lg border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/20 dark:to-purple-500/20 space-y-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-600" />
-              <label className="text-sm font-medium text-indigo-800">
+              <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <label className="text-sm font-medium text-indigo-800 dark:text-indigo-300">
                 Executive Summary
               </label>
-              <span className="text-xs text-indigo-600">(Premium feature)</span>
+              <span className="text-xs text-indigo-600 dark:text-indigo-400">(Premium feature)</span>
             </div>
 
             <div className="space-y-3">
@@ -392,13 +392,13 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
           </div>
 
           {/* Follow-up Offer */}
-          <div className="p-4 rounded-lg border bg-gradient-to-br from-green-50 to-emerald-50 space-y-4">
+          <div className="p-4 rounded-lg border border-green-200 dark:border-green-500/40 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-500/20 dark:to-emerald-500/20 space-y-4">
             <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-green-600" />
-              <label className="text-sm font-medium text-green-800">
+              <CalendarClock className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <label className="text-sm font-medium text-green-800 dark:text-green-300">
                 Follow-up Offer
               </label>
-              <span className="text-xs text-green-600">(Optional)</span>
+              <span className="text-xs text-green-600 dark:text-green-400">(Optional)</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -414,11 +414,11 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
                     },
                   })
                 }
-                className="h-4 w-4 rounded border-green-300"
+                className="h-4 w-4 rounded border-green-300 dark:border-green-500"
               />
               <label
                 htmlFor="offer-followup"
-                className="text-sm text-green-800"
+                className="text-sm text-green-800 dark:text-green-200"
               >
                 I'm available for a follow-up review
               </label>
@@ -474,14 +474,14 @@ export function VerdictCardEditor({ className }: VerdictCardProps) {
 
       {/* Validation Status */}
       {!isComplete && (
-        <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/40">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-amber-800">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
                 Complete the following to submit:
               </p>
-              <ul className="text-xs text-amber-700 space-y-1">
+              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
                 {verdict.rating < 1 && <li>• Set an overall rating (1-5 stars)</li>}
                 {!isSummaryValid && (
                   <li>• Write a summary (50-300 characters)</li>
