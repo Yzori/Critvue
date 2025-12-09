@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
 
 from app.core.config import settings
+from app.core.exception_handlers import register_exception_handlers
 from app.api import auth, password_reset, webhooks
 from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, sparks, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers, payments, slot_applications
 from app.api.v1 import settings as settings_router
@@ -44,6 +45,9 @@ app = FastAPI(
 app.state.limiter = limiter
 if settings.ENABLE_RATE_LIMITING:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Register global exception handlers for consistent error responses
+register_exception_handlers(app)
 
 # Include routers
 app.include_router(auth.router, prefix="/api/v1")

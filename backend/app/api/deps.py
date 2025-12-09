@@ -1,13 +1,21 @@
 """Dependencies for API endpoints"""
 
 from typing import Optional
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.db.session import get_db
 from app.core.security import decode_access_token
+from app.core.exceptions import (
+    NotAuthenticatedError,
+    TokenInvalidError,
+    TokenRevokedError,
+    InactiveUserError,
+    BannedUserError,
+    SuspendedUserError,
+)
 from app.models.user import User
 from app.schemas.user import TokenData
 from app.services.redis_service import redis_service
@@ -30,73 +38,49 @@ async def get_current_user(
         Current authenticated user
 
     Raises:
-        HTTPException: If token is invalid or user not found
+        NotAuthenticatedError: If no token is provided
+        TokenRevokedError: If token has been revoked
+        TokenInvalidError: If token is invalid or user not found
+        InactiveUserError: If user account is inactive
+        BannedUserError: If user account is banned
+        SuspendedUserError: If user account is suspended
     """
     # Check if token exists in cookie
     if not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise NotAuthenticatedError()
 
     # Check if token is blacklisted
     if redis_service.is_token_blacklisted(access_token):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has been revoked",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenRevokedError()
 
     payload = decode_access_token(access_token)
 
     if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError()
 
     user_id: Optional[int] = payload.get("user_id")
     if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError()
 
     # Fetch user from database
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError(message="User not found")
 
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
-        )
+        raise InactiveUserError()
 
     # Check if user is banned
     if user.is_banned:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account has been banned"
-        )
+        raise BannedUserError()
 
     # Check if user is suspended (and suspension hasn't expired)
     if user.is_suspended:
         from datetime import datetime
         if user.suspended_until and user.suspended_until > datetime.utcnow():
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Account is suspended until {user.suspended_until.isoformat()}"
-            )
+            raise SuspendedUserError(suspended_until=user.suspended_until.isoformat())
 
     return user
 
@@ -164,11 +148,8 @@ async def get_current_active_user(
         Active user
 
     Raises:
-        HTTPException: If user is not active
+        InactiveUserError: If user is not active
     """
     if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
-        )
+        raise InactiveUserError()
     return current_user
