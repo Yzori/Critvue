@@ -92,40 +92,40 @@ export default function ApplicationStatusPage() {
       case 'under_review':
         return {
           icon: Clock,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-100',
+          color: 'text-[var(--accent-blue)]',
+          bgColor: 'bg-[var(--accent-blue)]/10',
           label: 'Under Review',
           description: 'Your application is being reviewed by our team.'
         }
       case 'approved':
         return {
           icon: CheckCircle2,
-          color: 'text-green-600',
-          bgColor: 'bg-green-100',
+          color: 'text-[var(--accent-sage)]',
+          bgColor: 'bg-[var(--accent-sage)]/10',
           label: 'Approved',
           description: 'Congratulations! Your application has been approved.'
         }
       case 'rejected':
         return {
           icon: XCircle,
-          color: 'text-red-600',
-          bgColor: 'bg-red-100',
+          color: 'text-[var(--accent-peach)]',
+          bgColor: 'bg-[var(--accent-peach)]/10',
           label: 'Not Approved',
           description: 'Unfortunately, we are unable to approve your application at this time.'
         }
       case 'draft':
         return {
           icon: FileText,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-100',
+          color: 'text-muted-foreground',
+          bgColor: 'bg-muted',
           label: 'Draft',
           description: 'Your application has not been submitted yet.'
         }
       default:
         return {
           icon: AlertCircle,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-100',
+          color: 'text-muted-foreground',
+          bgColor: 'bg-muted',
           label: status,
           description: 'Application status'
         }
@@ -258,20 +258,20 @@ export default function ApplicationStatusPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mb-8 rounded-lg bg-blue-50 border border-blue-200 p-6"
+              className="mb-8 rounded-lg bg-[var(--accent-blue)]/10 border border-[var(--accent-blue)]/20 p-6"
             >
               <h3 className="mb-3 font-semibold text-foreground">What's Next?</h3>
               <ul className="space-y-2 text-sm text-foreground-muted">
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-blue)] flex-shrink-0" />
                   <span>Our team typically reviews applications within 3-5 business days</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-blue)] flex-shrink-0" />
                   <span>You'll receive an email notification with our decision</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-blue)] flex-shrink-0" />
                   <span>Check back here anytime to see your status</span>
                 </li>
               </ul>
@@ -283,20 +283,20 @@ export default function ApplicationStatusPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="mb-8 rounded-lg bg-green-50 border border-green-200 p-6"
+              className="mb-8 rounded-lg bg-[var(--accent-sage)]/10 border border-[var(--accent-sage)]/20 p-6"
             >
               <h3 className="mb-3 font-semibold text-foreground">Next Steps</h3>
               <ul className="space-y-2 text-sm text-foreground-muted">
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-sage)] flex-shrink-0" />
                   <span>Check your email for onboarding instructions</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-sage)] flex-shrink-0" />
                   <span>Complete the reviewer training program</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                  <div className="mt-0.5 h-1.5 w-1.5 rounded-full bg-[var(--accent-sage)] flex-shrink-0" />
                   <span>Start reviewing and earning</span>
                 </li>
               </ul>

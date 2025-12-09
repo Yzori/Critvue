@@ -24,6 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
+from app.core.exceptions import InvalidInputError, InternalError, ExternalServiceError
 from app.models.review_request import ReviewRequest, ReviewType
 from app.services.payment_service import PaymentService
 from app.schemas.payment import (
@@ -103,8 +104,7 @@ async def create_payment_intent(
         )
     except stripe.StripeError as e:
         logger.error(f"Stripe error creating payment intent: {e}")
-        raise InternalError(message="Failed to create payment. Please try again."
-        )
+        raise ExternalServiceError(service="Stripe", message="Failed to create payment. Please try again.")
 
 
 @router.get(
@@ -219,9 +219,8 @@ async def start_connect_onboarding(
         # Check if Connect isn't enabled on the platform
         error_message = str(e)
         if "signed up for Connect" in error_message:
-            raise InternalError(message="Payout setup is not yet available. Please check back later.")
-        raise InternalError(message="Failed to start onboarding. Please try again."
-        )
+            raise ExternalServiceError(service="Stripe", message="Payout setup is not yet available. Please check back later.")
+        raise ExternalServiceError(service="Stripe", message="Failed to start onboarding. Please try again.")
 
 
 @router.get(
@@ -267,8 +266,7 @@ async def get_connect_dashboard_link(
         )
     except stripe.StripeError as e:
         logger.error(f"Stripe error getting dashboard link: {e}")
-        raise InternalError(message="Failed to get dashboard link. Please try again."
-        )
+        raise ExternalServiceError(service="Stripe", message="Failed to get dashboard link. Please try again.")
 
 
 @router.get(
