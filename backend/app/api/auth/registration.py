@@ -19,8 +19,8 @@ from app.api.auth.common import (
     generate_unique_username,
     security_logger,
     settings,
-    HTTPException,
 )
+from app.core.exceptions import InvalidInputError
 
 router = create_router("registration")
 
@@ -43,7 +43,7 @@ async def register(
         Created user
 
     Raises:
-        HTTPException: If email already exists
+        InvalidInputError: If email already exists
     """
     # Check if user with email already exists
     result = await db.execute(select(User).where(User.email == user_data.email))
@@ -58,9 +58,8 @@ async def register(
             event_type="register"
         )
         # Generic error to prevent email enumeration
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unable to complete registration. Please try a different email or contact support."
+        raise InvalidInputError(
+            message="Unable to complete registration. Please try a different email or contact support."
         )
 
     # Create new user

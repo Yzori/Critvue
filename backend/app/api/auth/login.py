@@ -7,8 +7,9 @@ Core authentication flow endpoints.
 from datetime import datetime
 from typing import Optional
 import json
+import logging
 
-from fastapi import Cookie, Depends, Request, Response, status
+from fastapi import Cookie, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
@@ -30,10 +31,16 @@ from app.api.auth.common import (
     redis_service,
     security_logger,
     settings,
-    HTTPException,
     set_auth_cookies,
     clear_auth_cookies,
     create_user_session,
+)
+from app.core.exceptions import (
+    AuthenticationError,
+    TokenInvalidError,
+    InactiveUserError,
+    InvalidInputError,
+    ValidationError,
 )
 
 router = create_router("login")
@@ -60,7 +67,8 @@ async def login(
         User information (tokens set in httpOnly cookies)
 
     Raises:
-        HTTPException: If credentials are invalid
+        AuthenticationError: If credentials are invalid
+        InactiveUserError: If account is inactive
     """
     # Find user by email
     result = await db.execute(select(User).where(User.email == credentials.email))
@@ -82,11 +90,7 @@ async def login(
             reason="invalid_credentials",
             event_type="login"
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise AuthenticationError(message="Incorrect email or password")
 
     # Check if user is active
     if not user.is_active:
@@ -96,10 +100,7 @@ async def login(
             reason="inactive_account",
             event_type="login"
         )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is inactive"
-        )
+        raise InactiveUserError()
 
     # Update last login
     user.last_login = datetime.utcnow()
@@ -159,7 +160,8 @@ async def refresh_access_token(
         Success message (new tokens set in httpOnly cookies)
 
     Raises:
-        HTTPException: If refresh token is invalid or missing
+        TokenInvalidError: If refresh token is invalid or missing
+        AuthenticationError: If user not found or inactive
     """
     # Check if refresh token exists in cookie
     if not refresh_token:
@@ -169,11 +171,7 @@ async def refresh_access_token(
             reason="missing_refresh_token",
             event_type="token_refresh"
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Refresh token not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError(message="Refresh token not found")
 
     # Decode and validate refresh token
     payload = decode_refresh_token(refresh_token)
@@ -185,11 +183,7 @@ async def refresh_access_token(
             reason="invalid_refresh_token",
             event_type="token_refresh"
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError(message="Invalid refresh token")
 
     user_id: Optional[int] = payload.get("user_id")
     if not user_id:
@@ -199,11 +193,7 @@ async def refresh_access_token(
             reason="missing_user_id_in_token",
             event_type="token_refresh"
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise TokenInvalidError(message="Invalid refresh token")
 
     # Verify user still exists and is active
     result = await db.execute(select(User).where(User.id == user_id))
@@ -217,11 +207,7 @@ async def refresh_access_token(
             reason="user_not_found_or_inactive",
             event_type="token_refresh"
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise AuthenticationError(message="User not found or inactive")
 
     # Create new tokens
     new_token_data = {"user_id": user.id, "email": user.email}
@@ -263,7 +249,8 @@ async def change_password(
         Success message
 
     Raises:
-        HTTPException: If current password is wrong or validation fails
+        ValidationError: If request body is invalid
+        InvalidInputError: If current password is wrong or validation fails
     """
     # Parse body from request
     body_bytes = await request.body()
@@ -272,16 +259,14 @@ async def change_password(
     try:
         password_data = ChangePasswordRequest(**body_data)
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Invalid request body. Required: current_password, new_password (min 8 chars)"
+        raise ValidationError(
+            message="Invalid request body. Required: current_password, new_password (min 8 chars)"
         )
 
     # Check if user has a password (OAuth users might not)
     if not current_user.hashed_password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change password for OAuth-only accounts. Please set a password first."
+        raise InvalidInputError(
+            message="Cannot change password for OAuth-only accounts. Please set a password first."
         )
 
     # Verify current password
@@ -292,16 +277,12 @@ async def change_password(
             reason="incorrect_current_password",
             event_type="change_password"
         )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
-        )
+        raise InvalidInputError(message="Current password is incorrect")
 
     # Ensure new password is different
     if verify_password(password_data.new_password, current_user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be different from current password"
+        raise InvalidInputError(
+            message="New password must be different from current password"
         )
 
     # Update password

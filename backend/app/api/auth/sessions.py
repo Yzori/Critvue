@@ -7,7 +7,7 @@ View and manage user sessions across devices.
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Cookie, Depends, Request, status
+from fastapi import Cookie, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -19,8 +19,8 @@ from app.api.auth.common import (
     UserSession,
     redis_service,
     security_logger,
-    HTTPException,
 )
+from app.core.exceptions import NotFoundError
 
 router = create_router("sessions")
 
@@ -83,10 +83,7 @@ async def revoke_session(
     session = result.scalar_one_or_none()
 
     if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
+        raise NotFoundError(message="Session not found")
 
     # Revoke the session
     session.is_active = False
