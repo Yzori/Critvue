@@ -128,6 +128,45 @@ def apply_sorting(query, sort_by: str, sort_order: str, model):
     return query
 
 
+def calculate_browse_urgency(deadline: Optional[datetime]) -> str:
+    """
+    Calculate urgency level for browse marketplace filtering.
+
+    Uses different thresholds than dashboard urgency:
+    - URGENT: < 24 hours
+    - THIS_WEEK: < 7 days
+    - THIS_MONTH: < 30 days
+    - FLEXIBLE: > 30 days or no deadline
+
+    Args:
+        deadline: The deadline datetime, or None if no deadline.
+
+    Returns:
+        String urgency level: "urgent", "this_week", "this_month", or "flexible"
+
+    Note:
+        This function is used by the browse CRUD for filtering/sorting.
+        Returns lowercase strings matching UrgencyLevel enum values.
+    """
+    if deadline is None:
+        return "flexible"
+
+    now = datetime.utcnow()
+    delta = deadline - now
+    seconds = delta.total_seconds()
+
+    if seconds <= 0:
+        return "urgent"  # Expired counts as urgent
+    elif seconds < SECONDS_PER_DAY:  # < 24 hours
+        return "urgent"
+    elif seconds < SECONDS_PER_WEEK:  # < 7 days
+        return "this_week"
+    elif seconds < SECONDS_PER_DAY * 30:  # < 30 days
+        return "this_month"
+    else:
+        return "flexible"
+
+
 def apply_date_range_filter(
     query,
     date_range: str,

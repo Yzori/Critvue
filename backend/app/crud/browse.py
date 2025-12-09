@@ -16,6 +16,7 @@ from app.schemas.browse import (
     DeadlineFilter,
     UrgencyLevel
 )
+from app.utils import calculate_browse_urgency
 
 
 class BrowseCRUD:
@@ -32,20 +33,8 @@ class BrowseCRUD:
         Returns:
             UrgencyLevel enum value
         """
-        if deadline is None:
-            return UrgencyLevel.FLEXIBLE
-
-        now = datetime.utcnow()
-        time_remaining = deadline - now
-
-        if time_remaining <= timedelta(hours=24):
-            return UrgencyLevel.URGENT
-        elif time_remaining <= timedelta(days=7):
-            return UrgencyLevel.THIS_WEEK
-        elif time_remaining <= timedelta(days=30):
-            return UrgencyLevel.THIS_MONTH
-        else:
-            return UrgencyLevel.FLEXIBLE
+        urgency_str = calculate_browse_urgency(deadline)
+        return UrgencyLevel(urgency_str)
 
     @staticmethod
     def _parse_skills_needed(feedback_areas: Optional[str]) -> List[str]:
