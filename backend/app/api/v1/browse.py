@@ -16,9 +16,11 @@ from app.schemas.browse import (
 from app.crud.browse import browse_crud
 from app.models.review_request import ContentType, ReviewType
 from app.models.user import User
-from app.core.logging_config import security_logger
+from app.core.logging_config import get_logger
 from app.api.deps import get_current_active_user
 from app.services.claim_service import claim_service, ClaimValidationError, ApplicationRequiredError, TierPermissionError
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/reviews", tags=["Browse"])
 
@@ -131,7 +133,7 @@ async def browse_reviews(
             skills_list = [s.strip() for s in user_skills.split(',') if s.strip()]
 
         # Log the browse request (without user identification for public endpoint)
-        security_logger.logger.info(
+        logger.info(
             f"Browse request: content_type={content_type}, review_type={review_type}, "
             f"sort_by={sort_by}, deadline={deadline}, limit={limit}, offset={offset}, "
             f"user_skills={len(skills_list) if skills_list else 0} skills, search={search}"
@@ -159,7 +161,7 @@ async def browse_reviews(
         )
 
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to browse reviews: {type(e).__name__}: {str(e)}"
         )
         # Re-raise as generic error to avoid exposing internal details
@@ -226,7 +228,7 @@ async def claim_review_slot(
     """
     try:
         # Log the claim attempt
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} attempting to claim review {review_id}"
         )
 
@@ -242,7 +244,7 @@ async def claim_review_slot(
         review = await db.get(ReviewRequest, review_id)
 
         # Success - log and return response
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} successfully claimed review {review_id} (slot {slot.id}). "
             f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
         )
@@ -260,7 +262,7 @@ async def claim_review_slot(
     except ApplicationRequiredError as e:
         # For paid reviews, redirect to application workflow
         error_msg = str(e)
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} redirected to application flow for review {review_id}: {error_msg}"
         )
         raise ForbiddenError(message={
@@ -274,7 +276,7 @@ async def claim_review_slot(
     except TierPermissionError as e:
         # User's tier doesn't allow claiming this paid review
         error_msg = str(e)
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} tier permission denied for review {review_id}: {error_msg}"
         )
         raise ForbiddenError(message={
@@ -287,7 +289,7 @@ async def claim_review_slot(
     except ClaimValidationError as e:
         # Handle validation errors (own review, fully claimed, duplicate claim, etc.)
         error_msg = str(e)
-        security_logger.logger.warning(
+        logger.warning(
             f"Claim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
         )
 
@@ -301,7 +303,7 @@ async def claim_review_slot(
     except RuntimeError as e:
         # Handle not found errors
         error_msg = str(e)
-        security_logger.logger.warning(
+        logger.warning(
             f"Review {review_id} not found for claim by user {current_user.id}: {error_msg}"
         )
         raise NotFoundError(message=error_msg
@@ -309,7 +311,7 @@ async def claim_review_slot(
 
     except Exception as e:
         # Handle unexpected errors
-        security_logger.logger.error(
+        logger.error(
             f"Failed to claim review {review_id} for user {current_user.id}: "
             f"{type(e).__name__}: {str(e)}"
         )
@@ -363,7 +365,7 @@ async def unclaim_review_slot(
     """
     try:
         # Log the unclaim attempt
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} attempting to unclaim review {review_id}"
         )
 
@@ -383,7 +385,7 @@ async def unclaim_review_slot(
         slot = result.scalar_one_or_none()
 
         if not slot:
-            security_logger.logger.warning(
+            logger.warning(
                 f"No claimed slot found for user {current_user.id} on review {review_id}"
             )
             raise NotFoundError(message="No active claim found for this review request"
@@ -401,7 +403,7 @@ async def unclaim_review_slot(
         review = await db.get(ReviewRequest, review_id)
 
         # Success - log and return response
-        security_logger.logger.info(
+        logger.info(
             f"User {current_user.id} successfully unclaimed review {review_id} (slot {slot.id}). "
             f"Slots: {review.reviews_claimed}/{review.reviews_requested}"
         )
@@ -419,7 +421,7 @@ async def unclaim_review_slot(
     except ClaimValidationError as e:
         # Handle validation errors
         error_msg = str(e)
-        security_logger.logger.warning(
+        logger.warning(
             f"Unclaim validation failed for user {current_user.id} on review {review_id}: {error_msg}"
         )
 
@@ -429,7 +431,7 @@ async def unclaim_review_slot(
     except RuntimeError as e:
         # Handle not found errors
         error_msg = str(e)
-        security_logger.logger.warning(
+        logger.warning(
             f"Slot not found for unclaim by user {current_user.id}: {error_msg}"
         )
         raise NotFoundError(message=error_msg
@@ -437,7 +439,7 @@ async def unclaim_review_slot(
 
     except Exception as e:
         # Handle unexpected errors
-        security_logger.logger.error(
+        logger.error(
             f"Failed to unclaim review {review_id} for user {current_user.id}: "
             f"{type(e).__name__}: {str(e)}"
         )

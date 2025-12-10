@@ -32,6 +32,7 @@ from app.core.exceptions import (
     InvalidStateError,
     AlreadyExistsError,
 )
+from app.utils import get_display_name
 
 
 class ChallengeLifecycleService(BaseChallengeService):
@@ -598,8 +599,8 @@ class ChallengeLifecycleService(BaseChallengeService):
             loser = await self.db.get(User, loser_id)
 
             if winner and loser:
-                winner_name = winner.full_name or winner.email.split('@')[0]
-                loser_name = loser.full_name or loser.email.split('@')[0]
+                winner_name = get_display_name(winner)
+                loser_name = get_display_name(loser)
 
                 await self.notification_service.create_notification(
                     user_id=challenge.winner_id,

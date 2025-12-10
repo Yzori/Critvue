@@ -23,7 +23,7 @@ from app.core.exceptions import InternalError, InvalidInputError
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, PaymentStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
-from app.utils import calculate_urgency, generate_etag, apply_sorting, apply_date_range_filter
+from app.utils import calculate_urgency, generate_etag, apply_sorting, apply_date_range_filter, get_display_name
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -58,7 +58,7 @@ def format_reviewer_info(reviewer: Any) -> Optional[Dict[str, Any]]:
         return None
     return {
         "id": reviewer.id,
-        "name": reviewer.full_name or reviewer.email.split('@')[0],
+        "name": get_display_name(reviewer),
         "avatar_url": reviewer.avatar_url,
         "tier": reviewer.user_tier.value if reviewer.user_tier else "novice",
         "avg_rating": float(reviewer.avg_rating) if reviewer.avg_rating else None,
@@ -110,7 +110,8 @@ def calculate_draft_progress(slot: ReviewSlot) -> Dict[str, Any]:
                     "sections_total": 3,
                     "percentage": round(completed / 3 * 100, 1)
                 })
-        except:
+        except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
+            # Draft data is malformed or invalid - continue with empty progress
             pass
 
     return draft_progress

@@ -33,6 +33,12 @@ from app.utils.query_helpers import (
     apply_filters,
 )
 
+from app.utils.user_utils import (
+    get_display_name,
+    format_user_info,
+    format_reviewer_info,
+)
+
 __all__ = [
     # Dashboard utils
     "calculate_urgency",
@@ -57,4 +63,8 @@ __all__ = [
     "QueryBuilder",
     "get_sort_params",
     "apply_filters",
+    # User utils
+    "get_display_name",
+    "format_user_info",
+    "format_reviewer_info",
 ]

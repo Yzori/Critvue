@@ -233,5 +233,26 @@ class SecurityLogger:
         )
 
 
+def get_logger(name: str) -> logging.Logger:
+    """
+    Get a standardized logger instance.
+
+    Use this for module-level logging instead of calling logging.getLogger directly.
+    This ensures consistent logger configuration across the application.
+
+    Usage:
+        from app.core.logging_config import get_logger
+        logger = get_logger(__name__)
+        logger.info("Something happened")
+
+    Args:
+        name: Logger name, typically __name__ for module-level loggers
+
+    Returns:
+        Configured logger instance
+    """
+    return logging.getLogger(name)
+
+
 # Global security logger instance
 security_logger = SecurityLogger()

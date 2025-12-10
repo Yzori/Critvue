@@ -23,6 +23,7 @@ from app.core.exceptions import (
     AlreadyExistsError,
     ForbiddenError,
 )
+from app.utils import get_display_name
 
 
 class ChallengeInvitationService(BaseChallengeService):
@@ -271,7 +272,7 @@ class ChallengeInvitationService(BaseChallengeService):
         if not decliner:
             return
 
-        decliner_name = decliner.full_name or decliner.email.split('@')[0]
+        decliner_name = get_display_name(decliner)
 
         await self.notification_service.create_notification(
             user_id=challenge.created_by,

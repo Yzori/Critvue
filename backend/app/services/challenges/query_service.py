@@ -16,6 +16,7 @@ from app.models.challenge_vote import ChallengeVote
 from app.models.challenge_invitation import ChallengeInvitation
 from app.models.challenge_participant import ChallengeParticipant
 from app.services.challenges.base import BaseChallengeService
+from app.utils import get_display_name
 
 
 class ChallengeQueryService(BaseChallengeService):
@@ -211,7 +212,7 @@ class ChallengeQueryService(BaseChallengeService):
                 "rank": rank,
                 "user_id": user.id,
                 "username": user.username,
-                "user_name": user.full_name or user.email.split('@')[0],
+                "user_name": get_display_name(user),
                 "user_avatar": user.avatar_url,
                 "user_tier": user.user_tier.value if user.user_tier else None,
                 "challenges_won": user.challenges_won,

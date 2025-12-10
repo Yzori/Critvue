@@ -28,9 +28,12 @@ from app.schemas.review import (
     ReviewRequestStats,
 )
 from app.crud.review import review_crud
-from app.core.logging_config import security_logger
+from app.core.logging_config import get_logger
 from app.services.subscription_service import SubscriptionService
 from app.services.notification_triggers import notify_review_invitation
+from app.utils import get_display_name
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/reviews", tags=["Reviews"])
 
@@ -74,7 +77,7 @@ async def create_review_request(
         # NOTE: Review count is incremented when status changes to PENDING (on submission)
         # NOT when creating a draft review to avoid counting abandoned drafts
 
-        security_logger.logger.info(
+        logger.info(
             f"Review request created: id={review.id}, user={current_user.email}, "
             f"type={review.content_type.value}"
         )
@@ -86,7 +89,7 @@ async def create_review_request(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to create review request for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to create review request")
@@ -137,7 +140,7 @@ async def list_review_requests(
             has_more=(skip + len(reviews)) < total
         )
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to list review requests for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to retrieve review requests")
@@ -172,7 +175,7 @@ async def get_review_stats(
         )
         return ReviewRequestStats(**stats)
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to get review stats for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to retrieve statistics")
@@ -232,7 +235,7 @@ async def get_reviews_with_open_slots(
         )
 
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to get reviews with open slots for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to retrieve review requests")
@@ -303,7 +306,7 @@ async def get_review_request(
 
         # Add requester information from the user relationship
         if hasattr(review, 'user') and review.user:
-            response_data.requester_username = review.user.full_name or review.user.email.split('@')[0]
+            response_data.requester_username = get_display_name(review.user)
             response_data.requester_avatar = review.user.avatar_url
 
         # Filter slots based on user role for privacy
@@ -331,7 +334,7 @@ async def get_review_request(
     except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to get review request {review_id} for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to retrieve review request")
@@ -410,12 +413,12 @@ async def update_review_request(
         # Increment review count when free review is submitted (DRAFT → PENDING)
         if is_status_changing_to_pending and review.review_type == ReviewType.FREE:
             await SubscriptionService.increment_review_count(current_user, db)
-            security_logger.logger.info(
+            logger.info(
                 f"Incremented review count for user {current_user.email}: "
                 f"review {review.id} submitted"
             )
 
-        security_logger.logger.info(
+        logger.info(
             f"Review request updated: id={review.id}, user={current_user.email}"
         )
 
@@ -425,7 +428,7 @@ async def update_review_request(
     except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to update review request {review_id} for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to update review request")
@@ -467,13 +470,13 @@ async def delete_review_request(
             )
 
         delete_type = "hard" if hard_delete else "soft"
-        security_logger.logger.info(
+        logger.info(
             f"Review request {delete_type} deleted: id={review_id}, user={current_user.email}"
         )
     except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to delete review request {review_id} for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to delete review request")
@@ -580,7 +583,7 @@ async def invite_reviewer(
             message=invite_data.message
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Review invitation sent: review_id={review_id}, "
             f"inviter={current_user.email}, invitee_id={invite_data.reviewer_id}"
         )
@@ -595,7 +598,7 @@ async def invite_reviewer(
     except (NotFoundError, InvalidInputError, InternalError, ForbiddenError, NotOwnerError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to send review invitation for review {review_id} "
             f"from user {current_user.email}: {str(e)}"
         )

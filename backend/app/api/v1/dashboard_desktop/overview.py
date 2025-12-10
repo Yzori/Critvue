@@ -25,6 +25,7 @@ from app.api.v1.dashboard_desktop.common import (
     ReviewSlotStatus,
     ReviewRequest,
     ReviewStatus,
+    get_display_name,
 )
 
 router = create_router("overview")
@@ -338,7 +339,7 @@ async def _get_creator_activities(db: AsyncSession, current_user: User, limit: i
             } if slot.review_request else None,
             "reviewer": {
                 "id": slot.reviewer.id,
-                "name": slot.reviewer.full_name or slot.reviewer.email.split('@')[0],
+                "name": get_display_name(slot.reviewer),
                 "avatar_url": slot.reviewer.avatar_url
             } if slot.reviewer else None,
             "details": {

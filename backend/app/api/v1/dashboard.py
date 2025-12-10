@@ -30,7 +30,7 @@ from app.models.review_request import ReviewRequest, ReviewStatus
 from app.schemas.review_slot import ReviewAccept
 from app.services.review_sparks_hooks import on_review_accepted
 from app.services.notification_triggers import notify_review_accepted
-from app.utils import calculate_urgency, generate_etag
+from app.utils import calculate_urgency, generate_etag, get_display_name
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ async def get_creator_actions_needed(
                 "review_request_title": slot.review_request.title if slot.review_request else None,
                 "reviewer": {
                     "id": slot.reviewer.id,
-                    "name": slot.reviewer.full_name or slot.reviewer.email.split('@')[0],
+                    "name": get_display_name(slot.reviewer),
                     "avatar_url": slot.reviewer.avatar_url,
                     "tier": slot.reviewer.user_tier.value if slot.reviewer.user_tier else "novice",
                     "avg_rating": float(slot.reviewer.avg_rating) if slot.reviewer.avg_rating else None,
@@ -397,7 +397,8 @@ async def get_reviewer_active(
                             "sections_total": 3,
                             "percentage": round(completed / 3 * 100, 1)
                         })
-                except:
+                except (json.JSONDecodeError, TypeError, KeyError, AttributeError):
+                    # Draft data is malformed or invalid - continue with empty progress
                     pass
 
             # Calculate earnings potential

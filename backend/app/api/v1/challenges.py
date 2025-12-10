@@ -43,7 +43,10 @@ from app.schemas.challenge import (
     OpenSlotChallengeResponse,
 )
 from app.services.challenges import ChallengeService
-from app.core.logging_config import security_logger
+from app.core.logging_config import get_logger
+from app.utils import get_display_name
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/challenges", tags=["Challenges"])
 
@@ -74,17 +77,15 @@ def _build_challenge_response(
     winner_name = None
 
     if challenge.participant1:
-        participant1_name = challenge.participant1.full_name or challenge.participant1.email.split('@')[0]
+        participant1_name = get_display_name(challenge.participant1)
         participant1_avatar = challenge.participant1.avatar_url
     if challenge.participant2:
-        participant2_name = challenge.participant2.full_name or challenge.participant2.email.split('@')[0]
+        participant2_name = get_display_name(challenge.participant2)
         participant2_avatar = challenge.participant2.avatar_url
     if challenge.winner:
-        winner_name = challenge.winner.full_name or challenge.winner.email.split('@')[0]
+        winner_name = get_display_name(challenge.winner)
 
-    creator_name = None
-    if challenge.creator:
-        creator_name = challenge.creator.full_name or challenge.creator.email.split('@')[0]
+    creator_name = get_display_name(challenge.creator)
 
     # Build entry responses with user info
     entry_responses = []
@@ -102,7 +103,7 @@ def _build_challenge_response(
         user_avatar = None
         user_tier = None
         if entry.user:
-            user_name = entry.user.full_name or entry.user.email.split('@')[0]
+            user_name = get_display_name(entry.user)
             user_avatar = entry.user.avatar_url
             user_tier = entry.user.user_tier.value if entry.user.user_tier else None
 
@@ -172,7 +173,7 @@ def _build_challenge_response(
         user_avatar = None
         user_tier = None
         if inv.user:
-            user_name = inv.user.full_name or inv.user.email.split('@')[0]
+            user_name = get_display_name(inv.user)
             user_avatar = inv.user.avatar_url
             user_tier = inv.user.user_tier.value if inv.user.user_tier else None
 
@@ -282,7 +283,7 @@ async def get_prompts(
             total=len(prompts)
         )
     except Exception as e:
-        security_logger.logger.error(f"Failed to get challenge prompts: {str(e)}")
+        logger.error(f"Failed to get challenge prompts: {str(e)}")
         raise InternalError(message="Failed to retrieve prompts")
 
 
@@ -307,7 +308,7 @@ async def get_prompt(
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to get prompt {prompt_id}: {str(e)}")
+        logger.error(f"Failed to get prompt {prompt_id}: {str(e)}")
         raise InternalError(message="Failed to retrieve prompt")
 
 
@@ -336,13 +337,13 @@ async def create_prompt(
             is_active=prompt_data.is_active
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge prompt created: id={prompt.id}, title={prompt.title}, by admin={admin_user.email}"
         )
 
         return ChallengePromptResponse.model_validate(prompt)
     except Exception as e:
-        security_logger.logger.error(f"Failed to create prompt: {str(e)}")
+        logger.error(f"Failed to create prompt: {str(e)}")
         raise InternalError(message="Failed to create prompt")
 
 
@@ -368,7 +369,7 @@ async def update_prompt(
         if not prompt:
             raise NotFoundError(resource="Prompt")
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge prompt updated: id={prompt_id}, by admin={admin_user.email}"
         )
 
@@ -376,7 +377,7 @@ async def update_prompt(
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to update prompt {prompt_id}: {str(e)}")
+        logger.error(f"Failed to update prompt {prompt_id}: {str(e)}")
         raise InternalError(message="Failed to update prompt")
 
 
@@ -398,13 +399,13 @@ async def delete_prompt(
         if not success:
             raise NotFoundError(resource="Prompt")
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge prompt deleted: id={prompt_id}, by admin={admin_user.email}"
         )
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to delete prompt {prompt_id}: {str(e)}")
+        logger.error(f"Failed to delete prompt {prompt_id}: {str(e)}")
         raise InternalError(message="Failed to delete prompt")
 
 
@@ -446,7 +447,7 @@ async def create_challenge(
             invitation_mode=challenge_data.invitation_mode
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge created: id={challenge.id}, type={challenge.challenge_type}, by admin={admin_user.email}"
         )
 
@@ -454,7 +455,7 @@ async def create_challenge(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to create challenge: {str(e)}")
+        logger.error(f"Failed to create challenge: {str(e)}")
         raise InternalError(message="Failed to create challenge")
 
 
@@ -480,7 +481,7 @@ async def update_challenge(
         if not challenge:
             raise NotFoundError(resource="Challenge")
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge updated: id={challenge_id}, by admin={admin_user.email}"
         )
 
@@ -490,7 +491,7 @@ async def update_challenge(
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to update challenge {challenge_id}: {str(e)}")
+        logger.error(f"Failed to update challenge {challenge_id}: {str(e)}")
         raise InternalError(message="Failed to update challenge")
 
 
@@ -516,7 +517,7 @@ async def invite_creator(
             message=invitation_data.message
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Creator invited: challenge={challenge_id}, user={invitation_data.user_id}, by admin={admin_user.email}"
         )
 
@@ -534,7 +535,7 @@ async def invite_creator(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to invite creator: {str(e)}")
+        logger.error(f"Failed to invite creator: {str(e)}")
         raise InternalError(message="Failed to invite creator")
 
 
@@ -560,7 +561,7 @@ async def replace_invitation(
             message=replacement_data.message
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Invitation replaced: challenge={challenge_id}, slot={slot}, new_user={replacement_data.new_user_id}, by admin={admin_user.email}"
         )
 
@@ -578,7 +579,7 @@ async def replace_invitation(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to replace invitation: {str(e)}")
+        logger.error(f"Failed to replace invitation: {str(e)}")
         raise InternalError(message="Failed to replace invitation")
 
 
@@ -597,7 +598,7 @@ async def activate_challenge(
         service = ChallengeService(db)
         challenge = await service.activate_challenge(challenge_id)
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge activated: id={challenge_id}, by admin={admin_user.email}"
         )
 
@@ -605,7 +606,7 @@ async def activate_challenge(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to activate challenge: {str(e)}")
+        logger.error(f"Failed to activate challenge: {str(e)}")
         raise InternalError(message="Failed to activate challenge")
 
 
@@ -624,7 +625,7 @@ async def open_challenge(
         service = ChallengeService(db)
         challenge = await service.open_challenge(challenge_id)
 
-        security_logger.logger.info(
+        logger.info(
             f"Category challenge opened: id={challenge_id}, by admin={admin_user.email}"
         )
 
@@ -632,7 +633,7 @@ async def open_challenge(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to open challenge: {str(e)}")
+        logger.error(f"Failed to open challenge: {str(e)}")
         raise InternalError(message="Failed to open challenge")
 
 
@@ -655,7 +656,7 @@ async def open_challenge_slots(
             duration_hours=slots_data.duration_hours
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge slots opened: id={challenge_id}, duration={slots_data.duration_hours}h, by admin={admin_user.email}"
         )
 
@@ -663,7 +664,7 @@ async def open_challenge_slots(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to open challenge slots: {str(e)}")
+        logger.error(f"Failed to open challenge slots: {str(e)}")
         raise InternalError(message="Failed to open challenge slots")
 
 
@@ -682,7 +683,7 @@ async def close_submissions(
         service = ChallengeService(db)
         challenge = await service.close_submissions(challenge_id)
 
-        security_logger.logger.info(
+        logger.info(
             f"Submissions closed: challenge={challenge_id}, by admin={admin_user.email}"
         )
 
@@ -690,7 +691,7 @@ async def close_submissions(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to close submissions: {str(e)}")
+        logger.error(f"Failed to close submissions: {str(e)}")
         raise InternalError(message="Failed to close submissions")
 
 
@@ -709,7 +710,7 @@ async def complete_challenge(
         service = ChallengeService(db)
         challenge = await service.complete_challenge(challenge_id)
 
-        security_logger.logger.info(
+        logger.info(
             f"Challenge completed: id={challenge_id}, by admin={admin_user.email}"
         )
 
@@ -717,7 +718,7 @@ async def complete_challenge(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to complete challenge: {str(e)}")
+        logger.error(f"Failed to complete challenge: {str(e)}")
         raise InternalError(message="Failed to complete challenge")
 
 
@@ -761,7 +762,7 @@ async def get_challenges(
             has_more=(skip + len(challenges)) < total
         )
     except Exception as e:
-        security_logger.logger.error(f"Failed to get challenges: {str(e)}")
+        logger.error(f"Failed to get challenges: {str(e)}")
         raise InternalError(message="Failed to retrieve challenges")
 
 
@@ -788,7 +789,7 @@ async def get_open_slot_challenges(
             participant1_name = None
             participant1_avatar = None
             if c.participant1:
-                participant1_name = c.participant1.full_name or c.participant1.email.split('@')[0]
+                participant1_name = get_display_name(c.participant1)
                 participant1_avatar = c.participant1.avatar_url
 
             # Build prompt response
@@ -825,7 +826,7 @@ async def get_open_slot_challenges(
 
         return responses
     except Exception as e:
-        security_logger.logger.error(f"Failed to get open slot challenges: {str(e)}")
+        logger.error(f"Failed to get open slot challenges: {str(e)}")
         raise InternalError(message="Failed to retrieve open slot challenges")
 
 
@@ -848,7 +849,7 @@ async def claim_challenge_slot(
             user_id=current_user.id
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Slot claimed: challenge={challenge_id}, slot={result['slot']}, user={current_user.email}, activated={result['challenge_activated']}"
         )
 
@@ -862,7 +863,7 @@ async def claim_challenge_slot(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to claim slot: {str(e)}")
+        logger.error(f"Failed to claim slot: {str(e)}")
         raise InternalError(message="Failed to claim slot")
 
 
@@ -889,7 +890,7 @@ async def get_active_challenges(
 
         return [_build_challenge_response(c, user_id) for c in challenges]
     except Exception as e:
-        security_logger.logger.error(f"Failed to get active challenges: {str(e)}")
+        logger.error(f"Failed to get active challenges: {str(e)}")
         raise InternalError(message="Failed to retrieve active challenges")
 
 
@@ -922,7 +923,7 @@ async def get_leaderboard(
             current_user_rank=current_user_rank
         )
     except Exception as e:
-        security_logger.logger.error(f"Failed to get leaderboard: {str(e)}")
+        logger.error(f"Failed to get leaderboard: {str(e)}")
         raise InternalError(message="Failed to retrieve leaderboard")
 
 
@@ -953,7 +954,7 @@ async def get_challenge(
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to get challenge {challenge_id}: {str(e)}")
+        logger.error(f"Failed to get challenge {challenge_id}: {str(e)}")
         raise InternalError(message="Failed to retrieve challenge")
 
 
@@ -989,7 +990,7 @@ async def get_my_invitations(
             for inv in invitations
         ]
     except Exception as e:
-        security_logger.logger.error(f"Failed to get invitations: {str(e)}")
+        logger.error(f"Failed to get invitations: {str(e)}")
         raise InternalError(message="Failed to retrieve invitations")
 
 
@@ -1014,7 +1015,7 @@ async def respond_to_invitation(
         )
 
         action = "accepted" if response_data.accept else "declined"
-        security_logger.logger.info(
+        logger.info(
             f"Invitation {action}: id={invitation_id}, user={current_user.email}"
         )
 
@@ -1032,7 +1033,7 @@ async def respond_to_invitation(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to respond to invitation: {str(e)}")
+        logger.error(f"Failed to respond to invitation: {str(e)}")
         raise InternalError(message="Failed to respond to invitation")
 
 
@@ -1058,7 +1059,7 @@ async def join_category_challenge(
             user_id=current_user.id
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"User joined challenge: challenge={challenge_id}, user={current_user.email}"
         )
 
@@ -1069,14 +1070,14 @@ async def join_category_challenge(
             joined_at=participant.joined_at,
             placement=participant.placement,
             karma_earned=participant.karma_earned,
-            user_name=current_user.full_name or current_user.email.split('@')[0],
+            user_name=get_display_name(current_user),
             user_avatar=current_user.avatar_url,
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to join challenge: {str(e)}")
+        logger.error(f"Failed to join challenge: {str(e)}")
         raise InternalError(message="Failed to join challenge")
 
 
@@ -1121,14 +1122,14 @@ async def create_entry(
             created_at=entry.created_at,
             updated_at=entry.updated_at,
             submitted_at=entry.submitted_at,
-            user_name=current_user.full_name or current_user.email.split('@')[0],
+            user_name=get_display_name(current_user),
             user_avatar=current_user.avatar_url,
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to create entry: {str(e)}")
+        logger.error(f"Failed to create entry: {str(e)}")
         raise InternalError(message="Failed to create entry")
 
 
@@ -1150,7 +1151,7 @@ async def submit_entry(
             user_id=current_user.id
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Entry submitted: challenge={challenge_id}, user={current_user.email}"
         )
 
@@ -1167,14 +1168,14 @@ async def submit_entry(
             created_at=entry.created_at,
             updated_at=entry.updated_at,
             submitted_at=entry.submitted_at,
-            user_name=current_user.full_name or current_user.email.split('@')[0],
+            user_name=get_display_name(current_user),
             user_avatar=current_user.avatar_url,
             user_tier=current_user.user_tier.value if current_user.user_tier else None
         )
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to submit entry: {str(e)}")
+        logger.error(f"Failed to submit entry: {str(e)}")
         raise InternalError(message="Failed to submit entry")
 
 
@@ -1214,7 +1215,7 @@ async def get_entries(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to get entries: {str(e)}")
+        logger.error(f"Failed to get entries: {str(e)}")
         raise InternalError(message="Failed to retrieve entries")
 
 
@@ -1242,7 +1243,7 @@ async def cast_vote(
             entry_id=vote_data.entry_id
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Vote cast: challenge={challenge_id}, entry={vote_data.entry_id}, user={current_user.email}"
         )
 
@@ -1256,7 +1257,7 @@ async def cast_vote(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to cast vote: {str(e)}")
+        logger.error(f"Failed to cast vote: {str(e)}")
         raise InternalError(message="Failed to cast vote")
 
 
@@ -1285,7 +1286,7 @@ async def get_vote_stats(
     except ValueError as e:
         raise InvalidInputError(message=str(e))
     except Exception as e:
-        security_logger.logger.error(f"Failed to get vote stats: {str(e)}")
+        logger.error(f"Failed to get vote stats: {str(e)}")
         raise InternalError(message="Failed to retrieve vote statistics")
 
 
@@ -1308,7 +1309,7 @@ async def get_my_stats(
 
         return ChallengeStats(**stats)
     except Exception as e:
-        security_logger.logger.error(f"Failed to get user stats: {str(e)}")
+        logger.error(f"Failed to get user stats: {str(e)}")
         raise InternalError(message="Failed to retrieve statistics")
 
 
@@ -1333,5 +1334,5 @@ async def get_user_stats(
     except (NotFoundError, InvalidInputError, InternalError, AdminRequiredError):
         raise
     except Exception as e:
-        security_logger.logger.error(f"Failed to get user stats: {str(e)}")
+        logger.error(f"Failed to get user stats: {str(e)}")
         raise InternalError(message="Failed to retrieve statistics")

@@ -17,7 +17,9 @@ from app.schemas.nda import (
     NDAContentResponse,
     NDASignatureResponse,
 )
-from app.core.logging_config import security_logger
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/nda", tags=["NDA"])
 
@@ -255,7 +257,7 @@ async def sign_nda(
     await db.commit()
     await db.refresh(signature)
 
-    security_logger.logger.info(
+    logger.info(
         f"NDA signed: review_id={review_id}, user={current_user.email}, "
         f"role={role.value}, signature_id={signature.id}"
     )

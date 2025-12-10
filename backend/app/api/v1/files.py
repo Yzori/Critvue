@@ -12,7 +12,9 @@ from app.models.review_file import ReviewFile
 from app.schemas.review import ReviewFileCreate, ReviewFileResponse
 from app.crud.review import review_crud
 from app.utils.file_utils import process_upload, delete_file
-from app.core.logging_config import security_logger
+from app.core.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/reviews", tags=["Files"])
 
@@ -76,7 +78,7 @@ async def upload_generic_file(
             content_type=content_type
         )
 
-        security_logger.logger.info(
+        logger.info(
             f"Generic file uploaded: category={category}, "
             f"user={current_user.email}, size={file_metadata['file_size'] / (1024*1024):.2f}MB"
         )
@@ -91,7 +93,7 @@ async def upload_generic_file(
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to upload generic file for user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
@@ -168,7 +170,7 @@ async def upload_review_file(
             raise InternalError(message="Failed to save file metadata"
             )
 
-        security_logger.logger.info(
+        logger.info(
             f"File uploaded: review_id={review_id}, file_id={review_file.id}, "
             f"user={current_user.email}, size={review_file.file_size_mb:.2f}MB"
         )
@@ -178,7 +180,7 @@ async def upload_review_file(
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to upload file for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to upload file. Please try again."  # Generic message - don't expose internal errors
@@ -268,20 +270,20 @@ async def upload_review_files_batch(
             raise InvalidInputError(message=f"All file uploads failed: {'; '.join(errors)}"
             )
 
-        security_logger.logger.info(
+        logger.info(
             f"Batch upload: review_id={review_id}, user={current_user.email}, "
             f"success={len(uploaded_files)}, failed={len(errors)}"
         )
 
         if errors:
-            security_logger.logger.warning(f"Partial upload failures: {'; '.join(errors)}")
+            logger.warning(f"Partial upload failures: {'; '.join(errors)}")
 
         return uploaded_files
 
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed batch upload for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to upload files. Please try again."  # Generic message - don't expose internal errors
@@ -340,7 +342,7 @@ async def list_review_files(
     except HTTPException:
         raise
     except Exception as e:
-        security_logger.logger.error(
+        logger.error(
             f"Failed to list files for review {review_id}, user {current_user.email}: {str(e)}"
         )
         raise InternalError(message="Failed to retrieve files"
@@ -405,7 +407,7 @@ async def delete_review_file(
         await db.delete(file_to_delete)
         await db.commit()
 
-        security_logger.logger.info(
+        logger.info(
             f"File deleted: review_id={review_id}, file_id={file_id}, "
             f"user={current_user.email}"
         )
@@ -414,7 +416,7 @@ async def delete_review_file(
         raise
     except Exception as e:
         await db.rollback()
-        security_logger.logger.error(
+        logger.error(
             f"Failed to delete file {file_id} for review {review_id}, "
             f"user {current_user.email}: {str(e)}"
         )
