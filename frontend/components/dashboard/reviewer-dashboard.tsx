@@ -15,6 +15,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useAsyncCallback } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DashboardStats } from "@/components/reviewer/dashboard-stats";
@@ -44,69 +45,35 @@ import {
 } from "@/lib/api/reviewer";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
+interface DashboardData {
+  dashboard: Awaited<ReturnType<typeof getReviewerDashboard>> | null;
+  activeReviews: ReviewSlot[];
+  submittedReviews: ReviewSlot[];
+  completedReviews: ReviewSlot[];
+}
+
+const initialDashboardData: DashboardData = {
+  dashboard: null,
+  activeReviews: [],
+  submittedReviews: [],
+  completedReviews: [],
+};
+
 export default function ReviewerDashboard() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
 
   // State
-  const [dashboard, setDashboard] = React.useState<Awaited<ReturnType<typeof getReviewerDashboard>> | null>(null);
-  const [activeReviews, setActiveReviews] = React.useState<ReviewSlot[]>([]);
-  const [submittedReviews, setSubmittedReviews] = React.useState<ReviewSlot[]>([]);
-  const [completedReviews, setCompletedReviews] = React.useState<ReviewSlot[]>([]);
+  const [data, setData] = React.useState<DashboardData>(initialDashboardData);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Fetch dashboard data on mount
-  React.useEffect(() => {
-    let cancelled = false;
-
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch all data in parallel
-        const [dashboardData, claimed, submitted, accepted] = await Promise.all([
-          getReviewerDashboard(),
-          getMyReviews("claimed"),
-          getMyReviews("submitted"),
-          getMyReviews("accepted"),
-        ]);
-
-        if (cancelled) {
-          return;
-        }
-
-        setDashboard(dashboardData);
-        setActiveReviews(claimed);
-        setSubmittedReviews(submitted);
-        setCompletedReviews(accepted.slice(0, 5)); // Show last 5
-      } catch {
-        if (!cancelled) {
-          setError("Failed to load dashboard. Please try again.");
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchDashboard();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []); // Empty dependency array - only run once on mount
-
-  // Handle abandon review
-  const handleAbandonReview = async (slotId: number) => {
-    // Refresh after abandon
-    setLoading(true);
-    await abandonReviewSlot(slotId);
-
-    // Re-fetch data
+  // Fetch dashboard data
+  const fetchDashboard = React.useCallback(async () => {
     try {
+      setLoading(true);
+      setError(null);
+
       const [dashboardData, claimed, submitted, accepted] = await Promise.all([
         getReviewerDashboard(),
         getMyReviews("claimed"),
@@ -114,16 +81,33 @@ export default function ReviewerDashboard() {
         getMyReviews("accepted"),
       ]);
 
-      setDashboard(dashboardData);
-      setActiveReviews(claimed);
-      setSubmittedReviews(submitted);
-      setCompletedReviews(accepted.slice(0, 5));
+      setData({
+        dashboard: dashboardData,
+        activeReviews: claimed,
+        submittedReviews: submitted,
+        completedReviews: accepted.slice(0, 5),
+      });
     } catch {
-      // Error refreshing after abandon - silent fail
+      setError("Failed to load dashboard. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch on mount
+  React.useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  // Handle abandon review with useAsyncCallback
+  const { execute: handleAbandonReview } = useAsyncCallback(async (slotId: number) => {
+    setLoading(true);
+    await abandonReviewSlot(slotId);
+    await fetchDashboard();
+  });
+
+  // Destructure for easier access
+  const { dashboard, activeReviews, submittedReviews, completedReviews } = data;
 
   const contentTypeConfig = {
     design: {

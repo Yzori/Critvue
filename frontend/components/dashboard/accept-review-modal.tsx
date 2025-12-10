@@ -13,8 +13,9 @@
 
 "use client";
 
-import { useState } from "react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useFormState } from "@/hooks";
 import {
   Dialog,
   DialogContent,
@@ -72,7 +73,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   icon,
   description,
 }) => {
-  const [hovered, setHovered] = useState(0);
+  const [hovered, setHovered] = React.useState(0);
 
   return (
     <div className="space-y-2">
@@ -115,6 +116,22 @@ const StarRating: React.FC<StarRatingProps> = ({
   );
 };
 
+interface AcceptFormData {
+  quality: number;
+  professionalism: number;
+  helpfulness: number;
+  feedback: string;
+  isAnonymous: boolean;
+}
+
+const initialFormData: AcceptFormData = {
+  quality: 0,
+  professionalism: 0,
+  helpfulness: 0,
+  feedback: "",
+  isAnonymous: true,
+};
+
 export function AcceptReviewModal({
   isOpen,
   onClose,
@@ -122,17 +139,17 @@ export function AcceptReviewModal({
   reviewerName,
   isSubmitting = false,
 }: AcceptReviewModalProps) {
-  const [quality, setQuality] = useState<number>(0);
-  const [professionalism, setProfessionalism] = useState<number>(0);
-  const [helpfulness, setHelpfulness] = useState<number>(0);
-  const [feedback, setFeedback] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(true);
+  const {
+    values: form,
+    setValue,
+    reset,
+  } = useFormState<AcceptFormData>(initialFormData);
 
-  const canSubmit = quality > 0 && professionalism > 0 && helpfulness > 0;
+  const canSubmit = form.quality > 0 && form.professionalism > 0 && form.helpfulness > 0;
 
   // Calculate overall rating for display
   const overallRating = canSubmit
-    ? Math.round(quality * 0.4 + professionalism * 0.3 + helpfulness * 0.3)
+    ? Math.round(form.quality * 0.4 + form.professionalism * 0.3 + form.helpfulness * 0.3)
     : 0;
 
   const handleAccept = async () => {
@@ -140,22 +157,17 @@ export function AcceptReviewModal({
 
     await onAccept({
       rating: overallRating,
-      quality_rating: quality,
-      professionalism_rating: professionalism,
-      helpfulness_rating: helpfulness,
-      feedback_text: feedback.trim() || undefined,
-      is_anonymous: isAnonymous,
+      quality_rating: form.quality,
+      professionalism_rating: form.professionalism,
+      helpfulness_rating: form.helpfulness,
+      feedback_text: form.feedback.trim() || undefined,
+      is_anonymous: form.isAnonymous,
     });
   };
 
   const handleClose = () => {
     if (!isSubmitting) {
-      // Reset form state
-      setQuality(0);
-      setProfessionalism(0);
-      setHelpfulness(0);
-      setFeedback("");
-      setIsAnonymous(true);
+      reset();
       onClose();
     }
   };
@@ -179,8 +191,8 @@ export function AcceptReviewModal({
         <div className="space-y-6 py-4">
           {/* Quality Rating */}
           <StarRating
-            value={quality}
-            onChange={setQuality}
+            value={form.quality}
+            onChange={(v) => setValue("quality", v)}
             label="Review Quality *"
             icon={<Sparkles className="size-5 text-amber-500" />}
             description="Was the review thorough, detailed, and helpful?"
@@ -188,8 +200,8 @@ export function AcceptReviewModal({
 
           {/* Professionalism Rating */}
           <StarRating
-            value={professionalism}
-            onChange={setProfessionalism}
+            value={form.professionalism}
+            onChange={(v) => setValue("professionalism", v)}
             label="Professionalism *"
             icon={<UserCheck className="size-5 text-blue-500" />}
             description="Was the feedback constructive and appropriate?"
@@ -197,8 +209,8 @@ export function AcceptReviewModal({
 
           {/* Helpfulness Rating */}
           <StarRating
-            value={helpfulness}
-            onChange={setHelpfulness}
+            value={form.helpfulness}
+            onChange={(v) => setValue("helpfulness", v)}
             label="Helpfulness *"
             icon={<MessageCircle className="size-5 text-green-500" />}
             description="Did they respond to follow-up questions?"
@@ -246,8 +258,8 @@ export function AcceptReviewModal({
 
             <Textarea
               id="feedback"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
+              value={form.feedback}
+              onChange={(e) => setValue("feedback", e.target.value)}
               placeholder="This review was incredibly helpful because..."
               className="min-h-[100px] resize-none"
               maxLength={500}
@@ -255,14 +267,14 @@ export function AcceptReviewModal({
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>May be displayed on reviewer's profile</span>
-              <span>{feedback.length}/500</span>
+              <span>{form.feedback.length}/500</span>
             </div>
           </div>
 
           {/* Anonymous Toggle */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="flex items-center gap-3">
-              {isAnonymous ? (
+              {form.isAnonymous ? (
                 <EyeOff className="size-5 text-muted-foreground" />
               ) : (
                 <Eye className="size-5 text-muted-foreground" />
@@ -270,13 +282,13 @@ export function AcceptReviewModal({
               <div>
                 <Label className="text-sm font-semibold text-foreground">Anonymous Rating</Label>
                 <p className="text-xs text-muted-foreground">
-                  {isAnonymous ? "Your name will be hidden from the reviewer" : "Your name will be visible to the reviewer"}
+                  {form.isAnonymous ? "Your name will be hidden from the reviewer" : "Your name will be visible to the reviewer"}
                 </p>
               </div>
             </div>
             <Switch
-              checked={isAnonymous}
-              onCheckedChange={setIsAnonymous}
+              checked={form.isAnonymous}
+              onCheckedChange={(checked) => setValue("isAnonymous", checked)}
             />
           </div>
 

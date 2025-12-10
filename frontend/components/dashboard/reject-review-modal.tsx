@@ -13,8 +13,8 @@
 
 "use client";
 
-import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useFormState, useToggle } from "@/hooks";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +77,16 @@ const REJECTION_REASONS = [
   },
 ] as const;
 
+interface RejectFormData {
+  selectedReason: RejectionReason | null;
+  notes: string;
+}
+
+const initialRejectForm: RejectFormData = {
+  selectedReason: null,
+  notes: "",
+};
+
 export function RejectReviewModal({
   isOpen,
   onClose,
@@ -85,40 +95,38 @@ export function RejectReviewModal({
   isSubmitting = false,
   isPaidReview = false,
 }: RejectReviewModalProps) {
-  const [selectedReason, setSelectedReason] = useState<RejectionReason | null>(
-    null
-  );
-  const [notes, setNotes] = useState("");
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const { values: form, setValue, reset } = useFormState<RejectFormData>(initialRejectForm);
+  const { value: showConfirmation, setTrue: showConfirm, setFalse: hideConfirm } = useToggle(false);
 
-  const isOtherReason = selectedReason === "other";
+  const isOtherReason = form.selectedReason === "other";
   const canSubmit =
-    selectedReason !== null && (!isOtherReason || notes.trim().length >= 10);
+    form.selectedReason !== null && (!isOtherReason || form.notes.trim().length >= 10);
 
   const handleReject = async () => {
-    if (!selectedReason || !canSubmit) return;
+    if (!form.selectedReason || !canSubmit) return;
 
     await onReject({
-      rejection_reason: selectedReason,
-      rejection_notes: notes.trim() || undefined,
+      rejection_reason: form.selectedReason,
+      rejection_notes: form.notes.trim() || undefined,
     });
   };
 
   const handleClose = () => {
     if (!isSubmitting) {
-      setShowConfirmation(false);
+      hideConfirm();
+      reset();
       onClose();
     }
   };
 
   const handleProceedToConfirm = () => {
     if (canSubmit) {
-      setShowConfirmation(true);
+      showConfirm();
     }
   };
 
   const handleBackToForm = () => {
-    setShowConfirmation(false);
+    hideConfirm();
   };
 
   return (
@@ -176,9 +184,9 @@ export function RejectReviewModal({
                 </Label>
 
                 <RadioGroup
-                  value={selectedReason || ""}
+                  value={form.selectedReason || ""}
                   onValueChange={(value) =>
-                    setSelectedReason(value as RejectionReason)
+                    setValue("selectedReason", value as RejectionReason)
                   }
                 >
                   <div className="space-y-3">
@@ -188,11 +196,11 @@ export function RejectReviewModal({
                         className={cn(
                           "flex items-start gap-3 p-4 rounded-lg border-2 transition-all duration-200",
                           "hover:bg-red-500/5 cursor-pointer",
-                          selectedReason === reason.value
+                          form.selectedReason === reason.value
                             ? "border-red-500 bg-red-500/5"
                             : "border-border"
                         )}
-                        onClick={() => setSelectedReason(reason.value)}
+                        onClick={() => setValue("selectedReason", reason.value)}
                       >
                         <RadioGroupItem
                           value={reason.value}
@@ -235,8 +243,8 @@ export function RejectReviewModal({
 
                 <Textarea
                   id="rejection-notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  value={form.notes}
+                  onChange={(e) => setValue("notes", e.target.value)}
                   placeholder={
                     isOtherReason
                       ? "Please explain why you're rejecting this review..."
@@ -249,10 +257,10 @@ export function RejectReviewModal({
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
                     {isOtherReason &&
-                      notes.trim().length < 10 &&
+                      form.notes.trim().length < 10 &&
                       "Minimum 10 characters required"}
                   </span>
-                  <span>{notes.length}/2000</span>
+                  <span>{form.notes.length}/2000</span>
                 </div>
               </div>
             </div>
@@ -297,18 +305,18 @@ export function RejectReviewModal({
                     REJECTION REASON
                   </div>
                   <div className="text-sm font-semibold text-foreground">
-                    {REJECTION_REASONS.find((r) => r.value === selectedReason)
+                    {REJECTION_REASONS.find((r) => r.value === form.selectedReason)
                       ?.label}
                   </div>
                 </div>
 
-                {notes.trim() && (
+                {form.notes.trim() && (
                   <div>
                     <div className="text-xs font-semibold text-muted-foreground mb-1">
                       YOUR NOTES
                     </div>
                     <div className="text-sm text-foreground whitespace-pre-wrap">
-                      {notes.trim()}
+                      {form.notes.trim()}
                     </div>
                   </div>
                 )}

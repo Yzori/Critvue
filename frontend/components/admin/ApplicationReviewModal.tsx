@@ -12,7 +12,8 @@
  * - Previous review history
  */
 
-import { useState, useEffect } from "react";
+import * as React from "react";
+import { useFormState, useToggle } from "@/hooks";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -248,8 +249,8 @@ function ApplicationDataSection({
 }: {
   data: Record<string, unknown>;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const { value: expanded, toggle: toggleExpanded } = useToggle(false);
+  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
 
   // Cast to typed structure
   const appData = data as ApplicationData;
@@ -469,7 +470,7 @@ function ApplicationDataSection({
 
       {/* Show raw data toggle */}
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={toggleExpanded}
         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-gray-700"
       >
         <ChevronDown
@@ -497,6 +498,20 @@ function ApplicationDataSection({
   );
 }
 
+interface VoteFormData {
+  selectedVote: VoteType | null;
+  rejectionReasonId: string;
+  additionalFeedback: string;
+  internalNotes: string;
+}
+
+const initialVoteForm: VoteFormData = {
+  selectedVote: null,
+  rejectionReasonId: "",
+  additionalFeedback: "",
+  internalNotes: "",
+};
+
 export function ApplicationReviewModal({
   application,
   rejectionReasons,
@@ -507,32 +522,26 @@ export function ApplicationReviewModal({
   isSubmitting,
   isClaimed,
 }: ApplicationReviewModalProps) {
-  const [selectedVote, setSelectedVote] = useState<VoteType | null>(null);
-  const [rejectionReasonId, setRejectionReasonId] = useState<string>("");
-  const [additionalFeedback, setAdditionalFeedback] = useState("");
-  const [internalNotes, setInternalNotes] = useState("");
+  const { values: form, setValue, reset } = useFormState<VoteFormData>(initialVoteForm);
 
   // Reset form when modal opens/closes
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isOpen) {
-      setSelectedVote(null);
-      setRejectionReasonId("");
-      setAdditionalFeedback("");
-      setInternalNotes("");
+      reset();
     }
-  }, [isOpen]);
+  }, [isOpen, reset]);
 
   const handleSubmit = async () => {
-    if (!selectedVote) return;
+    if (!form.selectedVote) return;
 
     const voteRequest: VoteRequest = {
-      vote: selectedVote,
-      additional_feedback: additionalFeedback || undefined,
-      internal_notes: internalNotes || undefined,
+      vote: form.selectedVote,
+      additional_feedback: form.additionalFeedback || undefined,
+      internal_notes: form.internalNotes || undefined,
     };
 
-    if (selectedVote === "reject" && rejectionReasonId) {
-      voteRequest.rejection_reason_id = parseInt(rejectionReasonId);
+    if (form.selectedVote === "reject" && form.rejectionReasonId) {
+      voteRequest.rejection_reason_id = parseInt(form.rejectionReasonId);
     }
 
     await onVote(voteRequest);
@@ -637,20 +646,20 @@ export function ApplicationReviewModal({
                         <div className="flex gap-3">
                           <VoteButton
                             type="approve"
-                            selected={selectedVote === "approve"}
-                            onClick={() => setSelectedVote("approve")}
+                            selected={form.selectedVote === "approve"}
+                            onClick={() => setValue("selectedVote", "approve")}
                             disabled={isSubmitting}
                           />
                           <VoteButton
                             type="reject"
-                            selected={selectedVote === "reject"}
-                            onClick={() => setSelectedVote("reject")}
+                            selected={form.selectedVote === "reject"}
+                            onClick={() => setValue("selectedVote", "reject")}
                             disabled={isSubmitting}
                           />
                           <VoteButton
                             type="request_changes"
-                            selected={selectedVote === "request_changes"}
-                            onClick={() => setSelectedVote("request_changes")}
+                            selected={form.selectedVote === "request_changes"}
+                            onClick={() => setValue("selectedVote", "request_changes")}
                             disabled={isSubmitting}
                           />
                         </div>
@@ -658,7 +667,7 @@ export function ApplicationReviewModal({
 
                       {/* Rejection reason */}
                       <AnimatePresence>
-                        {selectedVote === "reject" && (
+                        {form.selectedVote === "reject" && (
                           <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
@@ -669,8 +678,8 @@ export function ApplicationReviewModal({
                               Rejection Reason *
                             </label>
                             <Select
-                              value={rejectionReasonId}
-                              onValueChange={setRejectionReasonId}
+                              value={form.rejectionReasonId}
+                              onValueChange={(v) => setValue("rejectionReasonId", v)}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a reason" />
@@ -697,9 +706,9 @@ export function ApplicationReviewModal({
                           Feedback for Applicant (optional)
                         </label>
                         <Textarea
-                          value={additionalFeedback}
+                          value={form.additionalFeedback}
                           onChange={(e) =>
-                            setAdditionalFeedback(e.target.value)
+                            setValue("additionalFeedback", e.target.value)
                           }
                           placeholder="This will be shared with the applicant..."
                           rows={3}
@@ -712,8 +721,8 @@ export function ApplicationReviewModal({
                           Internal Notes (optional)
                         </label>
                         <Textarea
-                          value={internalNotes}
-                          onChange={(e) => setInternalNotes(e.target.value)}
+                          value={form.internalNotes}
+                          onChange={(e) => setValue("internalNotes", e.target.value)}
                           placeholder="Notes for other committee members (not shared with applicant)..."
                           rows={2}
                           className="bg-gray-50"
@@ -753,8 +762,8 @@ export function ApplicationReviewModal({
                   <Button
                     onClick={handleSubmit}
                     disabled={
-                      !selectedVote ||
-                      (selectedVote === "reject" && !rejectionReasonId) ||
+                      !form.selectedVote ||
+                      (form.selectedVote === "reject" && !form.rejectionReasonId) ||
                       isSubmitting
                     }
                   >

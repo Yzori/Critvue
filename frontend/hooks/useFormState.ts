@@ -11,7 +11,7 @@ export type ValidationRules<T> = {
   [K in keyof T]?: ValidationRule<T[K]>[];
 };
 
-export interface UseFormStateReturn<T extends Record<string, unknown>> {
+export interface UseFormStateReturn<T extends object> {
   /** Current form values */
   values: T;
   /** Current validation errors by field */
@@ -51,7 +51,7 @@ export interface UseFormStateReturn<T extends Record<string, unknown>> {
   ) => (e?: React.FormEvent) => Promise<void>;
 }
 
-export interface UseFormStateOptions<T extends Record<string, unknown>> {
+export interface UseFormStateOptions<T extends object> {
   /** Validation rules for fields */
   validationRules?: ValidationRules<T>;
   /** Validate on field change (default: false) */
@@ -99,7 +99,7 @@ export interface UseFormStateOptions<T extends Record<string, unknown>> {
  *   await submitForm(values);
  * })}>
  */
-export function useFormState<T extends Record<string, unknown>>(
+export function useFormState<T extends object>(
   initialValues: T,
   options: UseFormStateOptions<T> = {}
 ): UseFormStateReturn<T> {
