@@ -7,7 +7,7 @@
  * Displays all portfolio items with checkboxes for selection.
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -34,6 +34,7 @@ import {
   type PortfolioItem,
 } from "@/lib/api/portfolio";
 import { getFileUrl } from "@/lib/api/client";
+import { useAsync, useAsyncCallback, useSelection } from "@/hooks";
 
 interface SelectFeaturedModalProps {
   open: boolean;
@@ -50,88 +51,78 @@ export function SelectFeaturedModal({
   onFeaturedUpdated,
   currentFeaturedIds = [],
 }: SelectFeaturedModalProps) {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set(currentFeaturedIds));
+  // Async state for loading portfolio
+  const {
+    data: portfolioResponse,
+    isLoading: loading,
+    error: loadError,
+    refetch: loadPortfolio,
+  } = useAsync(
+    () => getMyPortfolio({ page_size: 50 }),
+    { immediate: false }
+  );
+
+  const portfolioItems = portfolioResponse?.items ?? [];
+
+  // Selection state with max limit
+  const {
+    selected: selectedIds,
+    isSelected,
+    toggle: handleToggleSelection,
+    setSelection,
+    count: selectedCount,
+    isMaxReached,
+  } = useSelection<number>(currentFeaturedIds, { maxSelection: MAX_FEATURED });
+
+  // Async state for saving
+  const {
+    isLoading: saving,
+    error: saveError,
+    execute: executeSave,
+  } = useAsyncCallback(async () => {
+    // Find items to feature and unfeature
+    const currentFeaturedSet = new Set(currentFeaturedIds);
+    const toFeature = [...selectedIds].filter((id) => !currentFeaturedSet.has(id));
+    const toUnfeature = currentFeaturedIds.filter((id) => !selectedIds.has(id));
+
+    // Process all changes
+    const promises: Promise<PortfolioItem>[] = [];
+
+    for (const id of toFeature) {
+      promises.push(togglePortfolioFeatured(id, true));
+    }
+
+    for (const id of toUnfeature) {
+      promises.push(togglePortfolioFeatured(id, false));
+    }
+
+    await Promise.all(promises);
+
+    // Get the updated featured items
+    const featuredItems = portfolioItems.filter((item) => selectedIds.has(item.id));
+    onFeaturedUpdated(featuredItems);
+    onOpenChange(false);
+  });
+
+  const error = loadError || saveError;
 
   // Load portfolio items when modal opens
   useEffect(() => {
     if (open) {
       loadPortfolio();
       // Initialize with current featured items
-      setSelectedIds(new Set(currentFeaturedIds));
+      setSelection(currentFeaturedIds);
     }
-  }, [open, currentFeaturedIds]);
+  }, [open, currentFeaturedIds, loadPortfolio, setSelection]);
 
-  const loadPortfolio = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getMyPortfolio({ page_size: 50 });
-      setPortfolioItems(response.items);
-    } catch {
-      setError("Failed to load your portfolio items");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleSelection = (itemId: number) => {
-    setSelectedIds((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else if (newSet.size < MAX_FEATURED) {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      setError(null);
-
-      // Find items to feature and unfeature
-      const currentFeaturedSet = new Set(currentFeaturedIds);
-      const toFeature = [...selectedIds].filter((id) => !currentFeaturedSet.has(id));
-      const toUnfeature = currentFeaturedIds.filter((id) => !selectedIds.has(id));
-
-      // Process all changes
-      const promises: Promise<PortfolioItem>[] = [];
-
-      for (const id of toFeature) {
-        promises.push(togglePortfolioFeatured(id, true));
-      }
-
-      for (const id of toUnfeature) {
-        promises.push(togglePortfolioFeatured(id, false));
-      }
-
-      await Promise.all(promises);
-
-      // Get the updated featured items
-      const featuredItems = portfolioItems.filter((item) => selectedIds.has(item.id));
-      onFeaturedUpdated(featuredItems);
-      onOpenChange(false);
-    } catch {
-      setError("Failed to update featured items. Please try again.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const hasChanges = () => {
+  const hasChanges = useMemo(() => {
     const currentSet = new Set(currentFeaturedIds);
     if (selectedIds.size !== currentSet.size) return true;
     for (const id of selectedIds) {
       if (!currentSet.has(id)) return true;
     }
     return false;
-  };
+  }, [selectedIds, currentFeaturedIds]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,9 +134,9 @@ export function SelectFeaturedModal({
           </DialogTitle>
           <DialogDescription>
             Choose up to {MAX_FEATURED} portfolio items to highlight on your profile.
-            {selectedIds.size > 0 && (
+            {selectedCount > 0 && (
               <span className="ml-2 text-foreground font-medium">
-                ({selectedIds.size}/{MAX_FEATURED} selected)
+                ({selectedCount}/{MAX_FEATURED} selected)
               </span>
             )}
           </DialogDescription>
@@ -175,8 +166,8 @@ export function SelectFeaturedModal({
             <div className="grid grid-cols-2 gap-4 py-4">
               <AnimatePresence mode="popLayout">
                 {portfolioItems.map((item, index) => {
-                  const isSelected = selectedIds.has(item.id);
-                  const canSelect = isSelected || selectedIds.size < MAX_FEATURED;
+                  const itemIsSelected = isSelected(item.id);
+                  const canSelect = itemIsSelected || !isMaxReached;
 
                   return (
                     <motion.button
@@ -185,7 +176,7 @@ export function SelectFeaturedModal({
                       disabled={!canSelect}
                       className={cn(
                         "relative aspect-[4/3] rounded-xl overflow-hidden group text-left transition-all",
-                        isSelected
+                        itemIsSelected
                           ? "ring-2 ring-amber-500 ring-offset-2 ring-offset-background"
                           : canSelect
                             ? "hover:ring-2 hover:ring-muted-foreground/30 hover:ring-offset-2 hover:ring-offset-background"
@@ -211,7 +202,7 @@ export function SelectFeaturedModal({
                       {/* Overlay */}
                       <div className={cn(
                         "absolute inset-0 transition-colors",
-                        isSelected
+                        itemIsSelected
                           ? "bg-amber-500/20"
                           : "bg-black/0 group-hover:bg-black/30"
                       )} />
@@ -219,11 +210,11 @@ export function SelectFeaturedModal({
                       {/* Selection indicator */}
                       <div className={cn(
                         "absolute top-3 right-3 size-6 rounded-full flex items-center justify-center transition-all",
-                        isSelected
+                        itemIsSelected
                           ? "bg-amber-500 scale-100"
                           : "bg-black/50 border-2 border-white scale-90 group-hover:scale-100"
                       )}>
-                        {isSelected && (
+                        {itemIsSelected && (
                           <CheckCircle2 className="size-4 text-white" />
                         )}
                       </div>
@@ -256,17 +247,17 @@ export function SelectFeaturedModal({
         {/* Footer */}
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <p className="text-sm text-muted-foreground">
-            {selectedIds.size === 0
+            {selectedCount === 0
               ? "Select items to feature"
-              : `${selectedIds.size} item${selectedIds.size !== 1 ? "s" : ""} selected`}
+              : `${selectedCount} item${selectedCount !== 1 ? "s" : ""} selected`}
           </p>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button
-              onClick={handleSave}
-              disabled={saving || !hasChanges()}
+              onClick={executeSave}
+              disabled={saving || !hasChanges}
               className="gap-2 bg-amber-500 hover:bg-amber-600 text-white"
             >
               {saving ? (

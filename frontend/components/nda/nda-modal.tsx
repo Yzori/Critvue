@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getNDAContent, signNDA, NDAContentResponse } from "@/lib/api/nda";
-import { getErrorMessage } from "@/lib/api/client";
+import { useAsync, useAsyncCallback, useToggle } from "@/hooks";
 
 interface NDAModalProps {
   reviewId: number;
@@ -23,63 +23,64 @@ interface NDAModalProps {
 }
 
 export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps) {
-  const [ndaContent, setNdaContent] = useState<NDAContentResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSigning, setIsSigning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Async state for loading NDA content
+  const {
+    data: ndaContent,
+    isLoading,
+    error: loadError,
+    refetch: loadNDAContent,
+  } = useAsync<NDAContentResponse>(() => getNDAContent(), { immediate: false });
+
+  // Async state for signing
+  const {
+    isLoading: isSigning,
+    error: signError,
+    execute: executeSign,
+  } = useAsyncCallback(async () => {
+    await signNDA(reviewId, { full_legal_name: fullLegalName.trim() });
+    onSigned();
+  });
+
+  // Form state
   const [fullLegalName, setFullLegalName] = useState("");
-  const [hasReadNDA, setHasReadNDA] = useState(false);
-  const [showFullNDA, setShowFullNDA] = useState(false);
+  const { value: hasReadNDA, toggle: toggleHasReadNDA, set: setHasReadNDA } = useToggle(false);
+  const { value: showFullNDA, toggle: toggleShowFullNDA } = useToggle(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Combined error state
+  const error = validationError || loadError || signError;
 
   // Load NDA content when modal opens
   useEffect(() => {
     if (isOpen) {
       loadNDAContent();
+      // Reset form state
+      setFullLegalName("");
+      setHasReadNDA(false);
+      setValidationError(null);
     }
-  }, [isOpen]);
-
-  const loadNDAContent = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const content = await getNDAContent();
-      setNdaContent(content);
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSign = async () => {
-    if (!fullLegalName.trim() || fullLegalName.trim().length < 2) {
-      setError("Please enter your full legal name (at least 2 characters)");
-      return;
-    }
-
-    if (!hasReadNDA) {
-      setError("Please confirm you have read and agree to the NDA");
-      return;
-    }
-
-    setIsSigning(true);
-    setError(null);
-
-    try {
-      await signNDA(reviewId, { full_legal_name: fullLegalName.trim() });
-      onSigned();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setIsSigning(false);
-    }
-  };
-
-  const [mounted, setMounted] = useState(false);
+  }, [isOpen, loadNDAContent, setHasReadNDA]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleSign = async () => {
+    setValidationError(null);
+
+    if (!fullLegalName.trim() || fullLegalName.trim().length < 2) {
+      setValidationError("Please enter your full legal name (at least 2 characters)");
+      return;
+    }
+
+    if (!hasReadNDA) {
+      setValidationError("Please confirm you have read and agree to the NDA");
+      return;
+    }
+
+    await executeSign();
+  };
 
   if (!isOpen || !mounted) return null;
 
@@ -126,10 +127,10 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-8 animate-spin text-purple-600" />
             </div>
-          ) : error && !ndaContent ? (
+          ) : loadError && !ndaContent ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <AlertTriangle className="size-12 text-amber-500" />
-              <p className="text-sm text-muted-foreground">{error}</p>
+              <p className="text-sm text-muted-foreground">{loadError}</p>
               <Button variant="outline" onClick={loadNDAContent}>
                 Try Again
               </Button>
@@ -155,7 +156,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
               {/* View Full NDA Toggle */}
               <div className="border border-border rounded-xl overflow-hidden">
                 <button
-                  onClick={() => setShowFullNDA(!showFullNDA)}
+                  onClick={toggleShowFullNDA}
                   className="w-full flex items-center justify-between p-4 hover:bg-accent/5 transition-colors"
                 >
                   <div className="flex items-center gap-2">
@@ -205,7 +206,7 @@ export function NDAModal({ reviewId, isOpen, onClose, onSigned }: NDAModalProps)
                     <input
                       type="checkbox"
                       checked={hasReadNDA}
-                      onChange={(e) => setHasReadNDA(e.target.checked)}
+                      onChange={toggleHasReadNDA}
                       className="sr-only peer"
                     />
                     <div className="size-5 rounded border-2 border-muted-foreground/30 peer-checked:border-purple-600 peer-checked:bg-purple-600 transition-colors flex items-center justify-center">
