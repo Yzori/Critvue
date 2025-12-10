@@ -15,14 +15,14 @@
  * WCAG 2.1 Level AA compliant
  */
 
-import { useState, useEffect } from "react";
+import * as React from "react";
 import Link from "next/link";
+import { useToggle } from "@/hooks";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  User,
   Star,
   CheckCircle2,
   Clock,
@@ -222,47 +222,69 @@ function transformTimelineEvents(apiEvents: ApiTimelineEvent[]): TimelineEvent[]
   }));
 }
 
+interface ProfilePageData {
+  profileData: ProfileData | null;
+  portfolioItems: PortfolioItem[];
+  featuredItems: PortfolioItem[];
+  reviewerDNA: ReviewerDNAData;
+  dnaMetadata: { hasSufficientData: boolean; reviewsAnalyzed: number };
+  badges: BadgeType[];
+  activityData: DayActivity[];
+  activityStats: { currentStreak: number; longestStreak: number; totalContributions: number };
+  timelineEvents: TimelineEvent[];
+  enhancedStats: EnhancedStatsResponse | null;
+}
+
+const initialProfilePageData: ProfilePageData = {
+  profileData: null,
+  portfolioItems: [],
+  featuredItems: [],
+  reviewerDNA: defaultReviewerDNA,
+  dnaMetadata: { hasSufficientData: false, reviewsAnalyzed: 0 },
+  badges: [],
+  activityData: [],
+  activityStats: { currentStreak: 0, longestStreak: 0, totalContributions: 0 },
+  timelineEvents: [],
+  enhancedStats: null,
+};
+
 export default function ProfilePage() {
   const prefersReducedMotion = useReducedMotion();
   const { updateUserAvatar } = useAuth();
-  const [isOwnProfile] = useState(true);
+  const isOwnProfile = true;
 
-  // State management
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
-  const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
-  const [selectFeaturedModalOpen, setSelectFeaturedModalOpen] = useState(false);
-  const [reviewerDNA, setReviewerDNA] = useState<ReviewerDNAData>(defaultReviewerDNA);
-  const [dnaMetadata, setDNAMetadata] = useState<{ hasSufficientData: boolean; reviewsAnalyzed: number }>({ hasSufficientData: false, reviewsAnalyzed: 0 });
-  const [badges, setBadges] = useState<BadgeType[]>([]);
-  const [activityData, setActivityData] = useState<DayActivity[]>([]);
-  const [activityStats, setActivityStats] = useState<{ currentStreak: number; longestStreak: number; totalContributions: number }>({ currentStreak: 0, longestStreak: 0, totalContributions: 0 });
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
-  const [enhancedStats, setEnhancedStats] = useState<EnhancedStatsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{
+  // Data state
+  const [data, setData] = React.useState<ProfilePageData>(initialProfilePageData);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<{
     type: "not_found" | "auth_required" | "network" | "server" | "unknown";
     message: string;
   } | null>(null);
-  const [skillsModalOpen, setSkillsModalOpen] = useState(false);
-  const [usernameModalOpen, setUsernameModalOpen] = useState(false);
+
+  // Modal states
+  const { value: skillsModalOpen, setTrue: openSkillsModal, setFalse: closeSkillsModal } = useToggle(false);
+  const { value: usernameModalOpen, setTrue: openUsernameModal, setFalse: closeUsernameModal } = useToggle(false);
+  const { value: selectFeaturedModalOpen, setTrue: openFeaturedModal, setFalse: closeFeaturedModal } = useToggle(false);
+
+  // Destructure for easier access
+  const { profileData, portfolioItems, featuredItems, reviewerDNA, dnaMetadata, badges, activityData, activityStats, timelineEvents, enhancedStats } = data;
 
   // Handle skills update from modal
   const handleSkillsUpdated = (newSkills: string[]) => {
     if (profileData) {
-      setProfileData({ ...profileData, specialty_tags: newSkills });
+      setData(prev => ({ ...prev, profileData: { ...prev.profileData!, specialty_tags: newSkills } }));
     }
   };
 
   // Handle username update from modal
   const handleUsernameUpdated = (newUsername: string) => {
     if (profileData) {
-      setProfileData({ ...profileData, username: newUsername });
+      setData(prev => ({ ...prev, profileData: { ...prev.profileData!, username: newUsername } }));
     }
   };
 
   // Load profile data on mount
-  useEffect(() => {
+  React.useEffect(() => {
     loadProfileData();
   }, []);
 
@@ -272,7 +294,6 @@ export default function ProfilePage() {
       setError(null);
 
       const profile = await getMyProfile();
-      setProfileData(profile);
 
       // Fetch DNA, portfolio, and badges in parallel
       const [portfolioResponse, dnaResponse, earnedBadges, availableBadges] = await Promise.all([
@@ -282,18 +303,12 @@ export default function ProfilePage() {
         getAvailableBadges().catch(() => []), // Available badges are optional
       ]);
 
-      setPortfolioItems(portfolioResponse.items);
-      // Extract featured items from portfolio
-      setFeaturedItems(portfolioResponse.items.filter((item) => item.is_featured));
-
-      // Transform and set DNA data
-      if (dnaResponse) {
-        setReviewerDNA(transformDNAResponse(dnaResponse));
-        setDNAMetadata({
-          hasSufficientData: dnaResponse.has_sufficient_data,
-          reviewsAnalyzed: dnaResponse.reviews_analyzed,
-        });
-      }
+      // Transform DNA data
+      const transformedDNA = dnaResponse ? transformDNAResponse(dnaResponse) : defaultReviewerDNA;
+      const dnaMetadataResult = dnaResponse ? {
+        hasSufficientData: dnaResponse.has_sufficient_data,
+        reviewsAnalyzed: dnaResponse.reviews_analyzed,
+      } : { hasSufficientData: false, reviewsAnalyzed: 0 };
 
       // Transform and set badges, including tier badge
       const transformedBadges = transformApiBadges(earnedBadges, availableBadges);
@@ -314,9 +329,6 @@ export default function ProfilePage() {
                 profile.user_tier === 'skilled' ? 'uncommon' : 'common',
       };
 
-      // Add tier badge at the beginning
-      setBadges([tierBadge, ...transformedBadges]);
-
       // Fetch activity data (heatmap, timeline, enhanced stats) in parallel
       const [heatmapData, timelineData, enhancedStatsData] = await Promise.all([
         getActivityHeatmap(365).catch(() => null),
@@ -324,34 +336,39 @@ export default function ProfilePage() {
         getEnhancedStats().catch(() => null),
       ]);
 
-      // Set activity heatmap data
-      if (heatmapData) {
-        // Transform to component format (add commentsGiven field)
-        const transformedActivity: DayActivity[] = heatmapData.data.map((day) => ({
-          date: day.date,
-          reviewsGiven: day.reviewsGiven,
-          reviewsReceived: day.reviewsReceived,
-          commentsGiven: day.sparksEvents, // Use sparks events as a proxy for activity
-          total: day.total,
-        }));
-        setActivityData(transformedActivity);
-        setActivityStats({
-          currentStreak: heatmapData.currentStreak,
-          longestStreak: heatmapData.longestStreak,
-          totalContributions: heatmapData.totalContributions,
-        });
-      }
+      // Transform activity data
+      const transformedActivity: DayActivity[] = heatmapData?.data.map((day) => ({
+        date: day.date,
+        reviewsGiven: day.reviewsGiven,
+        reviewsReceived: day.reviewsReceived,
+        challengeEntries: 0,
+        challengeVotes: 0,
+        reviewRequestsCreated: 0,
+        total: day.total,
+      })) ?? [];
 
-      // Set timeline events
-      if (timelineData) {
-        const transformedEvents = transformTimelineEvents(timelineData.events);
-        setTimelineEvents(transformedEvents);
-      }
+      const activityStatsResult = heatmapData ? {
+        currentStreak: heatmapData.currentStreak,
+        longestStreak: heatmapData.longestStreak,
+        totalContributions: heatmapData.totalContributions,
+      } : { currentStreak: 0, longestStreak: 0, totalContributions: 0 };
 
-      // Set enhanced stats
-      if (enhancedStatsData) {
-        setEnhancedStats(enhancedStatsData);
-      }
+      // Transform timeline events
+      const transformedEvents = timelineData ? transformTimelineEvents(timelineData.events) : [];
+
+      // Set all data at once
+      setData({
+        profileData: profile,
+        portfolioItems: portfolioResponse.items,
+        featuredItems: portfolioResponse.items.filter((item) => item.is_featured),
+        reviewerDNA: transformedDNA,
+        dnaMetadata: dnaMetadataResult,
+        badges: [tierBadge, ...transformedBadges],
+        activityData: transformedActivity,
+        activityStats: activityStatsResult,
+        timelineEvents: transformedEvents,
+        enhancedStats: enhancedStatsData,
+      });
     } catch (err) {
       if (err instanceof ApiClientError) {
         if (err.status === 401) {
@@ -409,7 +426,10 @@ export default function ProfilePage() {
                     <AvatarUpload
                       currentAvatarUrl={profileData.avatar_url}
                       onUploadComplete={(newAvatarUrl) => {
-                        setProfileData((prev) => prev ? { ...prev, avatar_url: newAvatarUrl } : prev);
+                        setData((prev) => ({
+                          ...prev,
+                          profileData: prev.profileData ? { ...prev.profileData, avatar_url: newAvatarUrl } : prev.profileData,
+                        }));
                         updateUserAvatar(newAvatarUrl);
                       }}
                       onUploadError={() => { /* Avatar upload error - silent */ }}
@@ -489,7 +509,7 @@ export default function ProfilePage() {
                   </span>
                   {isOwnProfile && (
                     <button
-                      onClick={() => setUsernameModalOpen(true)}
+                      onClick={openUsernameModal}
                       className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Edit
@@ -714,7 +734,7 @@ export default function ProfilePage() {
               </div>
               {isOwnProfile && profileData.specialty_tags.length > 0 && (
                 <button
-                  onClick={() => setSkillsModalOpen(true)}
+                  onClick={openSkillsModal}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Edit
@@ -741,7 +761,7 @@ export default function ProfilePage() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => setSkillsModalOpen(true)}
+                  onClick={openSkillsModal}
                 >
                   <Code className="size-4" />
                   Add Skills
@@ -808,7 +828,7 @@ export default function ProfilePage() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
-                  onClick={() => setSelectFeaturedModalOpen(true)}
+                  onClick={openFeaturedModal}
                 >
                   <Pencil className="size-4" />
                   {featuredItems.length > 0 ? "Edit" : "Select Works"}
@@ -830,7 +850,7 @@ export default function ProfilePage() {
                       variant="outline"
                       size="sm"
                       className="gap-2"
-                      onClick={() => setSelectFeaturedModalOpen(true)}
+                      onClick={openFeaturedModal}
                     >
                       <Star className="size-4" />
                       Select Featured Works
@@ -859,7 +879,7 @@ export default function ProfilePage() {
       {/* Skills Modal */}
       <SkillsModal
         open={skillsModalOpen}
-        onOpenChange={setSkillsModalOpen}
+        onOpenChange={(open) => open ? openSkillsModal() : closeSkillsModal()}
         currentSkills={profileData?.specialty_tags || []}
         onSkillsUpdated={handleSkillsUpdated}
       />
@@ -867,24 +887,24 @@ export default function ProfilePage() {
       {/* Select Featured Works Modal */}
       <SelectFeaturedModal
         open={selectFeaturedModalOpen}
-        onOpenChange={setSelectFeaturedModalOpen}
+        onOpenChange={(open) => open ? openFeaturedModal() : closeFeaturedModal()}
         currentFeaturedIds={featuredItems.map((item) => item.id)}
         onFeaturedUpdated={(newFeaturedItems) => {
-          setFeaturedItems(newFeaturedItems);
-          // Also update the portfolio items state to reflect featured changes
-          setPortfolioItems((prev) =>
-            prev.map((item) => ({
+          setData((prev) => ({
+            ...prev,
+            featuredItems: newFeaturedItems,
+            portfolioItems: prev.portfolioItems.map((item) => ({
               ...item,
               is_featured: newFeaturedItems.some((f) => f.id === item.id),
-            }))
-          );
+            })),
+          }));
         }}
       />
 
       {/* Username Edit Modal */}
       <UsernameModal
         open={usernameModalOpen}
-        onOpenChange={setUsernameModalOpen}
+        onOpenChange={(open) => open ? openUsernameModal() : closeUsernameModal()}
         currentUsername={profileData?.username || ""}
         onUsernameUpdated={handleUsernameUpdated}
       />

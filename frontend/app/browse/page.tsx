@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { getBrowseReviews, BrowseReviewItem } from "@/lib/api/browse";
 import { getMyProfile } from "@/lib/api/profile";
@@ -24,6 +24,15 @@ import { MobileDiscoveryCarousel } from "@/components/browse/mobile-discovery-ca
 import { CompactReviewCard } from "@/components/browse/compact-review-card";
 import { QuickFilterChips } from "@/components/browse/quick-filter-chips";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToggle } from "@/hooks";
+
+// Consolidated filter state interface
+interface BrowseFilters {
+  contentType: ContentType | "all";
+  reviewType: ReviewType | "all";
+  sortBy: "recent" | "price_high" | "price_low" | "deadline";
+  searchQuery: string;
+}
 
 /**
  * Browse Page - Smart Two-Tier Marketplace Layout
@@ -44,24 +53,34 @@ export default function BrowsePage() {
   // Auth state
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // State
-  const [reviews, setReviews] = React.useState<BrowseReviewItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [showMobileFilters, setShowMobileFilters] = React.useState(false);
+  // Data state
+  const [reviews, setReviews] = useState<BrowseReviewItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userSkills, setUserSkills] = useState<string[]>([]);
 
-  // User skills state
-  const [userSkills, setUserSkills] = React.useState<string[]>([]);
-  const [showSkillsModal, setShowSkillsModal] = React.useState(false);
+  // Modal toggles
+  const { value: showMobileFilters, setTrue: openMobileFilters, setFalse: closeMobileFilters } = useToggle(false);
+  const { value: showSkillsModal, setTrue: openSkillsModal, setFalse: closeSkillsModal } = useToggle(false);
 
-  // Filter state
-  const [contentType, setContentType] = React.useState<ContentType | "all">("all");
-  const [reviewType, setReviewType] = React.useState<ReviewType | "all">("all");
-  const [sortBy, setSortBy] = React.useState<"recent" | "price_high" | "price_low" | "deadline">("recent");
-  const [searchQuery, setSearchQuery] = React.useState("");
+  // Consolidated filter state
+  const [filters, setFilters] = useState<BrowseFilters>({
+    contentType: "all",
+    reviewType: "all",
+    sortBy: "recent",
+    searchQuery: "",
+  });
+
+  // Destructure for easier access
+  const { contentType, reviewType, sortBy, searchQuery } = filters;
+
+  // Filter update helper
+  const updateFilter = <K extends keyof BrowseFilters>(key: K, value: BrowseFilters[K]) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
 
   // Fetch user profile to get skills (only if authenticated)
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchUserSkills = async () => {
       if (!isAuthenticated || authLoading) return;
 
@@ -77,7 +96,7 @@ export default function BrowsePage() {
   }, [isAuthenticated, authLoading]);
 
   // Fetch reviews
-  const fetchReviews = React.useCallback(async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -100,16 +119,18 @@ export default function BrowsePage() {
   }, [contentType, reviewType, sortBy, searchQuery, userSkills]);
 
   // Fetch on mount and when filters change
-  React.useEffect(() => {
+  useEffect(() => {
     fetchReviews();
   }, [fetchReviews]);
 
   // Reset filters
   const handleResetFilters = () => {
-    setContentType("all");
-    setReviewType("all");
-    setSortBy("recent");
-    setSearchQuery("");
+    setFilters({
+      contentType: "all",
+      reviewType: "all",
+      sortBy: "recent",
+      searchQuery: "",
+    });
   };
 
   // Calculate importance score for sorting (higher = more prominent)
@@ -150,7 +171,7 @@ export default function BrowsePage() {
   };
 
   // Split reviews into tiers: Hero Featured, Paid/Expert, Recommended, and Others
-  const splitReviews = React.useMemo(() => {
+  const splitReviews = useMemo(() => {
     const heroFeatured: BrowseReviewItem[] = [];
     const recommended: BrowseReviewItem[] = [];
     const featuredPaid: BrowseReviewItem[] = [];
@@ -229,8 +250,8 @@ export default function BrowsePage() {
       {/* Mobile Header - Compact single row */}
       <MobileBrowseHeader
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onShowFilters={() => setShowMobileFilters(true)}
+        onSearchChange={(v) => updateFilter('searchQuery', v)}
+        onShowFilters={openMobileFilters}
         activeFilterCount={activeFilterCount}
       />
 
@@ -255,7 +276,7 @@ export default function BrowsePage() {
                 type="search"
                 placeholder="Search reviews..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => updateFilter('searchQuery', e.target.value)}
                 className={cn(
                   "w-full pl-12 pr-4 py-2.5 rounded-xl",
                   "bg-background/60 backdrop-blur-sm border border-border/50",
@@ -275,10 +296,10 @@ export default function BrowsePage() {
         contentType={contentType}
         reviewType={reviewType}
         sortBy={sortBy}
-        onContentTypeChange={setContentType}
-        onReviewTypeChange={setReviewType}
-        onSortByChange={(val) => setSortBy(val === "popular" ? "recent" : val as any)}
-        onShowMobileFilters={() => setShowMobileFilters(true)}
+        onContentTypeChange={(v) => updateFilter('contentType', v)}
+        onReviewTypeChange={(v) => updateFilter('reviewType', v)}
+        onSortByChange={(val) => updateFilter('sortBy', val === "popular" ? "recent" : val as "recent" | "price_high" | "price_low" | "deadline")}
+        onShowMobileFilters={openMobileFilters}
       />
 
       {/* Main content */}
@@ -334,13 +355,13 @@ export default function BrowsePage() {
                 recommendations={splitReviews.recommended.slice(0, 3)}
                 userSkills={userSkills}
                 isLoggedIn={isAuthenticated}
-                onCustomizeSkills={() => setShowSkillsModal(true)}
+                onCustomizeSkills={openSkillsModal}
               />
             )}
 
             {/* Category Cards - Interactive Browse */}
             <CategoryCards
-              onCategorySelect={(category) => setContentType(category ?? "all")}
+              onCategorySelect={(category) => updateFilter('contentType', category ?? "all")}
               selectedCategory={contentType}
             />
           </div>
@@ -548,24 +569,24 @@ export default function BrowsePage() {
       {/* Mobile bottom sheet */}
       <FilterBottomSheet
         open={showMobileFilters}
-        onOpenChange={setShowMobileFilters}
+        onOpenChange={(open) => open ? openMobileFilters() : closeMobileFilters()}
         contentType={contentType}
         reviewType={reviewType}
         sortBy={sortBy}
-        onContentTypeChange={setContentType}
-        onReviewTypeChange={setReviewType}
-        onSortByChange={setSortBy}
+        onContentTypeChange={(v) => updateFilter('contentType', v)}
+        onReviewTypeChange={(v) => updateFilter('reviewType', v)}
+        onSortByChange={(v) => updateFilter('sortBy', v)}
         onReset={handleResetFilters}
         onApply={() => {
           // Filters are applied immediately, this just closes the sheet
-          setShowMobileFilters(false);
+          closeMobileFilters();
         }}
       />
 
       {/* Skills selection modal */}
       <SkillsModal
         open={showSkillsModal}
-        onOpenChange={setShowSkillsModal}
+        onOpenChange={(open) => open ? openSkillsModal() : closeSkillsModal()}
         currentSkills={userSkills}
         onSkillsUpdated={setUserSkills}
       />
@@ -574,8 +595,8 @@ export default function BrowsePage() {
       <QuickFilterChips
         reviewType={reviewType}
         sortBy={sortBy}
-        onReviewTypeChange={setReviewType}
-        onSortByChange={setSortBy}
+        onReviewTypeChange={(v) => updateFilter('reviewType', v)}
+        onSortByChange={(v) => updateFilter('sortBy', v)}
       />
 
       {/* Accessibility and Performance Notes */}

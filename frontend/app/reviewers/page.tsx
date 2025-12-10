@@ -8,6 +8,7 @@
  */
 
 import * as React from 'react';
+import { useAsync, useToggle } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -40,7 +41,6 @@ import {
   getReviewers,
   getReviewerFilters,
   ReviewerEntry,
-  ReviewerFiltersResponse,
   ReviewerSortBy,
   SortOrder,
 } from '@/lib/api/reviewers';
@@ -65,47 +65,60 @@ const sortOptions: { value: ReviewerSortBy; label: string }[] = [
   { value: 'acceptance_rate', label: 'Acceptance Rate' },
 ];
 
+interface ReviewerFilters {
+  search: string;
+  debouncedSearch: string;
+  tier: string;
+  specialty: string;
+  sortBy: ReviewerSortBy;
+  sortOrder: SortOrder;
+}
+
+const initialFilters: ReviewerFilters = {
+  search: '',
+  debouncedSearch: '',
+  tier: 'all',
+  specialty: 'all',
+  sortBy: 'karma',
+  sortOrder: 'desc',
+};
+
 export default function ReviewerDirectoryPage() {
   const router = useRouter();
 
   // Filters state
-  const [search, setSearch] = React.useState('');
-  const [debouncedSearch, setDebouncedSearch] = React.useState('');
-  const [tier, setTier] = React.useState<string>('all');
-  const [specialty, setSpecialty] = React.useState<string>('all');
-  const [sortBy, setSortBy] = React.useState<ReviewerSortBy>('karma');
-  const [sortOrder, setSortOrder] = React.useState<SortOrder>('desc');
-  const [showFilters, setShowFilters] = React.useState(false);
+  const [filterState, setFilterState] = React.useState<ReviewerFilters>(initialFilters);
+  const { value: showFilters, toggle: toggleFilters } = useToggle(false);
 
   // Data state
   const [reviewers, setReviewers] = React.useState<ReviewerEntry[]>([]);
-  const [filters, setFilters] = React.useState<ReviewerFiltersResponse | null>(null);
   const [totalEntries, setTotalEntries] = React.useState(0);
   const [offset, setOffset] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  // Fetch filters
+  const { data: filters } = useAsync(async () => {
+    const data = await getReviewerFilters();
+    return data;
+  });
+
+  // Destructure filters for easier access
+  const { search, debouncedSearch, tier, specialty, sortBy, sortOrder } = filterState;
+
+  // Update filter helper
+  const updateFilter = <K extends keyof ReviewerFilters>(key: K, value: ReviewerFilters[K]) => {
+    setFilterState(prev => ({ ...prev, [key]: value }));
+  };
+
   // Debounce search
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(search);
+      updateFilter('debouncedSearch', search);
     }, 300);
     return () => clearTimeout(timer);
   }, [search]);
-
-  // Fetch filters on mount
-  React.useEffect(() => {
-    async function fetchFilters() {
-      try {
-        const data = await getReviewerFilters();
-        setFilters(data);
-      } catch {
-        // Failed to fetch filters - silent fail
-      }
-    }
-    fetchFilters();
-  }, []);
 
   // Fetch reviewers
   const fetchReviewers = React.useCallback(
@@ -174,15 +187,11 @@ export default function ReviewerDirectoryPage() {
   };
 
   const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+    updateFilter('sortOrder', sortOrder === 'desc' ? 'asc' : 'desc');
   };
 
   const clearFilters = () => {
-    setSearch('');
-    setTier('all');
-    setSpecialty('all');
-    setSortBy('karma');
-    setSortOrder('desc');
+    setFilterState(initialFilters);
   };
 
   const hasActiveFilters = search || tier !== 'all' || specialty !== 'all';
@@ -220,12 +229,12 @@ export default function ReviewerDirectoryPage() {
               <Input
                 placeholder="Search by name or username..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => updateFilter('search', e.target.value)}
                 className="pl-9 h-10"
               />
               {search && (
                 <button
-                  onClick={() => setSearch('')}
+                  onClick={() => updateFilter('search', '')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
@@ -236,7 +245,7 @@ export default function ReviewerDirectoryPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
+                onClick={toggleFilters}
                 className={cn(
                   'gap-2',
                   hasActiveFilters && 'border-accent-peach text-accent-peach'
@@ -280,7 +289,7 @@ export default function ReviewerDirectoryPage() {
                   {/* Tier Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Tier</label>
-                    <Select value={tier} onValueChange={setTier}>
+                    <Select value={tier} onValueChange={(v) => updateFilter('tier', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Tiers" />
                       </SelectTrigger>
@@ -298,7 +307,7 @@ export default function ReviewerDirectoryPage() {
                   {/* Specialty Filter */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Specialty</label>
-                    <Select value={specialty} onValueChange={setSpecialty}>
+                    <Select value={specialty} onValueChange={(v) => updateFilter('specialty', v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="All Specialties" />
                       </SelectTrigger>
@@ -316,7 +325,7 @@ export default function ReviewerDirectoryPage() {
                   {/* Sort By */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-muted-foreground">Sort By</label>
-                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as ReviewerSortBy)}>
+                    <Select value={sortBy} onValueChange={(v) => updateFilter('sortBy', v as ReviewerSortBy)}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
