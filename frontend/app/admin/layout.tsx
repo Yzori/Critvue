@@ -59,8 +59,8 @@ export default function AdminLayout({
             suspendedCount: 0,
           });
         }
-      } catch (error) {
-        console.error("Failed to fetch admin stats:", error);
+      } catch {
+        // Non-critical - stats will just show as 0
       }
     };
 

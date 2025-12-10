@@ -71,8 +71,7 @@ export function SelectFeaturedModal({
       setError(null);
       const response = await getMyPortfolio({ page_size: 50 });
       setPortfolioItems(response.items);
-    } catch (err) {
-      console.error("Failed to load portfolio:", err);
+    } catch {
       setError("Failed to load your portfolio items");
     } finally {
       setLoading(false);
@@ -118,8 +117,7 @@ export function SelectFeaturedModal({
       const featuredItems = portfolioItems.filter((item) => selectedIds.has(item.id));
       onFeaturedUpdated(featuredItems);
       onOpenChange(false);
-    } catch (err) {
-      console.error("Failed to update featured items:", err);
+    } catch {
       setError("Failed to update featured items. Please try again.");
     } finally {
       setSaving(false);

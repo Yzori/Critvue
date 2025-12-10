@@ -84,8 +84,7 @@ export default function PrivacySettingsPage() {
       const data = await apiClient.get<PrivacySettings>("/settings/privacy");
       setSettings(data);
       setOriginalSettings(data);
-    } catch (error) {
-      console.error("Failed to fetch privacy settings:", error);
+    } catch {
       toast.error("Failed to load privacy settings");
       // Fallback to defaults on error
       const defaultSettings: PrivacySettings = {
@@ -110,8 +109,7 @@ export default function PrivacySettingsPage() {
       setOriginalSettings(updatedSettings);
       setHasChanges(false);
       toast.success("Privacy settings saved");
-    } catch (error) {
-      console.error("Failed to save privacy settings:", error);
+    } catch {
       toast.error("Failed to save privacy settings");
     } finally {
       setIsSaving(false);
@@ -140,8 +138,7 @@ export default function PrivacySettingsPage() {
       // const data = await apiClient.get("/settings/export-data");
       await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
       toast.success("Your data export has been initiated. You'll receive an email when it's ready.");
-    } catch (error) {
-      console.error("Failed to export data:", error);
+    } catch {
       toast.error("Failed to export data");
     } finally {
       setIsExporting(false);

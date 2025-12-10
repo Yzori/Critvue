@@ -58,9 +58,9 @@ export default function PricingPage() {
 
       // Redirect to Stripe Checkout
       window.location.href = data.checkout_url;
-    } catch (error: any) {
-      console.error("Subscription error:", error);
-      alert(error.message || "Failed to start subscription. Please try again.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to start subscription. Please try again.";
+      alert(errorMessage);
       setIsLoading(false);
     }
   };

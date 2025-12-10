@@ -150,16 +150,15 @@ export function ActionBar({
           text: review.description,
           url: url,
         });
-      } catch (error) {
-        // User cancelled or error occurred
-        console.log("Share cancelled or failed:", error);
+      } catch {
+        // User cancelled or error occurred - silent fail
       }
     } else {
       // Fallback to clipboard
       try {
         await navigator.clipboard.writeText(url);
         toast.success("Link copied to clipboard!");
-      } catch (error) {
+      } catch {
         toast.error("Failed to copy link");
       }
     }

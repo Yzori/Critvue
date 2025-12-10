@@ -71,8 +71,7 @@ export default function AdminApplicationsPage() {
       setQueue(queueData.applications);
       setRejectionReasons(reasonsData);
       setClaimedApplications(myReviewsData.claimed || []);
-    } catch (err) {
-      console.error("Error fetching admin data:", err);
+    } catch {
       setError("Failed to load data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -100,8 +99,7 @@ export default function AdminApplicationsPage() {
       setQueue(queueData.applications);
 
       toast.success("Application claimed successfully");
-    } catch (err) {
-      console.error("Error claiming application:", err);
+    } catch {
       toast.error("Failed to claim application");
     } finally {
       setClaimingId(null);
@@ -116,8 +114,7 @@ export default function AdminApplicationsPage() {
       const hasClaimedReview = details.reviews?.some((r) => r.status === "claimed");
       setIsClaimed(hasClaimedReview);
       setIsModalOpen(true);
-    } catch (err) {
-      console.error("Error fetching application details:", err);
+    } catch {
       toast.error("Failed to load application details");
     }
   };
@@ -139,8 +136,7 @@ export default function AdminApplicationsPage() {
       setIsModalOpen(false);
       setSelectedApplication(null);
       await fetchData();
-    } catch (err) {
-      console.error("Error submitting vote:", err);
+    } catch {
       toast.error("Failed to submit vote");
     } finally {
       setIsSubmitting(false);
@@ -159,8 +155,7 @@ export default function AdminApplicationsPage() {
       setIsModalOpen(false);
       setSelectedApplication(null);
       await fetchData();
-    } catch (err) {
-      console.error("Error releasing application:", err);
+    } catch {
       toast.error("Failed to release application");
     } finally {
       setIsSubmitting(false);

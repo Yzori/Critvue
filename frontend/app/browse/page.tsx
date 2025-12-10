@@ -68,8 +68,7 @@ export default function BrowsePage() {
       try {
         const profile = await getMyProfile();
         setUserSkills(profile.specialty_tags || []);
-      } catch (err) {
-        console.error("Error fetching user profile:", err);
+      } catch {
         // Non-critical error - just don't show personalized skills
       }
     };
@@ -93,8 +92,7 @@ export default function BrowsePage() {
       });
 
       setReviews(response.items);
-    } catch (err) {
-      console.error("Error fetching reviews:", err);
+    } catch {
       setError("Failed to load reviews. Please try again.");
     } finally {
       setLoading(false);

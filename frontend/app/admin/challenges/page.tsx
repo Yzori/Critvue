@@ -148,8 +148,7 @@ export default function AdminChallengesPage() {
 
       setChallenges(challengesResponse.items);
       setPrompts(promptsResponse.items);
-    } catch (err) {
-      console.error("Error fetching data:", err);
+    } catch {
       setError("Failed to load data");
     } finally {
       setLoading(false);

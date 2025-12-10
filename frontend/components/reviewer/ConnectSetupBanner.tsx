@@ -44,9 +44,8 @@ export function ConnectSetupBanner({ className }: ConnectSetupBannerProps) {
         if (!status.payouts_enabled) {
           setVisible(true);
         }
-      } catch (error) {
+      } catch {
         // Don't show banner on error
-        console.error("Error checking Connect status:", error);
       } finally {
         setLoading(false);
       }

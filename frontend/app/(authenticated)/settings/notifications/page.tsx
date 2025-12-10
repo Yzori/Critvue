@@ -49,8 +49,7 @@ export default function NotificationPreferencesPage() {
       setIsLoading(true);
       const data = await getNotificationPreferences();
       setPreferences(data);
-    } catch (error) {
-      console.error("Failed to fetch notification preferences:", error);
+    } catch {
       toast.error("Failed to load notification preferences");
     } finally {
       setIsLoading(false);
@@ -80,8 +79,7 @@ export default function NotificationPreferencesPage() {
       setPreferences(updated);
       setHasChanges(false);
       toast.success("Notification preferences saved successfully");
-    } catch (error) {
-      console.error("Failed to save notification preferences:", error);
+    } catch {
       toast.error("Failed to save notification preferences");
     } finally {
       setIsSaving(false);

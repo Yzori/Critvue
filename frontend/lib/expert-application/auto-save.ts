@@ -76,10 +76,9 @@ export function useAutoSave(apiSaveEnabled: boolean = false) {
       //   useExpertApplicationStore.setState({ applicationId: data.applicationId })
       // }
 
-      console.log('[Auto-Save] Saved to API (stub):', payload)
-    } catch (error) {
-      console.error('[Auto-Save] Failed to save to API:', error)
-      // Don't throw - localStorage still works
+      // Successfully saved to API (stub)
+    } catch {
+      // Don't throw - localStorage still works as fallback
     }
   }, [apiSaveEnabled])
 
@@ -169,9 +168,8 @@ export function vibrate(pattern: number | number[]) {
   if (typeof window !== 'undefined' && 'vibrate' in navigator) {
     try {
       navigator.vibrate(pattern)
-    } catch (error) {
+    } catch {
       // Silently fail - not critical
-      console.debug('[Vibration] Not supported or failed:', error)
     }
   }
 }

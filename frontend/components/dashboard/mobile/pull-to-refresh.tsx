@@ -75,8 +75,8 @@ export function PullToRefresh({
 
       try {
         await onRefresh();
-      } catch (error) {
-        console.error("Refresh failed:", error);
+      } catch {
+        // Refresh failed - silent fail
       } finally {
         setIsRefreshing(false);
         y.set(0);

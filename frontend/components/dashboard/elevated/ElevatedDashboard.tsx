@@ -208,8 +208,8 @@ export function ElevatedDashboard({
         );
         setKanbanColumns(columns);
       }
-    } catch (err) {
-      console.error('Error loading dashboard data:', err);
+    } catch {
+      // Error loading dashboard data - silent fail, UI shows empty state
     } finally {
       setIsLoading(false);
     }

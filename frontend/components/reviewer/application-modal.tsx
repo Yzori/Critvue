@@ -76,8 +76,7 @@ export function ApplicationModal({
             setError(data.reason);
           }
         })
-        .catch((err) => {
-          console.error("Error checking application status:", err);
+        .catch(() => {
           setError("Failed to check application status");
         })
         .finally(() => {
@@ -116,15 +115,14 @@ export function ApplicationModal({
         onSuccess?.();
         onClose();
       }, 2000);
-    } catch (err: any) {
-      console.error("Application failed:", err);
-
+    } catch (err: unknown) {
       let errorMessage = "Failed to submit application. Please try again.";
-      if (err?.data?.detail) {
+      const typedErr = err as { data?: { detail?: string | { msg: string }[] } };
+      if (typedErr?.data?.detail) {
         errorMessage =
-          typeof err.data.detail === "string"
-            ? err.data.detail
-            : err.data.detail[0]?.msg || errorMessage;
+          typeof typedErr.data.detail === "string"
+            ? typedErr.data.detail
+            : typedErr.data.detail[0]?.msg || errorMessage;
       }
 
       setError(errorMessage);

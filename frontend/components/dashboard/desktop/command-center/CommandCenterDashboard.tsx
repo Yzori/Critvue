@@ -135,7 +135,6 @@ export function CommandCenterDashboard({
         await loadReviewerData();
       }
     } catch (err) {
-      console.error("Error loading dashboard data:", err);
       setError({
         message: getErrorMessage(err),
         isRetryable: isRetryableError(err),
@@ -346,15 +345,15 @@ function transformToUrgentAction(item: PendingReviewItem): UrgentAction {
     actions: {
       primary: {
         label: "Accept",
-        action: () => console.log("Accept review", item.slot_id),
+        action: () => { /* Accept action - to be implemented */ },
       },
       secondary: {
         label: "Decline",
-        action: () => console.log("Decline review", item.slot_id),
+        action: () => { /* Decline action - to be implemented */ },
       },
       view: {
         label: "View",
-        action: () => console.log("View review", item.slot_id),
+        action: () => { /* View action - to be implemented */ },
       },
     },
   };
@@ -371,11 +370,11 @@ function transformActiveToUrgentAction(item: ActiveReviewItem): UrgentAction {
     actions: {
       primary: {
         label: "Continue",
-        action: () => console.log("Continue review", item.slot_id),
+        action: () => { /* Continue action - to be implemented */ },
       },
       view: {
         label: "View",
-        action: () => console.log("View review", item.slot_id),
+        action: () => { /* View action - to be implemented */ },
       },
     },
   };
@@ -399,12 +398,12 @@ function transformCreatorDataToKanban(
     rating: item.rating,
     primaryAction: {
       label: "Accept",
-      onClick: () => console.log("Accept", item.slot_id),
+      onClick: () => { /* Accept action - to be implemented */ },
       variant: "success",
     },
     secondaryAction: {
       label: "Decline",
-      onClick: () => console.log("Decline", item.slot_id),
+      onClick: () => { /* Decline action - to be implemented */ },
     },
     onView: () => window.location.href = `/review/${item.review_request_id}`,
   }));

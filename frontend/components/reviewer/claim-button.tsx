@@ -125,9 +125,8 @@ export function ClaimButton({
       setTimeout(() => {
         router.push(`/reviewer/review/${response.slot_id}`);
       }, 500);
-    } catch (err: any) {
-      console.error("Claim failed:", err);
-
+    } catch (err: unknown) {
+      const typedErr = err as { data?: { detail?: string | { msg: string }[] } };
       // Check if this is an APPLICATION_REQUIRED error (paid reviews need application)
       if (isApplicationRequiredError(err)) {
         // Close claim modal and open application modal
@@ -139,10 +138,10 @@ export function ClaimButton({
 
       // Extract error message
       let errorMessage = "Failed to claim review. Please try again.";
-      if (err?.data?.detail) {
-        errorMessage = typeof err.data.detail === "string"
-          ? err.data.detail
-          : err.data.detail[0]?.msg || errorMessage;
+      if (typedErr?.data?.detail) {
+        errorMessage = typeof typedErr.data.detail === "string"
+          ? typedErr.data.detail
+          : typedErr.data.detail[0]?.msg || errorMessage;
       }
 
       setError(errorMessage);

@@ -119,8 +119,8 @@ export function pollPlatformActivity(
       if (isActive) {
         callback(data);
       }
-    } catch (error) {
-      console.error("Error polling platform activity:", error);
+    } catch {
+      // Error polling platform activity - silent fail
     }
   };
 
@@ -155,8 +155,8 @@ export function pollPlatformStats(
       if (isActive) {
         callback(data);
       }
-    } catch (error) {
-      console.error("Error polling platform stats:", error);
+    } catch {
+      // Error polling platform stats - silent fail
     }
   };
 

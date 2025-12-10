@@ -89,8 +89,8 @@ export function AvatarDisplay({
     try {
       await onDelete();
       setLocalAvatarUrl(null);
-    } catch (error) {
-      console.error("Failed to delete avatar:", error);
+    } catch {
+      // Failed to delete avatar - silent fail
     } finally {
       setIsDeleting(false);
     }
@@ -103,7 +103,7 @@ export function AvatarDisplay({
         <AvatarUpload
           currentAvatarUrl={localAvatarUrl || undefined}
           onUploadComplete={handleUploadComplete}
-          onUploadError={(error) => console.error(error)}
+          onUploadError={() => { /* Silent fail */ }}
         />
         <Button
           variant="outline"

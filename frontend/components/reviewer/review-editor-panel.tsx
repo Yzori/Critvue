@@ -48,8 +48,7 @@ export function ReviewEditorPanel({
         try {
           const filesData = await getReviewFiles(slot.review_request_id);
           setFiles(filesData);
-        } catch (error) {
-          console.error("Error fetching files:", error);
+        } catch {
           setFiles([]);
         }
       }

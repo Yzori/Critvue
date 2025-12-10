@@ -63,8 +63,7 @@ export function ActiveReviewsList({
     try {
       setAbandoningId(slotId);
       await onAbandon(slotId);
-    } catch (error) {
-      console.error("Failed to abandon review:", error);
+    } catch {
       alert("Failed to abandon review. Please try again.");
     } finally {
       setAbandoningId(null);

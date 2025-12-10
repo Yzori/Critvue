@@ -58,8 +58,8 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
         setLoading(true);
         const data = await adminUsersApi.getUser(userId);
         setUser(data);
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
+      } catch {
+        // Failed to fetch user - silent fail
       } finally {
         setLoading(false);
       }

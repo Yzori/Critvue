@@ -100,8 +100,8 @@ export default function ReviewerDirectoryPage() {
       try {
         const data = await getReviewerFilters();
         setFilters(data);
-      } catch (err) {
-        console.error('Failed to fetch filters:', err);
+      } catch {
+        // Failed to fetch filters - silent fail
       }
     }
     fetchFilters();
@@ -137,8 +137,7 @@ export default function ReviewerDirectoryPage() {
         }
         setTotalEntries(data.metadata.totalEntries);
         setOffset(newOffset);
-      } catch (err) {
-        console.error('Failed to fetch reviewers:', err);
+      } catch {
         setError('Failed to load reviewers. Please try again.');
       } finally {
         setIsLoading(false);

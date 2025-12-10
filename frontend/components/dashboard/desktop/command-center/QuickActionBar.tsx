@@ -116,7 +116,7 @@ export function QuickActionBar({
           label: "Accept All",
           icon: <CheckCircle2 className="size-4" />,
           shortcut: "A",
-          action: () => console.log("Accept all - TODO: Implement bulk accept"),
+          action: () => { /* TODO: Implement bulk accept */ },
           badge: 3,
         },
         {
@@ -124,7 +124,7 @@ export function QuickActionBar({
           label: "Filter",
           icon: <Filter className="size-4" />,
           shortcut: "F",
-          action: () => console.log("Filter - TODO: Implement filter modal"),
+          action: () => { /* TODO: Implement filter modal */ },
         },
       ];
     }
@@ -158,7 +158,7 @@ export function QuickActionBar({
         label: "Continue Draft",
         icon: <FileText className="size-4" />,
         shortcut: "C",
-        action: () => console.log("Continue draft - TODO: Navigate to latest draft"),
+        action: () => { /* TODO: Navigate to latest draft */ },
       },
       {
         id: "earnings",

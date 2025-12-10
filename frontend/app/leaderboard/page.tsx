@@ -138,8 +138,7 @@ export default function LeaderboardPage() {
           }, 500);
           hasShownConfetti.current = true;
         }
-      } catch (err) {
-        console.error('Failed to fetch leaderboard:', err);
+      } catch {
         setError(
           'Failed to load leaderboard. Please check your connection and try again.'
         );
@@ -161,8 +160,8 @@ export default function LeaderboardPage() {
       ]);
       setSeason(seasonData);
       setDiscoverySections(discovery);
-    } catch (err) {
-      console.error('Failed to fetch season/discovery:', err);
+    } catch {
+      // Failed to fetch season/discovery - silent fail
     } finally {
       setIsLoadingDiscovery(false);
     }
@@ -175,8 +174,7 @@ export default function LeaderboardPage() {
       setChallengesError(null);
       const data = await getChallengeLeaderboard(50);
       setChallengesData(data);
-    } catch (err) {
-      console.error('Failed to fetch challenges leaderboard:', err);
+    } catch {
       setChallengesError('Failed to load challenges leaderboard.');
     } finally {
       setIsChallengesLoading(false);

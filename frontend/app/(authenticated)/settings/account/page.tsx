@@ -79,8 +79,7 @@ export default function AccountSettingsPage() {
 
       setFormData(profileData);
       setOriginalData(profileData);
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
+    } catch {
       toast.error("Failed to load profile data");
     } finally {
       setIsLoading(false);
@@ -107,8 +106,7 @@ export default function AccountSettingsPage() {
         available: result.available,
         reason: result.reason,
       });
-    } catch (err) {
-      console.error("Error checking username:", err);
+    } catch {
       setUsernameAvailability(null);
     } finally {
       setUsernameChecking(false);
@@ -165,8 +163,7 @@ export default function AccountSettingsPage() {
       setHasChanges(false);
       setUsernameAvailability(null);
       toast.success("Profile updated successfully");
-    } catch (error) {
-      console.error("Failed to update profile:", error);
+    } catch {
       toast.error("Failed to update profile");
     } finally {
       setIsSaving(false);
@@ -205,8 +202,7 @@ export default function AccountSettingsPage() {
       const response = await uploadAvatar(file);
       updateUserAvatar(response.avatar_url);
       toast.success("Profile picture updated");
-    } catch (error) {
-      console.error("Failed to upload avatar:", error);
+    } catch {
       toast.error("Failed to upload profile picture");
     } finally {
       setIsUploadingAvatar(false);

@@ -134,8 +134,8 @@ export default function AdminAnalyticsPage() {
         setLoading(true);
         const data = await adminUsersApi.getStats();
         setStats(data);
-      } catch (error) {
-        console.error("Failed to fetch stats:", error);
+      } catch {
+        // Failed to fetch stats - silent fail
       } finally {
         setLoading(false);
       }

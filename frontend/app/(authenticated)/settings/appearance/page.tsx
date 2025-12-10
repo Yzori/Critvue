@@ -80,8 +80,7 @@ export default function AppearanceSettingsPage() {
       setOriginalFontSize(fontSize);
       setHasChanges(false);
       toast.success("Appearance settings saved");
-    } catch (error) {
-      console.error("Failed to save appearance settings:", error);
+    } catch {
       toast.error("Failed to save appearance settings");
     } finally {
       setIsSaving(false);

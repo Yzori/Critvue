@@ -66,8 +66,7 @@ export function ExpertReviewCheckout({
           apply_pro_discount: isProUser,
         });
         setBreakdown(response.breakdown);
-      } catch (error) {
-        console.error("Error calculating payment:", error);
+      } catch {
         setErrorMessage("Failed to calculate payment. Please try again.");
         setStatus("error");
       }
@@ -85,8 +84,7 @@ export function ExpertReviewCheckout({
         });
         setClientSecret(response.client_secret);
         setStatus("ready");
-      } catch (error) {
-        console.error("Error creating payment intent:", error);
+      } catch {
         setErrorMessage("Failed to initialize payment. Please try again.");
         setStatus("error");
       }

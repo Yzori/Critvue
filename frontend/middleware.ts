@@ -91,9 +91,8 @@ async function checkAuthentication(request: NextRequest): Promise<boolean> {
 
     // If response is OK (200), user is authenticated
     return response.ok;
-  } catch (error) {
+  } catch {
     // If there's an error (network, server down, etc.), assume not authenticated
-    console.error("Authentication check failed:", error);
     return false;
   }
 }

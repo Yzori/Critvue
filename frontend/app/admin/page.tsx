@@ -98,8 +98,8 @@ export default function AdminDashboardPage() {
           { id: 4, type: "application_rejected", message: "Application #APP-2024-0041 rejected", timestamp: "2 hours ago" },
           { id: 5, type: "user_joined", message: "New user registered: sarah@example.com", timestamp: "3 hours ago" },
         ]);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+      } catch {
+        // Failed to fetch dashboard data - silent fail
       } finally {
         setLoading(false);
       }

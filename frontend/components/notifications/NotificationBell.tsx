@@ -39,8 +39,8 @@ export function NotificationBell({ className }: NotificationBellProps) {
     try {
       const count = await getUnreadCount();
       setUnreadCount(count);
-    } catch (error) {
-      console.error("Failed to fetch unread count:", error);
+    } catch {
+      // Failed to fetch unread count - silent fail
     }
   }, []);
 

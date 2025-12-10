@@ -112,7 +112,7 @@ export function CommandPalette({
         title: "New Review Request",
         description: "Create a new review request",
         action: () => {
-          console.log("Navigate to new review");
+          // TODO: Navigate to new review
           onClose();
         },
         keywords: ["new", "create", "request", "review"],
@@ -124,7 +124,7 @@ export function CommandPalette({
         title: "Search All Reviews",
         description: "Browse all your reviews",
         action: () => {
-          console.log("Navigate to all reviews");
+          // TODO: Navigate to all reviews
           onClose();
         },
         keywords: ["search", "browse", "all", "reviews"],
@@ -141,7 +141,7 @@ export function CommandPalette({
           description: "Batch accept all pending reviews",
           badge: "3 eligible",
           action: () => {
-            console.log("Batch accept reviews");
+            // TODO: Batch accept reviews
             onClose();
           },
           keywords: ["accept", "approve", "batch", "all"],
@@ -154,7 +154,7 @@ export function CommandPalette({
           description: "Reviews awaiting your approval",
           badge: "5 pending",
           action: () => {
-            console.log("Navigate to pending");
+            // TODO: Navigate to pending
             onClose();
           },
           keywords: ["pending", "waiting", "actions", "urgent"],
@@ -172,7 +172,7 @@ export function CommandPalette({
           description: "Find reviews to claim",
           badge: "12 available",
           action: () => {
-            console.log("Navigate to marketplace");
+            // TODO: Navigate to marketplace
             onClose();
           },
           keywords: ["browse", "available", "marketplace", "claim"],
@@ -184,7 +184,7 @@ export function CommandPalette({
           title: "Continue Draft",
           description: "Resume your in-progress review",
           action: () => {
-            console.log("Continue draft");
+            // TODO: Continue draft
             onClose();
           },
           keywords: ["draft", "continue", "resume", "progress"],
@@ -196,7 +196,7 @@ export function CommandPalette({
           title: "View Earnings",
           description: "Track your reviewer income",
           action: () => {
-            console.log("Navigate to earnings");
+            // TODO: Navigate to earnings
             onClose();
           },
           keywords: ["earnings", "income", "money", "stats"],

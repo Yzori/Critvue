@@ -69,8 +69,7 @@ export default function MobileReviewerDashboard({ className }: MobileReviewerDas
     try {
       const response = await getActiveReviews(1, 20);
       setActiveReviews(response.items);
-    } catch (error) {
-      console.error("Failed to fetch active reviews:", error);
+    } catch {
       toast.error("Failed to load active reviews");
     } finally {
       setIsLoadingActive(false);
@@ -82,8 +81,7 @@ export default function MobileReviewerDashboard({ className }: MobileReviewerDas
     try {
       const response = await getSubmittedReviews(1, 20);
       setSubmittedReviews(response.items);
-    } catch (error) {
-      console.error("Failed to fetch submitted reviews:", error);
+    } catch {
       toast.error("Failed to load submitted reviews");
     } finally {
       setIsLoadingSubmitted(false);
@@ -95,8 +93,7 @@ export default function MobileReviewerDashboard({ className }: MobileReviewerDas
     try {
       const response = await getDashboardStats("reviewer", "week");
       setStats(response.stats as ReviewerStats);
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
+    } catch {
       // Don't show error toast for stats - non-critical
     } finally {
       setIsLoadingStats(false);

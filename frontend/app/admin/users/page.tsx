@@ -124,8 +124,7 @@ export default function AdminUsersPage() {
       setUsers(response.users);
       setTotal(response.total);
       setTotalPages(response.total_pages);
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
+    } catch {
       toast.error("Failed to load users");
     } finally {
       setLoading(false);

@@ -44,8 +44,8 @@ export default function SubscriptionStatusCard() {
         const data = await response.json();
         setSubscription(data);
       }
-    } catch (error) {
-      console.error("Failed to fetch subscription status:", error);
+    } catch {
+      // Failed to fetch subscription status - silent fail
     } finally {
       setLoading(false);
     }
@@ -74,8 +74,8 @@ export default function SubscriptionStatusCard() {
         const data = await response.json();
         window.location.href = data.portal_url;
       }
-    } catch (error) {
-      console.error("Failed to open customer portal:", error);
+    } catch {
+      // Failed to open customer portal - silent fail
     }
   };
 

@@ -65,8 +65,7 @@ export default function ApplicationStatusPage() {
           router.push('/apply/expert')
         }
       })
-      .catch(err => {
-        console.error('Failed to fetch application status:', err)
+      .catch(() => {
         setLoading(false)
       })
   }, [isAuthenticated, authLoading, router])

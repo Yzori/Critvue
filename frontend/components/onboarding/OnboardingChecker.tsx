@@ -25,9 +25,8 @@ export function OnboardingChecker() {
       if (!status.onboardingCompleted) {
         setShowOnboarding(true);
       }
-    } catch (error) {
+    } catch {
       // Silently fail - user might not have access or endpoint might fail
-      console.error("Failed to check onboarding status:", error);
     } finally {
       setHasChecked(true);
     }

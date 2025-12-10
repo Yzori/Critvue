@@ -88,8 +88,8 @@ function BillingSettingsContent() {
       if (synced.tier === "pro") {
         setSuccessMessage("Your Pro subscription is now active!");
       }
-    } catch (err) {
-      console.error("Error syncing subscription:", err);
+    } catch {
+      // Silent fail for sync
     } finally {
       setSyncLoading(false);
     }
@@ -110,8 +110,7 @@ function BillingSettingsContent() {
       if (statusRes.status === "fulfilled") setConnectStatus(statusRes.value);
       if (balanceRes.status === "fulfilled") setBalance(balanceRes.value);
       if (historyRes.status === "fulfilled") setPayoutHistory(historyRes.value);
-    } catch (err) {
-      console.error("Error fetching billing data:", err);
+    } catch {
       setError("Failed to load billing settings. Please try again.");
     } finally {
       setLoading(false);
@@ -123,8 +122,7 @@ function BillingSettingsContent() {
     try {
       const response = await createPortalSession(`${window.location.origin}/settings/billing`);
       window.location.href = response.portal_url;
-    } catch (err) {
-      console.error("Error creating portal session:", err);
+    } catch {
       setError("Failed to open subscription portal. Please try again.");
       setActionLoading(false);
     }
@@ -139,7 +137,6 @@ function BillingSettingsContent() {
       });
       window.location.href = response.onboarding_url;
     } catch (err: unknown) {
-      console.error("Error starting onboarding:", err);
       // Check for service unavailable (Connect not enabled)
       const status = (err as { status?: number })?.status;
       if (status === 503) {
@@ -156,8 +153,7 @@ function BillingSettingsContent() {
     try {
       const response = await getConnectDashboardLink();
       window.open(response.dashboard_url, "_blank");
-    } catch (err) {
-      console.error("Error getting dashboard link:", err);
+    } catch {
       setError("Failed to open Stripe dashboard. Please try again.");
     } finally {
       setActionLoading(false);

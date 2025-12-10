@@ -102,8 +102,7 @@ export default function InvitationsPage() {
           }
         }
         setChallengeDetails(details);
-      } catch (err) {
-        console.error("Error fetching invitations:", err);
+      } catch {
         setError("Failed to load invitations");
       } finally {
         setLoading(false);

@@ -76,7 +76,7 @@ export default function MobileDashboardPage() {
     if (activeRole === "creator") {
       getUrgentPendingCount()
         .then(data => setUrgentCount(data.count))
-        .catch(err => console.error("Failed to fetch urgent count:", err));
+        .catch(() => { /* Failed to fetch urgent count - non-critical */ });
     }
   }, [activeRole]);
 

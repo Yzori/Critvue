@@ -89,8 +89,7 @@ export function SkillsModal({
       await updateProfile({ specialty_tags: selectedSkills });
       onSkillsUpdated(selectedSkills);
       onOpenChange(false);
-    } catch (err) {
-      console.error("Error saving skills:", err);
+    } catch {
       setError("Failed to save skills. Please try again.");
     } finally {
       setSaving(false);

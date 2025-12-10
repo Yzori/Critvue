@@ -224,8 +224,6 @@ export default function PublicProfilePage({ params }: PageProps) {
       // Add tier badge at the beginning
       setBadges([tierBadge, ...transformedBadges]);
     } catch (err) {
-      console.error("Profile load error:", err);
-
       if (err instanceof ApiClientError) {
         if (err.status === 404) {
           setError({ type: "not_found", message: "Profile not found" });

@@ -111,8 +111,7 @@ export default function ReviewerHubPage() {
         } else {
           setCurrentSlot(combinedSlots[0] ?? null);
         }
-      } catch (err) {
-        console.error("Error fetching reviewer data:", err);
+      } catch {
         if (mode === "reviewer") {
           setError("Failed to load reviews. Please try again.");
         }
@@ -136,8 +135,7 @@ export default function ReviewerHubPage() {
         if (data.length > 0 && data[0]) {
           setCurrentPendingSlot(data[0]);
         }
-      } catch (err) {
-        console.error("Error fetching creator data:", err);
+      } catch {
         if (mode === "creator") {
           setError("Failed to load pending reviews. Please try again.");
         }
@@ -160,8 +158,7 @@ export default function ReviewerHubPage() {
       try {
         const requestData = await getReviewDetail(currentPendingSlot.review_request_id);
         setCurrentReviewRequest(requestData);
-      } catch (err) {
-        console.warn("Failed to fetch review request details:", err);
+      } catch {
         setCurrentReviewRequest(null);
       }
     };
@@ -216,8 +213,7 @@ export default function ReviewerHubPage() {
       setCurrentPendingSlot(remaining[0] ?? null);
       setIsAcceptModalOpen(false);
       toast.success("Review accepted successfully!");
-    } catch (err) {
-      console.error("Error accepting review:", err);
+    } catch (err: unknown) {
       toast.error(`Failed to accept review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
@@ -238,8 +234,7 @@ export default function ReviewerHubPage() {
       setCurrentPendingSlot(remaining[0] ?? null);
       setIsRejectModalOpen(false);
       toast.success("Review rejected successfully");
-    } catch (err) {
-      console.error("Error rejecting review:", err);
+    } catch (err: unknown) {
       toast.error(`Failed to reject review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
@@ -260,8 +255,7 @@ export default function ReviewerHubPage() {
       setCurrentPendingSlot(remaining[0] ?? null);
       setIsElaborationModalOpen(false);
       toast.success("Elaboration request sent! The reviewer has 48 hours to respond.");
-    } catch (err) {
-      console.error("Error requesting elaboration:", err);
+    } catch (err: unknown) {
       toast.error(`Failed to request elaboration: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);

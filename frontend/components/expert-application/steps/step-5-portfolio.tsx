@@ -342,7 +342,6 @@ export function Step5Portfolio({ onValidationChange }: Step5PortfolioProps) {
           URL.revokeObjectURL(preview)
         }
       } catch (error) {
-        console.error('Failed to upload file:', error)
         // Remove from UI state on error
         setUploadedFiles(prev => prev.filter(f => f.id !== fileId))
         if (preview) {

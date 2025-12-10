@@ -81,9 +81,8 @@ export default function ReviewerDashboard() {
         setActiveReviews(claimed);
         setSubmittedReviews(submitted);
         setCompletedReviews(accepted.slice(0, 5)); // Show last 5
-      } catch (err) {
+      } catch {
         if (!cancelled) {
-          console.error("[ReviewerDashboard] Error fetching dashboard:", err);
           setError("Failed to load dashboard. Please try again.");
         }
       } finally {
@@ -119,8 +118,8 @@ export default function ReviewerDashboard() {
       setActiveReviews(claimed);
       setSubmittedReviews(submitted);
       setCompletedReviews(accepted.slice(0, 5));
-    } catch (err) {
-      console.error("Error refreshing after abandon:", err);
+    } catch {
+      // Error refreshing after abandon - silent fail
     } finally {
       setLoading(false);
     }

@@ -155,8 +155,7 @@ export default function ChallengeDetailPage() {
           const stats = await getVoteStats(challengeId);
           setVoteStats(stats);
         }
-      } catch (err) {
-        console.error("Error fetching challenge:", err);
+      } catch {
         setError("Failed to load challenge. It may not exist or you may not have access.");
       } finally {
         setLoading(false);

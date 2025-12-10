@@ -20,7 +20,7 @@ export function SocialLogin({ disabled }: SocialLoginProps) {
 
   const handleGithubClick = () => {
     // GitHub OAuth - not yet implemented
-    console.log("GitHub OAuth not yet implemented");
+    // Will redirect to backend GitHub OAuth endpoint when available
   };
 
   return (

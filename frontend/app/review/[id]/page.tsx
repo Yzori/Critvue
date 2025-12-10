@@ -155,7 +155,6 @@ export default function ReviewDetailPage() {
       const data = await getReviewDetail(reviewId);
       setReview(data);
     } catch (err) {
-      console.error("Error fetching review:", err);
       setError(err instanceof Error ? err.message : "Failed to load review request");
     } finally {
       if (showLoading) setLoading(false);
@@ -399,8 +398,8 @@ export default function ReviewDetailPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title: review.title, text: review.description, url });
-      } catch (e) {
-        console.log("Share cancelled:", e);
+      } catch {
+        // Share cancelled - silent fail
       }
     } else {
       try {

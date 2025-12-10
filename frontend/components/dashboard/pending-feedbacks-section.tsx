@@ -72,7 +72,6 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
 
         setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching pending feedbacks:", err);
         setError(getErrorMessage(err));
         setIsLoading(false);
       }
@@ -99,7 +98,6 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
       // Show success message
       toast.success("Review accepted successfully!");
     } catch (err) {
-      console.error("Error accepting review:", err);
       toast.error(`Failed to accept review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
@@ -124,7 +122,6 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
       // Show success message
       toast.success("Review rejected successfully");
     } catch (err) {
-      console.error("Error rejecting review:", err);
       toast.error(`Failed to reject review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);

@@ -73,8 +73,7 @@ export function InviteReviewerModal({
     try {
       const response = await getReviewsWithOpenSlots();
       setReviews(response.items);
-    } catch (err) {
-      console.error("Failed to load reviews:", err);
+    } catch {
       setError("Failed to load your review requests");
     } finally {
       setLoading(false);
@@ -94,7 +93,6 @@ export function InviteReviewerModal({
       });
       setStep("success");
     } catch (err: unknown) {
-      console.error("Failed to send invitation:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to send invitation";
       setError(errorMessage);
       setStep("error");

@@ -480,17 +480,10 @@ export function ReviewStudioProvider({
       lastSaveRef.current = stateJson;
       dispatch({ type: "SET_LAST_SAVED", payload: new Date() });
     } catch (error) {
-      console.error("Failed to save draft:", error);
       let errorMessage = "Failed to save";
 
       if (error instanceof ApiClientError) {
         errorMessage = error.message;
-        console.error("API Error Details:",
-          "status=" + error.status,
-          "endpoint=" + error.endpoint,
-          "data=" + JSON.stringify(error.data),
-          "isRetryable=" + error.isRetryable()
-        );
 
         if (error.isNetworkError()) {
           errorMessage = "Network error - will retry automatically";
@@ -532,7 +525,6 @@ export function ReviewStudioProvider({
         } else {
           // Legacy SmartReviewDraft format - convert it
           // This handles old reviews that were saved before the studio format
-          console.log("Converting legacy SmartReviewDraft format to studio format");
           stateToLoad = draftToStudioState(loadedData as any, slotId, contentType);
         }
 
@@ -556,8 +548,8 @@ export function ReviewStudioProvider({
           lastSaveRef.current = JSON.stringify(stateToTrack);
         }
       }
-    } catch (error) {
-      console.log("No existing draft found, starting fresh");
+    } catch {
+      // No existing draft found, starting fresh
     }
   }, [slotId, contentType, isReadOnly]);
 

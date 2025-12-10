@@ -164,11 +164,9 @@ export function ShaderBackground({
 
     // Check for compilation errors
     if (!gl.getShaderParameter(vShader, gl.COMPILE_STATUS)) {
-      console.error("Vertex shader error:", gl.getShaderInfoLog(vShader));
       return false;
     }
     if (!gl.getShaderParameter(fShader, gl.COMPILE_STATUS)) {
-      console.error("Fragment shader error:", gl.getShaderInfoLog(fShader));
       return false;
     }
 
@@ -181,7 +179,6 @@ export function ShaderBackground({
     gl.linkProgram(program);
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      console.error("Program link error:", gl.getProgramInfoLog(program));
       return false;
     }
 

@@ -114,8 +114,8 @@ export default function ChallengesPage() {
             // Ignore errors
           }
         }
-      } catch (error) {
-        console.error("Error fetching challenges:", error);
+      } catch {
+        // Error fetching challenges - silent fail
       } finally {
         setLoading(false);
       }
@@ -156,8 +156,8 @@ export default function ChallengesPage() {
           );
         }
       }
-    } catch (error) {
-      console.error("Error claiming slot:", error);
+    } catch {
+      // Error claiming slot - silent fail
     } finally {
       setClaimingSlot(null);
     }

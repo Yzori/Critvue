@@ -88,8 +88,7 @@ export default function SecuritySettingsPage() {
     try {
       const data = await apiClient.get<Session[]>("/auth/sessions");
       setSessions(data);
-    } catch (error) {
-      console.error("Failed to fetch sessions:", error);
+    } catch {
       // Fallback to showing current session
       setSessions([
         {
@@ -154,7 +153,6 @@ export default function SecuritySettingsPage() {
       });
       setPasswordErrors({});
     } catch (error: unknown) {
-      console.error("Failed to change password:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to change password";
       toast.error(errorMessage);
     } finally {
@@ -168,8 +166,7 @@ export default function SecuritySettingsPage() {
       toast.success("Session revoked successfully");
       // Refresh sessions list
       await fetchSessions();
-    } catch (error) {
-      console.error("Failed to revoke session:", error);
+    } catch {
       toast.error("Failed to revoke session");
     }
   };
@@ -180,8 +177,7 @@ export default function SecuritySettingsPage() {
       toast.success(`Revoked ${result.revoked_count} session(s)`);
       // Refresh sessions list
       await fetchSessions();
-    } catch (error) {
-      console.error("Failed to revoke sessions:", error);
+    } catch {
       toast.error("Failed to revoke sessions");
     }
   };

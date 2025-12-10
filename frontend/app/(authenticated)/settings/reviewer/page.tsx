@@ -84,8 +84,7 @@ export default function ReviewerSettingsPage() {
       setIsListed(data.isListedAsReviewer);
       setAvailability(data.reviewerAvailability);
       setTagline(data.reviewerTagline || "");
-    } catch (error) {
-      console.error("Failed to load reviewer settings:", error);
+    } catch {
       toast.error("Failed to load settings");
     } finally {
       setIsLoading(false);
@@ -102,8 +101,7 @@ export default function ReviewerSettingsPage() {
       });
       setSettings(updated);
       toast.success("Settings saved successfully");
-    } catch (error) {
-      console.error("Failed to save settings:", error);
+    } catch {
       toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);

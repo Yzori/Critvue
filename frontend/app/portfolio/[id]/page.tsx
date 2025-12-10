@@ -186,8 +186,7 @@ export default function PublicPortfolioPage({ params }: PageProps) {
       }));
       setProjects(journeyProjects);
 
-    } catch (err) {
-      console.error("Failed to load portfolio:", err);
+    } catch {
       setError("Failed to load portfolio data. Please try again.");
     } finally {
       setLoading(false);
@@ -203,9 +202,8 @@ export default function PublicPortfolioPage({ params }: PageProps) {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
-      } catch (error) {
-        // User cancelled or error occurred
-        console.log("Share cancelled or failed:", error);
+      } catch {
+        // User cancelled or error occurred - silent fail
       }
     } else {
       // Fallback to clipboard

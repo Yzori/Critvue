@@ -353,8 +353,6 @@ export default function ProfilePage() {
         setEnhancedStats(enhancedStatsData);
       }
     } catch (err) {
-      console.error("Profile load error:", err);
-
       if (err instanceof ApiClientError) {
         if (err.status === 401) {
           setError({ type: "auth_required", message: "Authentication required" });
@@ -414,7 +412,7 @@ export default function ProfilePage() {
                         setProfileData((prev) => prev ? { ...prev, avatar_url: newAvatarUrl } : prev);
                         updateUserAvatar(newAvatarUrl);
                       }}
-                      onUploadError={(error) => console.error("Avatar upload error:", error)}
+                      onUploadError={() => { /* Avatar upload error - silent */ }}
                       tier={profileData.user_tier as UserTier}
                       fullName={profileData.full_name}
                     />

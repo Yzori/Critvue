@@ -220,8 +220,7 @@ export default function PortfolioPage() {
       }));
       setProjects(journeyProjects);
 
-    } catch (err) {
-      console.error("Failed to load portfolio:", err);
+    } catch {
       setError("Failed to load portfolio data. Please try again.");
       // Keep default data on error
     } finally {
@@ -251,8 +250,7 @@ export default function PortfolioPage() {
             }
           : null
       );
-    } catch (err) {
-      console.error("Failed to toggle featured:", err);
+    } catch {
       // Could show a toast notification here
     }
   };
@@ -266,9 +264,8 @@ export default function PortfolioPage() {
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
-      } catch (error) {
-        // User cancelled or error occurred
-        console.log("Share cancelled or failed:", error);
+      } catch {
+        // User cancelled or error occurred - silent fail
       }
     } else {
       // Fallback to clipboard

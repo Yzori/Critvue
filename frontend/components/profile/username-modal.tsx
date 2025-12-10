@@ -72,8 +72,7 @@ export function UsernameModal({
         available: result.available,
         reason: result.reason,
       });
-    } catch (err) {
-      console.error("Error checking username:", err);
+    } catch {
       setAvailability(null);
     } finally {
       setChecking(false);
@@ -116,8 +115,7 @@ export function UsernameModal({
       await updateProfile({ username });
       onUsernameUpdated(username);
       onOpenChange(false);
-    } catch (err) {
-      console.error("Error saving username:", err);
+    } catch {
       setError("Failed to save username. Please try again.");
     } finally {
       setSaving(false);

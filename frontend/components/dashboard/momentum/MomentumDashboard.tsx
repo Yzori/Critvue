@@ -170,7 +170,6 @@ export function MomentumDashboard({
         await Promise.all([karmaPromise, loadReviewerData()]);
       }
     } catch (err) {
-      console.error('Error loading dashboard data:', err);
       setError({
         message: getErrorMessage(err),
         isRetryable: isRetryableError(err),
@@ -206,8 +205,8 @@ export function MomentumDashboard({
 
       setFeaturedBadges(badges.filter(b => b.is_featured).slice(0, 3));
       setLeaderboardRank(ranking);
-    } catch (err) {
-      console.error('Error loading karma data:', err);
+    } catch {
+      // Error loading karma data - silent fail
     }
   }
 
@@ -540,12 +539,12 @@ function transformCreatorDataToKanban(
     rating: item.rating,
     primaryAction: {
       label: 'Accept',
-      onClick: () => console.log('Accept', item.slot_id),
+      onClick: () => { /* Accept action - to be implemented */ },
       variant: 'success',
     },
     secondaryAction: {
       label: 'Decline',
-      onClick: () => console.log('Decline', item.slot_id),
+      onClick: () => { /* Decline action - to be implemented */ },
     },
     onView: () => window.location.href = `/review/${item.review_request_id}`,
   }));

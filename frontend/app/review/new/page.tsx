@@ -125,8 +125,7 @@ export default function NewReviewPage() {
         if (!status.has_unlimited_reviews && status.reviews_remaining <= 0) {
           setQuotaExceeded(true);
         }
-      } catch (error) {
-        console.error("Failed to check subscription status:", error);
+      } catch {
         // Don't block the user if we can't check - the backend will enforce limits
       } finally {
         setIsCheckingQuota(false);
@@ -223,7 +222,6 @@ export default function NewReviewPage() {
         setCurrentStep(nextStep);
         showEncouragingMessage(currentStep);
       } catch (error) {
-        console.error("Failed to create draft review:", error);
         alert(`Failed to create review: ${getErrorMessage(error)}`);
       } finally {
         setIsSubmitting(false);
@@ -313,7 +311,6 @@ export default function NewReviewPage() {
         }, 2000);
       }
     } catch (error) {
-      console.error("Failed to submit review:", error);
       alert(`Failed to submit review: ${getErrorMessage(error)}`);
       setIsSubmitting(false);
     }
@@ -325,8 +322,8 @@ export default function NewReviewPage() {
     if (formState.reviewId) {
       try {
         await updateReview(formState.reviewId, { status: "pending" });
-      } catch (error) {
-        console.error("Failed to publish review after payment:", error);
+      } catch {
+        // Failed to publish review after payment - silent fail
       }
     }
     setShowPayment(false);

@@ -36,9 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Also cache user data in localStorage for quick access
         localStorage.setItem("user", JSON.stringify(userData));
-      } catch (error) {
+      } catch {
         // No valid session - user needs to login
-        console.log("No active session");
         clearAuthData();
       } finally {
         setIsLoading(false);
@@ -101,8 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Call backend to clear httpOnly cookies
       await logoutUser();
-    } catch (error) {
-      console.error("Logout error:", error);
+    } catch {
       // Continue with local cleanup even if backend call fails
     } finally {
       // Clear local user data
@@ -121,7 +119,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Token refresh is handled automatically in apiClient
     // when it receives a 401 response
     // This is a no-op but kept for API compatibility
-    console.log("Token refresh handled automatically by API client");
   }, []);
 
   /**

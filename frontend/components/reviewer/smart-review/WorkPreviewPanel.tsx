@@ -105,8 +105,8 @@ export function WorkPreviewPanel({
         await videoRef.current.requestPictureInPicture();
         setIsPiPActive(true);
       }
-    } catch (error) {
-      console.error('PiP error:', error);
+    } catch {
+      // PiP not supported or permission denied
     }
   }, []);
 

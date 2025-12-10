@@ -42,8 +42,7 @@ export default function ExpertApplicationPage() {
           }
         }
       })
-      .catch(err => {
-        console.error('Failed to check application status:', err)
+      .catch(() => {
         // On error, allow to continue (they might not be authenticated)
         setCheckingStatus(false)
 

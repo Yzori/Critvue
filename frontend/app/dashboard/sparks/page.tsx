@@ -101,8 +101,8 @@ export default function KarmaPage() {
       ]);
       setSummary(summaryData);
       setBreakdown(breakdownData);
-    } catch (error) {
-      console.error('Failed to fetch karma overview:', error);
+    } catch {
+      // Failed to fetch karma overview - silent fail
     } finally {
       setLoadingOverview(false);
     }
@@ -118,8 +118,8 @@ export default function KarmaPage() {
       ]);
       setEarnedBadges(earned);
       setAvailableBadges(available);
-    } catch (error) {
-      console.error('Failed to fetch badges:', error);
+    } catch {
+      // Failed to fetch badges - silent fail
     } finally {
       setLoadingBadges(false);
     }
@@ -136,8 +136,8 @@ export default function KarmaPage() {
       setLeaderboardData(leaderboard.rankings);
       setCurrentSeason(leaderboard.season);
       setUserRanking(ranking);
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
+    } catch {
+      // Leaderboard fetch failed - silent fail
     } finally {
       setLoadingLeaderboard(false);
     }
@@ -157,8 +157,8 @@ export default function KarmaPage() {
         setHistoryPage((p) => p + 1);
       }
       setHasMoreHistory(data.transactions.length === 20);
-    } catch (error) {
-      console.error('Failed to fetch karma history:', error);
+    } catch {
+      // Karma history fetch failed - silent fail
     } finally {
       setLoadingHistory(false);
     }
@@ -170,8 +170,8 @@ export default function KarmaPage() {
       await toggleBadgeFeatured(badgeId);
       // Refresh badges
       await fetchBadges();
-    } catch (error) {
-      console.error('Failed to toggle badge featured:', error);
+    } catch {
+      // Badge toggle failed - silent fail
     }
   };
 

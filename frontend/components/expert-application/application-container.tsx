@@ -119,7 +119,6 @@ export function ApplicationContainer() {
 
           if (!createResponse.ok) {
             const errorData = await createResponse.json()
-            console.error('Failed to create draft:', errorData)
             throw new Error(extractApiErrorMessage(errorData, 'Failed to create application'))
           }
 
@@ -143,7 +142,6 @@ export function ApplicationContainer() {
 
         if (!createResponse.ok) {
           const errorData = await createResponse.json()
-          console.error('Failed to create draft:', errorData)
           throw new Error(extractApiErrorMessage(errorData, 'Failed to create application'))
         }
 
@@ -165,7 +163,6 @@ export function ApplicationContainer() {
 
       if (!submitResponse.ok) {
         const errorData = await submitResponse.json()
-        console.error('Failed to submit application:', errorData)
         throw new Error(extractApiErrorMessage(errorData, 'Failed to submit application'))
       }
 
@@ -179,7 +176,6 @@ export function ApplicationContainer() {
         router.push('/apply/expert/status')
       }, 4000)
     } catch (error) {
-      console.error('Failed to submit application:', error)
       alert(`Failed to submit application: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }

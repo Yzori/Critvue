@@ -126,8 +126,7 @@ export function AvatarUpload({
 
       // Upload compressed file
       await uploadAvatar(compressed.file);
-    } catch (error) {
-      console.error("Compression error:", error);
+    } catch {
       setUploadState("error");
       setErrorMessage("Failed to process image");
       onUploadError?.("Failed to process image");
@@ -183,7 +182,6 @@ export function AvatarUpload({
         setUploadState("idle");
       }, 1500);
     } catch (error) {
-      console.error("Upload error:", error);
       setUploadState("error");
       setErrorMessage(error instanceof Error ? error.message : "Upload failed");
       onUploadError?.(error instanceof Error ? error.message : "Upload failed");

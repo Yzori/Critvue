@@ -112,8 +112,7 @@ export function ReviewEditor({
 
         // Reset to idle after 2 seconds
         setTimeout(() => setSaveStatus("idle"), 2000);
-      } catch (error) {
-        console.error("Auto-save failed:", error);
+      } catch {
         setSaveStatus("error");
         setTimeout(() => setSaveStatus("idle"), 3000);
       }
@@ -145,8 +144,7 @@ export function ReviewEditor({
       setSaveStatus("saved");
       setLastSaved(new Date());
       setTimeout(() => setSaveStatus("idle"), 2000);
-    } catch (error) {
-      console.error("Save failed:", error);
+    } catch {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     }
@@ -178,8 +176,7 @@ export function ReviewEditor({
 
       await submitReview(slotId, submission);
       onSubmitSuccess();
-    } catch (error) {
-      console.error("Submit failed:", error);
+    } catch {
       alert(
         "Failed to submit review. Please check your connection and try again."
       );
@@ -190,7 +187,6 @@ export function ReviewEditor({
   // Handle file upload
   const handleFileUpload = (files: File[]) => {
     // TODO: Implement actual file upload to server
-    console.log("Files to upload:", files);
     // For now, just simulate attachment
     const newAttachments = files.map((file) => ({
       file_url: URL.createObjectURL(file),

@@ -88,8 +88,7 @@ export function BatchAcceptButton({
 
       // Call success callback
       onSuccess?.();
-    } catch (error) {
-      console.error("Batch accept failed:", error);
+    } catch {
       toast.error("Failed to accept reviews", {
         description: "Please try accepting them individually.",
       });

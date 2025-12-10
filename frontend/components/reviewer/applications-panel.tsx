@@ -100,8 +100,7 @@ export function ApplicationsPanel({
       setError(null);
       const response = await getRequestApplications(reviewRequestId);
       setData(response);
-    } catch (err) {
-      console.error("Failed to fetch applications:", err);
+    } catch {
       setError("Failed to load applications");
     } finally {
       setLoading(false);
@@ -119,8 +118,7 @@ export function ApplicationsPanel({
       await acceptApplication(applicationId);
       await fetchApplications();
       onApplicationAccepted?.();
-    } catch (err: any) {
-      console.error("Failed to accept application:", err);
+    } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
       setProcessingId(null);
@@ -135,8 +133,7 @@ export function ApplicationsPanel({
       setShowRejectModal(null);
       setRejectReason("");
       await fetchApplications();
-    } catch (err: any) {
-      console.error("Failed to reject application:", err);
+    } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
       setProcessingId(null);

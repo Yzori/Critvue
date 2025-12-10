@@ -72,13 +72,11 @@ export default function ReviewAcceptancePage() {
           try {
             const requestData = await getReviewDetail(slotData.review_request_id);
             setReviewRequest(requestData);
-          } catch (reqErr) {
-            console.warn("Failed to fetch review request details:", reqErr);
+          } catch {
             // Don't fail the whole page if we can't get request details
           }
         }
       } catch (err) {
-        console.error("Failed to fetch review slot:", err);
         setError(getErrorMessage(err));
       } finally {
         setIsLoading(false);
@@ -109,15 +107,13 @@ export default function ReviewAcceptancePage() {
           feedback_text: data.feedback_text,
           is_anonymous: data.is_anonymous,
         });
-      } catch (ratingErr) {
-        // Log but don't fail the accept if rating submission fails
-        console.warn("Failed to submit reviewer rating:", ratingErr);
+      } catch {
+        // Don't fail the accept if rating submission fails
       }
 
       // Success - redirect to dashboard
       router.push("/dashboard?success=review-accepted");
     } catch (err) {
-      console.error("Failed to accept review:", err);
       alert(`Failed to accept review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
@@ -145,16 +141,14 @@ export default function ReviewAcceptancePage() {
             helpfulness_rating: data.helpfulness_rating,
             is_anonymous: data.is_anonymous,
           });
-        } catch (ratingErr) {
-          // Log but don't fail the reject if rating submission fails
-          console.warn("Failed to submit reviewer rating:", ratingErr);
+        } catch {
+          // Don't fail the reject if rating submission fails
         }
       }
 
       // Success - redirect to dashboard
       router.push("/dashboard?success=review-rejected");
     } catch (err) {
-      console.error("Failed to reject review:", err);
       alert(`Failed to reject review: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);

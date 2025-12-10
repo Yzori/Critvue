@@ -84,8 +84,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
       const response = await getActionsNeeded(1, 20);
       setPendingReviews(response.items);
       setUrgentCount(response.summary.critical_count);
-    } catch (error) {
-      console.error("Failed to fetch pending reviews:", error);
+    } catch {
       toast.error("Failed to load pending reviews");
     } finally {
       setIsLoadingActions(false);
@@ -97,8 +96,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
     try {
       const response = await getMyRequests(undefined, 1, 20);
       setMyRequests(response.items);
-    } catch (error) {
-      console.error("Failed to fetch requests:", error);
+    } catch {
       toast.error("Failed to load review requests");
     } finally {
       setIsLoadingRequests(false);
@@ -151,8 +149,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
       // Refresh data in background
       fetchPendingReviews();
       fetchMyRequests();
-    } catch (error) {
-      console.error("Failed to accept review:", error);
+    } catch (error: unknown) {
       toast.error(`Failed to accept: ${getErrorMessage(error)}`);
 
       // Revert optimistic update on error
@@ -177,8 +174,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
       // Refresh data in background
       fetchPendingReviews();
       fetchMyRequests();
-    } catch (error) {
-      console.error("Failed to reject review:", error);
+    } catch (error: unknown) {
       toast.error(`Failed to reject: ${getErrorMessage(error)}`);
 
       // Revert optimistic update on error

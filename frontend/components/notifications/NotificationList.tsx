@@ -60,8 +60,7 @@ export function NotificationList({
       });
 
       setNotifications(response.notifications);
-    } catch (err) {
-      console.error("Failed to fetch notifications:", err);
+    } catch {
       setError("Failed to load notifications");
     } finally {
       setIsLoading(false);
@@ -89,8 +88,8 @@ export function NotificationList({
 
       // Refresh list
       fetchNotifications();
-    } catch (err) {
-      console.error("Failed to handle notification click:", err);
+    } catch {
+      // Failed to handle notification click - silent fail
     }
   };
 
@@ -100,8 +99,8 @@ export function NotificationList({
       await markAllNotificationsRead();
       onNotificationRead?.();
       fetchNotifications();
-    } catch (err) {
-      console.error("Failed to mark all as read:", err);
+    } catch {
+      // Failed to mark all as read - silent fail
     }
   };
 
@@ -116,8 +115,8 @@ export function NotificationList({
       await deleteNotification(notificationId);
       onNotificationRead?.();
       fetchNotifications();
-    } catch (err) {
-      console.error("Failed to delete notification:", err);
+    } catch {
+      // Failed to delete notification - silent fail
     }
   };
 
