@@ -42,6 +42,7 @@ import { getErrorMessage } from "@/lib/api/client";
 import { AcceptReviewModal, type AcceptReviewData } from "./accept-review-modal";
 import { RejectReviewModal, type RejectReviewData } from "./reject-review-modal";
 import { toast } from "sonner";
+import { useAsync, useAsyncCallback, useToggle } from "@/hooks";
 
 interface PendingFeedbacksSectionProps {
   className?: string;
@@ -49,82 +50,62 @@ interface PendingFeedbacksSectionProps {
 
 export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionProps) {
   const router = useRouter();
-  const [pendingFeedbacks, setPendingFeedbacks] = React.useState<ReviewSlotWithRequest[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+
+  // Async state for pending feedbacks
+  const {
+    data: pendingFeedbacks,
+    isLoading,
+    error,
+    setData: setPendingFeedbacks,
+  } = useAsync(async () => {
+    const data = await getPendingReviewsForRequester();
+    return data;
+  });
 
   // Modal state
   const [selectedSlot, setSelectedSlot] = React.useState<ReviewSlotWithRequest | null>(null);
-  const [isAcceptModalOpen, setIsAcceptModalOpen] = React.useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { value: isAcceptModalOpen, setTrue: openAcceptModal, setFalse: closeAcceptModal } = useToggle(false);
+  const { value: isRejectModalOpen, setTrue: openRejectModal, setFalse: closeRejectModal } = useToggle(false);
 
-  // Fetch pending feedbacks
-  React.useEffect(() => {
-    const fetchPendingFeedbacks = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // Async callbacks for accept/reject
+  const {
+    isLoading: isSubmitting,
+    execute: executeAccept,
+  } = useAsyncCallback(async (data: AcceptReviewData) => {
+    if (!selectedSlot) return;
+    await acceptReviewSlot(selectedSlot.id, data);
+    setPendingFeedbacks(prev => prev?.filter(f => f.id !== selectedSlot.id) ?? null);
+    closeAcceptModal();
+    setSelectedSlot(null);
+    toast.success("Review accepted successfully!");
+  });
 
-        // Call the real API endpoint
-        const data = await getPendingReviewsForRequester();
-        setPendingFeedbacks(data);
-
-        setIsLoading(false);
-      } catch (err) {
-        setError(getErrorMessage(err));
-        setIsLoading(false);
-      }
-    };
-
-    fetchPendingFeedbacks();
-  }, []);
+  const {
+    execute: executeReject,
+  } = useAsyncCallback(async (data: RejectReviewData) => {
+    if (!selectedSlot) return;
+    await rejectReviewSlot(selectedSlot.id, data);
+    setPendingFeedbacks(prev => prev?.filter(f => f.id !== selectedSlot.id) ?? null);
+    closeRejectModal();
+    setSelectedSlot(null);
+    toast.success("Review rejected successfully");
+  });
 
   // Handle accept review
   const handleAccept = async (data: AcceptReviewData) => {
-    if (!selectedSlot) return;
-
     try {
-      setIsSubmitting(true);
-      await acceptReviewSlot(selectedSlot.id, data);
-
-      // Remove from list
-      setPendingFeedbacks(prev => prev.filter(f => f.id !== selectedSlot.id));
-
-      // Close modal
-      setIsAcceptModalOpen(false);
-      setSelectedSlot(null);
-
-      // Show success message
-      toast.success("Review accepted successfully!");
+      await executeAccept(data);
     } catch (err) {
       toast.error(`Failed to accept review: ${getErrorMessage(err)}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   // Handle reject review
   const handleReject = async (data: RejectReviewData) => {
-    if (!selectedSlot) return;
-
     try {
-      setIsSubmitting(true);
-      await rejectReviewSlot(selectedSlot.id, data);
-
-      // Remove from list
-      setPendingFeedbacks(prev => prev.filter(f => f.id !== selectedSlot.id));
-
-      // Close modal
-      setIsRejectModalOpen(false);
-      setSelectedSlot(null);
-
-      // Show success message
-      toast.success("Review rejected successfully");
+      await executeReject(data);
     } catch (err) {
       toast.error(`Failed to reject review: ${getErrorMessage(err)}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -210,7 +191,7 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
   }
 
   // Empty state
-  if (pendingFeedbacks.length === 0) {
+  if (!pendingFeedbacks || pendingFeedbacks.length === 0) {
     return (
       <div className={cn("rounded-2xl border border-border bg-card p-8 shadow-sm", className)}>
         <div className="flex flex-col items-center justify-center text-center space-y-4">
@@ -350,7 +331,7 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
                     variant="outline"
                     onClick={() => {
                       setSelectedSlot(feedback);
-                      setIsRejectModalOpen(true);
+                      openRejectModal();
                     }}
                     className="w-full border-red-500/30 text-red-600 hover:bg-red-500/5 hover:border-red-500 min-h-[44px]"
                   >
@@ -360,7 +341,7 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
                   <Button
                     onClick={() => {
                       setSelectedSlot(feedback);
-                      setIsAcceptModalOpen(true);
+                      openAcceptModal();
                     }}
                     className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[44px]"
                   >
@@ -388,7 +369,7 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
         <AcceptReviewModal
           isOpen={isAcceptModalOpen}
           onClose={() => {
-            setIsAcceptModalOpen(false);
+            closeAcceptModal();
             setSelectedSlot(null);
           }}
           onAccept={handleAccept}
@@ -402,7 +383,7 @@ export function PendingFeedbacksSection({ className }: PendingFeedbacksSectionPr
         <RejectReviewModal
           isOpen={isRejectModalOpen}
           onClose={() => {
-            setIsRejectModalOpen(false);
+            closeRejectModal();
             setSelectedSlot(null);
           }}
           onReject={handleReject}

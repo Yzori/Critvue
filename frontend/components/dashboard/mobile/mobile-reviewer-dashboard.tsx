@@ -28,12 +28,8 @@ import {
   getActiveReviews,
   getSubmittedReviews,
   getDashboardStats,
-  type ActiveReviewItem,
-  type SubmittedReviewItem,
   type ReviewerStats,
 } from "@/lib/api/dashboard";
-
-
 import {
   Clock,
   CheckCircle2,
@@ -44,6 +40,7 @@ import {
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAsync } from "@/hooks";
 
 type ReviewerTab = "active" | "submitted" | "completed";
 
@@ -54,69 +51,52 @@ interface MobileReviewerDashboardProps {
 export default function MobileReviewerDashboard({ className }: MobileReviewerDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState<ReviewerTab>("active");
-  const [activeReviews, setActiveReviews] = React.useState<ActiveReviewItem[]>([]);
-  const [submittedReviews, setSubmittedReviews] = React.useState<SubmittedReviewItem[]>([]);
-  const [stats, setStats] = React.useState<ReviewerStats | null>(null);
-  const [isLoadingActive, setIsLoadingActive] = React.useState(true);
-  const [isLoadingSubmitted, setIsLoadingSubmitted] = React.useState(true);
-  const [isLoadingStats, setIsLoadingStats] = React.useState(true);
+
+  // Async state for active reviews
+  const {
+    data: activeData,
+    isLoading: isLoadingActive,
+    refetch: fetchActiveReviews,
+  } = useAsync(async () => {
+    const response = await getActiveReviews(1, 20);
+    return response;
+  });
+
+  const activeReviews = activeData?.items ?? [];
+
+  // Async state for submitted reviews
+  const {
+    data: submittedData,
+    isLoading: isLoadingSubmitted,
+    refetch: fetchSubmittedReviews,
+  } = useAsync(async () => {
+    const response = await getSubmittedReviews(1, 20);
+    return response;
+  });
+
+  const submittedReviews = submittedData?.items ?? [];
+
+  // Async state for stats
+  const {
+    data: stats,
+    isLoading: isLoadingStats,
+    refetch: fetchStats,
+  } = useAsync(async () => {
+    const response = await getDashboardStats("reviewer", "week");
+    return response.stats as ReviewerStats;
+  });
 
   // Auto-refresh interval (30 seconds)
   const autoRefreshInterval = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch active reviews
-  const fetchActiveReviews = React.useCallback(async () => {
-    try {
-      const response = await getActiveReviews(1, 20);
-      setActiveReviews(response.items);
-    } catch {
-      toast.error("Failed to load active reviews");
-    } finally {
-      setIsLoadingActive(false);
-    }
-  }, []);
-
-  // Fetch submitted reviews
-  const fetchSubmittedReviews = React.useCallback(async () => {
-    try {
-      const response = await getSubmittedReviews(1, 20);
-      setSubmittedReviews(response.items);
-    } catch {
-      toast.error("Failed to load submitted reviews");
-    } finally {
-      setIsLoadingSubmitted(false);
-    }
-  }, []);
-
-  // Fetch reviewer stats
-  const fetchStats = React.useCallback(async () => {
-    try {
-      const response = await getDashboardStats("reviewer", "week");
-      setStats(response.stats as ReviewerStats);
-    } catch {
-      // Don't show error toast for stats - non-critical
-    } finally {
-      setIsLoadingStats(false);
-    }
-  }, []);
-
-  // Initial fetch
-  React.useEffect(() => {
-    fetchActiveReviews();
-    fetchSubmittedReviews();
-    fetchStats();
-  }, [fetchActiveReviews, fetchSubmittedReviews, fetchStats]);
-
   // Auto-refresh setup
   React.useEffect(() => {
-    // Set up auto-refresh every 30 seconds
     autoRefreshInterval.current = setInterval(() => {
       fetchActiveReviews();
       fetchSubmittedReviews();
       fetchStats();
     }, 30000);
 
-    // Cleanup on unmount
     return () => {
       if (autoRefreshInterval.current) {
         clearInterval(autoRefreshInterval.current);
@@ -146,10 +126,7 @@ export default function MobileReviewerDashboard({ className }: MobileReviewerDas
 
   // Calculate earnings
   const totalEarnings = stats?.total_earned || 0;
-  const activeEarnings = activeReviews.reduce((sum, r) => sum + r.earnings_potential, 0);
   const pendingEarnings = submittedReviews.reduce((sum, r) => sum + r.payment_amount, 0);
-
-  const isLoading = isLoadingActive || isLoadingSubmitted || isLoadingStats;
 
   return (
     <div className={cn("space-y-4 pb-20", className)}>

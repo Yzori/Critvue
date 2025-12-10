@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Search, X, Sparkles, Check } from "lucide-react";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SKILL_CATEGORIES } from "@/lib/expert-application/types";
 import { updateProfile } from "@/lib/api/profile";
+import { useSelection, useAsyncCallback } from "@/hooks";
 
 export interface SkillsModalProps {
   open: boolean;
@@ -35,21 +36,40 @@ export function SkillsModal({
   currentSkills,
   onSkillsUpdated,
 }: SkillsModalProps) {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(currentSkills);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Selection state with max 10 skills
+  const {
+    selectedArray: selectedSkills,
+    isSelected,
+    toggle: toggleSkill,
+    setSelection,
+    clear: clearSelection,
+    count: selectedCount,
+    isMaxReached,
+  } = useSelection<string>(currentSkills, { maxSelection: 10 });
+
+  // Filter state
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+
+  // Async save state
+  const {
+    isLoading: saving,
+    error,
+    execute: executeSave,
+  } = useAsyncCallback(async () => {
+    await updateProfile({ specialty_tags: selectedSkills });
+    onSkillsUpdated(selectedSkills);
+    onOpenChange(false);
+  });
 
   // Reset state when modal opens
   React.useEffect(() => {
     if (open) {
-      setSelectedSkills(currentSkills);
+      setSelection(currentSkills);
       setSearchQuery("");
       setSelectedCategory(null);
-      setError(null);
     }
-  }, [open, currentSkills]);
+  }, [open, currentSkills, setSelection]);
 
   // Filter skills based on search and category
   const filteredSkills = useMemo(() => {
@@ -67,37 +87,16 @@ export function SkillsModal({
     );
   }, [searchQuery, selectedCategory]);
 
-  const handleToggleSkill = (skill: string) => {
-    setSelectedSkills((prev) => {
-      if (prev.includes(skill)) {
-        return prev.filter((s) => s !== skill);
-      }
-      if (prev.length >= 10) return prev; // Max 10 skills
-      return [...prev, skill];
-    });
-  };
-
   const handleRemoveSkill = (skill: string) => {
-    setSelectedSkills((prev) => prev.filter((s) => s !== skill));
+    toggleSkill(skill);
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-
-    try {
-      await updateProfile({ specialty_tags: selectedSkills });
-      onSkillsUpdated(selectedSkills);
-      onOpenChange(false);
-    } catch {
-      setError("Failed to save skills. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    await executeSave();
   };
 
   const hasChanges =
-    JSON.stringify(selectedSkills.sort()) !==
+    JSON.stringify([...selectedSkills].sort()) !==
     JSON.stringify([...currentSkills].sort());
 
   return (
@@ -118,15 +117,15 @@ export function SkillsModal({
 
         <div className="flex-1 overflow-hidden flex flex-col gap-4 py-4">
           {/* Selected Skills */}
-          {selectedSkills.length > 0 && (
+          {selectedCount > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-foreground">
-                  Your Skills ({selectedSkills.length}/10)
+                  Your Skills ({selectedCount}/10)
                 </span>
-                {selectedSkills.length > 0 && (
+                {selectedCount > 0 && (
                   <button
-                    onClick={() => setSelectedSkills([])}
+                    onClick={clearSelection}
                     className="text-xs text-muted-foreground hover:text-foreground"
                   >
                     Clear all
@@ -155,7 +154,7 @@ export function SkillsModal({
           )}
 
           {/* Empty state prompt */}
-          {selectedSkills.length === 0 && (
+          {selectedCount === 0 && (
             <div className="text-center py-3 px-4 rounded-lg bg-muted/50 border border-dashed border-border">
               <p className="text-sm text-muted-foreground">
                 Select skills below to get better recommendations
@@ -209,17 +208,17 @@ export function SkillsModal({
           <div className="flex-1 overflow-y-auto min-h-0 rounded-lg border border-border p-3">
             <div className="grid gap-2 sm:grid-cols-2">
               {filteredSkills.map(({ skill, icon }) => {
-                const isSelected = selectedSkills.includes(skill);
-                const canAdd = selectedSkills.length < 10;
+                const skillIsSelected = isSelected(skill);
+                const canAdd = !isMaxReached;
 
                 return (
                   <button
                     key={skill}
-                    onClick={() => handleToggleSkill(skill)}
-                    disabled={!isSelected && !canAdd}
+                    onClick={() => toggleSkill(skill)}
+                    disabled={!skillIsSelected && !canAdd}
                     className={cn(
                       "flex items-center justify-between rounded-lg border p-3 text-left text-sm transition-all",
-                      isSelected
+                      skillIsSelected
                         ? "border-accent-blue bg-accent-blue/5 text-accent-blue"
                         : canAdd
                           ? "border-border hover:border-accent-blue/50 hover:bg-muted/50"
@@ -230,7 +229,7 @@ export function SkillsModal({
                       <span className="mr-2">{icon}</span>
                       {skill}
                     </span>
-                    {isSelected && (
+                    {skillIsSelected && (
                       <Check className="size-4 text-accent-blue" />
                     )}
                   </button>

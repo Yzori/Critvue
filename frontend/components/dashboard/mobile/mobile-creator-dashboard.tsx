@@ -30,8 +30,6 @@ import { PullToRefresh } from "./pull-to-refresh";
 import {
   getActionsNeeded,
   getMyRequests,
-  type PendingReviewItem,
-  type MyRequestItem,
 } from "@/lib/api/dashboard";
 import {
   acceptReview,
@@ -54,6 +52,7 @@ import {
   BatchAcceptButton,
   SelectionModeToggle,
 } from "./batch-accept-button";
+import { useAsync, useToggle, useSelectionMode } from "@/hooks";
 
 type DashboardTab = "actions" | "requests" | "activity";
 
@@ -64,60 +63,52 @@ interface MobileCreatorDashboardProps {
 export default function MobileCreatorDashboard({ className }: MobileCreatorDashboardProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = React.useState<DashboardTab>("actions");
-  const [pendingReviews, setPendingReviews] = React.useState<PendingReviewItem[]>([]);
-  const [myRequests, setMyRequests] = React.useState<MyRequestItem[]>([]);
-  const [isLoadingActions, setIsLoadingActions] = React.useState(true);
-  const [isLoadingRequests, setIsLoadingRequests] = React.useState(true);
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [urgentCount, setUrgentCount] = React.useState(0);
+  const { setTrue: startRefresh, setFalse: stopRefresh } = useToggle(false);
 
-  // Batch selection state
-  const [selectionMode, setSelectionMode] = React.useState(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  // Async state for pending reviews (actions needed)
+  const {
+    data: actionsData,
+    isLoading: isLoadingActions,
+    refetch: fetchPendingReviews,
+    setData: setActionsData,
+  } = useAsync(async () => {
+    const response = await getActionsNeeded(1, 20);
+    return response;
+  });
+
+  const pendingReviews = actionsData?.items ?? [];
+  const urgentCount = actionsData?.summary.critical_count ?? 0;
+
+  // Async state for my requests
+  const {
+    data: requestsData,
+    isLoading: isLoadingRequests,
+    refetch: fetchMyRequests,
+  } = useAsync(async () => {
+    const response = await getMyRequests(undefined, 1, 20);
+    return response;
+  });
+
+  const myRequests = requestsData?.items ?? [];
+
+  // Selection mode for batch operations
+  const {
+    isSelectionMode: selectionMode,
+    enterSelectionMode,
+    exitSelectionMode,
+    selection: { selectedArray: selectedIds, toggle: toggleSelection, clear: clearSelection },
+  } = useSelectionMode<number>();
 
   // Auto-refresh interval (30 seconds)
   const autoRefreshInterval = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch pending reviews (actions needed)
-  const fetchPendingReviews = React.useCallback(async () => {
-    try {
-      const response = await getActionsNeeded(1, 20);
-      setPendingReviews(response.items);
-      setUrgentCount(response.summary.critical_count);
-    } catch {
-      toast.error("Failed to load pending reviews");
-    } finally {
-      setIsLoadingActions(false);
-    }
-  }, []);
-
-  // Fetch my requests
-  const fetchMyRequests = React.useCallback(async () => {
-    try {
-      const response = await getMyRequests(undefined, 1, 20);
-      setMyRequests(response.items);
-    } catch {
-      toast.error("Failed to load review requests");
-    } finally {
-      setIsLoadingRequests(false);
-    }
-  }, []);
-
-  // Initial fetch
-  React.useEffect(() => {
-    fetchPendingReviews();
-    fetchMyRequests();
-  }, [fetchPendingReviews, fetchMyRequests]);
-
   // Auto-refresh setup
   React.useEffect(() => {
-    // Set up auto-refresh every 30 seconds
     autoRefreshInterval.current = setInterval(() => {
       fetchPendingReviews();
       fetchMyRequests();
     }, 30000);
 
-    // Cleanup on unmount
     return () => {
       if (autoRefreshInterval.current) {
         clearInterval(autoRefreshInterval.current);
@@ -127,32 +118,28 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
 
   // Handle pull-to-refresh
   const handleRefresh = async () => {
-    setIsRefreshing(true);
+    startRefresh();
     await Promise.all([fetchPendingReviews(), fetchMyRequests()]);
-    setIsRefreshing(false);
+    stopRefresh();
     toast.success("Dashboard updated");
   };
 
   // Handle accept review with optimistic update
   const handleAcceptReview = async (slotId: number) => {
     // Optimistic update - remove from list immediately
-    setPendingReviews(prev => prev.filter(r => r.slot_id !== slotId));
-    setUrgentCount(prev => Math.max(0, prev - 1));
+    setActionsData(prev => prev ? {
+      ...prev,
+      items: prev.items.filter(r => r.slot_id !== slotId),
+      summary: { ...prev.summary, critical_count: Math.max(0, prev.summary.critical_count - 1) }
+    } : null);
 
     try {
-      await acceptReview(slotId, {
-        helpful_rating: 5,
-      });
-
+      await acceptReview(slotId, { helpful_rating: 5 });
       toast.success("Review accepted!");
-
-      // Refresh data in background
       fetchPendingReviews();
       fetchMyRequests();
     } catch (error: unknown) {
       toast.error(`Failed to accept: ${getErrorMessage(error)}`);
-
-      // Revert optimistic update on error
       fetchPendingReviews();
     }
   };
@@ -160,24 +147,22 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
   // Handle reject review with optimistic update
   const handleRejectReview = async (slotId: number) => {
     // Optimistic update - remove from list immediately
-    setPendingReviews(prev => prev.filter(r => r.slot_id !== slotId));
-    setUrgentCount(prev => Math.max(0, prev - 1));
+    setActionsData(prev => prev ? {
+      ...prev,
+      items: prev.items.filter(r => r.slot_id !== slotId),
+      summary: { ...prev.summary, critical_count: Math.max(0, prev.summary.critical_count - 1) }
+    } : null);
 
     try {
       await rejectReview(slotId, {
         rejection_reason: "low_quality",
         rejection_notes: "Review did not meet expectations",
       });
-
       toast.success("Review rejected");
-
-      // Refresh data in background
       fetchPendingReviews();
       fetchMyRequests();
     } catch (error: unknown) {
       toast.error(`Failed to reject: ${getErrorMessage(error)}`);
-
-      // Revert optimistic update on error
       fetchPendingReviews();
     }
   };
@@ -189,33 +174,18 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
 
   // Handle batch selection toggle
   const handleToggleSelectionMode = () => {
-    setSelectionMode(!selectionMode);
-    setSelectedIds([]);
-  };
-
-  // Handle card selection
-  const handleCardSelect = (slotId: number) => {
-    setSelectedIds(prev => {
-      if (prev.includes(slotId)) {
-        return prev.filter(id => id !== slotId);
-      } else {
-        return [...prev, slotId];
-      }
-    });
+    if (selectionMode) {
+      exitSelectionMode();
+    } else {
+      enterSelectionMode();
+    }
   };
 
   // Handle batch accept success
   const handleBatchAcceptSuccess = () => {
-    setSelectionMode(false);
-    setSelectedIds([]);
+    exitSelectionMode();
     fetchPendingReviews();
     fetchMyRequests();
-  };
-
-  // Handle clear selection
-  const handleClearSelection = () => {
-    setSelectedIds([]);
-    setSelectionMode(false);
   };
 
   return (
@@ -360,7 +330,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
                         )}
                         onClick={() => {
                           if (selectionMode) {
-                            handleCardSelect(review.slot_id);
+                            toggleSelection(review.slot_id);
                           }
                         }}
                       >
@@ -415,7 +385,7 @@ export default function MobileCreatorDashboard({ className }: MobileCreatorDashb
             <BatchAcceptButton
               selectedIds={selectedIds}
               onSuccess={handleBatchAcceptSuccess}
-              onClear={handleClearSelection}
+              onClear={() => { clearSelection(); exitSelectionMode(); }}
             />
           )}
 
