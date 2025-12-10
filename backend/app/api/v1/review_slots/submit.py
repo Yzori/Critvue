@@ -25,7 +25,7 @@ from app.services.notification_triggers import (
     notify_review_rejected,
     notify_elaboration_requested,
 )
-from app.services.payment_service import PaymentService
+from app.services.payments import PaymentService
 from app.core.exceptions import (
     NotOwnerError,
     InvalidInputError,

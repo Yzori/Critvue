@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User, UserTier
 from app.models.tier_milestone import TierMilestone
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
+from app.core.exceptions import NotFoundError
 
 
 class TierService:
@@ -227,7 +228,7 @@ class TierService:
         """
         user = await self.db.get(User, user_id)
         if not user:
-            raise ValueError(f"User {user_id} not found")
+            raise NotFoundError(resource="User", resource_id=user_id)
 
         # Record old tier
         old_tier = user.user_tier
@@ -454,7 +455,7 @@ class TierService:
         """
         user = await self.db.get(User, user_id)
         if not user:
-            raise ValueError(f"User {user_id} not found")
+            raise NotFoundError(resource="User", resource_id=user_id)
 
         # Set expert application flag
         user.expert_application_approved = True

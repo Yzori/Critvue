@@ -24,12 +24,18 @@ from app.schemas.committee import (
 )
 from app.models.notification import NotificationType, NotificationPriority
 from app.services.notification_service import NotificationService
+from app.constants.committee import (
+    REAPPLICATION_COOLDOWN_DAYS,
+    ESCALATION_DAYS,
+)
+from app.core.exceptions import (
+    NotFoundError,
+    InvalidInputError,
+    InvalidStateError,
+    AlreadyExistsError,
+)
 
 logger = logging.getLogger(__name__)
-
-# Constants
-REAPPLICATION_COOLDOWN_DAYS = 90  # 3 months
-ESCALATION_DAYS = 7  # Auto-escalate after 7 days
 
 
 class CommitteeService:
@@ -166,8 +172,8 @@ class CommitteeService:
         # Check member's current claims
         current_claims = await self.get_committee_member_current_claims(committee_member.id)
         if current_claims >= committee_member.max_concurrent_reviews:
-            raise ValueError(
-                f"You have reached your maximum concurrent reviews ({committee_member.max_concurrent_reviews})"
+            raise InvalidStateError(
+                message=f"You have reached your maximum concurrent reviews ({committee_member.max_concurrent_reviews})"
             )
 
         # Get application
@@ -176,10 +182,14 @@ class CommitteeService:
         application = app_result.scalar_one_or_none()
 
         if not application:
-            raise ValueError("Application not found")
+            raise NotFoundError(resource="Application", resource_id=application_id)
 
         if application.status not in [ApplicationStatus.SUBMITTED.value, ApplicationStatus.RESUBMITTED.value]:
-            raise ValueError(f"Application is not available for review (status: {application.status})")
+            raise InvalidStateError(
+                message=f"Application is not available for review",
+                current_state=application.status,
+                allowed_states=["submitted", "resubmitted"]
+            )
 
         # Check if already claimed by someone else
         existing_claim_stmt = select(ApplicationReview).where(
@@ -190,7 +200,7 @@ class CommitteeService:
         existing_claim = existing_result.scalar_one_or_none()
 
         if existing_claim:
-            raise ValueError("Application is already claimed by another reviewer")
+            raise AlreadyExistsError(resource="Claim", message="Application is already claimed by another reviewer")
 
         # Check if this member already voted on this application
         already_voted_stmt = select(ApplicationReview).where(
@@ -200,7 +210,7 @@ class CommitteeService:
         )
         already_voted_result = await self.db.execute(already_voted_stmt)
         if already_voted_result.scalar_one_or_none():
-            raise ValueError("You have already voted on this application")
+            raise AlreadyExistsError(resource="Vote", message="You have already voted on this application")
 
         # Create the review/claim
         review = ApplicationReview(
@@ -238,7 +248,7 @@ class CommitteeService:
         review = result.scalar_one_or_none()
 
         if not review:
-            raise ValueError("You don't have an active claim on this application")
+            raise NotFoundError(resource="Claim", message="You don't have an active claim on this application")
 
         # Update review status
         review.status = ReviewStatus.RELEASED
@@ -286,11 +296,11 @@ class CommitteeService:
         review = result.scalar_one_or_none()
 
         if not review:
-            raise ValueError("You don't have an active claim on this application")
+            raise NotFoundError(resource="Claim", message="You don't have an active claim on this application")
 
         # Validate rejection reason if rejecting
         if vote_request.vote == Vote.REJECT.value and not vote_request.rejection_reason_id:
-            raise ValueError("Rejection reason is required when rejecting")
+            raise InvalidInputError(message="Rejection reason is required when rejecting")
 
         if vote_request.rejection_reason_id:
             reason_stmt = select(RejectionReason).where(
@@ -299,7 +309,7 @@ class CommitteeService:
             )
             reason_result = await self.db.execute(reason_stmt)
             if not reason_result.scalar_one_or_none():
-                raise ValueError("Invalid rejection reason")
+                raise NotFoundError(resource="Rejection reason", resource_id=vote_request.rejection_reason_id)
 
         # Update the review with the vote
         review.status = ReviewStatus.VOTED

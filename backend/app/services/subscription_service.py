@@ -9,6 +9,11 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.models.user import User, SubscriptionTier, SubscriptionStatus
+from app.core.exceptions import (
+    InvalidStateError,
+    InvalidInputError,
+    InternalError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -194,11 +199,11 @@ class SubscriptionService:
             ValueError: If Stripe is not configured or user already has active subscription
         """
         if not settings.STRIPE_API_KEY or not settings.STRIPE_PRO_PRICE_ID:
-            raise ValueError("Stripe is not properly configured")
+            raise InternalError(message="Stripe is not properly configured")
 
         # Check if user already has an active subscription
         if user.subscription_tier == SubscriptionTier.PRO and user.subscription_status == SubscriptionStatus.ACTIVE:
-            raise ValueError("User already has an active Pro subscription")
+            raise InvalidStateError(message="User already has an active Pro subscription")
 
         try:
             # Create or retrieve Stripe customer
@@ -247,7 +252,7 @@ class SubscriptionService:
 
         except stripe.StripeError as e:
             logger.error(f"Stripe error creating checkout session: {str(e)}")
-            raise ValueError(f"Failed to create checkout session: {str(e)}")
+            raise InternalError(message=f"Failed to create checkout session: {str(e)}")
 
     @staticmethod
     async def create_portal_session(user: User, return_url: str) -> Dict[str, str]:
@@ -265,7 +270,7 @@ class SubscriptionService:
             ValueError: If user doesn't have a Stripe customer ID
         """
         if not user.stripe_customer_id:
-            raise ValueError("User does not have a Stripe customer account")
+            raise InvalidStateError(message="User does not have a Stripe customer account")
 
         try:
             session = stripe.billing_portal.Session.create(
@@ -281,7 +286,7 @@ class SubscriptionService:
 
         except stripe.StripeError as e:
             logger.error(f"Stripe error creating portal session: {str(e)}")
-            raise ValueError(f"Failed to create portal session: {str(e)}")
+            raise InternalError(message=f"Failed to create portal session: {str(e)}")
 
     @staticmethod
     async def handle_subscription_created(subscription: Dict[str, Any], db: AsyncSession) -> None:

@@ -9,6 +9,7 @@ from app.models.leaderboard import Season, LeaderboardEntry, SeasonType, Leaderb
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 from app.models.sparks_transaction import SparksAction as KarmaAction, SparksTransaction as KarmaTransaction
+from app.core.exceptions import NotFoundError, InvalidStateError, InvalidInputError
 
 
 class LeaderboardService:
@@ -73,7 +74,7 @@ class LeaderboardService:
         """Activate a season and deactivate others of same type."""
         season = await self.db.get(Season, season_id)
         if not season:
-            raise ValueError(f"Season {season_id} not found")
+            raise NotFoundError(resource="Season", resource_id=season_id)
 
         # Deactivate other seasons of same type
         stmt = select(Season).where(
@@ -294,10 +295,10 @@ class LeaderboardService:
         """
         season = await self.db.get(Season, season_id)
         if not season:
-            raise ValueError(f"Season {season_id} not found")
+            raise NotFoundError(resource="Season", resource_id=season_id)
 
         if season.is_finalized:
-            raise ValueError(f"Season {season_id} already finalized")
+            raise InvalidStateError(message=f"Season {season_id} already finalized")
 
         reward_recipients = []
 
@@ -418,7 +419,7 @@ class LeaderboardService:
             name = f"{quarter_names[(start_date.month - 1) // 3 + 1]} {start_date.year}"
 
         else:
-            raise ValueError(f"Unknown season type: {season_type}")
+            raise InvalidInputError(message=f"Unknown season type: {season_type}")
 
         # Create and activate
         season = await self.create_season(

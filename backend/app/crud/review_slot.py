@@ -956,7 +956,7 @@ async def process_auto_accepts(db: AsyncSession) -> int:
             # Release payment for expert reviews with escrowed funds
             if slot.requires_payment and slot.payment_status == PaymentStatus.ESCROWED.value:
                 try:
-                    from app.services.payment_service import PaymentService
+                    from app.services.payments import PaymentService
 
                     # Get reviewer
                     reviewer = await db.get(User, slot.reviewer_id)

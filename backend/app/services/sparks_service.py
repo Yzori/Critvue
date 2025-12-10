@@ -10,6 +10,7 @@ from app.constants import SparksConfig
 from app.models.sparks_transaction import SparksAction, SparksTransaction
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
+from app.core.exceptions import NotFoundError
 
 
 class SparksService:
@@ -129,7 +130,7 @@ class SparksService:
         """
         user = await self.db.get(User, user_id)
         if not user:
-            raise ValueError(f"User {user_id} not found")
+            raise NotFoundError(resource="User", resource_id=user_id)
 
         # Calculate points based on action
         if custom_points is not None:
@@ -206,7 +207,7 @@ class SparksService:
         """
         user = await self.db.get(User, user_id)
         if not user:
-            raise ValueError(f"User {user_id} not found")
+            raise NotFoundError(resource="User", resource_id=user_id)
 
         # Check if warnings have expired
         warning_count = user.warning_count or 0

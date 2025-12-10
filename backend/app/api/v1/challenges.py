@@ -42,7 +42,7 @@ from app.schemas.challenge import (
     SlotClaimResponse,
     OpenSlotChallengeResponse,
 )
-from app.services.challenge_service import ChallengeService
+from app.services.challenges import ChallengeService
 from app.core.logging_config import security_logger
 
 router = APIRouter(prefix="/challenges", tags=["Challenges"])

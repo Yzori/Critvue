@@ -11,6 +11,11 @@ from app.models.admin_audit_log import AdminAuditLog, AdminAction
 from app.models.expert_application import ExpertApplication, ApplicationStatus
 from app.models.challenge import Challenge, ChallengeStatus
 from app.models.review_slot import ReviewSlot
+from app.core.exceptions import (
+    UserNotFoundError,
+    ForbiddenError,
+    InvalidStateError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -115,11 +120,11 @@ class AdminUsersService:
         """Change a user's role"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         # Prevent admin self-demotion (could lock themselves out)
         if user.id == admin.id and user.role == UserRole.ADMIN and new_role != UserRole.ADMIN:
-            raise ValueError("Cannot demote yourself from admin role")
+            raise ForbiddenError(message="Cannot demote yourself from admin role")
 
         old_role = user.role
         user.role = new_role
@@ -154,16 +159,16 @@ class AdminUsersService:
         """Ban a user"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         if user.id == admin.id:
-            raise ValueError("Cannot ban yourself")
+            raise ForbiddenError(message="Cannot ban yourself")
 
         if user.role == UserRole.ADMIN:
-            raise ValueError("Cannot ban another admin")
+            raise ForbiddenError(message="Cannot ban another admin")
 
         if user.is_banned:
-            raise ValueError("User is already banned")
+            raise InvalidStateError(message="User is already banned", current_state="banned")
 
         user.is_banned = True
         user.banned_at = datetime.utcnow()
@@ -202,10 +207,10 @@ class AdminUsersService:
         """Unban a user"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         if not user.is_banned:
-            raise ValueError("User is not banned")
+            raise InvalidStateError(message="User is not banned", current_state="not_banned")
 
         old_reason = user.ban_reason
         user.is_banned = False
@@ -240,16 +245,20 @@ class AdminUsersService:
         """Suspend a user temporarily"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         if user.id == admin.id:
-            raise ValueError("Cannot suspend yourself")
+            raise ForbiddenError(message="Cannot suspend yourself")
 
         if user.role == UserRole.ADMIN:
-            raise ValueError("Cannot suspend another admin")
+            raise ForbiddenError(message="Cannot suspend another admin")
 
         if user.is_banned:
-            raise ValueError("Cannot suspend a banned user")
+            raise InvalidStateError(
+                message="Cannot suspend a banned user",
+                current_state="banned",
+                allowed_states=["active"]
+            )
 
         now = datetime.utcnow()
         user.is_suspended = True
@@ -287,10 +296,10 @@ class AdminUsersService:
         """Remove suspension from a user"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         if not user.is_suspended:
-            raise ValueError("User is not suspended")
+            raise InvalidStateError(message="User is not suspended", current_state="not_suspended")
 
         old_reason = user.suspension_reason
         old_until = user.suspended_until
@@ -329,10 +338,10 @@ class AdminUsersService:
         """Manually verify a user's email"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         if user.is_verified:
-            raise ValueError("User is already verified")
+            raise InvalidStateError(message="User is already verified", current_state="verified")
 
         user.is_verified = True
         user.updated_at = datetime.utcnow()
@@ -363,7 +372,7 @@ class AdminUsersService:
         """Adjust a user's sparks points"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         old_sparks = user.sparks_points
         user.sparks_points = max(0, user.sparks_points + amount)  # Prevent negative sparks
@@ -403,7 +412,7 @@ class AdminUsersService:
         """Override a user's tier"""
         user = await self.get_user_by_id(user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError(resource="User", resource_id=user_id)
 
         old_tier = user.user_tier
         user.user_tier = new_tier

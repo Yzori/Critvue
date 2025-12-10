@@ -26,7 +26,7 @@ from app.api.deps import get_current_user
 from app.models.user import User
 from app.core.exceptions import InvalidInputError, InternalError, ExternalServiceError
 from app.models.review_request import ReviewRequest, ReviewType
-from app.services.payment_service import PaymentService
+from app.services.payments import PaymentService
 from app.schemas.payment import (
     CreatePaymentIntentRequest,
     CreatePaymentIntentResponse,

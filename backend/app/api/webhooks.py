@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.db.session import get_db
 from app.services.subscription_service import SubscriptionService
-from app.services.payment_service import PaymentService
+from app.services.payments import PaymentService
 from app.core.exceptions import InvalidInputError, InternalError
 
 logger = logging.getLogger(__name__)

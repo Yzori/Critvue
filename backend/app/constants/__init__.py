@@ -27,6 +27,13 @@ from app.constants.sparks import (
     SparksConfig,
 )
 
+# New constant modules
+from app.constants import challenges
+from app.constants import leaderboard
+from app.constants import payments
+from app.constants import committee
+from app.constants import review_slots
+
 __all__ = [
     # Time constants
     "SECONDS_PER_MINUTE",
@@ -42,4 +49,10 @@ __all__ = [
     "PaginationDefaults",
     # Sparks
     "SparksConfig",
+    # New modules
+    "challenges",
+    "leaderboard",
+    "payments",
+    "committee",
+    "review_slots",
 ]

@@ -10,6 +10,13 @@ from app.models.reviewer_rating import ReviewerRating, ReviewerStats
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 from app.models.review_request import ReviewRequest
+from app.core.exceptions import (
+    NotFoundError,
+    InvalidInputError,
+    InvalidStateError,
+    AlreadyExistsError,
+    ForbiddenError,
+)
 
 
 class ReviewerRatingService:
@@ -62,25 +69,29 @@ class ReviewerRatingService:
             (helpfulness_rating, "helpfulness")
         ]:
             if not 1 <= rating <= 5:
-                raise ValueError(f"{name} rating must be between 1 and 5")
+                raise InvalidInputError(message=f"{name} rating must be between 1 and 5")
 
         # Get the review slot
         slot = await self.db.get(ReviewSlot, review_slot_id)
         if not slot:
-            raise ValueError(f"Review slot {review_slot_id} not found")
+            raise NotFoundError(resource="Review slot", resource_id=review_slot_id)
 
         # Get the review request to verify ownership
         review_request = await self.db.get(ReviewRequest, slot.review_request_id)
         if not review_request:
-            raise ValueError("Review request not found")
+            raise NotFoundError(resource="Review request", resource_id=slot.review_request_id)
 
         # Verify this user owns the review request
         if review_request.user_id != requester_id:
-            raise ValueError("You can only rate reviewers for your own review requests")
+            raise ForbiddenError(message="You can only rate reviewers for your own review requests")
 
         # Verify slot has been submitted or accepted (review is complete)
         if slot.status not in [ReviewSlotStatus.SUBMITTED.value, ReviewSlotStatus.ACCEPTED.value, ReviewSlotStatus.REJECTED.value]:
-            raise ValueError("Can only rate reviewers after they submit their review")
+            raise InvalidStateError(
+                message="Can only rate reviewers after they submit their review",
+                current_state=slot.status,
+                allowed_states=["submitted", "accepted", "rejected"]
+            )
 
         # Check for existing rating
         stmt = select(ReviewerRating).where(
@@ -89,7 +100,7 @@ class ReviewerRatingService:
         result = await self.db.execute(stmt)
         existing = result.scalar_one_or_none()
         if existing:
-            raise ValueError("You have already rated this reviewer for this review")
+            raise AlreadyExistsError(resource="Rating", message="You have already rated this reviewer for this review")
 
         # Calculate overall rating (weighted average)
         # Quality is most important for reviewers
