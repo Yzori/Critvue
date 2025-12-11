@@ -1,15 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
+import { useModal, useAsync } from "@/hooks";
 import {
   Search,
-  Filter,
   MoreHorizontal,
   Ban,
   Clock,
   UserCog,
-  Shield,
   Star,
   CheckCircle,
   XCircle,
@@ -19,7 +17,7 @@ import {
   RefreshCw,
   Download,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -80,90 +78,60 @@ const tierColors: Record<UserTier, { bg: string; text: string }> = {
 };
 
 export default function AdminUsersPage() {
-  // State
-  const [users, setUsers] = React.useState<UserListItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [total, setTotal] = React.useState(0);
-  const [totalPages, setTotalPages] = React.useState(0);
-
   // Filters
   const [searchQuery, setSearchQuery] = React.useState("");
   const [roleFilter, setRoleFilter] = React.useState<UserRole | "all">("all");
   const [statusFilter, setStatusFilter] = React.useState<"all" | "banned" | "suspended" | "verified" | "unverified">("all");
   const [page, setPage] = React.useState(1);
-  const [pageSize] = React.useState(20);
+  const pageSize = 20;
 
-  // Modal states
-  const [selectedUser, setSelectedUser] = React.useState<UserListItem | null>(null);
-  const [showBanModal, setShowBanModal] = React.useState(false);
-  const [showSuspendModal, setShowSuspendModal] = React.useState(false);
-  const [showRoleModal, setShowRoleModal] = React.useState(false);
-  const [showDetailDrawer, setShowDetailDrawer] = React.useState(false);
+  // Modal states using useModal hook
+  const banModal = useModal<UserListItem>();
+  const suspendModal = useModal<UserListItem>();
+  const roleModal = useModal<UserListItem>();
+  const detailDrawer = useModal<UserListItem>();
 
-  // Fetch users
-  const fetchUsers = React.useCallback(async () => {
-    try {
-      setLoading(true);
+  // Fetch users with useAsync
+  const fetchUsersData = React.useCallback(async () => {
+    const params: UserSearchParams = {
+      page,
+      page_size: pageSize,
+      sort_by: "created_at",
+      sort_order: "desc",
+    };
 
-      const params: UserSearchParams = {
-        page,
-        page_size: pageSize,
-        sort_by: "created_at",
-        sort_order: "desc",
-      };
+    if (searchQuery) params.query = searchQuery;
+    if (roleFilter !== "all") params.role = roleFilter;
 
-      if (searchQuery) params.query = searchQuery;
-      if (roleFilter !== "all") params.role = roleFilter;
+    if (statusFilter === "banned") params.is_banned = true;
+    else if (statusFilter === "suspended") params.is_suspended = true;
+    else if (statusFilter === "verified") params.is_verified = true;
+    else if (statusFilter === "unverified") params.is_verified = false;
 
-      if (statusFilter === "banned") params.is_banned = true;
-      else if (statusFilter === "suspended") params.is_suspended = true;
-      else if (statusFilter === "verified") params.is_verified = true;
-      else if (statusFilter === "unverified") params.is_verified = false;
-
-      const response = await adminUsersApi.listUsers(params);
-      setUsers(response.users);
-      setTotal(response.total);
-      setTotalPages(response.total_pages);
-    } catch {
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
+    return await adminUsersApi.listUsers(params);
   }, [page, pageSize, searchQuery, roleFilter, statusFilter]);
 
-  React.useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const { data: usersData, isLoading: loading, refetch: fetchUsers } = useAsync(fetchUsersData, {
+    onError: () => toast.error("Failed to load users"),
+  });
+
+  const users = usersData?.users || [];
+  const total = usersData?.total || 0;
+  const totalPages = usersData?.total_pages || 0;
 
   // Debounced search
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setPage(1);
-      fetchUsers();
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
   // Handle actions
-  const handleBan = (user: UserListItem) => {
-    setSelectedUser(user);
-    setShowBanModal(true);
-  };
-
-  const handleSuspend = (user: UserListItem) => {
-    setSelectedUser(user);
-    setShowSuspendModal(true);
-  };
-
-  const handleRoleChange = (user: UserListItem) => {
-    setSelectedUser(user);
-    setShowRoleModal(true);
-  };
-
-  const handleViewDetails = (user: UserListItem) => {
-    setSelectedUser(user);
-    setShowDetailDrawer(true);
-  };
+  const handleBan = (user: UserListItem) => banModal.open(user);
+  const handleSuspend = (user: UserListItem) => suspendModal.open(user);
+  const handleRoleChange = (user: UserListItem) => roleModal.open(user);
+  const handleViewDetails = (user: UserListItem) => detailDrawer.open(user);
 
   const handleUnban = async (user: UserListItem) => {
     try {
@@ -445,32 +413,34 @@ export default function AdminUsersPage() {
 
       {/* Modals */}
       <BanUserModal
-        user={selectedUser}
-        isOpen={showBanModal}
-        onClose={() => { setShowBanModal(false); setSelectedUser(null); }}
+        user={banModal.data || null}
+        isOpen={banModal.isOpen}
+        onClose={banModal.close}
         onSuccess={fetchUsers}
       />
       <SuspendUserModal
-        user={selectedUser}
-        isOpen={showSuspendModal}
-        onClose={() => { setShowSuspendModal(false); setSelectedUser(null); }}
+        user={suspendModal.data || null}
+        isOpen={suspendModal.isOpen}
+        onClose={suspendModal.close}
         onSuccess={fetchUsers}
       />
       <RoleChangeModal
-        user={selectedUser}
-        isOpen={showRoleModal}
-        onClose={() => { setShowRoleModal(false); setSelectedUser(null); }}
+        user={roleModal.data || null}
+        isOpen={roleModal.isOpen}
+        onClose={roleModal.close}
         onSuccess={fetchUsers}
       />
       <UserDetailDrawer
-        userId={selectedUser?.id || null}
-        isOpen={showDetailDrawer}
-        onClose={() => { setShowDetailDrawer(false); setSelectedUser(null); }}
+        userId={detailDrawer.data?.id || null}
+        isOpen={detailDrawer.isOpen}
+        onClose={detailDrawer.close}
         onAction={(action) => {
-          setShowDetailDrawer(false);
-          if (action === "ban") handleBan(selectedUser!);
-          else if (action === "suspend") handleSuspend(selectedUser!);
-          else if (action === "role") handleRoleChange(selectedUser!);
+          detailDrawer.close();
+          if (detailDrawer.data) {
+            if (action === "ban") handleBan(detailDrawer.data);
+            else if (action === "suspend") handleSuspend(detailDrawer.data);
+            else if (action === "role") handleRoleChange(detailDrawer.data);
+          }
         }}
       />
     </div>

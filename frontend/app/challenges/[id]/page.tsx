@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useToggle, useFormState } from "@/hooks";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -105,16 +106,24 @@ export default function ChallengeDetailPage() {
   const [challenge, setChallenge] = React.useState<Challenge | null>(null);
   const [voteStats, setVoteStats] = React.useState<ChallengeVoteStats | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [voting, setVoting] = React.useState(false);
-  const [joining, setJoining] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Operation loading states
+  const votingState = useToggle();
+  const joiningState = useToggle();
+  const submittingState = useToggle();
+
+  // Selection and modal states
   const [selectedEntry, setSelectedEntry] = React.useState<number | null>(null);
-  const [showVoteConfirm, setShowVoteConfirm] = React.useState(false);
-  const [showJoinConfirm, setShowJoinConfirm] = React.useState(false);
-  const [showEntryForm, setShowEntryForm] = React.useState(false);
-  const [entryTitle, setEntryTitle] = React.useState("");
-  const [entryDescription, setEntryDescription] = React.useState("");
-  const [submitting, setSubmitting] = React.useState(false);
+  const voteConfirmModal = useToggle();
+  const joinConfirmModal = useToggle();
+  const entryFormModal = useToggle();
+
+  // Entry form state
+  const entryForm = useFormState({ title: "", description: "" });
+
+  // Convenient alias
+  const submitting = submittingState.value;
 
   // Fetch challenge data
   React.useEffect(() => {
@@ -172,7 +181,7 @@ export default function ChallengeDetailPage() {
     if (!selectedEntry || !challenge) return;
 
     try {
-      setVoting(true);
+      votingState.setTrue();
       await castVote(challenge.id, { entryId: selectedEntry });
 
       // Refresh challenge data
@@ -182,12 +191,12 @@ export default function ChallengeDetailPage() {
       const stats = await getVoteStats(challengeId);
       setVoteStats(stats);
 
-      setShowVoteConfirm(false);
+      voteConfirmModal.setFalse();
       setSelectedEntry(null);
     } catch (err: any) {
       setError(err.message || "Failed to cast vote");
     } finally {
-      setVoting(false);
+      votingState.setFalse();
     }
   };
 
@@ -196,43 +205,42 @@ export default function ChallengeDetailPage() {
     if (!challenge) return;
 
     try {
-      setJoining(true);
+      joiningState.setTrue();
       await joinCategoryChallenge(challenge.id);
 
       // Refresh challenge data
       const updatedChallenge = await getChallenge(challengeId);
       setChallenge(updatedChallenge);
 
-      setShowJoinConfirm(false);
+      joinConfirmModal.setFalse();
     } catch (err: any) {
       setError(err.message || "Failed to join challenge");
     } finally {
-      setJoining(false);
+      joiningState.setFalse();
     }
   };
 
   // Handle create entry
   const handleCreateEntry = async () => {
-    if (!challenge || !entryTitle.trim()) return;
+    if (!challenge || !entryForm.values.title.trim()) return;
 
     try {
-      setSubmitting(true);
+      submittingState.setTrue();
       await createEntry(challenge.id, {
-        title: entryTitle,
-        description: entryDescription || undefined,
+        title: entryForm.values.title,
+        description: entryForm.values.description || undefined,
       });
 
       // Refresh challenge data
       const updatedChallenge = await getChallenge(challengeId);
       setChallenge(updatedChallenge);
 
-      setShowEntryForm(false);
-      setEntryTitle("");
-      setEntryDescription("");
+      entryFormModal.setFalse();
+      entryForm.reset();
     } catch (err: any) {
       setError(err.message || "Failed to create entry");
     } finally {
-      setSubmitting(false);
+      submittingState.setFalse();
     }
   };
 
@@ -241,7 +249,7 @@ export default function ChallengeDetailPage() {
     if (!challenge) return;
 
     try {
-      setSubmitting(true);
+      submittingState.setTrue();
       await submitEntry(challenge.id);
 
       // Refresh challenge data
@@ -250,7 +258,7 @@ export default function ChallengeDetailPage() {
     } catch (err: any) {
       setError(err.message || "Failed to submit entry");
     } finally {
-      setSubmitting(false);
+      submittingState.setFalse();
     }
   };
 
@@ -622,7 +630,7 @@ export default function ChallengeDetailPage() {
                       {canJoin && (
                         <Button
                           className="bg-gradient-to-r from-accent-blue to-cyan-500 hover:opacity-90 text-white"
-                          onClick={() => setShowJoinConfirm(true)}
+                          onClick={joinConfirmModal.setTrue}
                         >
                           <Users className="w-4 h-4 mr-2" />
                           Join Challenge
@@ -632,7 +640,7 @@ export default function ChallengeDetailPage() {
                       {isParticipant && challenge.status === "active" && !challenge.currentUserEntry && (
                         <Button
                           className="bg-accent-blue hover:bg-accent-blue/90 text-white"
-                          onClick={() => setShowEntryForm(true)}
+                          onClick={entryFormModal.setTrue}
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Create Entry
@@ -767,7 +775,7 @@ export default function ChallengeDetailPage() {
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-accent-blue to-cyan-500 hover:opacity-90 text-white shadow-lg"
-                onClick={() => setShowVoteConfirm(true)}
+                onClick={voteConfirmModal.setTrue}
               >
                 <Vote className="w-5 h-5 mr-2" />
                 Confirm Vote
@@ -798,7 +806,7 @@ export default function ChallengeDetailPage() {
       </div>
 
       {/* Vote Confirmation Dialog */}
-      <Dialog open={showVoteConfirm} onOpenChange={setShowVoteConfirm}>
+      <Dialog open={voteConfirmModal.value} onOpenChange={voteConfirmModal.set}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Confirm Your Vote</DialogTitle>
@@ -807,22 +815,22 @@ export default function ChallengeDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowVoteConfirm(false)}>
+            <Button variant="outline" onClick={voteConfirmModal.setFalse}>
               Cancel
             </Button>
             <Button
               className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleVote}
-              disabled={voting}
+              disabled={votingState.value}
             >
-              {voting ? "Voting..." : "Cast Vote"}
+              {votingState.value ? "Voting..." : "Cast Vote"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Join Confirmation Dialog */}
-      <Dialog open={showJoinConfirm} onOpenChange={setShowJoinConfirm}>
+      <Dialog open={joinConfirmModal.value} onOpenChange={joinConfirmModal.set}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Join Challenge</DialogTitle>
@@ -831,22 +839,22 @@ export default function ChallengeDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowJoinConfirm(false)}>
+            <Button variant="outline" onClick={joinConfirmModal.setFalse}>
               Cancel
             </Button>
             <Button
               className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleJoin}
-              disabled={joining}
+              disabled={joiningState.value}
             >
-              {joining ? "Joining..." : "Join Challenge"}
+              {joiningState.value ? "Joining..." : "Join Challenge"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Entry Form Dialog */}
-      <Dialog open={showEntryForm} onOpenChange={setShowEntryForm}>
+      <Dialog open={entryFormModal.value} onOpenChange={entryFormModal.set}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Create Your Entry</DialogTitle>
@@ -859,8 +867,8 @@ export default function ChallengeDetailPage() {
               <Label htmlFor="entryTitle" className="text-foreground">Title</Label>
               <Input
                 id="entryTitle"
-                value={entryTitle}
-                onChange={(e) => setEntryTitle(e.target.value)}
+                value={entryForm.values.title}
+                onChange={(e) => entryForm.setValue("title", e.target.value)}
                 placeholder="Give your entry a title"
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground"
               />
@@ -869,8 +877,8 @@ export default function ChallengeDetailPage() {
               <Label htmlFor="entryDescription" className="text-foreground">Description (optional)</Label>
               <Textarea
                 id="entryDescription"
-                value={entryDescription}
-                onChange={(e) => setEntryDescription(e.target.value)}
+                value={entryForm.values.description}
+                onChange={(e) => entryForm.setValue("description", e.target.value)}
                 placeholder="Describe your entry..."
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 rows={4}
@@ -878,13 +886,13 @@ export default function ChallengeDetailPage() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowEntryForm(false)}>
+            <Button variant="outline" onClick={entryFormModal.setFalse}>
               Cancel
             </Button>
             <Button
               className="bg-accent-blue hover:bg-accent-blue/90 text-white"
               onClick={handleCreateEntry}
-              disabled={submitting || !entryTitle.trim()}
+              disabled={submitting || !entryForm.values.title.trim()}
             >
               {submitting ? "Creating..." : "Create Entry"}
             </Button>

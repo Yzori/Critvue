@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useModal, useToggle } from "@/hooks";
 import { motion } from "framer-motion";
 import {
   RefreshCw,
@@ -40,24 +41,28 @@ type TabType = "queue" | "my-reviews";
 export default function AdminApplicationsPage() {
   const { user } = useAuth();
 
-  // State
+  // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("queue");
+
+  // Data state
   const [stats, setStats] = useState<CommitteeStats | null>(null);
   const [queue, setQueue] = useState<ApplicationQueueItem[]>([]);
   const [claimedApplications, setClaimedApplications] = useState<ApplicationDetail[]>([]);
   const [rejectionReasons, setRejectionReasons] = useState<RejectionReason[]>([]);
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationDetail | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [claimingId, setClaimingId] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isClaimed, setIsClaimed] = useState(false);
+
+  // Modal state using useModal
+  const reviewModal = useModal<{ application: ApplicationDetail; isClaimed: boolean }>();
+
+  // Loading states using useToggle
+  const loadingState = useToggle(true);
+  const submittingState = useToggle();
+  const [claimingId, setClaimingId] = useState<number | null>(null);
 
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
-      setIsLoading(true);
+      loadingState.setTrue();
       setError(null);
 
       const [statsData, queueData, reasonsData, myReviewsData] = await Promise.all([
@@ -74,9 +79,9 @@ export default function AdminApplicationsPage() {
     } catch {
       setError("Failed to load data. Please try again.");
     } finally {
-      setIsLoading(false);
+      loadingState.setFalse();
     }
-  }, []);
+  }, [loadingState]);
 
   useEffect(() => {
     if (user?.role === "admin") {
@@ -91,9 +96,7 @@ export default function AdminApplicationsPage() {
       await adminApi.claimApplication(applicationId);
 
       const details = await adminApi.getApplication(applicationId);
-      setSelectedApplication(details);
-      setIsClaimed(true);
-      setIsModalOpen(true);
+      reviewModal.open({ application: details, isClaimed: true });
 
       const queueData = await adminApi.getQueue();
       setQueue(queueData.applications);
@@ -110,10 +113,8 @@ export default function AdminApplicationsPage() {
   const handleViewDetails = async (applicationId: number) => {
     try {
       const details = await adminApi.getApplication(applicationId);
-      setSelectedApplication(details);
       const hasClaimedReview = details.reviews?.some((r) => r.status === "claimed");
-      setIsClaimed(hasClaimedReview);
-      setIsModalOpen(true);
+      reviewModal.open({ application: details, isClaimed: hasClaimedReview });
     } catch {
       toast.error("Failed to load application details");
     }
@@ -121,11 +122,11 @@ export default function AdminApplicationsPage() {
 
   // Handle vote submission
   const handleVote = async (vote: VoteRequest) => {
-    if (!selectedApplication) return;
+    if (!reviewModal.data?.application) return;
 
     try {
-      setIsSubmitting(true);
-      const result = await adminApi.submitVote(selectedApplication.id, vote);
+      submittingState.setTrue();
+      const result = await adminApi.submitVote(reviewModal.data.application.id, vote);
 
       if (result.decision) {
         toast.success(`Application ${result.decision.decision.toLowerCase()}!`);
@@ -133,34 +134,35 @@ export default function AdminApplicationsPage() {
         toast.success("Vote submitted successfully");
       }
 
-      setIsModalOpen(false);
-      setSelectedApplication(null);
+      reviewModal.close();
       await fetchData();
     } catch {
       toast.error("Failed to submit vote");
     } finally {
-      setIsSubmitting(false);
+      submittingState.setFalse();
     }
   };
 
   // Handle release
   const handleRelease = async () => {
-    if (!selectedApplication) return;
+    if (!reviewModal.data?.application) return;
 
     try {
-      setIsSubmitting(true);
-      await adminApi.releaseApplication(selectedApplication.id);
+      submittingState.setTrue();
+      await adminApi.releaseApplication(reviewModal.data.application.id);
 
       toast.success("Application released back to queue");
-      setIsModalOpen(false);
-      setSelectedApplication(null);
+      reviewModal.close();
       await fetchData();
     } catch {
       toast.error("Failed to release application");
     } finally {
-      setIsSubmitting(false);
+      submittingState.setFalse();
     }
   };
+
+  // Convenient alias
+  const isLoading = loadingState.value;
 
   // Initial loading
   if (isLoading && !stats) {
@@ -333,17 +335,14 @@ export default function AdminApplicationsPage() {
 
       {/* Review Modal */}
       <ApplicationReviewModal
-        application={selectedApplication}
+        application={reviewModal.data?.application || null}
         rejectionReasons={rejectionReasons}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedApplication(null);
-        }}
+        isOpen={reviewModal.isOpen}
+        onClose={reviewModal.close}
         onVote={handleVote}
         onRelease={handleRelease}
-        isSubmitting={isSubmitting}
-        isClaimed={isClaimed}
+        isSubmitting={submittingState.value}
+        isClaimed={reviewModal.data?.isClaimed || false}
       />
     </div>
   );

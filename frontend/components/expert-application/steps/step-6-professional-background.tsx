@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useToggle, useModal } from '@/hooks'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, FileText, GraduationCap, Award, Briefcase, Users,
@@ -29,9 +30,9 @@ export function Step6ProfessionalBackground({ onValidationChange }: Step6Profess
   const setCredentialsMode = useExpertApplicationStore((state) => state.setCredentialsMode)
 
   const [activeTab, setActiveTab] = useState<'credentials' | 'references'>('credentials')
-  const [showEducationForm, setShowEducationForm] = useState(false)
-  const [showCertificationForm, setShowCertificationForm] = useState(false)
-  const [showEmploymentForm, setShowEmploymentForm] = useState(false)
+  const educationForm = useToggle()
+  const certificationForm = useToggle()
+  const employmentForm = useToggle()
 
   const mode = credentials.mode
 
@@ -109,12 +110,9 @@ export function Step6ProfessionalBackground({ onValidationChange }: Step6Profess
                 key="detailed"
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                showEducationForm={showEducationForm}
-                setShowEducationForm={setShowEducationForm}
-                showCertificationForm={showCertificationForm}
-                setShowCertificationForm={setShowCertificationForm}
-                showEmploymentForm={showEmploymentForm}
-                setShowEmploymentForm={setShowEmploymentForm}
+                educationForm={educationForm}
+                certificationForm={certificationForm}
+                employmentForm={employmentForm}
               />
             )}
           </AnimatePresence>
@@ -148,8 +146,8 @@ function QuickModeContent() {
   const removePortfolioLink = useExpertApplicationStore((state) => state.removePortfolioLink)
   const updatePortfolioLink = useExpertApplicationStore((state) => state.updatePortfolioLink)
   const references = useExpertApplicationStore((state) => state.references)
-  const [editingReferenceId, setEditingReferenceId] = useState<string | null>(null)
-  const [showAddReference, setShowAddReference] = useState(false)
+  const editReferenceModal = useModal<string>()
+  const addReferenceForm = useToggle()
 
   // Get skill categories for platform suggestions
   const skillCategories = [...new Set(skills.map(s => s.category))]
@@ -206,16 +204,16 @@ function QuickModeContent() {
           <div className="space-y-2">
             {references.map((ref) => (
               <div key={ref.id}>
-                {editingReferenceId === ref.id ? (
+                {editReferenceModal.data === ref.id ? (
                   <QuickReferenceForm
                     existingReference={ref}
-                    onClose={() => setEditingReferenceId(null)}
-                    onSave={() => setEditingReferenceId(null)}
+                    onClose={editReferenceModal.close}
+                    onSave={editReferenceModal.close}
                   />
                 ) : (
                   <QuickReferenceItem
                     reference={ref}
-                    onEdit={() => setEditingReferenceId(ref.id)}
+                    onEdit={() => editReferenceModal.open(ref.id)}
                   />
                 )}
               </div>
@@ -224,15 +222,15 @@ function QuickModeContent() {
         )}
 
         {/* Add Reference Form/Button */}
-        {showAddReference ? (
+        {addReferenceForm.value ? (
           <QuickReferenceForm
-            onClose={() => setShowAddReference(false)}
-            onSave={() => setShowAddReference(false)}
+            onClose={addReferenceForm.setFalse}
+            onSave={addReferenceForm.setFalse}
           />
         ) : (
           <Button
             variant="outline"
-            onClick={() => setShowAddReference(true)}
+            onClick={addReferenceForm.setTrue}
             className="w-full border-2 border-dashed"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -484,21 +482,15 @@ function QuickReferenceForm({
 function DetailedModeContent({
   activeTab,
   setActiveTab,
-  showEducationForm,
-  setShowEducationForm,
-  showCertificationForm,
-  setShowCertificationForm,
-  showEmploymentForm,
-  setShowEmploymentForm
+  educationForm,
+  certificationForm,
+  employmentForm
 }: {
   activeTab: 'credentials' | 'references'
   setActiveTab: (tab: 'credentials' | 'references') => void
-  showEducationForm: boolean
-  setShowEducationForm: (show: boolean) => void
-  showCertificationForm: boolean
-  setShowCertificationForm: (show: boolean) => void
-  showEmploymentForm: boolean
-  setShowEmploymentForm: (show: boolean) => void
+  educationForm: ReturnType<typeof useToggle>
+  certificationForm: ReturnType<typeof useToggle>
+  employmentForm: ReturnType<typeof useToggle>
 }) {
   const credentials = useExpertApplicationStore((state) => state.credentials)
 
@@ -568,11 +560,11 @@ function DetailedModeContent({
               count={credentials.education.length}
               required
               items={credentials.education}
-              onAdd={() => setShowEducationForm(true)}
+              onAdd={educationForm.setTrue}
               renderItem={(edu: Education) => <EducationItem key={edu.id} education={edu} />}
             />
-            {showEducationForm && (
-              <EducationForm onClose={() => setShowEducationForm(false)} />
+            {educationForm.value && (
+              <EducationForm onClose={educationForm.setFalse} />
             )}
 
             {/* Certifications Section */}
@@ -581,13 +573,13 @@ function DetailedModeContent({
               title="Certifications"
               count={credentials.certifications.length}
               items={credentials.certifications}
-              onAdd={() => setShowCertificationForm(true)}
+              onAdd={certificationForm.setTrue}
               renderItem={(cert: Certification) => (
                 <CertificationItem key={cert.id} certification={cert} />
               )}
             />
-            {showCertificationForm && (
-              <CertificationForm onClose={() => setShowCertificationForm(false)} />
+            {certificationForm.value && (
+              <CertificationForm onClose={certificationForm.setFalse} />
             )}
 
             {/* Employment Section */}
@@ -597,11 +589,11 @@ function DetailedModeContent({
               count={credentials.employment.length}
               required
               items={credentials.employment}
-              onAdd={() => setShowEmploymentForm(true)}
+              onAdd={employmentForm.setTrue}
               renderItem={(emp: Employment) => <EmploymentItem key={emp.id} employment={emp} />}
             />
-            {showEmploymentForm && (
-              <EmploymentForm onClose={() => setShowEmploymentForm(false)} />
+            {employmentForm.value && (
+              <EmploymentForm onClose={employmentForm.setFalse} />
             )}
           </motion.div>
         ) : (
@@ -1076,7 +1068,7 @@ function EmploymentForm({ onClose }: { onClose: () => void }) {
 // Detailed References Section
 function DetailedReferencesSection() {
   const references = useExpertApplicationStore((state) => state.references)
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const editingModal = useModal<number>()
 
   return (
     <div className="space-y-4">
@@ -1095,7 +1087,7 @@ function DetailedReferencesSection() {
 
       {[0, 1, 2].map((index) => {
         const ref = references[index]
-        const isEditing = editingIndex === index
+        const isEditing = editingModal.data === index
 
         return (
           <div key={index}>
@@ -1103,14 +1095,14 @@ function DetailedReferencesSection() {
               <DetailedReferenceItem
                 reference={ref}
                 index={index}
-                onEdit={() => setEditingIndex(index)}
+                onEdit={() => editingModal.open(index)}
               />
             ) : (
               <DetailedReferenceForm
                 index={index}
                 existingReference={ref}
-                onClose={() => setEditingIndex(null)}
-                onSave={() => setEditingIndex(null)}
+                onClose={editingModal.close}
+                onSave={editingModal.close}
               />
             )}
           </div>

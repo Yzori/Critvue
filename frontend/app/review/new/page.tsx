@@ -15,10 +15,11 @@
  * Redesigned to feel like a creative invitation, not a ticketing system
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useToggle, useAsync } from "@/hooks";
 import { useRouter } from "next/navigation";
 import { ContentType, ReviewType, ReviewTier, FeedbackPriority, createReview, updateReview } from "@/lib/api/reviews";
-import { getSubscriptionStatus, SubscriptionStatus } from "@/lib/api/subscriptions";
+import { getSubscriptionStatus } from "@/lib/api/subscriptions";
 import { Button } from "@/components/ui/button";
 import { ContentTypeStep } from "@/components/review-flow/content-type-step";
 import { AboutYourWorkStep, FeedbackGoal } from "@/components/review-flow/about-your-work-step";
@@ -75,17 +76,21 @@ const encouragingMessages: Record<number, string> = {
 export default function NewReviewPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [showPayment, setShowPayment] = useState(false); // Payment step for expert reviews
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [encouragingMessage, setEncouragingMessage] = useState("");
-  const [showEncouragement, setShowEncouragement] = useState(false);
 
-  // Subscription/quota state
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
-  const [quotaExceeded, setQuotaExceeded] = useState(false);
-  const [isCheckingQuota, setIsCheckingQuota] = useState(true);
+  // UI state using useToggle
+  const submittingState = useToggle();
+  const submitSuccessState = useToggle();
+  const paymentState = useToggle();
+  const encouragementState = useToggle();
+
+  // Subscription/quota state using useAsync
+  const { data: subscriptionStatus, isLoading: isCheckingQuota } = useAsync(
+    () => getSubscriptionStatus(),
+    { immediate: true }
+  );
+  const quotaExceeded = Boolean(subscriptionStatus && !subscriptionStatus.has_unlimited_reviews && subscriptionStatus.reviews_remaining <= 0);
 
   // Form state - Enhanced with new tier fields and feedback goals
   const [formState, setFormState] = useState<FormState>({
@@ -114,26 +119,11 @@ export default function NewReviewPage() {
     requiresNda: false,
   });
 
-  // Check subscription quota on page load
-  useEffect(() => {
-    async function checkQuota() {
-      try {
-        const status = await getSubscriptionStatus();
-        setSubscriptionStatus(status);
-
-        // Check if user has exceeded their quota (only for free tier community reviews)
-        if (!status.has_unlimited_reviews && status.reviews_remaining <= 0) {
-          setQuotaExceeded(true);
-        }
-      } catch {
-        // Don't block the user if we can't check - the backend will enforce limits
-      } finally {
-        setIsCheckingQuota(false);
-      }
-    }
-
-    checkQuota();
-  }, []);
+  // Convenient aliases for cleaner code
+  const isSubmitting = submittingState.value;
+  const submitSuccess = submitSuccessState.value;
+  const showPayment = paymentState.value;
+  const showEncouragement = encouragementState.value;
 
   // Validate current step - Updated for 5-step flow
   const validateStep = (step: number): boolean => {
@@ -190,8 +180,8 @@ export default function NewReviewPage() {
     const message = encouragingMessages[step];
     if (message) {
       setEncouragingMessage(message);
-      setShowEncouragement(true);
-      setTimeout(() => setShowEncouragement(false), 3000);
+      encouragementState.setTrue();
+      setTimeout(() => encouragementState.setFalse(), 3000);
     }
   };
 
@@ -204,7 +194,7 @@ export default function NewReviewPage() {
     // Special handling for step 2: create draft review with title and description
     // We need the review ID before step 3 (file upload)
     if (currentStep === 2 && !formState.reviewId) {
-      setIsSubmitting(true);
+      submittingState.setTrue();
       try {
         const response = await createReview({
           title: formState.title.trim(),
@@ -224,7 +214,7 @@ export default function NewReviewPage() {
       } catch (error) {
         alert(`Failed to create review: ${getErrorMessage(error)}`);
       } finally {
-        setIsSubmitting(false);
+        submittingState.setFalse();
       }
       return;
     }
@@ -251,7 +241,7 @@ export default function NewReviewPage() {
       return;
     }
 
-    setIsSubmitting(true);
+    submittingState.setTrue();
 
     try {
       // Build feedback_areas string from selected areas
@@ -299,11 +289,11 @@ export default function NewReviewPage() {
 
       // For expert reviews, show payment step
       if (formState.reviewType === "expert") {
-        setIsSubmitting(false);
-        setShowPayment(true);
+        submittingState.setFalse();
+        paymentState.setTrue();
       } else {
         // For free reviews, show success immediately
-        setSubmitSuccess(true);
+        submitSuccessState.setTrue();
 
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
@@ -312,7 +302,7 @@ export default function NewReviewPage() {
       }
     } catch (error) {
       alert(`Failed to submit review: ${getErrorMessage(error)}`);
-      setIsSubmitting(false);
+      submittingState.setFalse();
     }
   };
 
@@ -326,8 +316,8 @@ export default function NewReviewPage() {
         // Failed to publish review after payment - silent fail
       }
     }
-    setShowPayment(false);
-    setSubmitSuccess(true);
+    paymentState.setFalse();
+    submitSuccessState.setTrue();
 
     // Redirect to dashboard after 2 seconds
     setTimeout(() => {
@@ -337,7 +327,7 @@ export default function NewReviewPage() {
 
   // Handle payment cancel
   const handlePaymentCancel = () => {
-    setShowPayment(false);
+    paymentState.setFalse();
     // Stay on the confirmation step so user can try again
   };
 
