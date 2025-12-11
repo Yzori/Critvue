@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useModal, useFormState, useAsync } from "@/hooks";
 import {
   getChallenges,
   getChallengePrompts,
@@ -15,7 +16,6 @@ import {
   completeChallenge,
   openChallengeSlots,
   Challenge,
-  ChallengePrompt,
   ContentType,
   ChallengeType,
   InvitationMode,
@@ -89,71 +89,32 @@ const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: st
 };
 
 const contentTypes: ContentType[] = ["design", "photography", "video", "stream", "audio", "writing", "art"];
-const challengeTypes: ChallengeType[] = ["one_on_one", "category"];
 
 export default function AdminChallengesPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // State
-  const [challenges, setChallenges] = React.useState<Challenge[]>([]);
-  const [prompts, setPrompts] = React.useState<ChallengePrompt[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+  // Tab state
   const [activeTab, setActiveTab] = React.useState("challenges");
 
-  // Dialog states
-  const [showCreateChallenge, setShowCreateChallenge] = React.useState(false);
-  const [showCreatePrompt, setShowCreatePrompt] = React.useState(false);
-  const [showInviteDialog, setShowInviteDialog] = React.useState(false);
-  const [selectedChallenge, setSelectedChallenge] = React.useState<Challenge | null>(null);
-
-  // Form states
-  const [challengeTitle, setChallengeTitle] = React.useState("");
-  const [challengeDescription, setChallengeDescription] = React.useState("");
-  const [challengeType, setChallengeType] = React.useState<ChallengeType>("one_on_one");
-  const [contentType, setContentType] = React.useState<ContentType>("design");
-  const [selectedPromptId, setSelectedPromptId] = React.useState<number | null>(null);
-  const [submissionHours, setSubmissionHours] = React.useState("72");
-  const [votingHours, setVotingHours] = React.useState("48");
-  const [maxWinners, setMaxWinners] = React.useState("1");
-  const [prizeDescription, setPrizeDescription] = React.useState("");
-  const [invitationMode, setInvitationMode] = React.useState<InvitationMode>("admin_curated");
-
-  // Open slots dialog
-  const [showOpenSlotsDialog, setShowOpenSlotsDialog] = React.useState(false);
-  const [openSlotsDuration, setOpenSlotsDuration] = React.useState("24");
-
-  const [promptTitle, setPromptTitle] = React.useState("");
-  const [promptDescription, setPromptDescription] = React.useState("");
-  const [promptContentType, setPromptContentType] = React.useState<ContentType>("design");
-  const [promptDifficulty, setPromptDifficulty] = React.useState<"beginner" | "intermediate" | "advanced">("intermediate");
-
-  const [inviteUserId, setInviteUserId] = React.useState("");
-  const [inviteSlot, setInviteSlot] = React.useState<1 | 2>(1);
-  const [inviteMessage, setInviteMessage] = React.useState("");
-
-  const [submitting, setSubmitting] = React.useState(false);
-
-  // Fetch data
-  const fetchData = React.useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [challengesResponse, promptsResponse] = await Promise.all([
-        getChallenges(undefined, undefined, undefined, undefined, 0, 100),
-        getChallengePrompts(undefined, 100),
-      ]);
-
-      setChallenges(challengesResponse.items);
-      setPrompts(promptsResponse.items);
-    } catch {
-      setError("Failed to load data");
-    } finally {
-      setLoading(false);
-    }
+  // Async data fetching
+  const fetchDataFn = React.useCallback(async () => {
+    const [challengesResponse, promptsResponse] = await Promise.all([
+      getChallenges(undefined, undefined, undefined, undefined, 0, 100),
+      getChallengePrompts(undefined, 100),
+    ]);
+    return { challenges: challengesResponse.items, prompts: promptsResponse.items };
   }, []);
+
+  const {
+    data,
+    isLoading: loading,
+    error,
+    refetch: fetchData,
+  } = useAsync(fetchDataFn, { immediate: false });
+
+  const challenges = data?.challenges ?? [];
+  const prompts = data?.prompts ?? [];
 
   React.useEffect(() => {
     if (user?.role === "admin") {
@@ -161,30 +122,70 @@ export default function AdminChallengesPage() {
     }
   }, [user, fetchData]);
 
+  // Dialog modals
+  const createChallengeModal = useModal();
+  const createPromptModal = useModal();
+  const inviteModal = useModal<Challenge>();
+  const openSlotsModal = useModal<Challenge>();
+
+  // Challenge form
+  const challengeForm = useFormState({
+    title: "",
+    description: "",
+    challengeType: "one_on_one" as ChallengeType,
+    contentType: "design" as ContentType,
+    selectedPromptId: null as number | null,
+    submissionHours: "72",
+    votingHours: "48",
+    maxWinners: "1",
+    prizeDescription: "",
+    invitationMode: "admin_curated" as InvitationMode,
+  });
+
+  // Prompt form
+  const promptForm = useFormState({
+    title: "",
+    description: "",
+    contentType: "design" as ContentType,
+    difficulty: "intermediate" as "beginner" | "intermediate" | "advanced",
+  });
+
+  // Invite form
+  const inviteForm = useFormState({
+    userId: "",
+    slot: 1 as 1 | 2,
+    message: "",
+  });
+
+  // Open slots form
+  const openSlotsForm = useFormState({
+    duration: "24",
+  });
+
+  // Submitting state
+  const [submitting, setSubmitting] = React.useState(false);
+
   // Handle create challenge
   const handleCreateChallenge = async () => {
     try {
       setSubmitting(true);
+      const { values } = challengeForm;
       await createChallenge({
-        title: challengeTitle,
-        description: challengeDescription || undefined,
-        contentType,
-        challengeType,
-        promptId: selectedPromptId || undefined,
-        submissionHours: Number(submissionHours),
-        votingHours: Number(votingHours),
-        maxWinners: Number(maxWinners),
-        invitationMode: challengeType === "one_on_one" ? invitationMode : undefined,
-        prizeDescription: prizeDescription || undefined,
+        title: values.title,
+        description: values.description || undefined,
+        contentType: values.contentType,
+        challengeType: values.challengeType,
+        promptId: values.selectedPromptId || undefined,
+        submissionHours: Number(values.submissionHours),
+        votingHours: Number(values.votingHours),
+        maxWinners: Number(values.maxWinners),
+        invitationMode: values.challengeType === "one_on_one" ? values.invitationMode : undefined,
+        prizeDescription: values.prizeDescription || undefined,
       });
 
       await fetchData();
-      setChallengeTitle("");
-      setChallengeDescription("");
-      setSelectedPromptId(null);
-      setPrizeDescription("");
-      setInvitationMode("admin_curated");
-      setShowCreateChallenge(false);
+      challengeForm.reset();
+      createChallengeModal.close();
       toast.success("Challenge created successfully");
     } catch (err: any) {
       toast.error(err.message || "Failed to create challenge");
@@ -197,17 +198,17 @@ export default function AdminChallengesPage() {
   const handleCreatePrompt = async () => {
     try {
       setSubmitting(true);
+      const { values } = promptForm;
       await createChallengePrompt({
-        title: promptTitle,
-        description: promptDescription,
-        contentType: promptContentType,
-        difficulty: promptDifficulty,
+        title: values.title,
+        description: values.description,
+        contentType: values.contentType,
+        difficulty: values.difficulty,
       });
 
       await fetchData();
-      setPromptTitle("");
-      setPromptDescription("");
-      setShowCreatePrompt(false);
+      promptForm.reset();
+      createPromptModal.close();
       toast.success("Prompt created successfully");
     } catch (err: any) {
       toast.error(err.message || "Failed to create prompt");
@@ -218,21 +219,20 @@ export default function AdminChallengesPage() {
 
   // Handle invite creator
   const handleInvite = async () => {
-    if (!selectedChallenge) return;
+    if (!inviteModal.data) return;
 
     try {
       setSubmitting(true);
-      await inviteCreator(selectedChallenge.id, {
-        userId: Number(inviteUserId),
-        slot: inviteSlot,
-        message: inviteMessage || undefined,
+      const { values } = inviteForm;
+      await inviteCreator(inviteModal.data.id, {
+        userId: Number(values.userId),
+        slot: values.slot,
+        message: values.message || undefined,
       });
 
       await fetchData();
-      setInviteUserId("");
-      setInviteMessage("");
-      setShowInviteDialog(false);
-      setSelectedChallenge(null);
+      inviteForm.reset();
+      inviteModal.close();
       toast.success("Invitation sent successfully");
     } catch (err: any) {
       toast.error(err.message || "Failed to send invitation");
@@ -283,15 +283,14 @@ export default function AdminChallengesPage() {
   };
 
   const handleOpenSlots = async () => {
-    if (!selectedChallenge) return;
+    if (!openSlotsModal.data) return;
 
     try {
       setSubmitting(true);
-      await openChallengeSlots(selectedChallenge.id, Number(openSlotsDuration));
+      await openChallengeSlots(openSlotsModal.data.id, Number(openSlotsForm.values.duration));
       await fetchData();
-      setOpenSlotsDuration("24");
-      setShowOpenSlotsDialog(false);
-      setSelectedChallenge(null);
+      openSlotsForm.reset();
+      openSlotsModal.close();
       toast.success("Slots opened for claiming");
     } catch (err: any) {
       toast.error(err.message || "Failed to open slots");
@@ -315,14 +314,14 @@ export default function AdminChallengesPage() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => setShowCreatePrompt(true)}
+            onClick={() => createPromptModal.open()}
           >
             <Target className="w-4 h-4 mr-2" />
             New Prompt
           </Button>
           <Button
             className="bg-[#4CC9F0] hover:bg-[#3DB8DF] text-white"
-            onClick={() => setShowCreateChallenge(true)}
+            onClick={() => createChallengeModal.open()}
           >
             <Plus className="w-4 h-4 mr-2" />
             New Challenge
@@ -332,17 +331,17 @@ export default function AdminChallengesPage() {
 
       {/* Error Message */}
       {error && (
-        <Card className="bg-red-50 border-red-200">
+        <Card className="bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900">
           <CardContent className="flex items-center gap-3 py-4">
             <AlertCircle className="w-5 h-5 text-red-500" />
-            <span className="text-red-600">{error}</span>
+            <span className="text-red-600 dark:text-red-400">{error}</span>
             <Button
               variant="ghost"
               size="sm"
               className="ml-auto text-red-500 hover:text-red-600"
-              onClick={() => setError(null)}
+              onClick={() => fetchData()}
             >
-              Dismiss
+              Retry
             </Button>
           </CardContent>
         </Card>
@@ -446,10 +445,7 @@ export default function AdminChallengesPage() {
                                   variant="ghost"
                                   size="sm"
                                   className="text-[#4CC9F0] hover:text-[#3DB8DF]"
-                                  onClick={() => {
-                                    setSelectedChallenge(challenge);
-                                    setShowInviteDialog(true);
-                                  }}
+                                  onClick={() => inviteModal.open(challenge)}
                                 >
                                   <Send className="w-4 h-4" />
                                 </Button>
@@ -462,10 +458,7 @@ export default function AdminChallengesPage() {
                                   variant="ghost"
                                   size="sm"
                                   className="text-[#4ADE80] hover:text-[#3FCF70]"
-                                  onClick={() => {
-                                    setSelectedChallenge(challenge);
-                                    setShowOpenSlotsDialog(true);
-                                  }}
+                                  onClick={() => openSlotsModal.open(challenge)}
                                 >
                                   <Unlock className="w-4 h-4" />
                                 </Button>
@@ -570,7 +563,7 @@ export default function AdminChallengesPage() {
       </Tabs>
 
       {/* Create Challenge Dialog */}
-      <Dialog open={showCreateChallenge} onOpenChange={setShowCreateChallenge}>
+      <Dialog open={createChallengeModal.isOpen} onOpenChange={(open) => !open && createChallengeModal.close()}>
         <DialogContent className="bg-background border-border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Create New Challenge</DialogTitle>
@@ -582,7 +575,7 @@ export default function AdminChallengesPage() {
           <div className="space-y-4 py-4">
             <div>
               <Label className="text-foreground">Challenge Type</Label>
-              <Select value={challengeType} onValueChange={(v) => setChallengeType(v as ChallengeType)}>
+              <Select value={challengeForm.values.challengeType} onValueChange={(v) => challengeForm.setValue("challengeType", v as ChallengeType)}>
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -593,10 +586,10 @@ export default function AdminChallengesPage() {
               </Select>
             </div>
 
-            {challengeType === "one_on_one" && (
+            {challengeForm.values.challengeType === "one_on_one" && (
               <div>
                 <Label className="text-foreground">Participant Selection</Label>
-                <Select value={invitationMode} onValueChange={(v) => setInvitationMode(v as InvitationMode)}>
+                <Select value={challengeForm.values.invitationMode} onValueChange={(v) => challengeForm.setValue("invitationMode", v as InvitationMode)}>
                   <SelectTrigger className="bg-background border-border text-foreground mt-1">
                     <SelectValue />
                   </SelectTrigger>
@@ -611,8 +604,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Title</Label>
               <Input
-                value={challengeTitle}
-                onChange={(e) => setChallengeTitle(e.target.value)}
+                value={challengeForm.values.title}
+                onChange={(e) => challengeForm.setValue("title", e.target.value)}
                 placeholder="Enter challenge title"
                 className="bg-background border-border text-foreground mt-1"
               />
@@ -621,8 +614,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Description (optional)</Label>
               <Textarea
-                value={challengeDescription}
-                onChange={(e) => setChallengeDescription(e.target.value)}
+                value={challengeForm.values.description}
+                onChange={(e) => challengeForm.setValue("description", e.target.value)}
                 placeholder="Describe the challenge..."
                 className="bg-background border-border text-foreground mt-1"
                 rows={3}
@@ -631,7 +624,7 @@ export default function AdminChallengesPage() {
 
             <div>
               <Label className="text-foreground">Content Type</Label>
-              <Select value={contentType} onValueChange={(v) => setContentType(v as ContentType)}>
+              <Select value={challengeForm.values.contentType} onValueChange={(v) => challengeForm.setValue("contentType", v as ContentType)}>
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -649,15 +642,15 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Prompt (optional)</Label>
               <Select
-                value={selectedPromptId?.toString() || ""}
-                onValueChange={(v) => setSelectedPromptId(v ? Number(v) : null)}
+                value={challengeForm.values.selectedPromptId?.toString() || ""}
+                onValueChange={(v) => challengeForm.setValue("selectedPromptId", v ? Number(v) : null)}
               >
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue placeholder="Select a prompt" />
                 </SelectTrigger>
                 <SelectContent>
                   {prompts
-                    .filter((p) => p.contentType === contentType && p.isActive)
+                    .filter((p) => p.contentType === challengeForm.values.contentType && p.isActive)
                     .map((prompt) => (
                       <SelectItem key={prompt.id} value={prompt.id.toString()}>
                         {prompt.title}
@@ -672,8 +665,8 @@ export default function AdminChallengesPage() {
                 <Label className="text-foreground">Submission Time (hours)</Label>
                 <Input
                   type="number"
-                  value={submissionHours}
-                  onChange={(e) => setSubmissionHours(e.target.value)}
+                  value={challengeForm.values.submissionHours}
+                  onChange={(e) => challengeForm.setValue("submissionHours", e.target.value)}
                   className="bg-background border-border text-foreground mt-1"
                 />
               </div>
@@ -681,20 +674,20 @@ export default function AdminChallengesPage() {
                 <Label className="text-foreground">Voting Time (hours)</Label>
                 <Input
                   type="number"
-                  value={votingHours}
-                  onChange={(e) => setVotingHours(e.target.value)}
+                  value={challengeForm.values.votingHours}
+                  onChange={(e) => challengeForm.setValue("votingHours", e.target.value)}
                   className="bg-background border-border text-foreground mt-1"
                 />
               </div>
             </div>
 
-            {challengeType === "category" && (
+            {challengeForm.values.challengeType === "category" && (
               <div>
                 <Label className="text-foreground">Number of Winners</Label>
                 <Input
                   type="number"
-                  value={maxWinners}
-                  onChange={(e) => setMaxWinners(e.target.value)}
+                  value={challengeForm.values.maxWinners}
+                  onChange={(e) => challengeForm.setValue("maxWinners", e.target.value)}
                   min="1"
                   className="bg-background border-border text-foreground mt-1"
                 />
@@ -704,8 +697,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Prize Description (optional)</Label>
               <Input
-                value={prizeDescription}
-                onChange={(e) => setPrizeDescription(e.target.value)}
+                value={challengeForm.values.prizeDescription}
+                onChange={(e) => challengeForm.setValue("prizeDescription", e.target.value)}
                 placeholder="e.g., 500 sparks"
                 className="bg-background border-border text-foreground mt-1"
               />
@@ -713,13 +706,13 @@ export default function AdminChallengesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateChallenge(false)}>
+            <Button variant="outline" onClick={() => createChallengeModal.close()}>
               Cancel
             </Button>
             <Button
               className="bg-[#4CC9F0] hover:bg-[#3DB8DF] text-white"
               onClick={handleCreateChallenge}
-              disabled={submitting || !challengeTitle.trim()}
+              disabled={submitting || !challengeForm.values.title.trim()}
             >
               {submitting ? "Creating..." : "Create Challenge"}
             </Button>
@@ -728,7 +721,7 @@ export default function AdminChallengesPage() {
       </Dialog>
 
       {/* Create Prompt Dialog */}
-      <Dialog open={showCreatePrompt} onOpenChange={setShowCreatePrompt}>
+      <Dialog open={createPromptModal.isOpen} onOpenChange={(open) => !open && createPromptModal.close()}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Create New Prompt</DialogTitle>
@@ -741,8 +734,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Title</Label>
               <Input
-                value={promptTitle}
-                onChange={(e) => setPromptTitle(e.target.value)}
+                value={promptForm.values.title}
+                onChange={(e) => promptForm.setValue("title", e.target.value)}
                 placeholder="Enter prompt title"
                 className="bg-background border-border text-foreground mt-1"
               />
@@ -751,8 +744,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Description</Label>
               <Textarea
-                value={promptDescription}
-                onChange={(e) => setPromptDescription(e.target.value)}
+                value={promptForm.values.description}
+                onChange={(e) => promptForm.setValue("description", e.target.value)}
                 placeholder="Describe what creators should create..."
                 className="bg-background border-border text-foreground mt-1"
                 rows={4}
@@ -761,7 +754,7 @@ export default function AdminChallengesPage() {
 
             <div>
               <Label className="text-foreground">Content Type</Label>
-              <Select value={promptContentType} onValueChange={(v) => setPromptContentType(v as ContentType)}>
+              <Select value={promptForm.values.contentType} onValueChange={(v) => promptForm.setValue("contentType", v as ContentType)}>
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -778,7 +771,7 @@ export default function AdminChallengesPage() {
 
             <div>
               <Label className="text-foreground">Difficulty</Label>
-              <Select value={promptDifficulty} onValueChange={(v) => setPromptDifficulty(v as typeof promptDifficulty)}>
+              <Select value={promptForm.values.difficulty} onValueChange={(v) => promptForm.setValue("difficulty", v as "beginner" | "intermediate" | "advanced")}>
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -792,13 +785,13 @@ export default function AdminChallengesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreatePrompt(false)}>
+            <Button variant="outline" onClick={() => createPromptModal.close()}>
               Cancel
             </Button>
             <Button
               className="bg-[#4CC9F0] hover:bg-[#3DB8DF] text-white"
               onClick={handleCreatePrompt}
-              disabled={submitting || !promptTitle.trim() || !promptDescription.trim()}
+              disabled={submitting || !promptForm.values.title.trim() || !promptForm.values.description.trim()}
             >
               {submitting ? "Creating..." : "Create Prompt"}
             </Button>
@@ -807,7 +800,7 @@ export default function AdminChallengesPage() {
       </Dialog>
 
       {/* Invite Creator Dialog */}
-      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+      <Dialog open={inviteModal.isOpen} onOpenChange={(open) => !open && inviteModal.close()}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Invite Creator</DialogTitle>
@@ -821,8 +814,8 @@ export default function AdminChallengesPage() {
               <Label className="text-foreground">User ID</Label>
               <Input
                 type="number"
-                value={inviteUserId}
-                onChange={(e) => setInviteUserId(e.target.value)}
+                value={inviteForm.values.userId}
+                onChange={(e) => inviteForm.setValue("userId", e.target.value)}
                 placeholder="Enter user ID"
                 className="bg-background border-border text-foreground mt-1"
               />
@@ -830,7 +823,7 @@ export default function AdminChallengesPage() {
 
             <div>
               <Label className="text-foreground">Participant Slot</Label>
-              <Select value={inviteSlot.toString()} onValueChange={(v) => setInviteSlot(Number(v) as 1 | 2)}>
+              <Select value={inviteForm.values.slot.toString()} onValueChange={(v) => inviteForm.setValue("slot", Number(v) as 1 | 2)}>
                 <SelectTrigger className="bg-background border-border text-foreground mt-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -844,8 +837,8 @@ export default function AdminChallengesPage() {
             <div>
               <Label className="text-foreground">Personal Message (optional)</Label>
               <Textarea
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
+                value={inviteForm.values.message}
+                onChange={(e) => inviteForm.setValue("message", e.target.value)}
                 placeholder="Add a personal message to the invitation..."
                 className="bg-background border-border text-foreground mt-1"
                 rows={3}
@@ -854,13 +847,13 @@ export default function AdminChallengesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+            <Button variant="outline" onClick={() => inviteModal.close()}>
               Cancel
             </Button>
             <Button
               className="bg-[#4CC9F0] hover:bg-[#3DB8DF] text-white"
               onClick={handleInvite}
-              disabled={submitting || !inviteUserId}
+              disabled={submitting || !inviteForm.values.userId}
             >
               {submitting ? "Sending..." : "Send Invitation"}
             </Button>
@@ -869,7 +862,7 @@ export default function AdminChallengesPage() {
       </Dialog>
 
       {/* Open Slots Dialog */}
-      <Dialog open={showOpenSlotsDialog} onOpenChange={setShowOpenSlotsDialog}>
+      <Dialog open={openSlotsModal.isOpen} onOpenChange={(open) => !open && openSlotsModal.close()}>
         <DialogContent className="bg-background border-border">
           <DialogHeader>
             <DialogTitle className="text-foreground">Open Challenge Slots</DialogTitle>
@@ -879,9 +872,9 @@ export default function AdminChallengesPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            {selectedChallenge && (
+            {openSlotsModal.data && (
               <div className="p-4 bg-muted rounded-lg">
-                <p className="font-medium text-foreground">{selectedChallenge.title}</p>
+                <p className="font-medium text-foreground">{openSlotsModal.data.title}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Once opened, anyone can claim a slot. The challenge will automatically
                   activate when both slots are filled.
@@ -893,8 +886,8 @@ export default function AdminChallengesPage() {
               <Label className="text-foreground">Slot Claiming Duration (hours)</Label>
               <Input
                 type="number"
-                value={openSlotsDuration}
-                onChange={(e) => setOpenSlotsDuration(e.target.value)}
+                value={openSlotsForm.values.duration}
+                onChange={(e) => openSlotsForm.setValue("duration", e.target.value)}
                 min="1"
                 max="168"
                 className="bg-background border-border text-foreground mt-1"
@@ -906,7 +899,7 @@ export default function AdminChallengesPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowOpenSlotsDialog(false)}>
+            <Button variant="outline" onClick={() => openSlotsModal.close()}>
               Cancel
             </Button>
             <Button

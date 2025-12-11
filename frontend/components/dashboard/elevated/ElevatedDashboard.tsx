@@ -16,11 +16,12 @@
  * - Ambient Modes (dark/focus/zen)
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAsync } from '@/hooks';
 
 // Elevated components
 import { HeroActionBlock, determineHeroAction, HeroAction } from './HeroActionBlock';
@@ -102,27 +103,88 @@ export function ElevatedDashboard({
 
   // UI state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Data state
-  const [karmaSummary, setKarmaSummary] = useState<KarmaSummary | null>(null);
-  const [pendingReviews, setPendingReviews] = useState<PendingReviewItem[]>([]);
-  const [myRequests, setMyRequests] = useState<MyRequestItem[]>([]);
-  const [activeReviews, setActiveReviews] = useState<ActiveReviewItem[]>([]);
-  const [submittedReviews, setSubmittedReviews] = useState<SubmittedReviewItem[]>([]);
-  const [completedReviews, setCompletedReviews] = useState<CompletedReviewItem[]>([]);
-  const [kanbanColumns, setKanbanColumns] = useState<KanbanColumn[]>([]);
-
-  // Platform-wide data (real API)
-  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
-  const [platformActivity, setPlatformActivity] = useState<PlatformActivityEvent[]>([]);
-  const [userStoryStats, setUserStoryStats] = useState<UserStoryStats | null>(null);
 
   // Celebration system
   const { current: celebration, celebrate, dismiss: dismissCelebration } = useCelebrations();
 
   // Track milestone celebrations (only trigger once per session)
   const [celebratedMilestones, setCelebratedMilestones] = useState<Set<string>>(new Set());
+
+  // Platform stats (polled separately)
+  const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
+
+  // Load all dashboard data using useAsync
+  const loadAllDataFn = useCallback(async () => {
+    // Load shared data in parallel
+    const [
+      karmaSummaryData,
+      platformStatsData,
+      platformActivityData,
+      userStoryStatsData,
+    ] = await Promise.all([
+      getKarmaSummary().catch(() => null),
+      getPlatformStats().catch(() => null),
+      getPlatformActivity(10, 60).catch(() => ({ events: [], has_more: false })),
+      getUserStoryStats(role).catch(() => null),
+    ]);
+
+    // Update polled platform stats initial value
+    if (platformStatsData) setPlatformStats(platformStatsData);
+
+    if (role === 'creator') {
+      const [actionsResponse, requestsResponse] = await Promise.all([
+        getActionsNeeded(1, 20),
+        getMyRequests(undefined, 1, 50),
+      ]);
+      const kanbanColumns = transformCreatorToKanban(actionsResponse.items, requestsResponse.items);
+      return {
+        karmaSummary: karmaSummaryData,
+        platformActivity: platformActivityData?.events ?? [],
+        userStoryStats: userStoryStatsData,
+        pendingReviews: actionsResponse.items,
+        myRequests: requestsResponse.items,
+        activeReviews: [] as ActiveReviewItem[],
+        submittedReviews: [] as SubmittedReviewItem[],
+        completedReviews: [] as CompletedReviewItem[],
+        kanbanColumns,
+      };
+    } else {
+      const [activeResponse, submittedResponse, completedResponse] = await Promise.all([
+        getActiveReviews(1, 20),
+        getSubmittedReviews(1, 20),
+        getCompletedReviews(1, 20),
+      ]);
+      const kanbanColumns = transformReviewerToKanban(
+        activeResponse.items,
+        submittedResponse.items,
+        completedResponse.items
+      );
+      return {
+        karmaSummary: karmaSummaryData,
+        platformActivity: platformActivityData?.events ?? [],
+        userStoryStats: userStoryStatsData,
+        pendingReviews: [] as PendingReviewItem[],
+        myRequests: [] as MyRequestItem[],
+        activeReviews: activeResponse.items,
+        submittedReviews: submittedResponse.items,
+        completedReviews: completedResponse.items,
+        kanbanColumns,
+      };
+    }
+  }, [role]);
+
+  const { data: dashboardData, isLoading, refetch: loadAllData } = useAsync(loadAllDataFn, { immediate: true });
+
+  // Extract data with defaults
+  const karmaSummary = dashboardData?.karmaSummary ?? null;
+  const platformActivity = dashboardData?.platformActivity ?? [];
+  const userStoryStats = dashboardData?.userStoryStats ?? null;
+  const pendingReviews = dashboardData?.pendingReviews ?? [];
+  const myRequests = dashboardData?.myRequests ?? [];
+  const activeReviews = dashboardData?.activeReviews ?? [];
+  const submittedReviews = dashboardData?.submittedReviews ?? [];
+  const completedReviews = dashboardData?.completedReviews ?? [];
+  const kanbanColumns = dashboardData?.kanbanColumns ?? [];
 
   // Handle role change with animation
   const handleRoleChange = (newRole: Role) => {
@@ -152,68 +214,10 @@ export function ElevatedDashboard({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [role]);
 
-  // Load all data
+  // Reload data when role changes
   useEffect(() => {
     loadAllData();
   }, [role]);
-
-  async function loadAllData() {
-    setIsLoading(true);
-    try {
-      // Load all data in parallel for efficiency
-      const [
-        karmaSummaryData,
-        platformStatsData,
-        platformActivityData,
-        userStoryStatsData,
-      ] = await Promise.all([
-        getKarmaSummary().catch(() => null),
-        getPlatformStats().catch(() => null),
-        getPlatformActivity(10, 60).catch(() => ({ events: [], has_more: false })),
-        getUserStoryStats(role).catch(() => null),
-      ]);
-
-      // Set platform data
-      if (karmaSummaryData) setKarmaSummary(karmaSummaryData);
-      if (platformStatsData) setPlatformStats(platformStatsData);
-      if (platformActivityData) setPlatformActivity(platformActivityData.events);
-      if (userStoryStatsData) setUserStoryStats(userStoryStatsData);
-
-      if (role === 'creator') {
-        const [actionsResponse, requestsResponse] = await Promise.all([
-          getActionsNeeded(1, 20),
-          getMyRequests(undefined, 1, 50),
-        ]);
-        setPendingReviews(actionsResponse.items);
-        setMyRequests(requestsResponse.items);
-
-        // Transform to kanban
-        const columns = transformCreatorToKanban(actionsResponse.items, requestsResponse.items);
-        setKanbanColumns(columns);
-      } else {
-        const [activeResponse, submittedResponse, completedResponse] = await Promise.all([
-          getActiveReviews(1, 20),
-          getSubmittedReviews(1, 20),
-          getCompletedReviews(1, 20),
-        ]);
-        setActiveReviews(activeResponse.items);
-        setSubmittedReviews(submittedResponse.items);
-        setCompletedReviews(completedResponse.items);
-
-        // Transform to kanban
-        const columns = transformReviewerToKanban(
-          activeResponse.items,
-          submittedResponse.items,
-          completedResponse.items
-        );
-        setKanbanColumns(columns);
-      }
-    } catch {
-      // Error loading dashboard data - silent fail, UI shows empty state
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   // Poll platform stats for real-time updates
   useEffect(() => {

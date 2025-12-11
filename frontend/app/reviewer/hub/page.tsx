@@ -18,6 +18,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useModal, useAsync, useToggle } from "@/hooks";
 import {
   ArrowLeft,
   ChevronLeft,
@@ -65,87 +66,69 @@ export default function ReviewerHubPage() {
   // Reviewer mode state
   const [allSlots, setAllSlots] = React.useState<ReviewSlot[]>([]);
   const [currentSlot, setCurrentSlot] = React.useState<ReviewSlot | null>(null);
-  const [reviewerLoading, setReviewerLoading] = React.useState(true);
 
   // Creator mode state
   const [pendingReviews, setPendingReviews] = React.useState<ReviewSlotWithRequest[]>([]);
   const [currentPendingSlot, setCurrentPendingSlot] = React.useState<ReviewSlotWithRequest | null>(null);
   const [currentReviewRequest, setCurrentReviewRequest] = React.useState<ReviewRequestDetail | null>(null);
-  const [creatorLoading, setCreatorLoading] = React.useState(true);
 
   // Shared state
   const [error, setError] = React.useState<string | null>(null);
-  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const mobileDrawer = useToggle(false);
+  const sidebarCollapsed = useToggle(false);
 
   // Creator mode: Modal state
-  const [isAcceptModalOpen, setIsAcceptModalOpen] = React.useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = React.useState(false);
-  const [isElaborationModalOpen, setIsElaborationModalOpen] = React.useState(false);
+  const acceptModal = useModal();
+  const rejectModal = useModal();
+  const elaborationModal = useModal();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  // Async data loading
+  const fetchReviewerFn = React.useCallback(async () => {
+    const slots = await getMyReviews("claimed,submitted,accepted,rejected,elaboration_requested");
+    return slots;
+  }, []);
+
+  const { data: reviewerData, isLoading: reviewerLoading } = useAsync(fetchReviewerFn, { immediate: true });
+
+  const fetchCreatorFn = React.useCallback(async () => {
+    const data = await getPendingReviewsForRequester();
+    return data;
+  }, []);
+
+  const { data: creatorData, isLoading: creatorLoading } = useAsync(fetchCreatorFn, { immediate: true });
+
+  // Initialize reviewer slots when data loads
+  React.useEffect(() => {
+    if (reviewerData) {
+      setAllSlots(reviewerData);
+      if (initialSlotId) {
+        const slot = reviewerData.find(s => s.id === Number(initialSlotId));
+        setCurrentSlot(slot ?? reviewerData[0] ?? null);
+      } else if (!currentSlot || !reviewerData.find(s => s.id === currentSlot?.id)) {
+        setCurrentSlot(reviewerData[0] ?? null);
+      }
+    }
+  }, [reviewerData, initialSlotId]);
+
+  // Initialize creator slots when data loads
+  React.useEffect(() => {
+    if (creatorData) {
+      setPendingReviews(creatorData);
+      if (creatorData.length > 0 && (!currentPendingSlot || !creatorData.find(s => s.id === currentPendingSlot?.id))) {
+        setCurrentPendingSlot(creatorData[0] ?? null);
+      }
+    }
+  }, [creatorData]);
 
   // Update URL when mode changes
   const handleModeChange = React.useCallback((newMode: HubMode) => {
     setMode(newMode);
+    setError(null);
     const url = new URL(window.location.href);
     url.searchParams.set("mode", newMode);
     window.history.pushState({}, "", url.toString());
   }, []);
-
-  // Clear error when mode changes
-  React.useEffect(() => {
-    setError(null);
-  }, [mode]);
-
-  // Fetch reviewer data (reviews I gave)
-  React.useEffect(() => {
-    const fetchReviewerData = async () => {
-      try {
-        setReviewerLoading(true);
-        const combinedSlots = await getMyReviews("claimed,submitted,accepted,rejected,elaboration_requested");
-        setAllSlots(combinedSlots);
-
-        if (initialSlotId) {
-          const slot = combinedSlots.find(s => s.id === Number(initialSlotId));
-          setCurrentSlot(slot ?? combinedSlots[0] ?? null);
-        } else {
-          setCurrentSlot(combinedSlots[0] ?? null);
-        }
-      } catch {
-        if (mode === "reviewer") {
-          setError("Failed to load reviews. Please try again.");
-        }
-      } finally {
-        setReviewerLoading(false);
-      }
-    };
-
-    fetchReviewerData();
-  }, [initialSlotId, mode]);
-
-  // Fetch creator data (reviews I received)
-  React.useEffect(() => {
-    const fetchCreatorData = async () => {
-      try {
-        setCreatorLoading(true);
-        const data = await getPendingReviewsForRequester();
-        setPendingReviews(data);
-
-        // Set first pending review as current
-        if (data.length > 0 && data[0]) {
-          setCurrentPendingSlot(data[0]);
-        }
-      } catch {
-        if (mode === "creator") {
-          setError("Failed to load pending reviews. Please try again.");
-        }
-      } finally {
-        setCreatorLoading(false);
-      }
-    };
-
-    fetchCreatorData();
-  }, [mode]);
 
   // Fetch review request details when current pending slot changes
   React.useEffect(() => {
@@ -185,18 +168,17 @@ export default function ReviewerHubPage() {
   }, [allSlots]);
 
   // Handle review submission success (reviewer mode)
-  const handleSubmitSuccess = React.useCallback(() => {
-    // Refresh the list and stay in hub
-    getMyReviews("claimed,submitted").then(slots => {
-      setAllSlots(slots);
-      if (slots.length === 0) {
-        // No reviews left, go to dashboard
-        router.push("/dashboard?role=reviewer");
-      } else if (slots[0]) {
-        // Stay in hub, switch to first available review
-        setCurrentSlot(slots[0]);
-      }
-    });
+  const handleSubmitSuccess = React.useCallback(async () => {
+    // Refresh the list by fetching again directly
+    const slots = await getMyReviews("claimed,submitted,accepted,rejected,elaboration_requested");
+    setAllSlots(slots);
+    if (slots.length === 0) {
+      // No reviews left, go to dashboard
+      router.push("/dashboard?role=reviewer");
+    } else if (slots[0]) {
+      // Stay in hub, switch to first available review
+      setCurrentSlot(slots[0]);
+    }
   }, [router]);
 
   // Handle accept review (creator mode)
@@ -211,7 +193,7 @@ export default function ReviewerHubPage() {
       const remaining = pendingReviews.filter(f => f.id !== currentPendingSlot.id);
       setPendingReviews(remaining);
       setCurrentPendingSlot(remaining[0] ?? null);
-      setIsAcceptModalOpen(false);
+      acceptModal.close();
       toast.success("Review accepted successfully!");
     } catch (err: unknown) {
       toast.error(`Failed to accept review: ${getErrorMessage(err)}`);
@@ -232,7 +214,7 @@ export default function ReviewerHubPage() {
       const remaining = pendingReviews.filter(f => f.id !== currentPendingSlot.id);
       setPendingReviews(remaining);
       setCurrentPendingSlot(remaining[0] ?? null);
-      setIsRejectModalOpen(false);
+      rejectModal.close();
       toast.success("Review rejected successfully");
     } catch (err: unknown) {
       toast.error(`Failed to reject review: ${getErrorMessage(err)}`);
@@ -253,7 +235,7 @@ export default function ReviewerHubPage() {
       const remaining = pendingReviews.filter(f => f.id !== currentPendingSlot.id);
       setPendingReviews(remaining);
       setCurrentPendingSlot(remaining[0] ?? null);
-      setIsElaborationModalOpen(false);
+      elaborationModal.close();
       toast.success("Elaboration request sent! The reviewer has 48 hours to respond.");
     } catch (err: unknown) {
       toast.error(`Failed to request elaboration: ${getErrorMessage(err)}`);
@@ -467,25 +449,25 @@ export default function ReviewerHubPage() {
               <div
                 className={cn(
                   "hidden lg:flex flex-col border-l border-border bg-card transition-all duration-300",
-                  isSidebarCollapsed ? "w-[60px]" : "w-[400px]"
+                  sidebarCollapsed.value ? "w-[60px]" : "w-[400px]"
                 )}
               >
                 {/* Collapse/Expand Button */}
                 <div className="flex items-center justify-between p-3 border-b border-border">
-                  {!isSidebarCollapsed && (
+                  {!sidebarCollapsed.value && (
                     <span className="text-sm font-semibold text-foreground">Active Reviews</span>
                   )}
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                    onClick={() => sidebarCollapsed.toggle()}
                     className={cn(
                       "flex-shrink-0",
-                      isSidebarCollapsed && "mx-auto"
+                      sidebarCollapsed.value && "mx-auto"
                     )}
-                    title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    title={sidebarCollapsed.value ? "Expand sidebar" : "Collapse sidebar"}
                   >
-                    {isSidebarCollapsed ? (
+                    {sidebarCollapsed.value ? (
                       <ChevronLeft className="size-4" />
                     ) : (
                       <ChevronRight className="size-4" />
@@ -494,7 +476,7 @@ export default function ReviewerHubPage() {
                 </div>
 
                 {/* Sidebar Content */}
-                {!isSidebarCollapsed && (
+                {!sidebarCollapsed.value && (
                   <div className="flex-1 overflow-y-auto">
                     <ActiveReviewsSidebar
                       slots={allSlots}
@@ -505,7 +487,7 @@ export default function ReviewerHubPage() {
                 )}
 
                 {/* Collapsed State - Show minimal info */}
-                {isSidebarCollapsed && (
+                {sidebarCollapsed.value && (
                   <div className="flex-1 overflow-y-auto p-2 space-y-2">
                     {allSlots.map((slot, index) => (
                       <button
@@ -540,7 +522,7 @@ export default function ReviewerHubPage() {
                 <Button
                   variant="outline"
                   className="w-full min-h-[48px]"
-                  onClick={() => setIsMobileDrawerOpen(true)}
+                  onClick={() => mobileDrawer.setTrue()}
                 >
                   Switch Review ({allSlots.length} active)
                 </Button>
@@ -549,8 +531,8 @@ export default function ReviewerHubPage() {
               <MobileReviewDrawer
                 slots={allSlots}
                 currentSlotId={currentSlot.id}
-                isOpen={isMobileDrawerOpen}
-                onClose={() => setIsMobileDrawerOpen(false)}
+                isOpen={mobileDrawer.value}
+                onClose={() => mobileDrawer.setFalse()}
                 onSlotChange={handleSlotChange}
               />
             </>
@@ -589,9 +571,9 @@ export default function ReviewerHubPage() {
                   externalUrl={currentReviewRequest?.external_links?.[0] || null}
                   mode="creator"
                   reviewerName={currentPendingSlot.reviewer?.full_name}
-                  onAccept={() => setIsAcceptModalOpen(true)}
-                  onReject={() => setIsRejectModalOpen(true)}
-                  onRequestRevision={() => setIsElaborationModalOpen(true)}
+                  onAccept={() => acceptModal.open()}
+                  onReject={() => rejectModal.open()}
+                  onRequestRevision={() => elaborationModal.open()}
                   className="h-full"
                 />
               </div>
@@ -601,25 +583,25 @@ export default function ReviewerHubPage() {
                 <div
                   className={cn(
                     "hidden lg:flex flex-col border-l border-border bg-card transition-all duration-300",
-                    isSidebarCollapsed ? "w-[60px]" : "w-[320px]"
+                    sidebarCollapsed.value ? "w-[60px]" : "w-[320px]"
                   )}
                 >
                   {/* Collapse/Expand Button */}
                   <div className="flex items-center justify-between p-3 border-b border-border">
-                    {!isSidebarCollapsed && (
+                    {!sidebarCollapsed.value && (
                       <span className="text-sm font-semibold text-foreground">Pending Reviews</span>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                      onClick={() => sidebarCollapsed.toggle()}
                       className={cn(
                         "flex-shrink-0",
-                        isSidebarCollapsed && "mx-auto"
+                        sidebarCollapsed.value && "mx-auto"
                       )}
-                      title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                      title={sidebarCollapsed.value ? "Expand sidebar" : "Collapse sidebar"}
                     >
-                      {isSidebarCollapsed ? (
+                      {sidebarCollapsed.value ? (
                         <ChevronLeft className="size-4" />
                       ) : (
                         <ChevronRight className="size-4" />
@@ -628,7 +610,7 @@ export default function ReviewerHubPage() {
                   </div>
 
                   {/* Sidebar Content - Full */}
-                  {!isSidebarCollapsed && (
+                  {!sidebarCollapsed.value && (
                     <div className="flex-1 overflow-y-auto p-2 space-y-2">
                       {pendingReviews.map((slot) => {
                         const urgency = getUrgency(slot.auto_accept_at);
@@ -672,7 +654,7 @@ export default function ReviewerHubPage() {
                   )}
 
                   {/* Collapsed State - Show minimal info */}
-                  {isSidebarCollapsed && (
+                  {sidebarCollapsed.value && (
                     <div className="flex-1 overflow-y-auto p-2 space-y-2">
                       {pendingReviews.map((slot, index) => {
                         const urgency = getUrgency(slot.auto_accept_at);
@@ -714,7 +696,7 @@ export default function ReviewerHubPage() {
               <Button
                 variant="outline"
                 className="w-full min-h-[48px]"
-                onClick={() => setIsMobileDrawerOpen(true)}
+                onClick={() => mobileDrawer.setTrue()}
               >
                 Switch Review ({pendingReviews.length} pending)
               </Button>
@@ -725,23 +707,23 @@ export default function ReviewerHubPage() {
           {currentPendingSlot && (
             <>
               <AcceptReviewModal
-                isOpen={isAcceptModalOpen}
-                onClose={() => setIsAcceptModalOpen(false)}
+                isOpen={acceptModal.isOpen}
+                onClose={() => acceptModal.close()}
                 onAccept={handleAccept}
                 reviewerName={currentPendingSlot.reviewer?.full_name}
                 isSubmitting={isSubmitting}
               />
               <RejectReviewModal
-                isOpen={isRejectModalOpen}
-                onClose={() => setIsRejectModalOpen(false)}
+                isOpen={rejectModal.isOpen}
+                onClose={() => rejectModal.close()}
                 onReject={handleReject}
                 reviewerName={currentPendingSlot.reviewer?.full_name}
                 isSubmitting={isSubmitting}
                 isPaidReview={currentPendingSlot.payment_amount !== undefined && currentPendingSlot.payment_amount > 0}
               />
               <RequestElaborationModal
-                isOpen={isElaborationModalOpen}
-                onClose={() => setIsElaborationModalOpen(false)}
+                isOpen={elaborationModal.isOpen}
+                onClose={() => elaborationModal.close()}
                 onRequestElaboration={handleRequestElaboration}
                 reviewerName={currentPendingSlot.reviewer?.full_name}
                 isSubmitting={isSubmitting}

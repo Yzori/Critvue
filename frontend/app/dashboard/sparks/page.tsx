@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KarmaDashboard, BadgesDisplay, Leaderboard } from '@/components/karma';
+import { useAsync } from '@/hooks';
 import {
   getKarmaSummary,
   getKarmaBreakdown,
@@ -22,13 +23,7 @@ import {
   toggleBadgeFeatured,
   getLeaderboard,
   getMyRanking,
-  type KarmaSummary,
-  type KarmaBreakdown,
   type KarmaTransaction,
-  type Badge as BadgeType,
-  type LeaderboardEntry,
-  type UserRanking,
-  type Season,
   type SeasonType,
   type LeaderboardCategory,
 } from '@/lib/api/karma';
@@ -67,83 +62,76 @@ export default function KarmaPage() {
   const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Data states
-  const [summary, setSummary] = useState<KarmaSummary | null>(null);
-  const [breakdown, setBreakdown] = useState<KarmaBreakdown | null>(null);
-  const [earnedBadges, setEarnedBadges] = useState<BadgeType[]>([]);
-  const [availableBadges, setAvailableBadges] = useState<BadgeType[]>([]);
-  const [transactions, setTransactions] = useState<KarmaTransaction[]>([]);
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [userRanking, setUserRanking] = useState<UserRanking | null>(null);
-  const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
-
-  // Loading states
-  const [loadingOverview, setLoadingOverview] = useState(true);
-  const [loadingBadges, setLoadingBadges] = useState(true);
-  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
-  const [loadingHistory, setLoadingHistory] = useState(true);
-
   // Leaderboard filters
   const [seasonType, setSeasonType] = useState<SeasonType>('weekly');
   const [category, setCategory] = useState<LeaderboardCategory>('overall');
 
-  // History pagination
+  // History pagination state
+  const [transactions, setTransactions] = useState<KarmaTransaction[]>([]);
   const [historyPage, setHistoryPage] = useState(0);
   const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
-  // Fetch overview data
-  const fetchOverview = async () => {
-    setLoadingOverview(true);
-    try {
-      const [summaryData, breakdownData] = await Promise.all([
-        getKarmaSummary(),
-        getKarmaBreakdown(),
-      ]);
-      setSummary(summaryData);
-      setBreakdown(breakdownData);
-    } catch {
-      // Failed to fetch karma overview - silent fail
-    } finally {
-      setLoadingOverview(false);
-    }
-  };
+  // Overview data - fetches summary and breakdown together
+  const fetchOverviewFn = useCallback(async () => {
+    const [summaryData, breakdownData] = await Promise.all([
+      getKarmaSummary(),
+      getKarmaBreakdown(),
+    ]);
+    return { summary: summaryData, breakdown: breakdownData };
+  }, []);
 
-  // Fetch badges
-  const fetchBadges = async () => {
-    setLoadingBadges(true);
-    try {
-      const [earned, available] = await Promise.all([
-        getMyBadges(true),
-        getAvailableBadges(),
-      ]);
-      setEarnedBadges(earned);
-      setAvailableBadges(available);
-    } catch {
-      // Failed to fetch badges - silent fail
-    } finally {
-      setLoadingBadges(false);
-    }
-  };
+  const {
+    data: overviewData,
+    isLoading: loadingOverview,
+    refetch: fetchOverview,
+  } = useAsync(fetchOverviewFn, { immediate: false });
 
-  // Fetch leaderboard
-  const fetchLeaderboard = async () => {
-    setLoadingLeaderboard(true);
-    try {
-      const [leaderboard, ranking] = await Promise.all([
-        getLeaderboard(seasonType, category),
-        getMyRanking(seasonType, category).catch(() => null),
-      ]);
-      setLeaderboardData(leaderboard.rankings);
-      setCurrentSeason(leaderboard.season);
-      setUserRanking(ranking);
-    } catch {
-      // Leaderboard fetch failed - silent fail
-    } finally {
-      setLoadingLeaderboard(false);
-    }
-  };
+  const summary = overviewData?.summary ?? null;
+  const breakdown = overviewData?.breakdown ?? null;
 
-  // Fetch transaction history
+  // Badges data
+  const fetchBadgesFn = useCallback(async () => {
+    const [earned, available] = await Promise.all([
+      getMyBadges(true),
+      getAvailableBadges(),
+    ]);
+    return { earnedBadges: earned, availableBadges: available };
+  }, []);
+
+  const {
+    data: badgesData,
+    isLoading: loadingBadges,
+    refetch: fetchBadges,
+  } = useAsync(fetchBadgesFn, { immediate: false });
+
+  const earnedBadges = badgesData?.earnedBadges ?? [];
+  const availableBadges = badgesData?.availableBadges ?? [];
+
+  // Leaderboard data
+  const fetchLeaderboardFn = useCallback(async () => {
+    const [leaderboard, ranking] = await Promise.all([
+      getLeaderboard(seasonType, category),
+      getMyRanking(seasonType, category).catch(() => null),
+    ]);
+    return {
+      rankings: leaderboard.rankings,
+      season: leaderboard.season,
+      userRanking: ranking,
+    };
+  }, [seasonType, category]);
+
+  const {
+    data: leaderboardData,
+    isLoading: loadingLeaderboard,
+    refetch: fetchLeaderboard,
+  } = useAsync(fetchLeaderboardFn, { immediate: false });
+
+  const rankings = leaderboardData?.rankings ?? [];
+  const currentSeason = leaderboardData?.season ?? null;
+  const userRanking = leaderboardData?.userRanking ?? null;
+
+  // Fetch transaction history (with pagination, requires separate handling)
   const fetchHistory = async (reset = false) => {
     setLoadingHistory(true);
     const offset = reset ? 0 : historyPage * 20;
@@ -168,7 +156,6 @@ export default function KarmaPage() {
   const handleToggleFeatured = async (badgeId: number) => {
     try {
       await toggleBadgeFeatured(badgeId);
-      // Refresh badges
       await fetchBadges();
     } catch {
       // Badge toggle failed - silent fail
@@ -286,7 +273,7 @@ export default function KarmaPage() {
         {/* Leaderboard Tab */}
         <TabsContent value="leaderboard" className="mt-6">
           <Leaderboard
-            rankings={leaderboardData}
+            rankings={rankings}
             userRanking={userRanking}
             season={currentSeason}
             seasonType={seasonType}

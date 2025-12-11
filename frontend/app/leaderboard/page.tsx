@@ -8,6 +8,7 @@ import { Trophy, AlertCircle, RefreshCw, Navigation, Sparkles, Star, Medal, Flam
 import { cn } from '@/lib/utils';
 import { UserTier } from '@/lib/types/tier';
 import { Button } from '@/components/ui/button';
+import { useAsync } from '@/hooks';
 import {
   Select,
   SelectContent,
@@ -31,14 +32,10 @@ import {
   LeaderboardPeriod,
   LeaderboardUser,
   LeaderboardData,
-  Season,
-  DiscoverySection,
   DiscoveryUser,
 } from '@/lib/api/leaderboard';
 import {
   getLeaderboard as getChallengeLeaderboard,
-  ChallengeLeaderboardEntry,
-  ChallengeLeaderboardResponse,
 } from '@/lib/api/challenges';
 
 type LeaderboardMode = 'reviews' | 'challenges';
@@ -60,7 +57,7 @@ export default function LeaderboardPage() {
   const initialMode = searchParams.get('mode') === 'challenges' ? 'challenges' : 'reviews';
   const [mode, setMode] = React.useState<LeaderboardMode>(initialMode);
 
-  // Reviews state
+  // Reviews filter state
   const [category, setCategory] = React.useState<LeaderboardCategory>(
     LeaderboardCategory.OVERALL
   );
@@ -68,30 +65,55 @@ export default function LeaderboardPage() {
     LeaderboardPeriod.MONTHLY
   );
   const [tierFilter, setTierFilter] = React.useState<UserTier | 'all'>('all');
-  const [leaderboardData, setLeaderboardData] =
-    React.useState<LeaderboardData | null>(null);
-  const [season, setSeason] = React.useState<Season | null>(null);
-  const [discoverySections, setDiscoverySections] = React.useState<
-    DiscoverySection[]
-  >([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [isLoadingDiscovery, setIsLoadingDiscovery] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-  // Challenges state
-  const [challengesData, setChallengesData] = React.useState<ChallengeLeaderboardResponse | null>(null);
-  const [isChallengesLoading, setIsChallengesLoading] = React.useState(false);
-  const [challengesError, setChallengesError] = React.useState<string | null>(null);
+  // Pull to refresh state
+  const [isPulling, setIsPulling] = React.useState(false);
+  const [pullDistance, setPullDistance] = React.useState(0);
+
+  // Leaderboard data with pagination accumulation
+  const [leaderboardData, setLeaderboardData] = React.useState<LeaderboardData | null>(null);
 
   // Refs
   const currentUserRef = React.useRef<HTMLDivElement>(null);
   const hasShownConfetti = React.useRef(false);
   const touchStartY = React.useRef(0);
   const pullToRefreshThreshold = 80;
-  const [isPulling, setIsPulling] = React.useState(false);
-  const [pullDistance, setPullDistance] = React.useState(0);
+
+  // Season and discovery data
+  const fetchSeasonAndDiscoveryFn = React.useCallback(async () => {
+    const [seasonData, discovery] = await Promise.all([
+      getCurrentSeason(),
+      getDiscoverySections(),
+    ]);
+    return { season: seasonData, discoverySections: discovery };
+  }, []);
+
+  const {
+    data: seasonDiscoveryData,
+    isLoading: isLoadingDiscovery,
+    refetch: fetchSeasonAndDiscovery,
+  } = useAsync(fetchSeasonAndDiscoveryFn, { immediate: true });
+
+  const season = seasonDiscoveryData?.season ?? null;
+  const discoverySections = seasonDiscoveryData?.discoverySections ?? [];
+
+  // Challenges leaderboard data
+  const fetchChallengesFn = React.useCallback(async () => {
+    return await getChallengeLeaderboard(50);
+  }, []);
+
+  const {
+    data: challengesData,
+    isLoading: isChallengesLoading,
+    error: challengesError,
+    refetch: fetchChallengesLeaderboard,
+  } = useAsync(fetchChallengesFn, { immediate: false });
+
+  // Loading and error states for reviews leaderboard (needs manual management due to pagination)
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   // Fetch leaderboard data
   const fetchLeaderboard = React.useCallback(
@@ -149,42 +171,6 @@ export default function LeaderboardPage() {
     },
     [category, period, tierFilter, leaderboardData]
   );
-
-  // Fetch season and discovery data
-  const fetchSeasonAndDiscovery = React.useCallback(async () => {
-    try {
-      setIsLoadingDiscovery(true);
-      const [seasonData, discovery] = await Promise.all([
-        getCurrentSeason(),
-        getDiscoverySections(),
-      ]);
-      setSeason(seasonData);
-      setDiscoverySections(discovery);
-    } catch {
-      // Failed to fetch season/discovery - silent fail
-    } finally {
-      setIsLoadingDiscovery(false);
-    }
-  }, []);
-
-  // Fetch challenges leaderboard
-  const fetchChallengesLeaderboard = React.useCallback(async () => {
-    try {
-      setIsChallengesLoading(true);
-      setChallengesError(null);
-      const data = await getChallengeLeaderboard(50);
-      setChallengesData(data);
-    } catch {
-      setChallengesError('Failed to load challenges leaderboard.');
-    } finally {
-      setIsChallengesLoading(false);
-    }
-  }, []);
-
-  // Initial load
-  React.useEffect(() => {
-    fetchSeasonAndDiscovery();
-  }, [fetchSeasonAndDiscovery]);
 
   // Fetch data based on mode
   React.useEffect(() => {
