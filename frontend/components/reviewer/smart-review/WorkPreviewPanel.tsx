@@ -14,6 +14,7 @@
 "use client";
 
 import * as React from "react";
+import { useToggle } from "@/hooks";
 import {
   ZoomIn,
   ZoomOut,
@@ -74,24 +75,38 @@ export function WorkPreviewPanel({
 }: WorkPreviewPanelProps) {
   const [currentFileIndex, setCurrentFileIndex] = React.useState(0);
   const [zoom, setZoom] = React.useState(100);
-  const [isPinned, setIsPinned] = React.useState(true);
-  const [isExpanded, setIsExpanded] = React.useState(false);
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
-  const [isLandscape, setIsLandscape] = React.useState(false);
-  const [showRotateHint, setShowRotateHint] = React.useState(false);
-  const [isPiPActive, setIsPiPActive] = React.useState(false);
-  const [isPiPSupported, setIsPiPSupported] = React.useState(false);
+
+  // Boolean states using useToggle
+  const pinnedState = useToggle(true);
+  const expandedState = useToggle();
+  const collapsedState = useToggle();
+  const landscapeState = useToggle();
+  const rotateHintState = useToggle();
+  const piPActiveState = useToggle();
+  const piPSupportedState = useToggle();
+
+  // Convenient aliases
+  const isPinned = pinnedState.value;
+  const isExpanded = expandedState.value;
+  const isCollapsed = collapsedState.value;
+  const isLandscape = landscapeState.value;
+  const showRotateHint = rotateHintState.value;
+  const isPiPActive = piPActiveState.value;
+  const isPiPSupported = piPSupportedState.value;
+
   const imageRef = React.useRef<HTMLImageElement>(null);
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
   // Check if PiP is supported
   React.useEffect(() => {
-    setIsPiPSupported(
+    if (
       typeof document !== 'undefined' &&
       'pictureInPictureEnabled' in document &&
       document.pictureInPictureEnabled
-    );
-  }, []);
+    ) {
+      piPSupportedState.setTrue();
+    }
+  }, [piPSupportedState]);
 
   // Handle PiP toggle
   const handlePiPToggle = React.useCallback(async () => {
@@ -100,23 +115,23 @@ export function WorkPreviewPanel({
     try {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
-        setIsPiPActive(false);
+        piPActiveState.setFalse();
       } else {
         await videoRef.current.requestPictureInPicture();
-        setIsPiPActive(true);
+        piPActiveState.setTrue();
       }
     } catch {
       // PiP not supported or permission denied
     }
-  }, []);
+  }, [piPActiveState]);
 
   // Listen for PiP events
   React.useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleEnterPiP = () => setIsPiPActive(true);
-    const handleLeavePiP = () => setIsPiPActive(false);
+    const handleEnterPiP = () => piPActiveState.setTrue();
+    const handleLeavePiP = () => piPActiveState.setFalse();
 
     video.addEventListener('enterpictureinpicture', handleEnterPiP);
     video.addEventListener('leavepictureinpicture', handleLeavePiP);
@@ -125,7 +140,7 @@ export function WorkPreviewPanel({
       video.removeEventListener('enterpictureinpicture', handleEnterPiP);
       video.removeEventListener('leavepictureinpicture', handleLeavePiP);
     };
-  }, [currentFileIndex]);
+  }, [currentFileIndex, piPActiveState]);
 
   // Check if device is mobile
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -139,22 +154,22 @@ export function WorkPreviewPanel({
 
         if (currentOrientation.includes('portrait')) {
           await screen.orientation.lock('landscape');
-          setIsLandscape(true);
+          landscapeState.setTrue();
         } else {
           await screen.orientation.unlock();
-          setIsLandscape(false);
+          landscapeState.setFalse();
         }
       } else {
         // Fallback: show hint to rotate device manually
-        setShowRotateHint(true);
-        setTimeout(() => setShowRotateHint(false), 3000);
+        rotateHintState.setTrue();
+        setTimeout(() => rotateHintState.setFalse(), 3000);
       }
     } catch {
       // API not supported or permission denied - show hint
-      setShowRotateHint(true);
-      setTimeout(() => setShowRotateHint(false), 3000);
+      rotateHintState.setTrue();
+      setTimeout(() => rotateHintState.setFalse(), 3000);
     }
-  }, []);
+  }, [landscapeState, rotateHintState]);
 
   // Reset orientation when closing fullscreen
   React.useEffect(() => {
@@ -166,9 +181,9 @@ export function WorkPreviewPanel({
       } catch {
         // Ignore errors
       }
-      setIsLandscape(false);
+      landscapeState.setFalse();
     }
-  }, [isExpanded, isLandscape]);
+  }, [isExpanded, isLandscape, landscapeState]);
 
   const currentFile = files[currentFileIndex];
   const hasMultipleFiles = files.length > 1;
@@ -217,7 +232,7 @@ export function WorkPreviewPanel({
     return (
       <div className={cn("relative", className)}>
         <button
-          onClick={() => setIsCollapsed(false)}
+          onClick={collapsedState.setFalse}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-accent-blue text-white p-2 rounded-r-lg shadow-lg hover:bg-accent-blue/90 transition-colors"
           aria-label="Show work preview"
         >
@@ -233,13 +248,13 @@ export function WorkPreviewPanel({
 
   // Fullscreen modal using Dialog with proper portal
   const FullscreenModal = () => (
-    <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+    <Dialog open={isExpanded} onOpenChange={expandedState.set}>
       <DialogPortal>
         <DialogOverlay className="bg-black" />
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
           {/* Close button - always visible, top right */}
           <button
-            onClick={() => setIsExpanded(false)}
+            onClick={expandedState.setFalse}
             className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             aria-label="Close fullscreen"
           >
@@ -411,7 +426,7 @@ export function WorkPreviewPanel({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsPinned(!isPinned)}
+            onClick={pinnedState.toggle}
             className="size-8"
             title={isPinned ? "Unpin panel" : "Pin panel"}
           >
@@ -424,7 +439,7 @@ export function WorkPreviewPanel({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsCollapsed(true)}
+            onClick={collapsedState.setTrue}
             className="size-8"
             title="Collapse panel"
           >
@@ -433,7 +448,7 @@ export function WorkPreviewPanel({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsExpanded(true)}
+            onClick={expandedState.setTrue}
             className="size-8"
             title="Expand fullscreen"
           >

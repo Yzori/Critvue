@@ -6,6 +6,7 @@
  */
 
 import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useToggle, useFormState } from "@/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,22 +31,30 @@ function PasswordResetContent() {
     }
   }, [searchParams]);
 
-  // Form state
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Form state using useFormState
+  const form = useFormState({
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  // UI state
-  const [isLoading, setIsLoading] = useState(false);
+  // Boolean states using useToggle
+  const showPasswordState = useToggle();
+  const showConfirmPasswordState = useToggle();
+  const loadingState = useToggle();
+  const successState = useToggle();
+
+  // Error states
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-
-  // Form validation errors
   const [errors, setErrors] = useState({
     password: "",
     confirmPassword: "",
   });
+
+  // Convenient aliases
+  const showPassword = showPasswordState.value;
+  const showConfirmPassword = showConfirmPasswordState.value;
+  const isLoading = loadingState.value;
+  const success = successState.value;
 
   /**
    * Validate form fields
@@ -57,16 +66,16 @@ function PasswordResetContent() {
     };
 
     // Password validation
-    if (!newPassword) {
+    if (!form.values.newPassword) {
       newErrors.password = "Password is required";
-    } else if (newPassword.length < 8) {
+    } else if (form.values.newPassword.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
 
     // Confirm password validation
-    if (!confirmPassword) {
+    if (!form.values.confirmPassword) {
       newErrors.confirmPassword = "Please confirm your password";
-    } else if (newPassword !== confirmPassword) {
+    } else if (form.values.newPassword !== form.values.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
@@ -92,18 +101,18 @@ function PasswordResetContent() {
       return;
     }
 
-    setIsLoading(true);
+    loadingState.setTrue();
 
     try {
       await resetPassword({
         token,
-        new_password: newPassword,
+        new_password: form.values.newPassword,
       });
-      setSuccess(true);
+      successState.setTrue();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setIsLoading(false);
+      loadingState.setFalse();
     }
   };
 
@@ -213,9 +222,9 @@ function PasswordResetContent() {
           <FormField
             label="New Password"
             type={showPassword ? "text" : "password"}
-            value={newPassword}
+            value={form.values.newPassword}
             onChange={(e) => {
-              setNewPassword(e.target.value);
+              form.setValue("newPassword", e.target.value);
               if (errors.password) setErrors({ ...errors, password: "" });
             }}
             error={errors.password}
@@ -228,7 +237,7 @@ function PasswordResetContent() {
           />
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
+            onClick={showPasswordState.toggle}
             className="absolute right-0 top-[2.125rem] p-3 text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
             aria-label={showPassword ? "Hide password" : "Show password"}
             tabIndex={-1}
@@ -242,16 +251,16 @@ function PasswordResetContent() {
         </div>
 
         {/* Password Strength Indicator */}
-        {newPassword && <PasswordStrength password={newPassword} />}
+        {form.values.newPassword && <PasswordStrength password={form.values.newPassword} />}
 
         {/* Confirm Password Field */}
         <div className="relative">
           <FormField
             label="Confirm New Password"
             type={showConfirmPassword ? "text" : "password"}
-            value={confirmPassword}
+            value={form.values.confirmPassword}
             onChange={(e) => {
-              setConfirmPassword(e.target.value);
+              form.setValue("confirmPassword", e.target.value);
               if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: "" });
             }}
             error={errors.confirmPassword}
@@ -263,7 +272,7 @@ function PasswordResetContent() {
           />
           <button
             type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            onClick={showConfirmPasswordState.toggle}
             className="absolute right-0 top-[2.125rem] p-3 text-muted-foreground hover:text-foreground transition-colors touch-manipulation"
             aria-label={showConfirmPassword ? "Hide password" : "Show password"}
             tabIndex={-1}

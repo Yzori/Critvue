@@ -8,7 +8,7 @@ import { Trophy, AlertCircle, RefreshCw, Navigation, Sparkles, Star, Medal, Flam
 import { cn } from '@/lib/utils';
 import { UserTier } from '@/lib/types/tier';
 import { Button } from '@/components/ui/button';
-import { useAsync } from '@/hooks';
+import { useAsync, useToggle } from '@/hooks';
 import {
   Select,
   SelectContent,
@@ -66,14 +66,18 @@ export default function LeaderboardPage() {
   );
   const [tierFilter, setTierFilter] = React.useState<UserTier | 'all'>('all');
   const [page, setPage] = React.useState(1);
-  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-
-  // Pull to refresh state
-  const [isPulling, setIsPulling] = React.useState(false);
   const [pullDistance, setPullDistance] = React.useState(0);
 
   // Leaderboard data with pagination accumulation
   const [leaderboardData, setLeaderboardData] = React.useState<LeaderboardData | null>(null);
+
+  // Boolean states using useToggle
+  const loadingMoreState = useToggle();
+  const pullingState = useToggle();
+
+  // Convenient aliases
+  const isLoadingMore = loadingMoreState.value;
+  const isPulling = pullingState.value;
 
   // Refs
   const currentUserRef = React.useRef<HTMLDivElement>(null);
@@ -112,18 +116,21 @@ export default function LeaderboardPage() {
   } = useAsync(fetchChallengesFn, { immediate: false });
 
   // Loading and error states for reviews leaderboard (needs manual management due to pagination)
-  const [isLoading, setIsLoading] = React.useState(true);
+  const loadingState = useToggle(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Convenient alias
+  const isLoading = loadingState.value;
 
   // Fetch leaderboard data
   const fetchLeaderboard = React.useCallback(
     async (pageNum: number = 1, append: boolean = false) => {
       try {
         if (pageNum === 1) {
-          setIsLoading(true);
+          loadingState.setTrue();
           setError(null);
         } else {
-          setIsLoadingMore(true);
+          loadingMoreState.setTrue();
         }
 
         const data = await getLeaderboardData({
@@ -165,11 +172,11 @@ export default function LeaderboardPage() {
           'Failed to load leaderboard. Please check your connection and try again.'
         );
       } finally {
-        setIsLoading(false);
-        setIsLoadingMore(false);
+        loadingState.setFalse();
+        loadingMoreState.setFalse();
       }
     },
-    [category, period, tierFilter, leaderboardData]
+    [category, period, tierFilter, leaderboardData, loadingState, loadingMoreState]
   );
 
   // Fetch data based on mode
@@ -226,7 +233,7 @@ export default function LeaderboardPage() {
         if (distance > 0) {
           setPullDistance(Math.min(distance, pullToRefreshThreshold + 20));
           if (distance > 10) {
-            setIsPulling(true);
+            pullingState.setTrue();
           }
         }
       }
@@ -238,7 +245,7 @@ export default function LeaderboardPage() {
         fetchLeaderboard(1, false);
         fetchSeasonAndDiscovery();
       }
-      setIsPulling(false);
+      pullingState.setFalse();
       setPullDistance(0);
       touchStartY.current = 0;
     };

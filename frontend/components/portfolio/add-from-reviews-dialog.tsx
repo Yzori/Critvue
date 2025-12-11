@@ -7,7 +7,8 @@
  * These items are unlimited and show a "Verified" badge.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useFormState } from "@/hooks";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -62,11 +63,13 @@ export function AddFromReviewsDialog({
   const [reviews, setReviews] = useState<EligibleReview[]>([]);
   const [selectedReview, setSelectedReview] = useState<EligibleReview | null>(null);
 
-  // Form state for configure step
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
-  const [projectUrl, setProjectUrl] = useState("");
+  // Form state using useFormState
+  const form = useFormState({
+    title: "",
+    description: "",
+    selectedImageUrl: null as string | null,
+    projectUrl: "",
+  });
 
   // Load reviews when dialog opens
   useEffect(() => {
@@ -92,29 +95,26 @@ export function AddFromReviewsDialog({
     if (review.has_portfolio_item) return;
 
     setSelectedReview(review);
-    setTitle(review.title);
-    setDescription(review.description);
+    form.setValue("title", review.title);
+    form.setValue("description", review.description);
 
     // Auto-select first image file if available
     const imageFile = review.files.find((f) =>
       f.file_type.startsWith("image/")
     );
-    setSelectedImageUrl(imageFile?.file_url || null);
+    form.setValue("selectedImageUrl", imageFile?.file_url || null);
 
     setStep("configure");
   };
 
   const handleBack = () => {
     setSelectedReview(null);
-    setSelectedImageUrl(null);
-    setTitle("");
-    setDescription("");
-    setProjectUrl("");
+    form.reset();
     setStep("select-review");
   };
 
   const handleSubmit = async () => {
-    if (!selectedReview || !selectedImageUrl) {
+    if (!selectedReview || !form.values.selectedImageUrl) {
       setError("Please select an image for your portfolio item");
       return;
     }
@@ -124,10 +124,10 @@ export function AddFromReviewsDialog({
 
     try {
       await createPortfolioFromReview(selectedReview.id, {
-        title: title.trim() || undefined,
-        description: description.trim() || undefined,
-        image_url: selectedImageUrl,
-        project_url: projectUrl.trim() || undefined,
+        title: form.values.title.trim() || undefined,
+        description: form.values.description.trim() || undefined,
+        image_url: form.values.selectedImageUrl,
+        project_url: form.values.projectUrl.trim() || undefined,
       });
 
       setStep("success");
@@ -150,10 +150,7 @@ export function AddFromReviewsDialog({
       setTimeout(() => {
         setStep("loading");
         setSelectedReview(null);
-        setSelectedImageUrl(null);
-        setTitle("");
-        setDescription("");
-        setProjectUrl("");
+        form.reset();
         setError(null);
       }, 200);
     }
@@ -304,8 +301,8 @@ export function AddFromReviewsDialog({
                 <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={form.values.title}
+                  onChange={(e) => form.setValue("title", e.target.value)}
                   placeholder={selectedReview.title}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -318,8 +315,8 @@ export function AddFromReviewsDialog({
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={form.values.description}
+                  onChange={(e) => form.setValue("description", e.target.value)}
                   placeholder="Describe your work..."
                   rows={3}
                 />
@@ -341,8 +338,8 @@ export function AddFromReviewsDialog({
                         <ImageSelectCard
                           key={file.id}
                           file={file}
-                          selected={selectedImageUrl === file.file_url}
-                          onClick={() => setSelectedImageUrl(file.file_url)}
+                          selected={form.values.selectedImageUrl === file.file_url}
+                          onClick={() => form.setValue("selectedImageUrl", file.file_url)}
                         />
                       ))}
                   </div>
@@ -366,8 +363,8 @@ export function AddFromReviewsDialog({
                   id="projectUrl"
                   type="url"
                   placeholder="https://example.com/project"
-                  value={projectUrl}
-                  onChange={(e) => setProjectUrl(e.target.value)}
+                  value={form.values.projectUrl}
+                  onChange={(e) => form.setValue("projectUrl", e.target.value)}
                 />
               </div>
 
@@ -386,7 +383,7 @@ export function AddFromReviewsDialog({
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  disabled={!selectedImageUrl}
+                  disabled={!form.values.selectedImageUrl}
                   className="gap-2"
                 >
                   <BadgeCheck className="size-4" />

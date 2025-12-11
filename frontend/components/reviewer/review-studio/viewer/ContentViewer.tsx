@@ -11,6 +11,7 @@
 "use client";
 
 import * as React from "react";
+import { useToggle } from "@/hooks";
 import {
   MapPin,
   X,
@@ -99,13 +100,18 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [editComment, setEditComment] = React.useState("");
   const [zoom, setZoom] = React.useState(1);
-  const [_isFullscreen, setIsFullscreen] = React.useState(false);
+  const [manualTimestamp, setManualTimestamp] = React.useState("");
 
   // Video-specific state
   const [currentTime, setCurrentTime] = React.useState(0);
   const [duration, setDuration] = React.useState(0);
-  const [isPlaying, setIsPlaying] = React.useState(false);
-  const [manualTimestamp, setManualTimestamp] = React.useState("");
+
+  // Boolean states using useToggle
+  const fullscreenState = useToggle();
+  const playingState = useToggle();
+
+  // Convenient alias
+  const isPlaying = playingState.value;
 
   // Parse external URL for video embedding
   const videoEmbed = React.useMemo(() => {
@@ -143,7 +149,7 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
     if (videoRef.current && isDirectVideo) {
       videoRef.current.currentTime = timestamp;
       videoRef.current.play();
-      setIsPlaying(true);
+      playingState.setTrue();
     }
   };
 
@@ -167,7 +173,7 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
       } else {
         videoRef.current.play();
       }
-      setIsPlaying(!isPlaying);
+      playingState.toggle();
     }
   };
 
@@ -297,7 +303,7 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setIsFullscreen(true)}
+                onClick={fullscreenState.setTrue}
                 className="h-8 w-8"
               >
                 <Maximize2 className="h-4 w-4" />
@@ -327,8 +333,8 @@ export function ContentViewer({ imageUrl, externalUrl, className }: ContentViewe
                     preload="metadata"
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
+                    onPlay={playingState.setTrue}
+                    onPause={playingState.setFalse}
                   >
                     Your browser does not support the video tag.
                   </video>
