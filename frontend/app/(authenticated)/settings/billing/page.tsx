@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect, Suspense } from "react";
+import { useToggle } from "@/hooks";
 import { useSearchParams } from "next/navigation";
 import {
   Card,
@@ -56,19 +57,24 @@ function BillingSettingsContent() {
   const defaultTab = searchParams.get("tab") || "subscription";
   const subscriptionSuccess = searchParams.get("subscription") === "success";
 
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [syncLoading, setSyncLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Subscription state
+  // Data states
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
-
-  // Connect/Payout state
   const [connectStatus, setConnectStatus] = useState<ConnectStatusResponse | null>(null);
   const [balance, setBalance] = useState<AvailableBalanceResponse | null>(null);
   const [payoutHistory, setPayoutHistory] = useState<PayoutHistoryResponse | null>(null);
+
+  // Loading states using useToggle
+  const loadingState = useToggle(true);
+  const actionLoadingState = useToggle();
+  const syncLoadingState = useToggle();
+
+  // Convenient aliases
+  const loading = loadingState.value;
+  const actionLoading = actionLoadingState.value;
+  const syncLoading = syncLoadingState.value;
 
   useEffect(() => {
     // If returning from successful checkout, sync subscription first
@@ -80,7 +86,7 @@ function BillingSettingsContent() {
   }, [subscriptionSuccess]);
 
   async function handleSyncSubscription() {
-    setSyncLoading(true);
+    syncLoadingState.setTrue();
     setError(null);
     try {
       const synced = await syncSubscription();
@@ -91,12 +97,12 @@ function BillingSettingsContent() {
     } catch {
       // Silent fail for sync
     } finally {
-      setSyncLoading(false);
+      syncLoadingState.setFalse();
     }
   }
 
   async function fetchData() {
-    setLoading(true);
+    loadingState.setTrue();
     setError(null);
     try {
       const [subRes, statusRes, balanceRes, historyRes] = await Promise.allSettled([
@@ -113,23 +119,23 @@ function BillingSettingsContent() {
     } catch {
       setError("Failed to load billing settings. Please try again.");
     } finally {
-      setLoading(false);
+      loadingState.setFalse();
     }
   }
 
   async function handleManageSubscription() {
-    setActionLoading(true);
+    actionLoadingState.setTrue();
     try {
       const response = await createPortalSession(`${window.location.origin}/settings/billing`);
       window.location.href = response.portal_url;
     } catch {
       setError("Failed to open subscription portal. Please try again.");
-      setActionLoading(false);
+      actionLoadingState.setFalse();
     }
   }
 
   async function handleSetupConnect() {
-    setActionLoading(true);
+    actionLoadingState.setTrue();
     try {
       const response = await startConnectOnboarding({
         return_url: `${window.location.origin}/settings/billing?tab=payouts&onboarding=complete`,
@@ -144,19 +150,19 @@ function BillingSettingsContent() {
       } else {
         setError("Failed to start payout setup. Please try again.");
       }
-      setActionLoading(false);
+      actionLoadingState.setFalse();
     }
   }
 
   async function handleOpenDashboard() {
-    setActionLoading(true);
+    actionLoadingState.setTrue();
     try {
       const response = await getConnectDashboardLink();
       window.open(response.dashboard_url, "_blank");
     } catch {
       setError("Failed to open Stripe dashboard. Please try again.");
     } finally {
-      setActionLoading(false);
+      actionLoadingState.setFalse();
     }
   }
 

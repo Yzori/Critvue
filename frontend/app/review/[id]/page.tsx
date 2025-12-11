@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { useToggle, useFormState } from "@/hooks";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -119,23 +120,32 @@ export default function ReviewDetailPage() {
   const reviewId = parseInt(params.id as string, 10);
 
   const [review, setReview] = React.useState<ReviewRequestDetail | null>(null);
-  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [showAllSlots, setShowAllSlots] = React.useState(false);
-
-  // Enhanced lightbox state
   const [lightboxIndex, setLightboxIndex] = React.useState<number | null>(null);
-  const [lightboxZoom, setLightboxZoom] = React.useState(1);
-  const [lightboxRotation, setLightboxRotation] = React.useState(0);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [dragPosition, setDragPosition] = React.useState({ x: 0, y: 0 });
-  const [dragStart, setDragStart] = React.useState({ x: 0, y: 0 });
 
-  // Portal mount state (for SSR compatibility)
-  const [isMounted, setIsMounted] = React.useState(false);
+  // Boolean states using useToggle
+  const loadingState = useToggle(true);
+  const showAllSlotsState = useToggle();
+  const draggingState = useToggle();
+  const mountedState = useToggle();
+
+  // Lightbox view state using useFormState
+  const lightboxView = useFormState({
+    zoom: 1,
+    rotation: 0,
+    dragPosition: { x: 0, y: 0 },
+    dragStart: { x: 0, y: 0 },
+  });
+
+  // Convenient aliases
+  const loading = loadingState.value;
+  const isDragging = draggingState.value;
+  const isMounted = mountedState.value;
+
+  // Portal mount effect (for SSR compatibility)
   React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
+    mountedState.setTrue();
+  }, [mountedState]);
 
   const currentUserId = user?.id;
   const isOwner = review?.user_id === currentUserId;
@@ -145,21 +155,21 @@ export default function ReviewDetailPage() {
   const fetchReview = React.useCallback(async (showLoading = true) => {
     if (!reviewId || isNaN(reviewId)) {
       setError("Invalid review ID");
-      setLoading(false);
+      loadingState.setFalse();
       return;
     }
 
     try {
-      if (showLoading) setLoading(true);
+      if (showLoading) loadingState.setTrue();
       setError(null);
       const data = await getReviewDetail(reviewId);
       setReview(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load review request");
     } finally {
-      if (showLoading) setLoading(false);
+      if (showLoading) loadingState.setFalse();
     }
-  }, [reviewId]);
+  }, [reviewId, loadingState]);
 
   React.useEffect(() => {
     fetchReview();
@@ -172,50 +182,52 @@ export default function ReviewDetailPage() {
 
   const currentLightboxFile = lightboxIndex !== null ? imageFiles[lightboxIndex] : null;
 
+  // Reset lightbox view helper
+  const resetLightboxView = React.useCallback(() => {
+    lightboxView.setValue("zoom", 1);
+    lightboxView.setValue("rotation", 0);
+    lightboxView.setValue("dragPosition", { x: 0, y: 0 });
+  }, [lightboxView]);
+
   // Lightbox navigation functions
   const openLightbox = React.useCallback((imageIndex: number) => {
     setLightboxIndex(imageIndex);
-    setLightboxZoom(1);
-    setLightboxRotation(0);
-    setDragPosition({ x: 0, y: 0 });
-  }, []);
+    resetLightboxView();
+  }, [resetLightboxView]);
 
   const closeLightbox = React.useCallback(() => {
     setLightboxIndex(null);
-    setLightboxZoom(1);
-    setLightboxRotation(0);
-    setDragPosition({ x: 0, y: 0 });
-  }, []);
+    resetLightboxView();
+  }, [resetLightboxView]);
 
   const goToPrevImage = React.useCallback(() => {
     if (lightboxIndex !== null && lightboxIndex > 0) {
       setLightboxIndex(lightboxIndex - 1);
-      setLightboxZoom(1);
-      setLightboxRotation(0);
-      setDragPosition({ x: 0, y: 0 });
+      resetLightboxView();
     }
-  }, [lightboxIndex]);
+  }, [lightboxIndex, resetLightboxView]);
 
   const goToNextImage = React.useCallback(() => {
     if (lightboxIndex !== null && lightboxIndex < imageFiles.length - 1) {
       setLightboxIndex(lightboxIndex + 1);
-      setLightboxZoom(1);
-      setLightboxRotation(0);
-      setDragPosition({ x: 0, y: 0 });
+      resetLightboxView();
     }
-  }, [lightboxIndex, imageFiles.length]);
+  }, [lightboxIndex, imageFiles.length, resetLightboxView]);
 
-  const handleZoomIn = React.useCallback(() => setLightboxZoom((z) => Math.min(z + 0.5, 4)), []);
+  const handleZoomIn = React.useCallback(() => {
+    lightboxView.setValue("zoom", Math.min(lightboxView.values.zoom + 0.5, 4));
+  }, [lightboxView]);
   const handleZoomOut = React.useCallback(() => {
-    setLightboxZoom((z) => Math.max(z - 0.5, 0.5));
-    if (lightboxZoom <= 1) setDragPosition({ x: 0, y: 0 });
-  }, [lightboxZoom]);
-  const handleRotate = React.useCallback(() => setLightboxRotation((r) => (r + 90) % 360), []);
+    const newZoom = Math.max(lightboxView.values.zoom - 0.5, 0.5);
+    lightboxView.setValue("zoom", newZoom);
+    if (newZoom <= 1) lightboxView.setValue("dragPosition", { x: 0, y: 0 });
+  }, [lightboxView]);
+  const handleRotate = React.useCallback(() => {
+    lightboxView.setValue("rotation", (lightboxView.values.rotation + 90) % 360);
+  }, [lightboxView]);
   const resetView = React.useCallback(() => {
-    setLightboxZoom(1);
-    setLightboxRotation(0);
-    setDragPosition({ x: 0, y: 0 });
-  }, []);
+    resetLightboxView();
+  }, [resetLightboxView]);
 
   // Keyboard navigation for lightbox
   React.useEffect(() => {
@@ -255,22 +267,25 @@ export default function ReviewDetailPage() {
 
   // Mouse drag for panning when zoomed
   const handleMouseDown = React.useCallback((e: React.MouseEvent) => {
-    if (lightboxZoom > 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - dragPosition.x, y: e.clientY - dragPosition.y });
-    }
-  }, [lightboxZoom, dragPosition]);
-
-  const handleMouseMove = React.useCallback((e: React.MouseEvent) => {
-    if (isDragging && lightboxZoom > 1) {
-      setDragPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
+    if (lightboxView.values.zoom > 1) {
+      draggingState.setTrue();
+      lightboxView.setValue("dragStart", {
+        x: e.clientX - lightboxView.values.dragPosition.x,
+        y: e.clientY - lightboxView.values.dragPosition.y,
       });
     }
-  }, [isDragging, lightboxZoom, dragStart]);
+  }, [lightboxView, draggingState]);
 
-  const handleMouseUp = React.useCallback(() => setIsDragging(false), []);
+  const handleMouseMove = React.useCallback((e: React.MouseEvent) => {
+    if (isDragging && lightboxView.values.zoom > 1) {
+      lightboxView.setValue("dragPosition", {
+        x: e.clientX - lightboxView.values.dragStart.x,
+        y: e.clientY - lightboxView.values.dragStart.y,
+      });
+    }
+  }, [isDragging, lightboxView]);
+
+  const handleMouseUp = React.useCallback(() => draggingState.setFalse(), [draggingState]);
 
   // Wheel zoom
   const handleWheel = React.useCallback((e: React.WheelEvent) => {
@@ -495,7 +510,7 @@ export default function ReviewDetailPage() {
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onWheel={handleWheel}
-            style={{ cursor: lightboxZoom > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
+            style={{ cursor: lightboxView.values.zoom > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
           >
             {/* Navigation Arrows */}
             {imageFiles.length > 1 && (
@@ -536,7 +551,7 @@ export default function ReviewDetailPage() {
                 alt={currentLightboxFile.original_filename}
                 className="max-w-full max-h-full object-contain select-none transition-transform duration-200"
                 style={{
-                  transform: `translate(${dragPosition.x}px, ${dragPosition.y}px) scale(${lightboxZoom}) rotate(${lightboxRotation}deg)`,
+                  transform: `translate(${lightboxView.values.dragPosition.x}px, ${lightboxView.values.dragPosition.y}px) scale(${lightboxView.values.zoom}) rotate(${lightboxView.values.rotation}deg)`,
                 }}
                 draggable={false}
                 onContextMenu={(e) => !isOwner && e.preventDefault()}
@@ -546,7 +561,7 @@ export default function ReviewDetailPage() {
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
-                    transform: `translate(${dragPosition.x}px, ${dragPosition.y}px) scale(${lightboxZoom}) rotate(${lightboxRotation}deg)`,
+                    transform: `translate(${lightboxView.values.dragPosition.x}px, ${lightboxView.values.dragPosition.y}px) scale(${lightboxView.values.zoom}) rotate(${lightboxView.values.rotation}deg)`,
                   }}
                 >
                   <LightboxWatermark opacity={12} />
@@ -562,10 +577,10 @@ export default function ReviewDetailPage() {
               <div className="flex items-center gap-1 bg-white/10 backdrop-blur-sm rounded-full p-1 border border-white/20">
                 <button
                   onClick={handleZoomOut}
-                  disabled={lightboxZoom <= 0.5}
+                  disabled={lightboxView.values.zoom <= 0.5}
                   className={cn(
                     "p-2 rounded-full transition-colors",
-                    lightboxZoom <= 0.5
+                    lightboxView.values.zoom <= 0.5
                       ? "text-white/30 cursor-not-allowed"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   )}
@@ -574,14 +589,14 @@ export default function ReviewDetailPage() {
                   <ZoomOut className="size-5" />
                 </button>
                 <span className="px-3 text-sm font-medium text-white/80 min-w-[60px] text-center">
-                  {Math.round(lightboxZoom * 100)}%
+                  {Math.round(lightboxView.values.zoom * 100)}%
                 </span>
                 <button
                   onClick={handleZoomIn}
-                  disabled={lightboxZoom >= 4}
+                  disabled={lightboxView.values.zoom >= 4}
                   className={cn(
                     "p-2 rounded-full transition-colors",
-                    lightboxZoom >= 4
+                    lightboxView.values.zoom >= 4
                       ? "text-white/30 cursor-not-allowed"
                       : "text-white/70 hover:text-white hover:bg-white/10"
                   )}
@@ -1014,14 +1029,14 @@ export default function ReviewDetailPage() {
               {review.slots && review.slots.length > 0 && (
                 <div>
                   <button
-                    onClick={() => setShowAllSlots(!showAllSlots)}
+                    onClick={showAllSlotsState.toggle}
                     className="flex items-center gap-2 text-sm text-accent-blue hover:text-accent-blue/80 font-medium transition-colors"
                   >
-                    {showAllSlots ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                    {showAllSlots ? "Hide details" : "Show slot details"}
+                    {showAllSlotsState.value ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                    {showAllSlotsState.value ? "Hide details" : "Show slot details"}
                   </button>
 
-                  {showAllSlots && (
+                  {showAllSlotsState.value && (
                     <div className="mt-4 space-y-3">
                       {review.slots.map((slot, index) => (
                         <div

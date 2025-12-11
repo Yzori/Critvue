@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from "react";
+import { useToggle } from "@/hooks";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -137,7 +138,6 @@ const defaultMilestones: TransformedMilestone[] = [
 export default function PortfolioPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Portfolio data state
@@ -145,12 +145,16 @@ export default function PortfolioPage() {
   const [milestones, setMilestones] = useState<TransformedMilestone[]>(defaultMilestones);
   const [reviewers, setReviewers] = useState<TransformedReviewer[]>([]);
   const [projects, setProjects] = useState<JourneyProject[]>([]);
-
-  // Upload dialog state
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [addFromReviewsOpen, setAddFromReviewsOpen] = useState(false);
   const [portfolioSlots, setPortfolioSlots] = useState<PortfolioSlotsResponse | null>(null);
   const [featuredSlots, setFeaturedSlots] = useState<FeaturedSlotsResponse | null>(null);
+
+  // Boolean states using useToggle
+  const loadingState = useToggle(true);
+  const uploadDialog = useToggle();
+  const addFromReviewsDialog = useToggle();
+
+  // Convenient alias
+  const loading = loadingState.value;
 
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
@@ -169,7 +173,7 @@ export default function PortfolioPage() {
 
   const loadPortfolio = async () => {
     try {
-      setLoading(true);
+      loadingState.setTrue();
       setError(null);
 
       // Fetch portfolio slots (for self-documented items limit)
@@ -224,7 +228,7 @@ export default function PortfolioPage() {
       setError("Failed to load portfolio data. Please try again.");
       // Keep default data on error
     } finally {
-      setLoading(false);
+      loadingState.setFalse();
     }
   };
 
@@ -298,16 +302,16 @@ export default function PortfolioPage() {
     <div className="min-h-screen bg-background">
       {/* Upload Dialog */}
       <PortfolioUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
+        open={uploadDialog.value}
+        onOpenChange={uploadDialog.set}
         slotsRemaining={portfolioSlots?.remaining ?? 3}
         onSuccess={loadPortfolio}
       />
 
       {/* Add from Reviews Dialog */}
       <AddFromReviewsDialog
-        open={addFromReviewsOpen}
-        onOpenChange={setAddFromReviewsOpen}
+        open={addFromReviewsDialog.value}
+        onOpenChange={addFromReviewsDialog.set}
         onSuccess={loadPortfolio}
       />
 
@@ -335,7 +339,7 @@ export default function PortfolioPage() {
             size="sm"
             variant="ghost"
             className="h-7 gap-1.5 text-xs"
-            onClick={() => setAddFromReviewsOpen(true)}
+            onClick={addFromReviewsDialog.setTrue}
           >
             <BadgeCheck className="size-3.5 text-emerald-500" />
             Add Verified
@@ -344,7 +348,7 @@ export default function PortfolioPage() {
             size="sm"
             variant="ghost"
             className="h-7 gap-1.5 text-xs"
-            onClick={() => setUploadDialogOpen(true)}
+            onClick={uploadDialog.setTrue}
           >
             <Plus className="size-3.5" />
             Upload
@@ -484,7 +488,7 @@ export default function PortfolioPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setAddFromReviewsOpen(true)}
+                    onClick={addFromReviewsDialog.setTrue}
                     className="gap-2"
                   >
                     <BadgeCheck className="size-4" />
@@ -492,7 +496,7 @@ export default function PortfolioPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setUploadDialogOpen(true)}
+                    onClick={uploadDialog.setTrue}
                     className="gap-2"
                   >
                     <Upload className="size-4" />

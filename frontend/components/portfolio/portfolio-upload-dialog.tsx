@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useFormState } from "@/hooks";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -78,28 +79,23 @@ export function PortfolioUploadDialog({
   const [step, setStep] = useState<"form" | "uploading" | "success" | "error">("form");
   const [error, setError] = useState<string | null>(null);
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [contentType, setContentType] = useState<PortfolioContentType>("design");
-  const [projectUrl, setProjectUrl] = useState("");
-  const [beforeImage, setBeforeImage] = useState<File | null>(null);
-  const [afterImage, setAfterImage] = useState<File | null>(null);
-  const [beforePreview, setBeforePreview] = useState<string | null>(null);
-  const [afterPreview, setAfterPreview] = useState<string | null>(null);
+  // Form state using useFormState
+  const form = useFormState({
+    title: "",
+    description: "",
+    contentType: "design" as PortfolioContentType,
+    projectUrl: "",
+    beforeImage: null as File | null,
+    afterImage: null as File | null,
+    beforePreview: null as string | null,
+    afterPreview: null as string | null,
+  });
 
   const resetForm = useCallback(() => {
     setStep("form");
     setError(null);
-    setTitle("");
-    setDescription("");
-    setContentType("design");
-    setProjectUrl("");
-    setBeforeImage(null);
-    setAfterImage(null);
-    setBeforePreview(null);
-    setAfterPreview(null);
-  }, []);
+    form.reset();
+  }, [form]);
 
   const handleImageSelect = useCallback((
     file: File | null,
@@ -110,23 +106,23 @@ export function PortfolioUploadDialog({
     const reader = new FileReader();
     reader.onload = (e) => {
       if (type === "before") {
-        setBeforeImage(file);
-        setBeforePreview(e.target?.result as string);
+        form.setValue("beforeImage", file);
+        form.setValue("beforePreview", e.target?.result as string);
       } else {
-        setAfterImage(file);
-        setAfterPreview(e.target?.result as string);
+        form.setValue("afterImage", file);
+        form.setValue("afterPreview", e.target?.result as string);
       }
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [form]);
 
   const handleSubmit = async () => {
-    if (!title.trim()) {
+    if (!form.values.title.trim()) {
       setError("Please enter a title for your work");
       return;
     }
 
-    if (!afterImage) {
+    if (!form.values.afterImage) {
       setError("Please upload at least an after/current image of your work");
       return;
     }
@@ -139,22 +135,22 @@ export function PortfolioUploadDialog({
       let beforeImageUrl: string | undefined;
       let afterImageUrl: string | undefined;
 
-      if (beforeImage) {
-        const beforeResponse = await uploadGenericFile(beforeImage, "portfolio");
+      if (form.values.beforeImage) {
+        const beforeResponse = await uploadGenericFile(form.values.beforeImage, "portfolio");
         beforeImageUrl = beforeResponse.url;
       }
 
-      const afterResponse = await uploadGenericFile(afterImage, "portfolio");
+      const afterResponse = await uploadGenericFile(form.values.afterImage, "portfolio");
       afterImageUrl = afterResponse.url;
 
       // Create portfolio item
       const data: CreatePortfolioData = {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        content_type: contentType,
+        title: form.values.title.trim(),
+        description: form.values.description.trim() || undefined,
+        content_type: form.values.contentType,
         image_url: afterImageUrl,
         before_image_url: beforeImageUrl,
-        project_url: projectUrl.trim() || undefined,
+        project_url: form.values.projectUrl.trim() || undefined,
       };
 
       await createPortfolioItem(data);
@@ -184,7 +180,7 @@ export function PortfolioUploadDialog({
     }
   };
 
-  const canSubmit = slotsRemaining > 0 && title.trim() && afterImage;
+  const canSubmit = slotsRemaining > 0 && form.values.title.trim() && form.values.afterImage;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -218,13 +214,13 @@ export function PortfolioUploadDialog({
                   <Input
                     id="title"
                     placeholder="My Creative Project"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    value={form.values.title}
+                    onChange={(e) => form.setValue("title", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contentType">Content Type</Label>
-                  <Select value={contentType} onValueChange={(v) => setContentType(v as PortfolioContentType)}>
+                  <Select value={form.values.contentType} onValueChange={(v) => form.setValue("contentType", v as PortfolioContentType)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -248,8 +244,8 @@ export function PortfolioUploadDialog({
                 <Textarea
                   id="description"
                   placeholder="Describe your work and growth journey..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={form.values.description}
+                  onChange={(e) => form.setValue("description", e.target.value)}
                   rows={3}
                 />
               </div>
@@ -264,11 +260,11 @@ export function PortfolioUploadDialog({
                   {/* Before Image */}
                   <ImageUploadZone
                     label="Before (Optional)"
-                    preview={beforePreview}
+                    preview={form.values.beforePreview}
                     onSelect={(f) => handleImageSelect(f, "before")}
                     onClear={() => {
-                      setBeforeImage(null);
-                      setBeforePreview(null);
+                      form.setValue("beforeImage", null);
+                      form.setValue("beforePreview", null);
                     }}
                   />
 
@@ -282,11 +278,11 @@ export function PortfolioUploadDialog({
                   {/* After Image */}
                   <ImageUploadZone
                     label="After/Current *"
-                    preview={afterPreview}
+                    preview={form.values.afterPreview}
                     onSelect={(f) => handleImageSelect(f, "after")}
                     onClear={() => {
-                      setAfterImage(null);
-                      setAfterPreview(null);
+                      form.setValue("afterImage", null);
+                      form.setValue("afterPreview", null);
                     }}
                     required
                   />
@@ -300,8 +296,8 @@ export function PortfolioUploadDialog({
                   id="projectUrl"
                   type="url"
                   placeholder="https://example.com/project"
-                  value={projectUrl}
-                  onChange={(e) => setProjectUrl(e.target.value)}
+                  value={form.values.projectUrl}
+                  onChange={(e) => form.setValue("projectUrl", e.target.value)}
                 />
               </div>
 

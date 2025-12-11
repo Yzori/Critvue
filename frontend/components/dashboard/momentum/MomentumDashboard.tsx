@@ -32,6 +32,7 @@
  */
 
 import * as React from 'react';
+import { useToggle } from '@/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -94,8 +95,8 @@ export function MomentumDashboard({
   className,
 }: MomentumDashboardProps) {
   const { user } = useAuth();
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const commandPalette = useToggle();
+  const loadingState = useToggle(true);
   const [error, setError] = React.useState<{ message: string; isRetryable: boolean } | null>(null);
 
   // Karma/gamification state
@@ -117,19 +118,22 @@ export function MomentumDashboard({
   const { celebration, showCelebration: _showCelebration, hideCelebration, isVisible: isCelebrating } = useCelebration();
 
   // Expert banner state (with localStorage persistence)
-  const [showExpertBanner, setShowExpertBanner] = React.useState(true);
+  const expertBanner = useToggle(true);
+
+  // Convenient alias
+  const isLoading = loadingState.value;
 
   // Load expert banner preference from localStorage
   React.useEffect(() => {
     const dismissed = localStorage.getItem('expertBannerDismissed');
     if (dismissed === 'true') {
-      setShowExpertBanner(false);
+      expertBanner.setFalse();
     }
-  }, []);
+  }, [expertBanner]);
 
   // Handle expert banner dismissal
   const handleDismissExpertBanner = () => {
-    setShowExpertBanner(false);
+    expertBanner.setFalse();
     localStorage.setItem('expertBannerDismissed', 'true');
   };
 
@@ -138,7 +142,7 @@ export function MomentumDashboard({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsCommandPaletteOpen(true);
+        commandPalette.setTrue();
       }
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'r') {
         e.preventDefault();
@@ -148,7 +152,7 @@ export function MomentumDashboard({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [role, onRoleChange]);
+  }, [role, onRoleChange, commandPalette]);
 
   // Load all data
   React.useEffect(() => {
@@ -156,7 +160,7 @@ export function MomentumDashboard({
   }, [role]);
 
   async function loadAllData() {
-    setIsLoading(true);
+    loadingState.setTrue();
     setError(null);
 
     try {
@@ -176,7 +180,7 @@ export function MomentumDashboard({
       });
       setKanbanColumns(getDefaultColumns(role).map(col => ({ ...col, items: [] })));
     } finally {
-      setIsLoading(false);
+      loadingState.setFalse();
     }
   }
 
@@ -329,7 +333,7 @@ export function MomentumDashboard({
 
               {/* Expert CTA - subtle inline upgrade prompt */}
               <AnimatePresence>
-                {showExpertBanner && user?.role !== 'reviewer' && user?.role !== 'admin' && (
+                {expertBanner.value && user?.role !== 'reviewer' && user?.role !== 'admin' && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -498,8 +502,8 @@ export function MomentumDashboard({
 
       {/* Command Palette */}
       <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
+        isOpen={commandPalette.value}
+        onClose={commandPalette.setFalse}
         role={role}
       />
 
