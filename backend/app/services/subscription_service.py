@@ -14,6 +14,7 @@ from app.core.exceptions import (
     InvalidInputError,
     InternalError,
 )
+from app.services.email import send_payment_failed_email
 
 logger = logging.getLogger(__name__)
 
@@ -419,7 +420,15 @@ class SubscriptionService:
             user.subscription_status = SubscriptionStatus.PAST_DUE
             await db.commit()
             logger.warning(f"Payment failed for user {user.id}, subscription {subscription_id}")
-            # TODO: Send email notification to user about failed payment
+
+            # Send email notification to user about failed payment
+            amount_due = invoice.get("amount_due", 0)
+            amount_str = f"${amount_due / 100:.2f}" if amount_due else None
+            await send_payment_failed_email(
+                to_email=user.email,
+                user_name=user.full_name,
+                amount=amount_str,
+            )
 
     @staticmethod
     async def sync_subscription_from_stripe(user: User, db: AsyncSession) -> bool:

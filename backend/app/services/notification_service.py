@@ -22,7 +22,7 @@ from app.models.notification import (
 )
 from app.models.user import User
 from app.schemas.notification import NotificationCreate
-# from app.services.email import send_email  # TODO: Implement generic send_email function
+from app.services.email import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -239,20 +239,18 @@ class NotificationService:
                 logger.error(f"User {notification.user_id} not found for email notification")
                 return
 
-            # TODO: Implement generic send_email function in email service
-            # For now, just log that we would send an email
-            logger.info(
-                f"Would send email notification {notification.id} to {user.email}: "
-                f"{notification.title}"
+            # Send the email
+            success = await send_email(
+                to_email=user.email,
+                subject=f"Critvue: {notification.title}",
+                html_content=self._generate_email_html(notification),
+                text_content=notification.message,
             )
 
-            # Future implementation:
-            # await send_email(
-            #     to_email=user.email,
-            #     subject=f"Critvue: {notification.title}",
-            #     html_content=self._generate_email_html(notification),
-            #     text_content=notification.message,
-            # )
+            if success:
+                logger.info(f"Email notification {notification.id} sent to {user.email}")
+            else:
+                logger.warning(f"Failed to send email notification {notification.id} to {user.email}")
 
         except Exception as e:
             logger.error(f"Error sending email for notification {notification.id}: {e}")

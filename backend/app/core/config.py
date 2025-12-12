@@ -91,9 +91,10 @@ class Settings(BaseSettings):
     # Stripe Connect (for reviewer payouts)
     STRIPE_PLATFORM_FEE_PERCENT: float = 0.25  # 25% platform fee on expert reviews
 
-    # Email
+    # Email (Resend)
     EMAIL_FROM: str = "noreply@critvue.com"
-    EMAIL_API_KEY: str = ""
+    EMAIL_API_KEY: str = ""  # Resend API key (re_xxxxx)
+    EMAIL_REPLY_TO: str = ""  # Optional reply-to address
 
     # Google OAuth
     GOOGLE_CLIENT_ID: str = ""
