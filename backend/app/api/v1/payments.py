@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.api.deps import get_current_user
 from app.models.user import User
-from app.core.exceptions import InvalidInputError, InternalError, ExternalServiceError
+from app.core.exceptions import InvalidInputError, InternalError, ExternalServiceError, NotFoundError, ForbiddenError
 from app.models.review_request import ReviewRequest, ReviewType
 from app.services.payments import PaymentService
 from app.schemas.payment import (

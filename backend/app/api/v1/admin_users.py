@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 
 from app.db.session import get_db
 from app.api.deps import get_current_user
+from app.core.exceptions import ForbiddenError
 
 # Rate limiter for admin endpoints
 limiter = Limiter(key_func=get_remote_address)

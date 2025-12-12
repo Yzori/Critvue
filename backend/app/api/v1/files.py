@@ -13,6 +13,7 @@ from app.schemas.review import ReviewFileCreate, ReviewFileResponse
 from app.crud.review import review_crud
 from app.utils.file_utils import process_upload, delete_file
 from app.core.logging_config import get_logger
+from app.core.exceptions import NotFoundError, InvalidInputError, InternalError
 
 logger = get_logger(__name__)
 
