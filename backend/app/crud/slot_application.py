@@ -107,16 +107,23 @@ async def create_application(
         raise DuplicateApplicationError("You already have a pending application for this request")
 
     # Check if there are still slots to fill
-    available_slots_query = select(func.count(ReviewSlot.id)).where(
-        and_(
-            ReviewSlot.review_request_id == review_request_id,
-            ReviewSlot.status == ReviewSlotStatus.AVAILABLE.value
+    # Use FOR UPDATE to prevent race conditions where multiple applicants
+    # could simultaneously see available slots and create applications
+    available_slots_query = (
+        select(ReviewSlot)
+        .where(
+            and_(
+                ReviewSlot.review_request_id == review_request_id,
+                ReviewSlot.status == ReviewSlotStatus.AVAILABLE.value
+            )
         )
+        .with_for_update(skip_locked=True)  # Skip locked rows, count only truly available
+        .limit(1)  # We only need to know if at least one exists
     )
-    available_count_result = await db.execute(available_slots_query)
-    available_count = available_count_result.scalar()
+    available_result = await db.execute(available_slots_query)
+    available_slot = available_result.scalar_one_or_none()
 
-    if available_count == 0:
+    if not available_slot:
         raise NoSlotsAvailableError("All slots for this review request have been filled")
 
     # Create the application

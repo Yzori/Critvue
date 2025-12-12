@@ -1,10 +1,32 @@
 /**
  * API Client Configuration
- * Fetch-based client with httpOnly cookie authentication
+ * Fetch-based client with httpOnly cookie authentication and CSRF protection
  */
 
 // Base API URL - configurable via environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+
+// CSRF token cookie name (must match backend)
+const CSRF_COOKIE_NAME = "csrf_token";
+// CSRF header name (must match backend)
+const CSRF_HEADER_NAME = "X-CSRF-Token";
+
+/**
+ * Get CSRF token from cookie
+ * Returns empty string if not found (server will set it on first request)
+ */
+function getCsrfToken(): string {
+  if (typeof document === "undefined") return "";
+
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === CSRF_COOKIE_NAME) {
+      return decodeURIComponent(value);
+    }
+  }
+  return "";
+}
 
 // Base backend URL for static files (without /api/v1)
 export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
@@ -41,22 +63,34 @@ export type ApiError = {
 };
 
 /**
- * Main API client using fetch with automatic cookie handling
+ * Main API client using fetch with automatic cookie handling and CSRF protection
  */
 export async function apiClient<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const method = (options.method || 'GET').toUpperCase();
+
+  // Build headers with CSRF token for state-changing methods
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  // Add CSRF token for state-changing methods (POST, PUT, PATCH, DELETE)
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      headers[CSRF_HEADER_NAME] = csrfToken;
+    }
+  }
 
   // Add credentials: 'include' to send httpOnly cookies
   const config: RequestInit = {
     ...options,
     credentials: 'include', // Automatically send cookies with requests
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   };
 
   let response: Response;
@@ -162,6 +196,13 @@ function getStatusMessage(status: number): string {
     504: "Request timed out. Please try again.",
   };
   return statusMessages[status] || `Request failed (${status})`;
+}
+
+/**
+ * Check if error is a CSRF validation failure
+ */
+export function isCsrfError(apiError: ApiError): boolean {
+  return apiError?.error?.code === "CSRF_VALIDATION_FAILED";
 }
 
 /**

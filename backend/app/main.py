@@ -81,6 +81,9 @@ app.include_router(reviewers.router, prefix="/api/v1")  # Reviewer directory
 app.include_router(payments.router, prefix="/api/v1")  # Expert review payments and Stripe Connect
 app.include_router(slot_applications.router, prefix="/api/v1")  # Expert review slot applications
 
+# CSRF Protection middleware
+from app.core.csrf import CSRFMiddleware
+
 # Security headers middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
@@ -122,6 +125,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+# CSRF Protection middleware (must be after CORS, before request processing)
+# Uses double-submit cookie pattern - validates X-CSRF-Token header matches csrf_token cookie
+app.add_middleware(CSRFMiddleware)
+
 # Session middleware for OAuth state management
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
@@ -137,6 +144,7 @@ app.add_middleware(
         "Accept",
         "Origin",
         "X-Requested-With",
+        "X-CSRF-Token",  # Required for CSRF protection
     ],
     expose_headers=["X-Total-Count", "X-Page", "X-Page-Size"],
 )
