@@ -16,7 +16,7 @@ from app.db.session import async_session_maker
 from app.crud.review_slot import process_expired_claims, process_auto_accepts
 from app.core.scheduler_config import scheduler_settings
 from app.services.committee_service import CommitteeService
-from app.services.email_digest import send_daily_digests, send_weekly_digests
+from app.services.notifications.email_digest import send_daily_digests, send_weekly_digests
 
 logger = logging.getLogger(__name__)
 

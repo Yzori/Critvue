@@ -34,7 +34,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Palette, Star, ArrowRight, X } from "lucide-react";
-import { useShowMobileUI } from "@/lib/hooks/use-media-query";
+import { useShowMobileUI } from "@/hooks/use-media-query";
 
 // Import dashboard components
 import CreatorDashboard from "@/components/dashboard/creator-dashboard";

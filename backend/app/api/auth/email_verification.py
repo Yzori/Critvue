@@ -15,7 +15,7 @@ from app.api.auth.common import (
     get_db,
     settings,
 )
-from app.services.email_verification import (
+from app.services.auth.email_verification import (
     verify_email_token,
     resend_verification_email,
 )

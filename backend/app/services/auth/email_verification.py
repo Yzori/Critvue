@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.user import User
-from app.services.email import send_email_verification
+from app.services.notifications.email_service import send_email_verification
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

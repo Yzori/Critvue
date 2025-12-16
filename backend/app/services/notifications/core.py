@@ -22,7 +22,7 @@ from app.models.notification import (
 )
 from app.models.user import User
 from app.schemas.notification import NotificationCreate
-from app.services.email import send_email
+from app.services.notifications.email_service import send_email
 
 logger = logging.getLogger(__name__)
 

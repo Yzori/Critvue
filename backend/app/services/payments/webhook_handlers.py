@@ -79,7 +79,7 @@ class PaymentWebhookHandlers:
         try:
             creator = await db.get(User, review_request.user_id)
             if creator:
-                from app.services.payment_notifications import notify_payment_captured
+                from app.services.notifications.payment_triggers import notify_payment_captured
                 total_amount = sum(slot.payment_amount or 0 for slot in slots)
                 await notify_payment_captured(
                     db=db,
@@ -127,7 +127,7 @@ class PaymentWebhookHandlers:
                 if review_request:
                     creator = await db.get(User, review_request.user_id)
                     if creator:
-                        from app.services.payment_notifications import notify_payment_failed
+                        from app.services.notifications.payment_triggers import notify_payment_failed
                         await notify_payment_failed(
                             db=db,
                             review_request=review_request,

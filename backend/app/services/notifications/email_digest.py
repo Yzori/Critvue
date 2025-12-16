@@ -18,8 +18,8 @@ from app.models.notification import (
     EmailDigestFrequency,
 )
 from app.models.user import User
-from app.services.email import send_digest_email
-from app.services.unsubscribe import get_unsubscribe_url_for_user
+from app.services.notifications.email_service import send_digest_email
+from app.services.auth.unsubscribe import get_unsubscribe_url_for_user
 
 logger = logging.getLogger(__name__)
 

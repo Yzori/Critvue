@@ -102,7 +102,7 @@ async def batch_reject_reviews(
                 )
 
                 # Deduct sparks
-                from app.services.review_sparks_hooks import on_review_rejected
+                from app.services.gamification.review_sparks_hooks import on_review_rejected
                 await on_review_rejected(db, rejected_slot.id, rejected_slot.reviewer_id)
 
                 rejected.append({

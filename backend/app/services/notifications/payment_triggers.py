@@ -22,7 +22,7 @@ from app.models.notification import (
 from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
 from app.models.user import User
-from app.services.notification_service import NotificationService
+from app.services.notifications.core import NotificationService
 
 logger = logging.getLogger(__name__)
 

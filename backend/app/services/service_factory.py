@@ -9,8 +9,8 @@ from functools import lru_cache
 from typing import Optional
 
 from app.core.config import settings
-from app.services.image_service import ImageService
-from app.services.storage_service import StorageService
+from app.services.infrastructure.image_service import ImageService
+from app.services.infrastructure.storage_service import StorageService
 
 logger = logging.getLogger(__name__)
 

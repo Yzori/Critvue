@@ -39,7 +39,7 @@ from app.schemas.slot_application import (
     MyApplicationsResponse,
     ApplicantInfo,
 )
-from app.services.notification_triggers import (
+from app.services.notifications.triggers import (
     notify_slot_application_received,
     notify_slot_application_accepted,
     notify_slot_application_rejected,

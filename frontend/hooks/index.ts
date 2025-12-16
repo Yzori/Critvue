@@ -47,3 +47,17 @@ export {
 // Existing hooks
 export { useReviews, useCreateReview } from "./useReviews";
 export { useScrollProgress } from "./useScrollProgress";
+
+// Media query hooks
+export {
+  useMediaQuery,
+  useIsMobile,
+  useIsTablet,
+  useIsDesktop,
+  useIsLargeDesktop,
+  useShowMobileUI,
+  usePrefersReducedMotion,
+  usePrefersDarkMode,
+  useCanHover,
+  useIsTouchDevice,
+} from "./use-media-query";

@@ -22,7 +22,7 @@ from app.api.auth.common import (
     settings,
 )
 from app.core.exceptions import InvalidInputError
-from app.services.email_verification import send_verification_email
+from app.services.auth.email_verification import send_verification_email
 
 logger = logging.getLogger(__name__)
 

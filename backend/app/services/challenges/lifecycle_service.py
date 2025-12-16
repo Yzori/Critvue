@@ -16,8 +16,8 @@ from app.models.challenge_entry import ChallengeEntry
 from app.models.challenge_invitation import ChallengeInvitation, InvitationStatus
 from app.models.sparks_transaction import SparksAction as KarmaAction
 from app.models.notification import NotificationType, NotificationPriority, EntityType
-from app.services.sparks_service import SparksService as KarmaService
-from app.services.notification_service import NotificationService
+from app.services.gamification.sparks_service import SparksService as KarmaService
+from app.services.notifications.core import NotificationService
 from app.services.challenges.base import BaseChallengeService
 from app.services.challenges.prompt_service import ChallengePromptService
 from app.constants.challenges import (

@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, AcceptanceType, DisputeResolution
 from app.models.sparks_transaction import SparksAction
-from app.services.sparks_service import SparksService
+from app.services.gamification.sparks_service import SparksService
 
 
 class ReviewSparksHooks:

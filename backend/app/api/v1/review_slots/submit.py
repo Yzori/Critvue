@@ -18,8 +18,8 @@ from app.schemas.review_slot import (
     ReviewReject,
     RequestElaboration,
 )
-from app.services.review_sparks_hooks import on_review_submitted, on_review_accepted, on_review_rejected
-from app.services.notification_triggers import (
+from app.services.gamification.review_sparks_hooks import on_review_submitted, on_review_accepted, on_review_rejected
+from app.services.notifications.triggers import (
     notify_review_submitted,
     notify_review_accepted,
     notify_review_rejected,

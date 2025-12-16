@@ -118,7 +118,7 @@ class ClaimService:
 
         # Then check tier permissions
         try:
-            from app.services.tier_service import TierService
+            from app.services.gamification.tier_service import TierService
             tier_service = TierService(db)
 
             can_claim, reason = await tier_service.can_claim_paid_review(
@@ -422,7 +422,7 @@ class ClaimService:
 
         # SPARKS PENALTY: Deduct sparks for abandoning claim
         try:
-            from app.services.review_sparks_hooks import deduct_sparks_for_abandonment
+            from app.services.gamification.review_sparks_hooks import deduct_sparks_for_abandonment
             await deduct_sparks_for_abandonment(db, slot)
         except ImportError:
             # Sparks system not available

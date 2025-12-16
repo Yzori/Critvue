@@ -30,7 +30,7 @@ from app.core.security import (
     decode_access_token
 )
 from app.api.deps import get_current_user
-from app.services.redis_service import redis_service
+from app.services.infrastructure.redis_service import redis_service
 from app.core.logging_config import security_logger
 from app.core.config import settings
 from app.crud.profile import generate_unique_username

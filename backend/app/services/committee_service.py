@@ -23,7 +23,7 @@ from app.schemas.committee import (
     CommitteeStats,
 )
 from app.models.notification import NotificationType, NotificationPriority
-from app.services.notification_service import NotificationService
+from app.services.notifications.core import NotificationService
 from app.constants.committee import (
     REAPPLICATION_COOLDOWN_DAYS,
     ESCALATION_DAYS,

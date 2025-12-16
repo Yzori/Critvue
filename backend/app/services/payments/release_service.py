@@ -97,7 +97,7 @@ class PaymentReleaseService:
 
             # Send notification to reviewer
             try:
-                from app.services.payment_notifications import notify_payment_released
+                from app.services.notifications.payment_triggers import notify_payment_released
                 await notify_payment_released(
                     db=db,
                     slot=slot,
@@ -173,7 +173,7 @@ class PaymentReleaseService:
 
             # Send notification to creator
             try:
-                from app.services.payment_notifications import notify_refund_issued
+                from app.services.notifications.payment_triggers import notify_refund_issued
                 creator = await db.get(User, review_request.user_id)
                 if creator:
                     await notify_refund_issued(

@@ -16,14 +16,14 @@ from app.schemas.password_reset import (
     PasswordResetVerify,
     PasswordResetVerifyResponse
 )
-from app.services.password_reset import (
+from app.services.auth.password_reset import (
     create_password_reset_token,
     verify_reset_token,
     reset_password,
     mask_email,
     RESET_TOKEN_EXPIRE_MINUTES
 )
-from app.services.email import send_password_reset_email
+from app.services.notifications.email_service import send_password_reset_email
 from app.core.logging_config import security_logger
 from app.core.config import settings
 from app.core.exceptions import InvalidInputError, InternalError

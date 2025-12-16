@@ -14,7 +14,7 @@ from app.core.exceptions import (
     InvalidInputError,
     InternalError,
 )
-from app.services.email import send_payment_failed_email
+from app.services.notifications.email_service import send_payment_failed_email
 
 logger = logging.getLogger(__name__)
 

@@ -38,10 +38,10 @@ from app.schemas.profile import (
 from app.crud import profile as profile_crud
 from app.core.config import settings
 from app.core.logging_config import logging
-from app.services.image_service import ImageService, ImageValidationError, ImageProcessingError
-from app.services.storage_service import StorageService, StorageError
+from app.services.infrastructure.image_service import ImageService, ImageValidationError, ImageProcessingError
+from app.services.infrastructure.storage_service import StorageService, StorageError
 from app.services.service_factory import get_image_service, get_storage_service
-from app.services.reviewer_dna_service import ReviewerDNAService
+from app.services.ratings.reviewer_dna_service import ReviewerDNAService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/profile", tags=["Profile"])

@@ -18,7 +18,7 @@ from app.core.exceptions import (
 )
 from app.models.user import User
 from app.schemas.user import TokenData
-from app.services.redis_service import redis_service
+from app.services.infrastructure.redis_service import redis_service
 
 security = HTTPBearer()
 

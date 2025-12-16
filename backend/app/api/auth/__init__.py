@@ -7,6 +7,7 @@ This package contains authentication endpoints organized into modules:
 - oauth: Google OAuth flow
 - sessions: Session management (view, revoke)
 - email_verification: Email verification and resend
+- password_reset: Password reset flow
 
 Usage:
     from app.api.auth import router
@@ -22,6 +23,7 @@ from app.api.auth.login import router as login_router
 from app.api.auth.oauth import router as oauth_router
 from app.api.auth.sessions import router as sessions_router
 from app.api.auth.email_verification import router as email_verification_router
+from app.api.auth.password_reset import router as password_reset_router
 
 # Re-export get_current_user for backwards compatibility
 # (some modules import it from here instead of app.api.deps)
@@ -36,5 +38,6 @@ router.include_router(login_router)
 router.include_router(oauth_router)
 router.include_router(sessions_router)
 router.include_router(email_verification_router)
+router.include_router(password_reset_router)
 
 __all__ = ["router", "get_current_user"]

@@ -18,8 +18,8 @@ from app.schemas.review_slot import (
     DraftSaveSuccess,
     SmartReviewSubmit,
 )
-from app.services.review_sparks_hooks import on_review_submitted
-from app.services.notification_triggers import notify_review_submitted, notify_elaboration_submitted
+from app.services.gamification.review_sparks_hooks import on_review_submitted
+from app.services.notifications.triggers import notify_review_submitted, notify_elaboration_submitted
 from app.core.exceptions import (
     SlotNotFoundError,
     NotOwnerError,

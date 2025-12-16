@@ -9,7 +9,7 @@ from app.models.badge import Badge, UserBadge, BadgeCategory, BadgeRarity
 from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus
 from app.models.sparks_transaction import SparksAction
-from app.services.badge_definitions import DEFAULT_BADGES
+from app.services.gamification.badge_definitions import DEFAULT_BADGES
 
 
 class BadgeService:

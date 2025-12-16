@@ -23,7 +23,7 @@ from app.schemas.notification import (
     NotificationPreferencesResponse,
     NotificationPreferencesUpdate,
 )
-from app.services.notification_service import NotificationService
+from app.services.notifications.core import NotificationService
 
 logger = logging.getLogger(__name__)
 

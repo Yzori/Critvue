@@ -13,7 +13,7 @@ from app.models.challenge_entry import ChallengeEntry
 from app.models.challenge_vote import ChallengeVote
 from app.models.challenge_participant import ChallengeParticipant
 from app.models.sparks_transaction import SparksAction as KarmaAction
-from app.services.sparks_service import SparksService as KarmaService
+from app.services.gamification.sparks_service import SparksService as KarmaService
 from app.services.challenges.base import BaseChallengeService
 from app.constants.challenges import KARMA_VALUES
 from app.core.exceptions import (

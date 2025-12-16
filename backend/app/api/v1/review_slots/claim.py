@@ -14,8 +14,8 @@ from app.services.claim_service import (
     ApplicationRequiredError as ServiceApplicationRequired,
     TierPermissionError as ServiceTierPermission,
 )
-from app.services.review_sparks_hooks import on_claim_abandoned
-from app.services.notification_triggers import notify_slot_claimed, notify_slot_abandoned
+from app.services.gamification.review_sparks_hooks import on_claim_abandoned
+from app.services.notifications.triggers import notify_slot_claimed, notify_slot_abandoned
 from app.core.exceptions import (
     ApplicationRequiredError,
     TierPermissionError,

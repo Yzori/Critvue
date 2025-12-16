@@ -28,8 +28,8 @@ from app.models.user import User
 from app.models.review_slot import ReviewSlot, ReviewSlotStatus, PaymentStatus
 from app.models.review_request import ReviewRequest, ReviewStatus
 from app.schemas.review_slot import ReviewAccept
-from app.services.review_sparks_hooks import on_review_accepted
-from app.services.notification_triggers import notify_review_accepted
+from app.services.gamification.review_sparks_hooks import on_review_accepted
+from app.services.notifications.triggers import notify_review_accepted
 from app.utils import calculate_urgency, generate_etag, get_display_name
 
 logger = logging.getLogger(__name__)

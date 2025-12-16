@@ -700,7 +700,7 @@ class SparksService:
 
     async def check_tier_promotion(self, user_id: int) -> bool:
         """Check if user qualifies for tier promotion."""
-        from app.services.tier_service import TierService
+        from app.services.gamification.tier_service import TierService
 
         tier_service = TierService(self.db)
         return await tier_service.check_and_promote_user(user_id)

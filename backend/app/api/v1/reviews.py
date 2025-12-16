@@ -30,7 +30,7 @@ from app.schemas.review import (
 from app.crud.review import review_crud
 from app.core.logging_config import get_logger
 from app.services.subscription_service import SubscriptionService
-from app.services.notification_triggers import notify_review_invitation
+from app.services.notifications.triggers import notify_review_invitation
 from app.utils import get_display_name
 
 logger = get_logger(__name__)

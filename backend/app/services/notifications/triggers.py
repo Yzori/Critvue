@@ -11,7 +11,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.notification import NotificationType, NotificationPriority, EntityType
-from app.services.notification_trigger_helper import (
+from app.services.notifications.trigger_helpers import (
     NotificationContext,
     fetch_slot_context,
     fetch_request_context,

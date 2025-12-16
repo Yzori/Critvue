@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
-from app.services.unsubscribe import (
+from app.services.auth.unsubscribe import (
     unsubscribe_by_token,
     resubscribe_by_token,
     get_user_from_unsubscribe_token,

@@ -14,8 +14,8 @@ from app.models.portfolio import Portfolio
 from app.models.review_slot import ReviewSlot
 from app.models.review_request import ReviewRequest
 from app.models.sparks_transaction import SparksTransaction as KarmaTransaction
-from app.services.sparks_service import SparksService as KarmaService
-from app.services.badge_service import BadgeService
+from app.services.gamification.sparks_service import SparksService as KarmaService
+from app.services.gamification.badge_service import BadgeService
 
 router = APIRouter(prefix="/growth", tags=["Growth Analytics"])
 

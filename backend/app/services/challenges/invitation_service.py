@@ -13,7 +13,7 @@ from app.models.challenge import Challenge, ChallengeStatus, ChallengeType
 from app.models.challenge_invitation import ChallengeInvitation, InvitationStatus
 from app.models.user import User
 from app.models.notification import NotificationType, NotificationPriority, EntityType
-from app.services.notification_service import NotificationService
+from app.services.notifications.core import NotificationService
 from app.services.challenges.base import BaseChallengeService
 from app.constants.challenges import INVITATION_EXPIRY_HOURS
 from app.core.exceptions import (

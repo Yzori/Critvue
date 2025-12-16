@@ -8,11 +8,11 @@ from pydantic import BaseModel, Field
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
-from app.services.sparks_service import SparksService
-from app.services.badge_service import BadgeService
-from app.services.leaderboard_service import LeaderboardService
-from app.services.requester_rating_service import RequesterRatingService
-from app.services.reviewer_rating_service import ReviewerRatingService
+from app.services.gamification.sparks_service import SparksService
+from app.services.gamification.badge_service import BadgeService
+from app.services.gamification.leaderboard_service import LeaderboardService
+from app.services.ratings.requester_rating_service import RequesterRatingService
+from app.services.ratings.reviewer_rating_service import ReviewerRatingService
 from app.models.leaderboard import SeasonType, LeaderboardCategory
 
 router = APIRouter(prefix="/sparks", tags=["Sparks"])

@@ -14,8 +14,8 @@ from app.schemas.review_slot import (
     ReviewDispute,
     DisputeResolve,
 )
-from app.services.review_sparks_hooks import on_dispute_created, on_dispute_resolved
-from app.services.notification_triggers import notify_dispute_created, notify_dispute_resolved
+from app.services.gamification.review_sparks_hooks import on_dispute_created, on_dispute_resolved
+from app.services.notifications.triggers import notify_dispute_created, notify_dispute_resolved
 from app.core.exceptions import (
     NotOwnerError,
     InvalidInputError,
