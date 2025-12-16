@@ -18,8 +18,9 @@ import {
   Play,
   Send,
   Trophy,
-  Target,
-  Zap,
+  Wallet,
+  History,
+  User,
 } from 'lucide-react';
 import type {
   ActiveReviewItem,
@@ -40,6 +41,7 @@ export function ReviewerDesk({
   activeReviews,
   submittedReviews,
   completedReviews,
+  karmaSummary,
   isLoading,
 }: ReviewerDeskProps) {
   const totalEarnings = completedReviews.reduce(
@@ -55,35 +57,50 @@ export function ReviewerDesk({
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Bento grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Find work CTA */}
-        <div className="md:col-span-1 lg:col-span-2 lg:row-span-2">
+        <div className="md:col-span-1 lg:row-span-2">
           <FindWorkCard />
         </div>
 
-        {/* Earnings card */}
+        {/* Quick access cards - Earnings, History, Profile */}
         <div className="md:col-span-1 lg:col-span-2">
-          <EarningsCard
-            totalEarnings={totalEarnings}
-            completedCount={completedReviews.length}
-          />
+          <div className="grid grid-cols-3 gap-3 md:gap-4 h-full">
+            <QuickAccessCard
+              href="/earnings"
+              icon={Wallet}
+              label="Earnings"
+              description="Payout history"
+              gradient="from-emerald-500 via-green-500 to-teal-600"
+              shadowColor="shadow-emerald-500/25 hover:shadow-emerald-500/40"
+            />
+            <QuickAccessCard
+              href="/reviewer/history"
+              icon={History}
+              label="History"
+              description="Past reviews"
+              gradient="from-blue-500 via-indigo-500 to-violet-600"
+              shadowColor="shadow-blue-500/25 hover:shadow-blue-500/40"
+            />
+            <QuickAccessCard
+              href="/profile"
+              icon={User}
+              label="Profile"
+              description="Your page"
+              gradient="from-violet-500 via-purple-500 to-fuchsia-600"
+              shadowColor="shadow-violet-500/25 hover:shadow-violet-500/40"
+            />
+          </div>
         </div>
 
-        {/* Stats row */}
-        <div className="md:col-span-1">
-          <StatCard
-            icon={Target}
-            label="Active"
-            value={activeReviews.length}
-            color="cyan"
-          />
-        </div>
-        <div className="md:col-span-1">
-          <StatCard
-            icon={Send}
-            label="Pending"
-            value={submittedReviews.length}
-            color="amber"
+        {/* Stats card - richer info */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <ReviewerStatsCard
+            totalEarnings={totalEarnings}
+            completedCount={completedReviews.length}
+            activeCount={activeReviews.length}
+            pendingCount={submittedReviews.length}
+            acceptanceRate={karmaSummary?.acceptance_rate}
           />
         </div>
       </div>
@@ -139,62 +156,112 @@ function FindWorkCard() {
   );
 }
 
-interface EarningsCardProps {
-  totalEarnings: number;
-  completedCount: number;
+interface QuickAccessCardProps {
+  href: string;
+  icon: typeof Wallet;
+  label: string;
+  description: string;
+  gradient: string;
+  shadowColor: string;
 }
 
-function EarningsCard({ totalEarnings, completedCount }: EarningsCardProps) {
+function QuickAccessCard({ href, icon: Icon, label, description, gradient, shadowColor }: QuickAccessCardProps) {
   return (
-    <div className="group h-full min-h-[140px] rounded-3xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 dark:from-violet-500/20 dark:to-purple-500/10 backdrop-blur-xl border border-violet-500/20 p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-violet-500/40 hover:from-violet-500/15 hover:to-purple-500/10">
-      <div className="flex items-center justify-between h-full">
-        <div>
-          <p className="text-muted-foreground text-sm mb-1 transition-colors duration-200 group-hover:text-foreground/70">Total Earnings</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl md:text-4xl font-bold text-foreground transition-transform duration-300 group-hover:scale-105 origin-left">
-              ${totalEarnings.toLocaleString()}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 transition-transform duration-300 group-hover:translate-x-1">
-            from {completedCount} reviews
-          </p>
+    <Link
+      href={href}
+      className={cn(
+        'group relative flex flex-col items-center justify-center h-full min-h-[120px] md:min-h-[130px] overflow-hidden rounded-2xl p-5 md:p-6 transition-all duration-500 hover:scale-[1.03] hover:-translate-y-1',
+        'bg-gradient-to-br',
+        gradient,
+        'shadow-xl',
+        shadowColor
+      )}
+    >
+      {/* Decorative blur elements */}
+      <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-2xl transition-all duration-700 group-hover:scale-150 group-hover:bg-white/20" />
+      <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-white/5 rounded-full blur-2xl transition-all duration-700 group-hover:scale-125 group-hover:bg-white/10" />
+
+      <div className="relative flex flex-col items-center text-center">
+        {/* Icon */}
+        <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3 transition-all duration-300 group-hover:bg-white/30 group-hover:scale-110 group-hover:rotate-3">
+          <Icon className="w-6 h-6 md:w-7 md:h-7 text-white transition-transform duration-300" />
         </div>
 
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-emerald-500/40 group-hover:rotate-3">
-          <DollarSign className="w-8 h-8 text-white transition-transform duration-300 group-hover:scale-110" />
-        </div>
+        {/* Text */}
+        <h4 className="font-bold text-white text-base md:text-lg transition-transform duration-300 group-hover:scale-105">
+          {label}
+        </h4>
+        <p className="text-white/70 text-xs md:text-sm mt-0.5 transition-colors duration-300 group-hover:text-white/80">
+          {description}
+        </p>
       </div>
-    </div>
+
+      {/* Arrow */}
+      <div className="absolute bottom-4 right-4 flex items-center text-white/50 transition-all duration-300 group-hover:text-white">
+        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+      </div>
+    </Link>
   );
 }
 
-interface StatCardProps {
-  icon: typeof Target;
-  label: string;
-  value: number;
-  color: 'cyan' | 'amber' | 'emerald';
+interface ReviewerStatsCardProps {
+  totalEarnings: number;
+  completedCount: number;
+  activeCount: number;
+  pendingCount: number;
+  acceptanceRate?: number | null;
 }
 
-function StatCard({ icon: Icon, label, value, color }: StatCardProps) {
-  const colors = {
-    cyan: 'from-cyan-500 to-blue-500 shadow-cyan-500/30 group-hover:shadow-cyan-500/50',
-    amber: 'from-amber-500 to-orange-500 shadow-amber-500/30 group-hover:shadow-amber-500/50',
-    emerald: 'from-emerald-500 to-teal-500 shadow-emerald-500/30 group-hover:shadow-emerald-500/50',
-  };
-
+function ReviewerStatsCard({ totalEarnings, completedCount, activeCount, pendingCount, acceptanceRate }: ReviewerStatsCardProps) {
   return (
-    <div className="group h-full min-h-[100px] rounded-3xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 p-5 shadow-lg flex items-center gap-4 transition-all duration-300 hover:shadow-xl hover:bg-white/70 dark:hover:bg-white/10 hover:scale-[1.02]">
-      <div
-        className={cn(
-          'w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110',
-          colors[color]
+    <div className="group h-full min-h-[130px] rounded-3xl bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-white/30 dark:border-white/10 p-6 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-emerald-500/20 hover:bg-white/70 dark:hover:bg-white/10">
+      <div className="flex items-center justify-between h-full">
+        <div className="flex-1">
+          <p className="text-muted-foreground text-sm mb-2 transition-colors duration-200 group-hover:text-foreground/70">Your Desk Stats</p>
+
+          {/* Primary stats row */}
+          <div className="flex items-baseline gap-6 flex-wrap">
+            {/* Total Earnings - Primary */}
+            <div className="transition-transform duration-300 group-hover:scale-105 origin-left">
+              <span className="text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+                ${totalEarnings.toLocaleString()}
+              </span>
+              <span className="text-muted-foreground text-sm ml-1">earned</span>
+            </div>
+
+            {/* Completed */}
+            <div className="transition-transform duration-300 group-hover:translate-x-1">
+              <span className="text-lg font-semibold text-foreground">{completedCount}</span>
+              <span className="text-muted-foreground text-sm ml-1">completed</span>
+            </div>
+
+            {/* Active */}
+            {activeCount > 0 && (
+              <div className="text-cyan-600 dark:text-cyan-400 transition-transform duration-300 group-hover:translate-x-1">
+                <span className="text-lg font-semibold">{activeCount}</span>
+                <span className="text-sm ml-1">active</span>
+              </div>
+            )}
+
+            {/* Pending */}
+            {pendingCount > 0 && (
+              <div className="text-amber-600 dark:text-amber-400 transition-transform duration-300 group-hover:translate-x-1">
+                <span className="text-lg font-semibold">{pendingCount}</span>
+                <span className="text-sm ml-1">pending</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Acceptance rate badge */}
+        {acceptanceRate !== undefined && acceptanceRate !== null && acceptanceRate > 0 && (
+          <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-100 dark:bg-emerald-500/10 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-emerald-500/20">
+            <CheckCircle className="w-5 h-5 text-emerald-500 transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+              {Math.round(acceptanceRate)}%
+            </span>
+          </div>
         )}
-      >
-        <Icon className="w-6 h-6 text-white transition-transform duration-300 group-hover:scale-110" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-foreground transition-transform duration-300 group-hover:translate-x-1">{value}</p>
-        <p className="text-sm text-muted-foreground transition-colors duration-300 group-hover:text-foreground/70">{label}</p>
       </div>
     </div>
   );
@@ -378,22 +445,31 @@ function RecentCompletionsSection({ completedReviews }: RecentCompletionsSection
 function EmptyDeskState() {
   return (
     <div className="group rounded-3xl bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-dashed border-white/50 dark:border-white/10 p-8 md:p-12 text-center transition-all duration-500 hover:border-emerald-500/30 hover:bg-white/50 dark:hover:bg-white/10">
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-500/10">
-        <Zap className="w-8 h-8 text-slate-400 transition-all duration-300 group-hover:text-emerald-500" />
+      <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-emerald-500/40">
+        <DollarSign className="w-8 h-8 text-white transition-all duration-300 group-hover:scale-110" />
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2 transition-transform duration-300 group-hover:scale-105">
         Your desk is clear
       </h3>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto transition-colors duration-300 group-hover:text-foreground/70">
+      <p className="text-muted-foreground mb-4 max-w-md mx-auto transition-colors duration-300 group-hover:text-foreground/70">
         Find creative work to review and start earning. Your expertise is valuable!
       </p>
-      <Link
-        href="/browse"
-        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 hover:gap-3"
-      >
-        <Search className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
-        Browse available work
-      </Link>
+
+      {/* Earning potential hint */}
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-sm mb-6 transition-all duration-300 group-hover:bg-emerald-500/20">
+        <DollarSign className="w-4 h-4" />
+        <span>Reviews typically pay <strong>$5 - $25</strong></span>
+      </div>
+
+      <div className="block">
+        <Link
+          href="/browse"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium shadow-lg shadow-emerald-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 hover:gap-3"
+        >
+          <Search className="w-4 h-4 transition-transform duration-300 hover:scale-110" />
+          Browse available work
+        </Link>
+      </div>
     </div>
   );
 }
