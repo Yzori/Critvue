@@ -16,8 +16,7 @@ from pathlib import Path
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.api import auth, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, sparks, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers, payments, slot_applications, unsubscribe
-from app.api.v1 import settings as settings_router
+from app.api.v1 import reviews, browse, profile, notifications, dashboard, admin, gamification, challenges, payments, unsubscribe
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
 from app.services.infrastructure.scheduler import start_background_jobs, stop_background_jobs
@@ -53,32 +52,16 @@ register_exception_handlers(app)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(webhooks.router, prefix="/api/v1")  # Webhooks (no auth required)
 app.include_router(browse.router, prefix="/api/v1")  # Public browse marketplace (must be before reviews to avoid conflicts)
-app.include_router(reviews.router, prefix="/api/v1")
-app.include_router(files.router, prefix="/api/v1")
-app.include_router(files.generic_files_router, prefix="/api/v1")  # Generic file uploads
-app.include_router(review_slots.router, prefix="/api/v1")  # Review slots workflow
-app.include_router(reviewer_dashboard.router, prefix="/api/v1")  # Reviewer dashboard
-app.include_router(profile.router, prefix="/api/v1")  # User profiles
-app.include_router(portfolio.router, prefix="/api/v1")  # Portfolio projects
-app.include_router(expert_applications.router)  # Expert reviewer applications (already has /api/v1 prefix)
-app.include_router(subscriptions.router, prefix="/api/v1")  # Subscription management
-app.include_router(tier_system.router, prefix="/api/v1")  # Tier/sparks system
-app.include_router(leaderboard.router, prefix="/api/v1")  # Leaderboard rankings
+app.include_router(reviews.router, prefix="/api/v1")  # Reviews (requests, files, slots, applications, NDA, reviewer dashboard, directory)
+app.include_router(reviews.generic_files_router, prefix="/api/v1")  # Generic file uploads (/files/*)
+app.include_router(profile.router, prefix="/api/v1")  # Profile (public, portfolio, settings, growth, activity)
+app.include_router(admin.expert_applications_router)  # Expert reviewer applications (already has /api/v1 prefix)
 app.include_router(notifications.router, prefix="/api/v1")  # Notifications
-app.include_router(dashboard.router, prefix="/api/v1")  # Mobile-optimized dashboard
-app.include_router(dashboard_desktop.router, prefix="/api/v1")  # Desktop-optimized dashboard
-app.include_router(sparks.router, prefix="/api/v1")  # Sparks system with badges, leaderboards, requester ratings
-app.include_router(platform.router, prefix="/api/v1")  # Platform-wide activity and stats for elevated dashboard
-app.include_router(admin_applications.router, prefix="/api/v1")  # Admin expert application review
-app.include_router(admin_users.router, prefix="/api/v1")  # Admin user management
-app.include_router(nda.router, prefix="/api/v1")  # NDA signing for confidential reviews
-app.include_router(activity.router, prefix="/api/v1")  # User activity heatmap and timeline
+app.include_router(dashboard.router, prefix="/api/v1")  # Dashboard (mobile, desktop, platform)
+app.include_router(gamification.router, prefix="/api/v1")  # Gamification (sparks, leaderboard, tiers)
+app.include_router(admin.router, prefix="/api/v1")  # Admin routes (users, applications)
 app.include_router(challenges.router, prefix="/api/v1")  # Platform-curated creative challenges
-app.include_router(settings_router.router, prefix="/api/v1")  # User settings (privacy, etc.)
-app.include_router(growth.router, prefix="/api/v1")  # Portfolio growth analytics
-app.include_router(reviewers.router, prefix="/api/v1")  # Reviewer directory
-app.include_router(payments.router, prefix="/api/v1")  # Expert review payments and Stripe Connect
-app.include_router(slot_applications.router, prefix="/api/v1")  # Expert review slot applications
+app.include_router(payments.router, prefix="/api/v1")  # Payments (transactions, subscriptions)
 app.include_router(unsubscribe.router, prefix="/api/v1")  # Email unsubscribe for compliance
 
 # CSRF Protection middleware

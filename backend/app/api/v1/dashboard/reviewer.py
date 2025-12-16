@@ -10,7 +10,7 @@ from sqlalchemy import select, and_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.v1.dashboard_desktop.common import (
+from .common import (
     create_router,
     limiter,
     logger,

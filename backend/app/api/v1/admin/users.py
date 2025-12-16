@@ -34,7 +34,7 @@ from app.schemas.admin_users import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/admin/users", tags=["admin-users"])
+router = APIRouter(prefix="/users", tags=["admin-users"])
 
 
 # ============ Dependencies ============
