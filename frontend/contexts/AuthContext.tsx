@@ -73,23 +73,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Register new user
+   * Redirects to onboarding page after successful registration
    */
   const register = useCallback(
     async (credentials: RegisterCredentials) => {
       try {
         await registerUser(credentials);
 
-        // After registration, automatically log in
-        await login({
+        // After registration, log in the user
+        const userData = await loginUser({
           email: credentials.email,
           password: credentials.password,
         });
+
+        // Store user data locally for quick access
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
+
+        // Redirect to onboarding page for new users
+        router.push("/onboarding");
       } catch (error) {
         const message = getErrorMessage(error);
         throw new Error(message);
       }
     },
-    [login]
+    [router]
   );
 
   /**
