@@ -431,6 +431,26 @@ body {
   }
 }
 
+/* Subtle flame flicker for streak badges */
+@keyframes flicker {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 0.9;
+    transform: scale(1.02) rotate(-1deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.98) rotate(1deg);
+  }
+  75% {
+    opacity: 0.95;
+    transform: scale(1.01) rotate(-0.5deg);
+  }
+}
+
 /* Animation utility classes */
 @layer utilities {
   /* Hide scrollbar for mobile horizontal scrolling */
