@@ -81,6 +81,10 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
 
+    # Email verification
+    email_verification_token = Column(String(255), nullable=True, index=True)
+    email_verification_expires_at = Column(DateTime, nullable=True)
+
     # Profile
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)

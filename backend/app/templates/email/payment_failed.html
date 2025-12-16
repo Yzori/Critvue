@@ -1,0 +1,30 @@
+{% extends "email/base.html" %}
+
+{% block title %}Payment Failed - Action Required{% endblock %}
+
+{% block header %}
+<h1>Payment Failed</h1>
+{% endblock %}
+
+{% block content %}
+<p>Hi{% if user_name %} {{ user_name }}{% endif %},</p>
+
+<div class="info-box danger">
+    <p><strong>We couldn't process your payment{% if amount %} of {{ amount }}{% endif %}.</strong></p>
+</div>
+
+<p>This could happen because:</p>
+<ul style="color: #4b5563; margin: 16px 0;">
+    <li>Your card has expired</li>
+    <li>Insufficient funds</li>
+    <li>Your bank declined the transaction</li>
+</ul>
+
+<p>Please update your payment method to continue using Critvue Pro features.</p>
+
+<div class="button-center">
+    <a href="{{ billing_url }}" class="button button-warning">Update Payment Method</a>
+</div>
+
+<p class="text-muted text-small">Questions? Contact us at <a href="mailto:support@critvue.com">support@critvue.com</a></p>
+{% endblock %}

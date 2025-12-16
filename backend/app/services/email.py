@@ -12,19 +12,30 @@ Setup:
 4. Set EMAIL_API_KEY in .env
 """
 
+import asyncio
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 from pathlib import Path
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Retry configuration
+MAX_RETRIES = 3
+INITIAL_RETRY_DELAY = 1.0  # seconds
+MAX_RETRY_DELAY = 30.0  # seconds
+
+# Template directory
+TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+
 
 class EmailService:
     """
-    Email service with Resend integration
+    Email service with Resend integration and Jinja2 templating.
 
     Usage:
         email_service = EmailService()
@@ -33,6 +44,14 @@ class EmailService:
             subject="Hello",
             html_content="<h1>Hi there!</h1>"
         )
+
+        # Or with templates:
+        await email_service.send_templated_email(
+            to_email="user@example.com",
+            subject="Welcome!",
+            template_name="welcome.html",
+            context={"user_name": "John"}
+        )
     """
 
     def __init__(self):
@@ -40,11 +59,20 @@ class EmailService:
         self.environment = settings.ENVIRONMENT
         self.email_from = settings.EMAIL_FROM
         self.reply_to = settings.EMAIL_REPLY_TO or None
+        self.frontend_url = settings.FRONTEND_URL
 
         # Development email storage
         self.dev_email_dir = Path("dev_emails")
         if not settings.is_production:
             self.dev_email_dir.mkdir(exist_ok=True)
+
+        # Initialize Jinja2 template environment
+        self._jinja_env = Environment(
+            loader=FileSystemLoader(TEMPLATES_DIR),
+            autoescape=select_autoescape(['html', 'xml']),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
 
         # Initialize Resend in production
         self._resend_configured = False
@@ -58,6 +86,82 @@ class EmailService:
                 logger.error("Resend package not installed. Run: pip install resend")
             except Exception as e:
                 logger.error(f"Failed to configure Resend: {e}")
+
+    def render_template(
+        self,
+        template_name: str,
+        context: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        Render a Jinja2 email template.
+
+        Args:
+            template_name: Name of the template file (e.g., "welcome.html")
+            context: Dictionary of variables to pass to the template
+
+        Returns:
+            Rendered HTML string
+        """
+        template = self._jinja_env.get_template(f"email/{template_name}")
+
+        # Build base context
+        base_context = {
+            "frontend_url": self.frontend_url,
+            "current_year": datetime.now(timezone.utc).year,
+        }
+
+        # Merge with provided context
+        if context:
+            base_context.update(context)
+
+        return template.render(**base_context)
+
+    async def send_templated_email(
+        self,
+        to_email: str,
+        subject: str,
+        template_name: str,
+        context: Optional[Dict[str, Any]] = None,
+        text_content: Optional[str] = None,
+        reply_to: Optional[str] = None,
+        tags: Optional[List[dict]] = None,
+        unsubscribe_url: Optional[str] = None,
+    ) -> bool:
+        """
+        Send an email using a Jinja2 template.
+
+        Args:
+            to_email: Recipient email address
+            subject: Email subject
+            template_name: Name of the template file
+            context: Dictionary of variables to pass to the template
+            text_content: Plain text fallback
+            reply_to: Reply-to address
+            tags: List of tags for tracking
+            unsubscribe_url: Optional unsubscribe URL for email compliance
+
+        Returns:
+            True if email was sent successfully
+        """
+        try:
+            # Add unsubscribe URL to context if provided
+            if context is None:
+                context = {}
+            if unsubscribe_url:
+                context["unsubscribe_url"] = unsubscribe_url
+
+            html_content = self.render_template(template_name, context)
+            return await self.send_email(
+                to_email=to_email,
+                subject=subject,
+                html_content=html_content,
+                text_content=text_content,
+                reply_to=reply_to,
+                tags=tags,
+            )
+        except Exception as e:
+            logger.error(f"Failed to render template {template_name}: {e}")
+            return False
 
     async def send_email(
         self,
@@ -144,47 +248,131 @@ class EmailService:
         tags: Optional[List[dict]] = None,
     ) -> bool:
         """
-        Production email sender using Resend API
+        Production email sender using Resend API with retry logic.
+
+        Uses exponential backoff for transient failures.
         """
         if not self._resend_configured:
             logger.error("Resend not configured. Set EMAIL_API_KEY in environment.")
             return False
 
-        try:
-            import resend
+        import resend
 
-            # Build email params
-            params: resend.Emails.SendParams = {
-                "from": self.email_from,
-                "to": [to_email],
-                "subject": subject,
-                "html": html_content,
-            }
+        # Build email params
+        params: resend.Emails.SendParams = {
+            "from": self.email_from,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+        }
 
-            # Optional fields
-            if text_content:
-                params["text"] = text_content
+        # Optional fields
+        if text_content:
+            params["text"] = text_content
 
-            effective_reply_to = reply_to or self.reply_to
-            if effective_reply_to:
-                params["reply_to"] = [effective_reply_to]
+        effective_reply_to = reply_to or self.reply_to
+        if effective_reply_to:
+            params["reply_to"] = [effective_reply_to]
 
-            if tags:
-                params["tags"] = tags
+        if tags:
+            params["tags"] = tags
 
-            # Send email
-            response = resend.Emails.send(params)
+        # Send with retry logic
+        last_exception = None
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = resend.Emails.send(params)
 
-            if response and response.get("id"):
-                logger.info(f"Email sent successfully. ID: {response['id']}, To: {to_email}")
-                return True
-            else:
-                logger.error(f"Failed to send email. Response: {response}")
+                if response and response.get("id"):
+                    logger.info(
+                        f"Email sent successfully. ID: {response['id']}, "
+                        f"To: {to_email}, Attempt: {attempt + 1}"
+                    )
+                    return True
+                else:
+                    logger.warning(
+                        f"Email send returned no ID. Response: {response}, "
+                        f"To: {to_email}, Attempt: {attempt + 1}"
+                    )
+                    # Don't retry on successful response without ID - likely a Resend issue
+                    return False
+
+            except Exception as e:
+                last_exception = e
+
+                # Check if error is retryable
+                if not self._is_retryable_error(e):
+                    logger.error(
+                        f"Non-retryable email error to {to_email}: {e}",
+                        exc_info=True
+                    )
+                    return False
+
+                # Calculate delay with exponential backoff
+                delay = min(
+                    INITIAL_RETRY_DELAY * (2 ** attempt),
+                    MAX_RETRY_DELAY
+                )
+
+                logger.warning(
+                    f"Email send failed (attempt {attempt + 1}/{MAX_RETRIES}), "
+                    f"retrying in {delay}s. Error: {e}"
+                )
+
+                if attempt < MAX_RETRIES - 1:
+                    await asyncio.sleep(delay)
+
+        logger.error(
+            f"Failed to send email to {to_email} after {MAX_RETRIES} attempts. "
+            f"Last error: {last_exception}",
+            exc_info=True
+        )
+        return False
+
+    def _is_retryable_error(self, error: Exception) -> bool:
+        """
+        Determine if an error is transient and worth retrying.
+
+        Returns True for network errors, rate limits, and server errors.
+        Returns False for validation errors, auth errors, etc.
+        """
+        error_str = str(error).lower()
+
+        # Non-retryable errors (client-side issues)
+        non_retryable_patterns = [
+            "invalid",
+            "validation",
+            "unauthorized",
+            "forbidden",
+            "not found",
+            "bad request",
+            "invalid api key",
+            "domain not verified",
+        ]
+
+        for pattern in non_retryable_patterns:
+            if pattern in error_str:
                 return False
 
-        except Exception as e:
-            logger.error(f"Failed to send email to {to_email}: {e}", exc_info=True)
-            return False
+        # Retryable errors (transient issues)
+        retryable_patterns = [
+            "timeout",
+            "connection",
+            "rate limit",
+            "too many requests",
+            "server error",
+            "502",
+            "503",
+            "504",
+            "network",
+        ]
+
+        for pattern in retryable_patterns:
+            if pattern in error_str:
+                return True
+
+        # Default to retrying unknown errors
+        return True
 
     async def send_password_reset_email(
         self,
@@ -193,7 +381,7 @@ class EmailService:
         user_name: Optional[str] = None,
     ) -> bool:
         """
-        Send password reset email
+        Send password reset email using template.
 
         Args:
             to_email: User's email address
@@ -203,112 +391,7 @@ class EmailService:
         Returns:
             True if email was sent successfully
         """
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        subject = "Reset Your Critvue Password"
-        current_year = datetime.now(timezone.utc).year
-
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }}
-        .container {{
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .header {{
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        .header h1 {{
-            color: #2c3e50;
-            font-size: 24px;
-            margin: 0;
-        }}
-        .button {{
-            display: inline-block;
-            background: #3498db;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 600;
-            text-align: center;
-            margin: 20px 0;
-        }}
-        .token {{
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            font-family: monospace;
-            word-break: break-all;
-            margin: 20px 0;
-            border-left: 4px solid #3498db;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-        .warning {{
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 12px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Password Reset Request</h1>
-        </div>
-
-        <div class="content">
-            <p>Hello{f" {user_name}" if user_name else ""},</p>
-
-            <p>We received a request to reset your Critvue password. Click the button below to choose a new password:</p>
-
-            <div style="text-align: center;">
-                <a href="{reset_url}" class="button">Reset Password</a>
-            </div>
-
-            <p>Or copy and paste this link into your browser:</p>
-            <div class="token">{reset_url}</div>
-
-            <div class="warning">
-                <strong>This link expires in 15 minutes</strong> for your security.
-            </div>
-
-            <p>If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.</p>
-        </div>
-
-        <div class="footer">
-            <p>This is an automated message from Critvue. Please do not reply to this email.</p>
-            <p>&copy; {current_year} Critvue. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
+        reset_url = f"{settings.FRONTEND_URL}/password-reset/reset?token={reset_token}"
 
         text_content = f"""
 Password Reset Request
@@ -326,13 +409,16 @@ If you didn't request a password reset, you can safely ignore this email.
 
 ---
 This is an automated message from Critvue. Please do not reply to this email.
-(c) {current_year} Critvue. All rights reserved.
 """
 
-        return await self.send_email(
+        return await self.send_templated_email(
             to_email=to_email,
-            subject=subject,
-            html_content=html_content,
+            subject="Reset Your Critvue Password",
+            template_name="password_reset.html",
+            context={
+                "user_name": user_name,
+                "reset_url": reset_url,
+            },
             text_content=text_content,
             tags=[{"name": "category", "value": "password_reset"}],
         )
@@ -342,104 +428,8 @@ This is an automated message from Critvue. Please do not reply to this email.
         to_email: str,
         user_name: Optional[str] = None,
     ) -> bool:
-        """Send welcome email to new users"""
-        subject = "Welcome to Critvue!"
-        current_year = datetime.now(timezone.utc).year
+        """Send welcome email to new users using template."""
         dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
-
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }}
-        .container {{
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .header {{
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        .header h1 {{
-            color: #2c3e50;
-            font-size: 28px;
-            margin: 0;
-        }}
-        .button {{
-            display: inline-block;
-            background: #3498db;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 600;
-        }}
-        .feature {{
-            padding: 15px;
-            margin: 10px 0;
-            background: #f8f9fa;
-            border-radius: 4px;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Welcome to Critvue!</h1>
-        </div>
-
-        <p>Hi{f" {user_name}" if user_name else ""},</p>
-
-        <p>Thanks for joining Critvue! We're excited to help you get better feedback on your creative work.</p>
-
-        <h3>Here's what you can do:</h3>
-
-        <div class="feature">
-            <strong>Get AI Feedback</strong> - Instant, structured feedback on your designs, writing, and more.
-        </div>
-
-        <div class="feature">
-            <strong>Request Expert Reviews</strong> - Connect with skilled reviewers for in-depth critiques.
-        </div>
-
-        <div class="feature">
-            <strong>Build Your Portfolio</strong> - Showcase your best work with verified reviews.
-        </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{dashboard_url}" class="button">Go to Dashboard</a>
-        </div>
-
-        <p>If you have any questions, we're here to help!</p>
-
-        <div class="footer">
-            <p>&copy; {current_year} Critvue. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
 
         text_content = f"""
 Welcome to Critvue!
@@ -456,14 +446,16 @@ Here's what you can do:
 Get started: {dashboard_url}
 
 If you have any questions, we're here to help!
-
-(c) {current_year} Critvue. All rights reserved.
 """
 
-        return await self.send_email(
+        return await self.send_templated_email(
             to_email=to_email,
-            subject=subject,
-            html_content=html_content,
+            subject="Welcome to Critvue!",
+            template_name="welcome.html",
+            context={
+                "user_name": user_name,
+                "dashboard_url": dashboard_url,
+            },
             text_content=text_content,
             tags=[{"name": "category", "value": "welcome"}],
         )
@@ -476,94 +468,8 @@ If you have any questions, we're here to help!
         reviewer_name: str = "A reviewer",
         review_url: Optional[str] = None,
     ) -> bool:
-        """Send email when a review is completed"""
-        subject = f"Your review is ready: {review_title}"
-        current_year = datetime.now(timezone.utc).year
+        """Send email when a review is completed using template."""
         view_url = review_url or f"{settings.FRONTEND_URL}/dashboard"
-
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }}
-        .container {{
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .header {{
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        .header h1 {{
-            color: #27ae60;
-            font-size: 24px;
-            margin: 0;
-        }}
-        .button {{
-            display: inline-block;
-            background: #27ae60;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 600;
-        }}
-        .review-info {{
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 4px;
-            margin: 20px 0;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Your Review is Ready!</h1>
-        </div>
-
-        <p>Hi{f" {user_name}" if user_name else ""},</p>
-
-        <p>Great news! {reviewer_name} has completed their review of your work.</p>
-
-        <div class="review-info">
-            <strong>Project:</strong> {review_title}
-        </div>
-
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{view_url}" class="button">View Review</a>
-        </div>
-
-        <p>We hope the feedback helps you improve your work!</p>
-
-        <div class="footer">
-            <p>&copy; {current_year} Critvue. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
 
         text_content = f"""
 Your Review is Ready!
@@ -577,14 +483,18 @@ Project: {review_title}
 View your review: {view_url}
 
 We hope the feedback helps you improve your work!
-
-(c) {current_year} Critvue. All rights reserved.
 """
 
-        return await self.send_email(
+        return await self.send_templated_email(
             to_email=to_email,
-            subject=subject,
-            html_content=html_content,
+            subject=f"Your review is ready: {review_title}",
+            template_name="review_completed.html",
+            context={
+                "user_name": user_name,
+                "review_title": review_title,
+                "reviewer_name": reviewer_name,
+                "review_url": view_url,
+            },
             text_content=text_content,
             tags=[{"name": "category", "value": "review_completed"}],
         )
@@ -595,101 +505,8 @@ We hope the feedback helps you improve your work!
         user_name: Optional[str] = None,
         amount: Optional[str] = None,
     ) -> bool:
-        """Send email when a payment fails"""
-        subject = "Action Required: Payment Failed"
-        current_year = datetime.now(timezone.utc).year
+        """Send email when a payment fails using template."""
         billing_url = f"{settings.FRONTEND_URL}/settings/billing"
-
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
-        }}
-        .container {{
-            background: #ffffff;
-            border-radius: 8px;
-            padding: 40px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }}
-        .header {{
-            text-align: center;
-            margin-bottom: 30px;
-        }}
-        .header h1 {{
-            color: #e74c3c;
-            font-size: 24px;
-            margin: 0;
-        }}
-        .button {{
-            display: inline-block;
-            background: #3498db;
-            color: #ffffff !important;
-            padding: 14px 28px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: 600;
-        }}
-        .alert {{
-            background: #fdeaea;
-            border-left: 4px solid #e74c3c;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }}
-        .footer {{
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Payment Failed</h1>
-        </div>
-
-        <p>Hi{f" {user_name}" if user_name else ""},</p>
-
-        <div class="alert">
-            <strong>We couldn't process your payment{f" of {amount}" if amount else ""}.</strong>
-        </div>
-
-        <p>This could happen because:</p>
-        <ul>
-            <li>Your card has expired</li>
-            <li>Insufficient funds</li>
-            <li>Your bank declined the transaction</li>
-        </ul>
-
-        <p>Please update your payment method to continue using Critvue Pro features.</p>
-
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{billing_url}" class="button">Update Payment Method</a>
-        </div>
-
-        <div class="footer">
-            <p>Questions? Contact us at support@critvue.com</p>
-            <p>&copy; {current_year} Critvue. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
 
         text_content = f"""
 Payment Failed
@@ -706,16 +523,124 @@ This could happen because:
 Please update your payment method: {billing_url}
 
 Questions? Contact us at support@critvue.com
-
-(c) {current_year} Critvue. All rights reserved.
 """
 
-        return await self.send_email(
+        return await self.send_templated_email(
             to_email=to_email,
-            subject=subject,
-            html_content=html_content,
+            subject="Action Required: Payment Failed",
+            template_name="payment_failed.html",
+            context={
+                "user_name": user_name,
+                "amount": amount,
+                "billing_url": billing_url,
+            },
             text_content=text_content,
             tags=[{"name": "category", "value": "payment_failed"}],
+        )
+
+    async def send_email_verification(
+        self,
+        to_email: str,
+        verification_token: str,
+        user_name: Optional[str] = None,
+    ) -> bool:
+        """
+        Send email verification email using template.
+
+        Args:
+            to_email: User's email address
+            verification_token: Email verification token
+            user_name: User's name (optional)
+
+        Returns:
+            True if email was sent successfully
+        """
+        verification_url = f"{settings.FRONTEND_URL}/verify-email?token={verification_token}"
+
+        text_content = f"""
+Verify Your Email
+
+Hi{f" {user_name}" if user_name else ""},
+
+Thanks for signing up for Critvue! Please verify your email address.
+
+Click this link to verify: {verification_url}
+
+This link expires in 24 hours.
+
+If you didn't create an account, you can safely ignore this email.
+
+---
+This is an automated message from Critvue.
+"""
+
+        return await self.send_templated_email(
+            to_email=to_email,
+            subject="Verify Your Email - Critvue",
+            template_name="email_verification.html",
+            context={
+                "user_name": user_name,
+                "verification_url": verification_url,
+            },
+            text_content=text_content,
+            tags=[{"name": "category", "value": "email_verification"}],
+        )
+
+    async def send_digest_email(
+        self,
+        to_email: str,
+        user_name: Optional[str] = None,
+        notifications: Optional[List[Dict[str, Any]]] = None,
+        digest_type: str = "Daily",
+        digest_period: str = "day",
+    ) -> bool:
+        """
+        Send email digest with accumulated notifications.
+
+        Args:
+            to_email: User's email address
+            user_name: User's name (optional)
+            notifications: List of notification dicts with title, message, action_url, etc.
+            digest_type: Type of digest ("Daily" or "Weekly")
+            digest_period: Period description ("day" or "week")
+
+        Returns:
+            True if email was sent successfully
+        """
+        dashboard_url = f"{settings.FRONTEND_URL}/dashboard"
+        notifications = notifications or []
+
+        # Generate plain text version
+        notification_text = ""
+        for n in notifications:
+            notification_text += f"\n- {n.get('title', 'Notification')}: {n.get('message', '')}"
+            if n.get('action_url'):
+                notification_text += f"\n  View: {n['action_url']}"
+
+        text_content = f"""
+Your {digest_type} Digest
+
+Hi{f" {user_name}" if user_name else ""},
+
+Here's a summary of your notifications from the past {digest_period}:
+{notification_text if notifications else "No new notifications this " + digest_period + "."}
+
+Go to Dashboard: {dashboard_url}
+"""
+
+        return await self.send_templated_email(
+            to_email=to_email,
+            subject=f"Your {digest_type} Digest - Critvue",
+            template_name="digest.html",
+            context={
+                "user_name": user_name,
+                "notifications": notifications,
+                "digest_type": digest_type,
+                "digest_period": digest_period,
+                "dashboard_url": dashboard_url,
+            },
+            text_content=text_content,
+            tags=[{"name": "category", "value": f"digest_{digest_type.lower()}"}],
         )
 
 
@@ -802,4 +727,34 @@ async def send_payment_failed_email(
         to_email=to_email,
         user_name=user_name,
         amount=amount,
+    )
+
+
+async def send_email_verification(
+    to_email: str,
+    verification_token: str,
+    user_name: Optional[str] = None,
+) -> bool:
+    """Send email verification"""
+    return await get_email_service().send_email_verification(
+        to_email=to_email,
+        verification_token=verification_token,
+        user_name=user_name,
+    )
+
+
+async def send_digest_email(
+    to_email: str,
+    user_name: Optional[str] = None,
+    notifications: Optional[List[Dict[str, Any]]] = None,
+    digest_type: str = "Daily",
+    digest_period: str = "day",
+) -> bool:
+    """Send email digest with accumulated notifications"""
+    return await get_email_service().send_digest_email(
+        to_email=to_email,
+        user_name=user_name,
+        notifications=notifications,
+        digest_type=digest_type,
+        digest_period=digest_period,
     )

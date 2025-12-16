@@ -1,0 +1,36 @@
+{% extends "email/base.html" %}
+
+{% block title %}Welcome to Critvue!{% endblock %}
+
+{% block header %}
+<h1>Welcome to Critvue!</h1>
+{% endblock %}
+
+{% block content %}
+<p>Hi{% if user_name %} {{ user_name }}{% endif %},</p>
+
+<p>Thanks for joining Critvue! We're excited to help you get better feedback on your creative work.</p>
+
+<h3 style="color: #1f2937; margin-top: 24px;">Here's what you can do:</h3>
+
+<div class="info-box success">
+    <p><strong>Get AI Feedback</strong><br>
+    Instant, structured feedback on your designs, writing, and more.</p>
+</div>
+
+<div class="info-box">
+    <p><strong>Request Expert Reviews</strong><br>
+    Connect with skilled reviewers for in-depth critiques.</p>
+</div>
+
+<div class="info-box">
+    <p><strong>Build Your Portfolio</strong><br>
+    Showcase your best work with verified reviews.</p>
+</div>
+
+<div class="button-center">
+    <a href="{{ dashboard_url }}" class="button button-success">Go to Dashboard</a>
+</div>
+
+<p>If you have any questions, we're here to help!</p>
+{% endblock %}

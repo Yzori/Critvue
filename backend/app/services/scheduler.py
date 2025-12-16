@@ -4,6 +4,7 @@ Background job scheduler for review workflow automation
 Handles:
 - Abandoning claimed reviews after timeout (72 hours default)
 - Auto-accepting submitted reviews after timeout (7 days default)
+- Sending daily and weekly email digests
 """
 
 import logging
@@ -15,6 +16,7 @@ from app.db.session import async_session_maker
 from app.crud.review_slot import process_expired_claims, process_auto_accepts
 from app.core.scheduler_config import scheduler_settings
 from app.services.committee_service import CommitteeService
+from app.services.email_digest import send_daily_digests, send_weekly_digests
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +96,32 @@ def start_background_jobs():
         misfire_grace_time=3600  # 1 hour grace period
     )
     logger.info("Scheduled job: process_stale_application_claims (daily at 2:00 AM, timeout=7d)")
+
+    # Job 4: Send daily email digests (every hour at :05)
+    # Runs every hour to check which users have daily digest set for that hour
+    scheduler.add_job(
+        send_daily_digests_job,
+        CronTrigger(minute=5),  # Run at :05 of every hour
+        id='send_daily_digests',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600  # 1 hour grace period
+    )
+    logger.info("Scheduled job: send_daily_digests (every hour at :05)")
+
+    # Job 5: Send weekly email digests (every hour at :10)
+    # Runs every hour to check which users have weekly digest set for that hour/day
+    scheduler.add_job(
+        send_weekly_digests_job,
+        CronTrigger(minute=10),  # Run at :10 of every hour
+        id='send_weekly_digests',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600  # 1 hour grace period
+    )
+    logger.info("Scheduled job: send_weekly_digests (every hour at :10)")
 
     # Start the scheduler
     scheduler.start()
@@ -214,6 +242,60 @@ async def process_stale_application_claims_job():
         )
 
 
+async def send_daily_digests_job():
+    """
+    Background job: Send daily email digests
+
+    This job runs every hour and sends daily digest emails to users
+    who have configured their digest time for that hour.
+    """
+    try:
+        async with async_session_maker() as db:
+            count = await send_daily_digests(db)
+
+            if count > 0:
+                logger.info(f"Sent {count} daily digest email(s)")
+            else:
+                logger.debug("No daily digests to send this hour")
+
+    except Exception as e:
+        logger.error(
+            f"Error in send_daily_digests job: {e}",
+            exc_info=True,
+            extra={
+                "job": "send_daily_digests",
+                "error_type": type(e).__name__
+            }
+        )
+
+
+async def send_weekly_digests_job():
+    """
+    Background job: Send weekly email digests
+
+    This job runs every hour and sends weekly digest emails to users
+    who have configured their digest time and day for that hour/day.
+    """
+    try:
+        async with async_session_maker() as db:
+            count = await send_weekly_digests(db)
+
+            if count > 0:
+                logger.info(f"Sent {count} weekly digest email(s)")
+            else:
+                logger.debug("No weekly digests to send this hour")
+
+    except Exception as e:
+        logger.error(
+            f"Error in send_weekly_digests job: {e}",
+            exc_info=True,
+            extra={
+                "job": "send_weekly_digests",
+                "error_type": type(e).__name__
+            }
+        )
+
+
 # ===== Manual Trigger Functions (for testing/admin use) =====
 
 async def trigger_expired_claims_now():
@@ -253,6 +335,30 @@ async def trigger_stale_application_claims_now():
     """
     logger.info("Manually triggering stale application claims processing...")
     await process_stale_application_claims_job()
+
+
+async def trigger_daily_digests_now():
+    """
+    Manually trigger daily digest sending
+
+    Useful for:
+    - Testing the email digest functionality
+    - Admin manual intervention
+    """
+    logger.info("Manually triggering daily digest sending...")
+    await send_daily_digests_job()
+
+
+async def trigger_weekly_digests_now():
+    """
+    Manually trigger weekly digest sending
+
+    Useful for:
+    - Testing the email digest functionality
+    - Admin manual intervention
+    """
+    logger.info("Manually triggering weekly digest sending...")
+    await send_weekly_digests_job()
 
 
 def get_scheduler_status() -> dict:

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Critvue{% endblock %}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style>
+        /* Reset styles */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Base styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        .email-wrapper {
+            width: 100%;
+            background-color: #f3f4f6;
+            padding: 40px 20px;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .email-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 32px 40px;
+            text-align: center;
+        }
+
+        .email-header h1 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .email-header .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #ffffff;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        /* Content */
+        .email-content {
+            padding: 40px;
+        }
+
+        .email-content h2 {
+            color: #1f2937;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 16px 0;
+        }
+
+        .email-content p {
+            color: #4b5563;
+            font-size: 16px;
+            margin: 0 0 16px 0;
+        }
+
+        /* Buttons */
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff !important;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        .button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+
+        .button-secondary {
+            background: #f3f4f6;
+            color: #374151 !important;
+            box-shadow: none;
+            border: 1px solid #d1d5db;
+        }
+
+        .button-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);
+        }
+
+        .button-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 6px -1px rgba(245, 158, 11, 0.3);
+        }
+
+        .button-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.3);
+        }
+
+        .button-center {
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        /* Info boxes */
+        .info-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box.warning {
+            background-color: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .info-box.success {
+            background-color: #ecfdf5;
+            border-left-color: #10b981;
+        }
+
+        .info-box.danger {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: #374151;
+        }
+
+        /* Code/Token display */
+        .token-box {
+            background-color: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 14px;
+            word-break: break-all;
+            margin: 16px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Footer */
+        .email-footer {
+            background-color: #f8fafc;
+            padding: 24px 40px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+        }
+
+        .email-footer p {
+            color: #9ca3af;
+            font-size: 13px;
+            margin: 0 0 8px 0;
+        }
+
+        .email-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .email-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            margin-top: 16px;
+        }
+
+        .footer-links a {
+            color: #6b7280;
+            font-size: 12px;
+            margin: 0 8px;
+        }
+
+        /* Utility classes */
+        .text-center { text-align: center; }
+        .text-muted { color: #6b7280; }
+        .text-small { font-size: 14px; }
+        .mt-0 { margin-top: 0; }
+        .mb-0 { margin-bottom: 0; }
+        .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
+
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+            .email-wrapper {
+                padding: 20px 10px;
+            }
+            .email-content,
+            .email-footer {
+                padding: 24px 20px;
+            }
+            .email-header {
+                padding: 24px 20px;
+            }
+            .button {
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <!-- Header -->
+            <div class="email-header">
+                <a href="{{ frontend_url }}" class="logo">Critvue</a>
+                {% block header %}{% endblock %}
+            </div>
+
+            <!-- Content -->
+            <div class="email-content">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Footer -->
+            <div class="email-footer">
+                {% block footer %}
+                <p>You received this email because you have an account on Critvue.</p>
+                <p><a href="{{ frontend_url }}/settings/notifications">Manage email preferences</a></p>
+                {% if unsubscribe_url %}
+                <p class="text-small"><a href="{{ unsubscribe_url }}">Unsubscribe from these emails</a></p>
+                {% endif %}
+                <div class="footer-links">
+                    <a href="{{ frontend_url }}/help">Help</a>
+                    <a href="{{ frontend_url }}/privacy">Privacy</a>
+                    <a href="{{ frontend_url }}/terms">Terms</a>
+                </div>
+                <p class="mt-4">&copy; {{ current_year }} Critvue. All rights reserved.</p>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,10 +1,11 @@
 """
 Authentication - Registration Endpoint
 
-User registration functionality.
+User registration functionality with email verification.
 """
 
-from fastapi import Depends, Request, status
+import logging
+from fastapi import Depends, Request, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -21,6 +22,9 @@ from app.api.auth.common import (
     settings,
 )
 from app.core.exceptions import InvalidInputError
+from app.services.email_verification import send_verification_email
+
+logger = logging.getLogger(__name__)
 
 router = create_router("registration")
 
@@ -30,13 +34,15 @@ router = create_router("registration")
 async def register(
     request: Request,
     user_data: UserCreate,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
-    Register a new user
+    Register a new user and send verification email.
 
     Args:
         user_data: User registration data
+        background_tasks: FastAPI background tasks
         db: Database session
 
     Returns:
@@ -79,6 +85,7 @@ async def register(
         hashed_password=hashed_password,
         full_name=full_name,
         username=username,
+        is_verified=False,  # Explicitly set to require email verification
     )
 
     db.add(new_user)
@@ -87,5 +94,13 @@ async def register(
 
     # Log successful registration
     security_logger.log_auth_success(new_user.email, request, event_type="register")
+
+    # Send verification email (non-blocking)
+    try:
+        await send_verification_email(db, new_user)
+        logger.info(f"Verification email queued for {new_user.email}")
+    except Exception as e:
+        # Don't fail registration if email fails - user can resend later
+        logger.error(f"Failed to send verification email to {new_user.email}: {e}")
 
     return new_user

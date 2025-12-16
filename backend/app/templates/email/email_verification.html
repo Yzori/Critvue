@@ -1,0 +1,32 @@
+{% extends "email/base.html" %}
+
+{% block title %}Verify Your Email - Critvue{% endblock %}
+
+{% block header %}
+<h1>Verify Your Email</h1>
+{% endblock %}
+
+{% block content %}
+<p>Hi{% if user_name %} {{ user_name }}{% endif %},</p>
+
+<p>Thanks for signing up for Critvue! Please verify your email address to complete your registration.</p>
+
+<div class="button-center">
+    <a href="{{ verification_url }}" class="button">Verify Email Address</a>
+</div>
+
+<p class="text-muted text-small">Or copy and paste this link into your browser:</p>
+<div class="token-box">{{ verification_url }}</div>
+
+<div class="info-box warning">
+    <p><strong>This link expires in 24 hours.</strong></p>
+</div>
+
+<p>If you didn't create an account on Critvue, you can safely ignore this email.</p>
+{% endblock %}
+
+{% block footer %}
+<p>This is an automated message from Critvue.</p>
+<p>Please do not reply to this email.</p>
+<p class="mt-4">&copy; {{ current_year }} Critvue. All rights reserved.</p>
+{% endblock %}

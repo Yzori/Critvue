@@ -248,6 +248,9 @@ class NotificationPreferences(Base):
     # Primary key (one-to-one with users)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
 
+    # Unsubscribe token for one-click email unsubscribe (email compliance)
+    unsubscribe_token = Column(String(64), nullable=True, unique=True, index=True)
+
     # Global channel toggles
     email_enabled = Column(Boolean, default=True, nullable=False)
     push_enabled = Column(Boolean, default=False, nullable=False)

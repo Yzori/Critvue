@@ -1,0 +1,25 @@
+{% extends "email/base.html" %}
+
+{% block title %}Your Review is Ready - Critvue{% endblock %}
+
+{% block header %}
+<h1>Your Review is Ready!</h1>
+{% endblock %}
+
+{% block content %}
+<p>Hi{% if user_name %} {{ user_name }}{% endif %},</p>
+
+<p>Great news! <strong>{{ reviewer_name }}</strong> has completed their review of your work.</p>
+
+<div class="info-box success">
+    <p><strong>Project:</strong> {{ review_title }}</p>
+</div>
+
+<div class="button-center">
+    <a href="{{ review_url }}" class="button button-success">View Review</a>
+</div>
+
+<p>We hope the feedback helps you improve your work!</p>
+
+<p class="text-muted text-small">Tip: You can rate the review to help us match you with the best reviewers in the future.</p>
+{% endblock %}

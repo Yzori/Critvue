@@ -1,0 +1,21 @@
+{% extends "email/base.html" %}
+
+{% block title %}{{ title }} - Critvue{% endblock %}
+
+{% block header %}
+<h1>{{ title }}</h1>
+{% endblock %}
+
+{% block content %}
+<p>{{ message }}</p>
+
+{% if action_url and action_label %}
+<div class="button-center">
+    <a href="{{ action_url }}" class="button">{{ action_label }}</a>
+</div>
+{% endif %}
+
+{% if extra_content %}
+{{ extra_content | safe }}
+{% endif %}
+{% endblock %}

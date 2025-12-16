@@ -16,7 +16,7 @@ from pathlib import Path
 from app.core.config import settings
 from app.core.exception_handlers import register_exception_handlers
 from app.api import auth, password_reset, webhooks
-from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, sparks, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers, payments, slot_applications
+from app.api.v1 import reviews, files, browse, review_slots, profile, portfolio, reviewer_dashboard, expert_applications, subscriptions, tier_system, leaderboard, notifications, dashboard, dashboard_desktop, sparks, platform, admin_applications, admin_users, nda, activity, challenges, growth, reviewers, payments, slot_applications, unsubscribe
 from app.api.v1 import settings as settings_router
 from app.core.logging_config import setup_logging
 from app.db.session import close_db, get_db
@@ -80,6 +80,7 @@ app.include_router(growth.router, prefix="/api/v1")  # Portfolio growth analytic
 app.include_router(reviewers.router, prefix="/api/v1")  # Reviewer directory
 app.include_router(payments.router, prefix="/api/v1")  # Expert review payments and Stripe Connect
 app.include_router(slot_applications.router, prefix="/api/v1")  # Expert review slot applications
+app.include_router(unsubscribe.router, prefix="/api/v1")  # Email unsubscribe for compliance
 
 # CSRF Protection middleware
 from app.core.csrf import CSRFMiddleware
