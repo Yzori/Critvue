@@ -5,7 +5,24 @@ Welcome to the Critvue documentation! This guide will help you navigate through 
 ## Getting Started
 
 - [Project Overview](../README.md) - Main project README
-- [Frontend Quick Start](frontend/AUTH_QUICKSTART.md) - Get up and running in 5 minutes
+
+## Documentation Structure
+
+```
+docs/
+├── README.md           # This file - documentation index
+├── design/             # UI/UX design specifications
+├── development/        # Development standards and plans
+├── frontend/           # Frontend-specific guides
+├── product/            # Product vision and brand guidelines
+└── technical/          # Architecture and tech stack
+
+backend/docs/           # Backend-specific documentation
+├── api/                # API reference
+├── features/           # Feature implementations
+├── review-system/      # Review system documentation
+└── testing/            # Testing guides
+```
 
 ## Product Documentation
 
@@ -21,20 +38,23 @@ UI/UX design specifications for key features:
 
 - [Homepage Design Spec](design/homepage-design-spec.md) - Complete homepage design specification
 - [Profile Design Spec](design/profile-design-spec.md) - Profile page design and layout
+- [Review Request Form Redesign](design/REVIEW_REQUEST_FORM_REDESIGN.md) - Review request form specifications
+- [Expert Reviewer System](design/expert-reviewer-system.md) - Expert reviewer feature design
+- [Expert Application System](design/expert-application-system.md) - Expert application flow design
 
-## Research
+## Development Documentation
 
-User research and design exploration:
+Coding standards and development guidelines:
 
-- [Homepage Research 2024-2025](research/homepage-research-2024-2025.md) - Homepage design research findings
-- [Mobile Homepage Research 2025](research/mobile-homepage-research-2025.md) - Mobile-specific UX research
+- [Coding Standards](development/CODING_STANDARDS.md) - Code style, patterns, and best practices
+- [Codebase Restructure Plan](development/CODEBASE_RESTRUCTURE_PLAN.md) - Ongoing refactoring plan
 
 ## Technical Documentation
 
-Architecture, tech stack, and implementation plans:
+Architecture, tech stack, and implementation details:
 
 - [Tech Stack Overview](technical/critvue_techstack.md) - Technologies, frameworks, and tools
-- [Implementation Plan](technical/implementation_plan.md) - Development phases and milestones
+- [Tier System Implementation](technical/TIER_SYSTEM_IMPLEMENTATION.md) - User tier system details
 
 ## Frontend Documentation
 
@@ -42,50 +62,15 @@ Next.js frontend implementation guides:
 
 - [Frontend Overview](frontend/README.md) - Frontend architecture and setup
 - [Authentication Guide](frontend/AUTH_GUIDE.md) - Complete authentication system documentation
-- [Authentication Quick Start](frontend/AUTH_QUICKSTART.md) - 5-minute auth setup guide
-- [Password Reset Implementation](frontend/PASSWORD_RESET.md) - Password reset flow details
-
-## Developer Guides
-
-Feature-specific development guides:
-
-- [Profile Integration Guide](guides/profile-integration.md) - How to integrate profile and portfolio APIs
-- [Profile Testing Guide](guides/profile-testing.md) - Comprehensive testing scenarios for profile features
-- [Avatar Quick Start](guides/avatar-quick-start.md) - Get avatar upload running in 5 minutes
-- [Mobile UX Patterns](guides/mobile-ux-patterns.md) - Mobile-first interaction patterns reference
-
-## Feature Documentation
-
-Complete feature implementations and specifications:
-
-- [Avatar Upload Backend](features/avatar-upload-backend.md) - Backend implementation details
-- [Avatar Security](features/avatar-security.md) - Security audit and best practices
 
 ## Backend Documentation
 
-FastAPI backend documentation:
+FastAPI backend documentation (in separate location):
 
-- [Backend Docs](../backend/docs/) - Backend documentation folder
-- [Testing Guide](../backend/docs/TESTING.md) - Backend testing documentation
-- [Password Reset Backend](../backend/docs/PASSWORD_RESET.md) - Backend password reset implementation
-
-## API Documentation
-
-Backend API references:
-
-- [Profile & Portfolio API](api/profile-api.md) - Complete profile and portfolio API reference
-- [Avatar Upload API](api/avatar-upload.md) - Avatar upload and management API
-- [Browse API](api/browse-api.md) - Browse/discovery API endpoints
-
-## Archive
-
-Historical implementation reports and debugging documentation (for reference):
-
-- [Profile System Implementation](archive/profile-system-implementation-summary.md) - Profile & portfolio backend implementation summary
-- [Mobile-First Implementation](archive/mobile-first-implementation-summary.md) - Mobile-first homepage implementation summary
-- [Navigation System Implementation](archive/navigation-implementation-summary.md) - Navigation system implementation details
-- [Avatar Implementation Archive](archive/avatar-implementation/) - Complete avatar upload implementation journey with debugging reports
-- [Archive Directory](archive/) - Additional implementation reports and historical documentation
+- [Backend Docs](../backend/docs/README.md) - Backend documentation index
+- [API Reference](../backend/docs/api/API_REFERENCE.md) - Complete API endpoint reference
+- [Testing Guide](../backend/docs/testing/TESTING.md) - Backend testing documentation
+- [Review System](../backend/docs/review-system/) - Review system documentation
 
 ---
 
@@ -104,19 +89,19 @@ When adding new documentation:
 **New Developer:**
 1. Read [Product Brief](product/critvue_product_brief.md)
 2. Review [Tech Stack](technical/critvue_techstack.md)
-3. Follow [Frontend Quick Start](frontend/AUTH_QUICKSTART.md)
+3. Follow [Coding Standards](development/CODING_STANDARDS.md)
 
 **Designer:**
 1. Read [Brand & Design System](product/critvue_brand_style.md)
-2. Review [Mobile UX Patterns](guides/mobile-ux-patterns.md)
+2. Review [Mobile UX Guide](product/mobile_guide.md)
 3. Check [Design Specs](design/homepage-design-spec.md)
 
 **Backend Developer:**
-1. Review [Tech Stack](technical/critvue_techstack.md)
-2. Read [API Documentation](api/profile-api.md)
-3. Check [Backend Docs](../backend/docs/)
+1. Review [Backend Docs](../backend/docs/README.md)
+2. Read [API Reference](../backend/docs/api/API_REFERENCE.md)
+3. Check [Coding Standards](development/CODING_STANDARDS.md)
 
 **Frontend Developer:**
 1. Review [Frontend Overview](frontend/README.md)
-2. Follow [Profile Integration Guide](guides/profile-integration.md)
-3. Read [Brand Guidelines](product/critvue_brand_style.md)
+2. Read [Authentication Guide](frontend/AUTH_GUIDE.md)
+3. Follow [Coding Standards](development/CODING_STANDARDS.md)
