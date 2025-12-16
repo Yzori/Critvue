@@ -8,7 +8,7 @@
  * - Requester ratings (two-sided reputation)
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 
 // ============= Types =============
 

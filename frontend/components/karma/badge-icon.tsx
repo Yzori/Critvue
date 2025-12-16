@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { getBadgeIconConfig } from '@/lib/constants/badge-icons';
-import type { BadgeRarity } from '@/lib/api/karma';
+import type { BadgeRarity } from '@/lib/api/gamification/karma';
 
 /**
  * BadgeIcon Component

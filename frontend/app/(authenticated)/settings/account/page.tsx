@@ -16,7 +16,7 @@ import {
 import { Avatar } from "@/components/profile/avatar-display";
 import { useAuth } from "@/contexts/AuthContext";
 import apiClient from "@/lib/api/client";
-import { uploadAvatar, checkUsernameAvailability } from "@/lib/api/profile";
+import { uploadAvatar, checkUsernameAvailability } from "@/lib/api/profile/public";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 

@@ -30,11 +30,11 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { claimReviewByRequestId, formatPayment } from "@/lib/api/reviewer";
-import { getNDAStatus } from "@/lib/api/nda";
+import { claimReviewByRequestId, formatPayment } from "@/lib/api/reviews/reviewer-dashboard";
+import { getNDAStatus } from "@/lib/api/reviews/nda";
 import { NDAModal } from "@/components/nda/nda-modal";
 import { ApplicationModal } from "@/components/reviewer/application-modal";
-import { isApplicationRequiredError } from "@/lib/api/slot-applications";
+import { isApplicationRequiredError } from "@/lib/api/reviews/applications";
 
 export interface ClaimButtonProps {
   reviewRequestId: number;

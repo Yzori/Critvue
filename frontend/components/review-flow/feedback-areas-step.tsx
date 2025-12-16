@@ -4,7 +4,7 @@
  * Content-type specific options with multi-select checkboxes
  */
 
-import { ContentType } from "@/lib/api/reviews";
+import { ContentType } from "@/lib/api/reviews/requests";
 import {
   CheckSquare,
   Square,

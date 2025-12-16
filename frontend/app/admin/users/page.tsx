@@ -54,7 +54,7 @@ import {
   UserRole,
   UserTier,
   UserSearchParams,
-} from "@/lib/api/admin-users";
+} from "@/lib/api/admin/users";
 
 // Import modals (we'll create these next)
 import { BanUserModal } from "@/components/admin/users/BanUserModal";
@@ -69,12 +69,12 @@ const roleColors: Record<UserRole, { bg: string; text: string }> = {
 };
 
 const tierColors: Record<UserTier, { bg: string; text: string }> = {
-  novice: { bg: "bg-gray-100", text: "text-muted-foreground" },
-  contributor: { bg: "bg-green-100", text: "text-green-700" },
-  skilled: { bg: "bg-blue-100", text: "text-blue-700" },
-  trusted_advisor: { bg: "bg-purple-100", text: "text-purple-700" },
-  expert: { bg: "bg-amber-100", text: "text-amber-700" },
-  master: { bg: "bg-gradient-to-r from-amber-100 to-orange-100", text: "text-orange-700" },
+  newcomer: { bg: "bg-gray-100", text: "text-muted-foreground" },
+  supporter: { bg: "bg-green-100", text: "text-green-700" },
+  guide: { bg: "bg-blue-100", text: "text-blue-700" },
+  mentor: { bg: "bg-purple-100", text: "text-purple-700" },
+  curator: { bg: "bg-amber-100", text: "text-amber-700" },
+  visionary: { bg: "bg-gradient-to-r from-amber-100 to-orange-100", text: "text-orange-700" },
 };
 
 export default function AdminUsersPage() {
@@ -287,20 +287,20 @@ export default function AdminUsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn("capitalize", tierColors[user.user_tier].text)}>
+                    <Badge variant="secondary" className={cn("capitalize", tierColors[user.user_tier].text)}>
                       {user.user_tier.replace("_", " ")}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 text-amber-500" />
-                      {user.karma_points.toLocaleString()}
+                      {user.sparks_points.toLocaleString()}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {user.is_banned ? (
-                        <Badge variant="destructive" className="gap-1">
+                        <Badge variant="error" className="gap-1">
                           <Ban className="h-3 w-3" />
                           Banned
                         </Badge>

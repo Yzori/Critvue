@@ -43,7 +43,7 @@ import {
   ReviewerEntry,
   ReviewerSortBy,
   SortOrder,
-} from '@/lib/api/reviewers';
+} from '@/lib/api/reviews/directory';
 
 const ITEMS_PER_PAGE = 24;
 

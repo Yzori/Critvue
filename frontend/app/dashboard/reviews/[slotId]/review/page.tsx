@@ -30,9 +30,9 @@ import {
   acceptReview,
   rejectReview,
   ReviewSlotResponse,
-} from "@/lib/api/review-slots";
-import { getReviewDetail, ReviewRequestDetail } from "@/lib/api/reviews";
-import { submitReviewerRating } from "@/lib/api/sparks";
+} from "@/lib/api/reviews/slots";
+import { getReviewDetail, ReviewRequestDetail } from "@/lib/api/reviews/requests";
+import { submitReviewerRating } from "@/lib/api/gamification/sparks";
 import { getErrorMessage } from "@/lib/api/client";
 import { ReviewStudio } from "@/components/reviewer/review-studio/ReviewStudio";
 

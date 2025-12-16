@@ -24,7 +24,7 @@ import {
   createPaymentIntent,
   calculatePayment,
   PaymentBreakdown as PaymentBreakdownType,
-} from "@/lib/api/payments";
+} from "@/lib/api/payments/transactions";
 import { CheckoutForm } from "./CheckoutForm";
 
 // Initialize Stripe

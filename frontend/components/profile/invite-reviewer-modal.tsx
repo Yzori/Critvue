@@ -31,7 +31,7 @@ import {
   getReviewsWithOpenSlots,
   inviteReviewer,
   CreateReviewResponse,
-} from "@/lib/api/reviews";
+} from "@/lib/api/reviews/requests";
 import { cn } from "@/lib/utils";
 
 interface InviteReviewerModalProps {

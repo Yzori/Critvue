@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { adminUsersApi, UserDetail, UserRole, UserTier } from "@/lib/api/admin-users";
+import { adminUsersApi, UserDetail, UserRole, UserTier } from "@/lib/api/admin/users";
 
 interface UserDetailDrawerProps {
   userId: number | null;
@@ -130,7 +130,7 @@ export function UserDetailDrawer({ userId, isOpen, onClose, onAction }: UserDeta
                     <Badge className={cn("capitalize", roleColors[user.role].bg, roleColors[user.role].text)}>
                       {user.role}
                     </Badge>
-                    <Badge variant="outline" className={cn("capitalize", tierColors[user.user_tier])}>
+                    <Badge variant="secondary" className={cn("capitalize", tierColors[user.user_tier])}>
                       {user.user_tier.replace("_", " ")}
                     </Badge>
                   </div>

@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { adminUsersApi, UserListItem } from "@/lib/api/admin-users";
+import { adminUsersApi, UserListItem } from "@/lib/api/admin/users";
 
 interface BanUserModalProps {
   user: UserListItem | null;

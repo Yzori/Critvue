@@ -25,8 +25,8 @@ import {
   getDeadlineUrgency,
   formatPayment,
   type ReviewSlot,
-} from "@/lib/api/reviewer";
-import { getReviewFiles, type FileResponse } from "@/lib/api/files";
+} from "@/lib/api/reviews/reviewer-dashboard";
+import { getReviewFiles, type FileResponse } from "@/lib/api/reviews/files";
 import { getFileUrl } from "@/lib/api/client";
 
 interface ReviewEditorPanelProps {

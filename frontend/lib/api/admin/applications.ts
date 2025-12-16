@@ -2,7 +2,7 @@
  * Admin API Client - Expert Application Review
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 
 // Types
 export interface ApplicationQueueItem {

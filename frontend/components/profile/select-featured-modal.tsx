@@ -32,7 +32,7 @@ import {
   getMyPortfolio,
   togglePortfolioFeatured,
   type PortfolioItem,
-} from "@/lib/api/portfolio";
+} from "@/lib/api/profile/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 import { useAsync, useAsyncCallback, useSelection } from "@/hooks";
 

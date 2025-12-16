@@ -33,7 +33,7 @@ import {
   LeaderboardUser,
   LeaderboardData,
   DiscoveryUser,
-} from '@/lib/api/leaderboard';
+} from '@/lib/api/gamification/leaderboard';
 import {
   getLeaderboard as getChallengeLeaderboard,
 } from '@/lib/api/challenges';

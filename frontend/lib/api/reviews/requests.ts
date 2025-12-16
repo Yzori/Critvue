@@ -3,7 +3,7 @@
  * Handles all review-related API requests
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // Content type options for reviews
 export type ContentType = "design" | "photography" | "video" | "stream" | "audio" | "writing" | "art";

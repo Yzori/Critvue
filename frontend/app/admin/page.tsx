@@ -9,7 +9,6 @@ import {
   Swords,
   UserCog,
   TrendingUp,
-  TrendingDown,
   Clock,
   CheckCircle,
   XCircle,
@@ -17,7 +16,6 @@ import {
   ArrowRight,
   Activity,
   Star,
-  Shield,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

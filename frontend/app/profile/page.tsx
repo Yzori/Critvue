@@ -39,10 +39,10 @@ import {
 } from "lucide-react";
 
 // API imports
-import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile";
-import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
-import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/sparks";
-import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/activity";
+import { getMyProfile, getMyDNA, ReviewerDNAResponse } from "@/lib/api/profile/public";
+import { getUserPortfolio, PortfolioItem } from "@/lib/api/profile/portfolio";
+import { getMyBadges, getAvailableBadges, Badge as ApiBadge } from "@/lib/api/gamification/sparks";
+import { getActivityHeatmap, getActivityTimeline, getEnhancedStats, TimelineEvent as ApiTimelineEvent, EnhancedStatsResponse } from "@/lib/api/profile/activity";
 import { ApiClientError } from "@/lib/api/client";
 
 // Component imports

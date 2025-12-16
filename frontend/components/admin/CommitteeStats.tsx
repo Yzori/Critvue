@@ -17,7 +17,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CommitteeStats } from "@/lib/api/admin";
+import type { CommitteeStats } from "@/lib/api/admin/applications";
 
 interface StatCardProps {
   label: string;

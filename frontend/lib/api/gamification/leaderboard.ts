@@ -7,7 +7,7 @@
  * - Social discovery features (Rising Stars, Skill Specialists, etc.)
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 import { UserTier } from '@/lib/types/tier';
 import {
   LeaderboardCategory,
@@ -24,7 +24,7 @@ import {
   CATEGORY_CONFIG,
   getCurrentSeasonTheme,
 } from '@/lib/types/leaderboard';
-import type { Badge } from '@/lib/api/karma';
+import type { Badge } from '@/lib/api/gamification/karma';
 
 // Re-export types for convenience
 export {

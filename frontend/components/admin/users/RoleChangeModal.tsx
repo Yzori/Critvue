@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { adminUsersApi, UserListItem, UserRole } from "@/lib/api/admin-users";
+import { adminUsersApi, UserListItem, UserRole } from "@/lib/api/admin/users";
 
 interface RoleChangeModalProps {
   user: UserListItem | null;

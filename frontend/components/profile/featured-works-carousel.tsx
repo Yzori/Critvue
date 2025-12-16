@@ -21,7 +21,7 @@ import {
   Play,
   Pause,
 } from "lucide-react";
-import { PortfolioItem } from "@/lib/api/portfolio";
+import { PortfolioItem } from "@/lib/api/profile/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 
 interface FeaturedWorksCarouselProps {

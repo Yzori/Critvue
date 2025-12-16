@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { updateProfile, checkUsernameAvailability } from "@/lib/api/profile";
+import { updateProfile, checkUsernameAvailability } from "@/lib/api/profile/public";
 
 export interface UsernameModalProps {
   open: boolean;

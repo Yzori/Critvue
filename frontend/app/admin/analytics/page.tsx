@@ -5,9 +5,6 @@ import { motion } from "framer-motion";
 import {
   Users,
   UserPlus,
-  Star,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Award,
   Swords,
@@ -24,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { adminUsersApi, AdminStats } from "@/lib/api/admin-users";
+import { adminUsersApi, AdminStats } from "@/lib/api/admin/users";
 
 interface StatCardProps {
   title: string;

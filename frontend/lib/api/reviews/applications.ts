@@ -3,7 +3,7 @@
  * Handles all slot application API requests for paid/expert reviews
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // Application status enum
 export type SlotApplicationStatus =

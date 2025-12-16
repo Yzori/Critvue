@@ -32,8 +32,8 @@ import { ReviewerNetwork } from "@/components/portfolio/reviewer-network";
 import { GrowthMilestones } from "@/components/portfolio/growth-milestones";
 
 // API
-import { getUserProfile, ProfileData } from "@/lib/api/profile";
-import { getUserPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getUserProfile, ProfileData } from "@/lib/api/profile/public";
+import { getUserPortfolio, PortfolioItem } from "@/lib/api/profile/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 import { toast } from "sonner";
 

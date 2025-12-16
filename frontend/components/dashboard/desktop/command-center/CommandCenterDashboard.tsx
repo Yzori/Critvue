@@ -62,7 +62,7 @@ import {
   type ActiveReviewItem,
   type SubmittedReviewItem,
   type CompletedReviewItem,
-} from "@/lib/api/dashboard";
+} from "@/lib/api/dashboard/mobile";
 import { getErrorMessage, isRetryableError } from "@/lib/api/client";
 
 export interface CommandCenterDashboardProps {

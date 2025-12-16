@@ -593,7 +593,7 @@ export default function HomePage() {
               whileTap={{ scale: 0.99 }}
             >
               <div className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2">
-                <Badge variant="outline" className="bg-background border-accent-peach text-accent-peach text-[10px] sm:text-xs">
+                <Badge variant="secondary" className="bg-background border-accent-peach text-accent-peach text-[10px] sm:text-xs">
                   <Award className="size-2.5 sm:size-3 mr-0.5" />
                   Premium
                 </Badge>

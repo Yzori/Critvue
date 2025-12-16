@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertTriangle, XCircle, Loader2, AlertCircle } from "lucide-react";
-import { RejectionReason } from "@/lib/api/review-slots";
+import { RejectionReason } from "@/lib/api/reviews/slots";
 
 export interface RejectReviewModalProps {
   isOpen: boolean;

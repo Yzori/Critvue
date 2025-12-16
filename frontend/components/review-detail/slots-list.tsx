@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { ReviewSlot, ReviewSlotStatus } from "@/lib/api/reviews";
+import { ReviewSlot, ReviewSlotStatus } from "@/lib/api/reviews/requests";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

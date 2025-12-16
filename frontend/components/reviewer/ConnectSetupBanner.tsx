@@ -15,7 +15,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Wallet, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getConnectStatus } from "@/lib/api/payments";
+import { getConnectStatus } from "@/lib/api/payments/transactions";
 
 interface ConnectSetupBannerProps {
   /** Optional class name for styling */

@@ -50,8 +50,8 @@ import {
   createPortfolioItem,
   type PortfolioContentType,
   type CreatePortfolioData,
-} from "@/lib/api/portfolio";
-import { uploadGenericFile } from "@/lib/api/files";
+} from "@/lib/api/profile/portfolio";
+import { uploadGenericFile } from "@/lib/api/reviews/files";
 
 interface PortfolioUploadDialogProps {
   open: boolean;

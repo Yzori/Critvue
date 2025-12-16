@@ -42,7 +42,7 @@ import {
   calculateDaysRemaining,
   formatPayment,
   type ReviewSlot,
-} from "@/lib/api/reviewer";
+} from "@/lib/api/reviews/reviewer-dashboard";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface DashboardData {

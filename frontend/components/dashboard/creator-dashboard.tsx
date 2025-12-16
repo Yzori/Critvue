@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { type CreateReviewResponse } from "@/lib/api/reviews";
+import { type CreateReviewResponse } from "@/lib/api/reviews/requests";
 import { useReviews } from "@/hooks/useReviews";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import SubscriptionStatusCard from "./subscription-status-card";

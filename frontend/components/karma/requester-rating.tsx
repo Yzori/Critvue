@@ -34,7 +34,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { type RequesterStats, type RequesterRatingRequest } from '@/lib/api/karma';
+import { type RequesterStats, type RequesterRatingRequest } from '@/lib/api/gamification/karma';
 
 /**
  * RequesterRating Component

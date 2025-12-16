@@ -32,7 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { type Badge, getBadgeRarityColor } from '@/lib/api/karma';
+import { type Badge, getBadgeRarityColor } from '@/lib/api/gamification/karma';
 
 export interface QuickStatsBarProps {
   sparks: number;

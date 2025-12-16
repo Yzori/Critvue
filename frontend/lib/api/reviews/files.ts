@@ -3,7 +3,7 @@
  * Handles file upload and management for review requests
  */
 
-import apiClient, { extractApiErrorMessage } from "./client";
+import apiClient, { extractApiErrorMessage } from "../client";
 
 // File metadata response from the API
 export interface FileResponse {

@@ -11,11 +11,10 @@ import {
   ChallengeInvitation,
   Challenge,
   getContentTypeInfo,
-  getChallengeTypeInfo,
   getTimeRemaining,
 } from "@/lib/api/challenges";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -45,10 +44,8 @@ import {
   Radio,
   Bell,
 } from "lucide-react";
-import { ContentType } from "@/lib/api/challenges";
-
 // Content type icons
-const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: string }>> = {
+const contentTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   design: Palette,
   code: Code,
   video: Video,
@@ -56,6 +53,7 @@ const contentTypeIcons: Record<ContentType, React.ComponentType<{ className?: st
   audio: Headphones,
   writing: FileText,
   art: Brush,
+  photography: Palette,
 };
 
 /**
@@ -218,7 +216,7 @@ export default function InvitationsPage() {
               const challenge = challengeDetails[invitation.challengeId];
               const timeRemaining = getTimeRemaining(invitation.expiresAt);
               const contentInfo = challenge ? getContentTypeInfo(challenge.contentType) : null;
-              const Icon = challenge ? contentTypeIcons[challenge.contentType] : Sparkles;
+              const Icon = challenge ? (contentTypeIcons[challenge.contentType] ?? Sparkles) : Sparkles;
 
               return (
                 <Card

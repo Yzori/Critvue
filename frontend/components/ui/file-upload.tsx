@@ -8,7 +8,7 @@
 import { useCallback, useState, useRef } from "react";
 import { Upload, X, File, Image, Video, Music, FileText, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatFileSize } from "@/lib/api/files";
+import { formatFileSize } from "@/lib/api/reviews/files";
 
 export interface UploadedFile {
   file: File;

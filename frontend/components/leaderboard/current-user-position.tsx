@@ -11,7 +11,7 @@ import {
   LeaderboardEntry,
   LeaderboardStatType,
   formatLeaderboardStat,
-} from '@/lib/api/leaderboard';
+} from '@/lib/api/gamification/leaderboard';
 
 export interface CurrentUserPositionProps {
   entry: LeaderboardEntry;

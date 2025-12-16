@@ -37,7 +37,7 @@ import {
   getPendingReviewsForRequester,
   acceptReviewSlot,
   rejectReviewSlot,
-} from "@/lib/api/review-slots";
+} from "@/lib/api/reviews/slots";
 import { getErrorMessage } from "@/lib/api/client";
 import { AcceptReviewModal, type AcceptReviewData } from "./accept-review-modal";
 import { RejectReviewModal, type RejectReviewData } from "./reject-review-modal";

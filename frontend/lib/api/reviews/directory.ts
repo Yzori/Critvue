@@ -2,7 +2,7 @@
  * Reviewers Directory API Client
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 
 // ==================== Types ====================
 

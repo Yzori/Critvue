@@ -31,7 +31,7 @@ import {
   getDeadlineUrgency,
   formatPayment,
   type ReviewSlot,
-} from "@/lib/api/reviewer";
+} from "@/lib/api/reviews/reviewer-dashboard";
 
 interface MobileReviewDrawerProps {
   slots: ReviewSlot[];

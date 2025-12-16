@@ -29,7 +29,7 @@ import {
   formatXP,
   getReputationLevel,
   getWeeklyGoalProgress,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 
 /**
  * KarmaDashboard Component

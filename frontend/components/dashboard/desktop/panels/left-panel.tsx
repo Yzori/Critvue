@@ -49,7 +49,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import type { DashboardRole, DashboardTab } from "../desktop-dashboard-container";
-import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard";
+import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard/mobile";
 import useSWR from "swr";
 
 export interface DesktopLeftPanelProps {

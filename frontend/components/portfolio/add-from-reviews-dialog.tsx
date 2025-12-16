@@ -42,7 +42,7 @@ import {
   createPortfolioFromReview,
   type EligibleReview,
   type EligibleReviewFile,
-} from "@/lib/api/portfolio";
+} from "@/lib/api/profile/portfolio";
 import { formatDistanceToNow } from "date-fns";
 
 interface AddFromReviewsDialogProps {
@@ -507,7 +507,7 @@ function ReviewCard({ review, onClick, disabled }: ReviewCardProps) {
 
       {/* Arrow or Added badge */}
       {disabled ? (
-        <Badge variant="outline" className="text-xs">
+        <Badge variant="secondary" className="text-xs">
           Added
         </Badge>
       ) : (

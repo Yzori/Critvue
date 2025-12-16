@@ -30,11 +30,11 @@ import { PullToRefresh } from "./pull-to-refresh";
 import {
   getActionsNeeded,
   getMyRequests,
-} from "@/lib/api/dashboard";
+} from "@/lib/api/dashboard/mobile";
 import {
   acceptReview,
   rejectReview,
-} from "@/lib/api/review-slots";
+} from "@/lib/api/reviews/slots";
 import {
   CheckCircle2,
   Clock,

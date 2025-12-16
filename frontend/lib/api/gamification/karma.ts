@@ -9,4 +9,4 @@
 export * from './sparks';
 
 // Note: This file exists for backward compatibility only.
-// New code should import from '@/lib/api/sparks' directly.
+// New code should import from '@/lib/api/gamification/sparks' directly.

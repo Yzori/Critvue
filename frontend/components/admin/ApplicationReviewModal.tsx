@@ -47,7 +47,7 @@ import type {
   RejectionReason,
   VoteRequest,
   ApplicationReview,
-} from "@/lib/api/admin";
+} from "@/lib/api/admin/applications";
 import { format } from "date-fns";
 
 interface ApplicationReviewModalProps {

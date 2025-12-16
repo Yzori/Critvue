@@ -37,7 +37,7 @@ import {
   submitReview,
   type ReviewDraft,
   type ReviewSubmission,
-} from "@/lib/api/reviewer";
+} from "@/lib/api/reviews/reviewer-dashboard";
 
 export interface ReviewEditorProps {
   slotId: number;

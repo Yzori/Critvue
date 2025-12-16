@@ -9,7 +9,7 @@
  * - Earnings and statistics
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 /**
  * Type Definitions

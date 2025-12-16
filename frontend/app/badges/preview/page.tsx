@@ -4,7 +4,7 @@ import * as React from 'react';
 import { BadgeIcon } from '@/components/karma/badge-icon';
 import { TierBadge } from '@/components/tier/tier-badge';
 import { UserTier, MasterTierType } from '@/lib/types/tier';
-import type { BadgeRarity } from '@/lib/api/karma';
+import type { BadgeRarity } from '@/lib/api/gamification/karma';
 
 /**
  * Badge Preview Page

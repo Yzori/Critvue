@@ -412,7 +412,7 @@ export default function AdminChallengesPage() {
                         </TableCell>
                         <TableCell>
                           {challenge.challengeType === "one_on_one" && (
-                            <Badge variant="outline" className={cn(
+                            <Badge variant="secondary" className={cn(
                               challenge.invitationMode === "open_slots"
                                 ? "border-[#4ADE80] text-[#4ADE80]"
                                 : "border-border text-muted-foreground"

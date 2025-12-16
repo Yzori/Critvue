@@ -26,7 +26,7 @@ import {
   type LeaderboardEntry,
   type UserRanking,
   type Season,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 
 /**
  * Leaderboard Component

@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { adminUsersApi, UserListItem } from "@/lib/api/admin-users";
+import { adminUsersApi, UserListItem } from "@/lib/api/admin/users";
 
 interface SuspendUserModalProps {
   user: UserListItem | null;

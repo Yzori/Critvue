@@ -3,7 +3,7 @@
  * Handles all review slot-related API requests for the complete review lifecycle
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // ===== Enums matching backend =====
 

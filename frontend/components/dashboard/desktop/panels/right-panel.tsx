@@ -42,9 +42,9 @@ import {
   Send,
 } from "lucide-react";
 import type { DashboardRole } from "../desktop-dashboard-container";
-import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard";
+import { getDashboardStats, type DashboardStats } from "@/lib/api/dashboard/mobile";
 import { getNotifications } from "@/lib/api/notifications";
-import { getActivityTimeline } from "@/lib/api/activity";
+import { getActivityTimeline } from "@/lib/api/profile/activity";
 import useSWR from "swr";
 
 export interface DesktopRightPanelProps {

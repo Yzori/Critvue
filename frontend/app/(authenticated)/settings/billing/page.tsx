@@ -44,13 +44,13 @@ import {
   ConnectStatusResponse,
   AvailableBalanceResponse,
   PayoutHistoryResponse,
-} from "@/lib/api/payments";
+} from "@/lib/api/payments/transactions";
 import {
   getSubscriptionStatus,
   createPortalSession,
   syncSubscription,
   SubscriptionStatus,
-} from "@/lib/api/subscriptions";
+} from "@/lib/api/payments/subscriptions";
 
 function BillingSettingsContent() {
   const searchParams = useSearchParams();
@@ -126,7 +126,7 @@ function BillingSettingsContent() {
   async function handleManageSubscription() {
     actionLoadingState.setTrue();
     try {
-      const response = await createPortalSession(`${window.location.origin}/settings/billing`);
+      const response = await createPortalSession({ return_url: `${window.location.origin}/settings/billing` });
       window.location.href = response.portal_url;
     } catch {
       setError("Failed to open subscription portal. Please try again.");
@@ -507,7 +507,7 @@ function BillingSettingsContent() {
                           {formatDate(payout.created_at)}
                         </p>
                       </div>
-                      <Badge variant={payout.status === "paid" ? "default" : "secondary"}>
+                      <Badge variant={payout.status === "paid" ? "success" : "secondary"}>
                         {payout.status}
                       </Badge>
                     </div>

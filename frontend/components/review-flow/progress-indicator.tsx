@@ -5,7 +5,7 @@
  */
 
 import { Check, FileText, Upload, MessageSquare, Award, CheckCircle } from "lucide-react";
-import { ContentType } from "@/lib/api/reviews";
+import { ContentType } from "@/lib/api/reviews/requests";
 
 interface ProgressIndicatorProps {
   currentStep: number;

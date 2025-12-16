@@ -72,7 +72,7 @@ import {
   type ActiveReviewItem,
   type SubmittedReviewItem,
   type CompletedReviewItem,
-} from '@/lib/api/dashboard';
+} from '@/lib/api/dashboard/mobile';
 import {
   getKarmaSummary,
   getMyBadges,
@@ -80,7 +80,7 @@ import {
   type KarmaSummary,
   type Badge as BadgeType,
   type UserRanking,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 import { getErrorMessage, isRetryableError } from '@/lib/api/client';
 
 export interface MomentumDashboardProps {

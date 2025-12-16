@@ -239,12 +239,12 @@ export function OpenChallengeCardCompact({
 
       {/* Time/Status */}
       {status === "open" && timeLeft && (
-        <Badge variant="outline" className="text-xs border-accent-sage/30 text-accent-sage">
+        <Badge variant="secondary" className="text-xs border-accent-sage/30 text-accent-sage">
           {timeLeft}
         </Badge>
       )}
       {status === "voting" && (
-        <Badge variant="outline" className="text-xs border-accent-peach/30 text-accent-peach">
+        <Badge variant="secondary" className="text-xs border-accent-peach/30 text-accent-peach">
           Voting
         </Badge>
       )}

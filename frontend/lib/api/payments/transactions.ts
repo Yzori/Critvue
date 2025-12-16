@@ -3,7 +3,7 @@
  * Functions for expert review payments and Stripe Connect
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // ===== Payment Intent Types =====
 

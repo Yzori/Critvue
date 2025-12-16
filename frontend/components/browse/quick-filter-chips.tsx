@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ReviewType } from "@/lib/api/reviews";
+import { ReviewType } from "@/lib/api/reviews/requests";
 import { Flame, DollarSign, Heart, Clock } from "lucide-react";
 
 export interface QuickFilterChipsProps {

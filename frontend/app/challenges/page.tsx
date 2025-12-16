@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -403,7 +402,7 @@ export default function ChallengesPage() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline" className="text-xs border-border">
+                              <Badge variant="secondary" className="text-xs border-border">
                                 {contentTypeLabels[challenge.contentType] || challenge.contentType}
                               </Badge>
                               {challenge.isFeatured && (

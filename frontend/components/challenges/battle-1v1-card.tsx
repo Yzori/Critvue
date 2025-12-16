@@ -308,7 +308,7 @@ export function Battle1v1CardCompact({
 
       {/* Time/Status */}
       {status === "voting" && timeLeft && (
-        <Badge variant="outline" className="text-xs border-accent-peach/30 text-accent-peach">
+        <Badge variant="secondary" className="text-xs border-accent-peach/30 text-accent-peach">
           {timeLeft}
         </Badge>
       )}

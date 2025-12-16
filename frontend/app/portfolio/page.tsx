@@ -44,14 +44,14 @@ import {
   transformGrowthData,
   transformMilestones,
   transformReviewers,
-} from "@/lib/api/growth";
+} from "@/lib/api/profile/growth";
 import {
   getPortfolioSlots,
   getFeaturedSlots,
   togglePortfolioFeatured,
   type PortfolioSlotsResponse,
   type FeaturedSlotsResponse,
-} from "@/lib/api/portfolio";
+} from "@/lib/api/profile/portfolio";
 import { getFileUrl } from "@/lib/api/client";
 import { toast } from "sonner";
 

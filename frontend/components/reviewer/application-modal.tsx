@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { applyForSlot, canApplyToRequest, CanApplyResponse } from "@/lib/api/slot-applications";
+import { applyForSlot, canApplyToRequest, CanApplyResponse } from "@/lib/api/reviews/applications";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface ApplicationModalProps {

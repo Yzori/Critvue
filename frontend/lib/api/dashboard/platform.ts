@@ -7,7 +7,7 @@
  * - User story stats (narrative-driven statistics)
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // ===== Types =====
 

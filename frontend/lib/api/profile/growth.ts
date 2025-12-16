@@ -3,7 +3,7 @@
  * Handles portfolio growth metrics and analytics
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 /**
  * Growth summary metrics

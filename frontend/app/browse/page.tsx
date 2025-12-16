@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { getBrowseReviews, BrowseReviewItem } from "@/lib/api/browse";
-import { getMyProfile } from "@/lib/api/profile";
-import { ContentType, ReviewType } from "@/lib/api/reviews";
+import { getMyProfile } from "@/lib/api/profile/public";
+import { ContentType, ReviewType } from "@/lib/api/reviews/requests";
 import { ReviewCard } from "@/components/browse/review-card";
 import { CompactFilterBar } from "@/components/browse/compact-filter-bar";
 import { FilterBottomSheet } from "@/components/browse/filter-bottom-sheet";

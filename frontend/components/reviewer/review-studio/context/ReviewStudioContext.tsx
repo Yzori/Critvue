@@ -37,7 +37,7 @@ import {
   saveStudioDraft,
   getStudioDraft,
   submitStudioReview,
-} from "@/lib/api/smart-review";
+} from "@/lib/api/reviews/smart-review";
 import { ApiClientError } from "@/lib/api/client";
 
 // ===== Context =====

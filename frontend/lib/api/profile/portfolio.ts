@@ -3,7 +3,7 @@
  * Handles all portfolio-related API requests with cookie-based authentication
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 /**
  * Content type options for portfolio items

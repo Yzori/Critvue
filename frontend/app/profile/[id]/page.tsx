@@ -32,10 +32,10 @@ import {
 } from "lucide-react";
 
 // API imports
-import { getUserProfile, getUserDNA, ReviewerDNAResponse, ProfileData } from "@/lib/api/profile";
-import { getUserFeaturedPortfolio, PortfolioItem } from "@/lib/api/portfolio";
+import { getUserProfile, getUserDNA, ReviewerDNAResponse, ProfileData } from "@/lib/api/profile/public";
+import { getUserFeaturedPortfolio, PortfolioItem } from "@/lib/api/profile/portfolio";
 import { getFileUrl } from "@/lib/api/client";
-import { getUserBadges, Badge as ApiBadge } from "@/lib/api/karma";
+import { getUserBadges, Badge as ApiBadge } from "@/lib/api/gamification/karma";
 import { ApiClientError } from "@/lib/api/client";
 
 // Component imports

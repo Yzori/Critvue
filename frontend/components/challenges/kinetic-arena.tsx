@@ -107,7 +107,7 @@ export function KineticArena({
             </Badge>
 
             {timeRemaining && isActive && (
-              <Badge variant="outline" className="border-white/20 text-white/80">
+              <Badge variant="secondary" className="border-white/20 text-white/80">
                 <Clock className="w-3 h-3 mr-1.5" />
                 {timeRemaining}
               </Badge>

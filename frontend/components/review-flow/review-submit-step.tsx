@@ -4,7 +4,7 @@
  * Includes feedback areas and budget information
  */
 
-import { ContentType, ReviewType } from "@/lib/api/reviews";
+import { ContentType, ReviewType } from "@/lib/api/reviews/requests";
 import { Palette, Code, Video, Mic, FileText, Image, Sparkles, Award, CheckCircle, DollarSign, MessageSquare, Shield, Cast } from "lucide-react";
 
 interface ReviewSubmitStepProps {

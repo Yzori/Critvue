@@ -31,7 +31,7 @@ import { Briefcase, Palette, Settings, Bell, ChevronDown } from "lucide-react";
 import MobileCreatorDashboard from "@/components/dashboard/mobile/mobile-creator-dashboard";
 import MobileReviewerDashboard from "@/components/dashboard/mobile/mobile-reviewer-dashboard";
 import { DashboardBottomNav } from "@/components/dashboard/mobile/dashboard-bottom-nav";
-import { getUrgentPendingCount } from "@/lib/api/review-slots";
+import { getUrgentPendingCount } from "@/lib/api/reviews/slots";
 import { cn } from "@/lib/utils";
 
 type DashboardRole = "creator" | "reviewer";

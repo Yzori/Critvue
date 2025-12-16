@@ -26,14 +26,14 @@ import {
   ApplicationQueue,
   ApplicationReviewModal,
 } from "@/components/admin";
-import { adminApi } from "@/lib/api/admin";
+import { adminApi } from "@/lib/api/admin/applications";
 import type {
   CommitteeStats,
   ApplicationQueueItem,
   ApplicationDetail,
   RejectionReason,
   VoteRequest,
-} from "@/lib/api/admin";
+} from "@/lib/api/admin/applications";
 import { toast } from "sonner";
 
 type TabType = "queue" | "my-reviews";

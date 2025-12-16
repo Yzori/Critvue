@@ -6,7 +6,7 @@ import { useToggle, useFormState } from "@/hooks";
 import { useParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { getReviewDetail, ReviewRequestDetail, ContentType } from "@/lib/api/reviews";
+import { getReviewDetail, ReviewRequestDetail, ContentType } from "@/lib/api/reviews/requests";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClaimButton } from "@/components/reviewer/claim-button";

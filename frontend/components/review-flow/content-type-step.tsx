@@ -14,7 +14,7 @@
 "use client";
 
 import * as React from "react";
-import { ContentType } from "@/lib/api/reviews";
+import { ContentType } from "@/lib/api/reviews/requests";
 import {
   getAllContentTypes,
   getSubcategories,

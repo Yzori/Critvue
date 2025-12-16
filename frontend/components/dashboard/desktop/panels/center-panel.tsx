@@ -47,7 +47,7 @@ import {
   getMyRequests,
   getActiveReviews,
   getSubmittedReviews,
-} from "@/lib/api/dashboard";
+} from "@/lib/api/dashboard/mobile";
 import useSWR from "swr";
 
 export interface DesktopCenterPanelProps {

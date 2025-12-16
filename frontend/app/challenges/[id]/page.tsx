@@ -17,10 +17,6 @@ import {
   Challenge,
   ChallengeEntry,
   ChallengeVoteStats,
-  ContentType,
-  getContentTypeInfo,
-  getChallengeStatusInfo,
-  getChallengeTypeInfo,
   getTimeRemaining,
 } from "@/lib/api/challenges";
 import { getFileUrl } from "@/lib/api/client";
@@ -29,7 +25,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
@@ -64,13 +59,12 @@ import {
   Award,
   Plus,
   Upload,
-  ArrowRight,
   Star,
 } from "lucide-react";
 import { USE_MOCK_DATA, getMockChallenge } from "@/lib/mocks/challenges";
 
 // Content type icons and config
-const contentTypeConfig: Record<ContentType, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
+const contentTypeConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
   design: { icon: Palette, color: "text-accent-blue", bg: "bg-accent-blue/10" },
   code: { icon: Code, color: "text-accent-sage", bg: "bg-accent-sage/10" },
   video: { icon: Video, color: "text-red-500", bg: "bg-red-50" },
@@ -78,6 +72,7 @@ const contentTypeConfig: Record<ContentType, { icon: React.ComponentType<{ class
   writing: { icon: FileText, color: "text-blue-500", bg: "bg-blue-50" },
   art: { icon: Brush, color: "text-purple-500", bg: "bg-purple-50" },
   stream: { icon: Radio, color: "text-pink-500", bg: "bg-pink-50" },
+  photography: { icon: Palette, color: "text-accent-blue", bg: "bg-accent-blue/10" },
 };
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -142,12 +137,12 @@ export default function ChallengeDetailPage() {
             if (["voting", "completed", "draw"].includes(mockChallenge.status)) {
               setVoteStats({
                 totalVotes: mockChallenge.totalVotes,
-                showVoteCounts: mockChallenge.status !== "voting",
                 topEntries: mockChallenge.entries?.slice(0, 10).map((e) => ({
                   entryId: e.id,
+                  userId: e.userId || 0,
                   votes: e.voteCount || 0,
                 })) || [],
-              });
+              } as ChallengeVoteStats);
             }
           } else {
             setError("Challenge not found");
@@ -320,8 +315,8 @@ export default function ChallengeDetailPage() {
     );
   }
 
-  const typeConfig = contentTypeConfig[challenge.contentType] || contentTypeConfig.design;
-  const currentStatusConfig = statusConfig[challenge.status] || statusConfig.open;
+  const typeConfig = contentTypeConfig[challenge.contentType] ?? contentTypeConfig.design!;
+  const currentStatusConfig = statusConfig[challenge.status] ?? statusConfig.open!;
   const ContentIcon = typeConfig.icon;
 
   // Get deadline info
@@ -379,14 +374,14 @@ export default function ChallengeDetailPage() {
                 <div className={cn("p-2 rounded-xl", typeConfig.bg)}>
                   <ContentIcon className={cn("w-5 h-5", typeConfig.color)} />
                 </div>
-                <Badge variant="outline" className={cn("font-medium border-0", typeConfig.bg, typeConfig.color)}>
+                <Badge variant="secondary" className={cn("font-medium border-0", typeConfig.bg, typeConfig.color)}>
                   {challenge.contentType.charAt(0).toUpperCase() + challenge.contentType.slice(1)}
                 </Badge>
-                <Badge variant="outline" className="bg-purple-50 text-purple-600 border-0 font-medium">
+                <Badge variant="secondary" className="bg-purple-50 text-purple-600 border-0 font-medium">
                   {challenge.challengeType === "one_on_one" ? "1v1 Battle" : "Open Challenge"}
                 </Badge>
                 <Badge
-                  variant="outline"
+                  variant="secondary"
                   className={cn("font-medium border-0", currentStatusConfig.bg, currentStatusConfig.color)}
                 >
                   {challenge.status === "voting" && (
@@ -395,7 +390,7 @@ export default function ChallengeDetailPage() {
                   {currentStatusConfig.label}
                 </Badge>
                 {deadlineInfo && !deadlineInfo.isExpired && (
-                  <Badge variant="outline" className="border-gray-200 text-gray-600 font-medium">
+                  <Badge variant="secondary" className="border-gray-200 text-gray-600 font-medium">
                     <Clock className="w-3 h-3 mr-1" />
                     {deadlineInfo.days > 0
                       ? `${deadlineInfo.days}d ${deadlineInfo.hours}h left`

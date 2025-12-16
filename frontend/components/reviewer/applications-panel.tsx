@@ -43,7 +43,7 @@ import {
   rejectApplication,
   RequestApplicationsResponse,
   SlotApplicationWithApplicant,
-} from "@/lib/api/slot-applications";
+} from "@/lib/api/reviews/applications";
 import { TieredAvatar } from "@/components/tier/tiered-avatar";
 import { UserTier } from "@/lib/types/tier";
 

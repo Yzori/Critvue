@@ -3,7 +3,7 @@
  * Handles all profile-related API requests with cookie-based authentication
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 /**
  * Backend Profile Response

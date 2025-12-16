@@ -18,8 +18,8 @@
 import { useState } from "react";
 import { useToggle, useAsync } from "@/hooks";
 import { useRouter } from "next/navigation";
-import { ContentType, ReviewType, ReviewTier, FeedbackPriority, createReview, updateReview } from "@/lib/api/reviews";
-import { getSubscriptionStatus } from "@/lib/api/subscriptions";
+import { ContentType, ReviewType, ReviewTier, FeedbackPriority, createReview, updateReview } from "@/lib/api/reviews/requests";
+import { getSubscriptionStatus } from "@/lib/api/payments/subscriptions";
 import { Button } from "@/components/ui/button";
 import { ContentTypeStep } from "@/components/review-flow/content-type-step";
 import { AboutYourWorkStep, FeedbackGoal } from "@/components/review-flow/about-your-work-step";

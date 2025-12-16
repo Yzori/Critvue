@@ -9,7 +9,7 @@
  * - Real-time data via polling/WebSocket
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // ===== Request/Response Types =====
 

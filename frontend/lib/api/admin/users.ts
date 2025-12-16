@@ -3,12 +3,12 @@
  * Handles user management operations for admins
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 
 // ============ Types ============
 
 export type UserRole = 'creator' | 'reviewer' | 'admin';
-export type UserTier = 'novice' | 'contributor' | 'skilled' | 'trusted_advisor' | 'expert' | 'master';
+export type UserTier = 'newcomer' | 'supporter' | 'guide' | 'mentor' | 'curator' | 'visionary';
 export type SubscriptionTier = 'free' | 'pro';
 
 export interface UserListItem {
@@ -19,7 +19,7 @@ export interface UserListItem {
   role: UserRole;
   user_tier: UserTier;
   subscription_tier: SubscriptionTier;
-  karma_points: number;
+  sparks_points: number;
   is_active: boolean;
   is_verified: boolean;
   is_banned: boolean;

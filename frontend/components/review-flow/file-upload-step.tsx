@@ -16,14 +16,14 @@ import {
   CheckCircle,
   Camera,
 } from "lucide-react";
-import { ContentType } from "@/lib/api/reviews";
+import { ContentType } from "@/lib/api/reviews/requests";
 import {
   uploadFile,
   getAcceptedFileTypes,
   getFileSizeLimit,
   isFileTypeAllowed,
   formatFileSize,
-} from "@/lib/api/files";
+} from "@/lib/api/reviews/files";
 
 interface FileUploadStepProps {
   contentType: ContentType;

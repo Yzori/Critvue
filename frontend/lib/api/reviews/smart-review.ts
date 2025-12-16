@@ -2,7 +2,7 @@
  * API client for Smart Adaptive Review Editor and Review Studio
  */
 
-import apiClient from './client';
+import apiClient from '../client';
 import {
   SmartReviewDraft,
   ContentRubric,

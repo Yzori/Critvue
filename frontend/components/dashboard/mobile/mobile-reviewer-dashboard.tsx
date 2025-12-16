@@ -29,7 +29,7 @@ import {
   getSubmittedReviews,
   getDashboardStats,
   type ReviewerStats,
-} from "@/lib/api/dashboard";
+} from "@/lib/api/dashboard/mobile";
 import {
   Clock,
   CheckCircle2,

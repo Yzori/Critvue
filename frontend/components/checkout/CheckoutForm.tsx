@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, AlertCircle, CreditCard, ShieldCheck } from "lucide-react";
 import { PaymentBreakdown } from "./PaymentBreakdown";
-import { PaymentBreakdown as PaymentBreakdownType } from "@/lib/api/payments";
+import { PaymentBreakdown as PaymentBreakdownType } from "@/lib/api/payments/transactions";
 
 type CheckoutStatus = "loading" | "ready" | "processing" | "success" | "error";
 

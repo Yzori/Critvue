@@ -52,11 +52,11 @@ import {
   type ActiveReviewItem,
   type SubmittedReviewItem,
   type CompletedReviewItem,
-} from '@/lib/api/dashboard';
+} from '@/lib/api/dashboard/mobile';
 import {
   getKarmaSummary,
   type KarmaSummary,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 import {
   getPlatformActivity,
   getPlatformStats,
@@ -65,7 +65,7 @@ import {
   type PlatformStats,
   type UserStoryStats,
   type ActivityEvent as PlatformActivityEvent,
-} from '@/lib/api/platform';
+} from '@/lib/api/dashboard/platform';
 
 // Icons
 import {

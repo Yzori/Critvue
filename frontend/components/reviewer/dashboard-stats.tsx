@@ -20,7 +20,7 @@ import * as React from "react";
 import { StatCard } from "@/components/ui/stat-card";
 import { Clock, CheckCircle2, DollarSign, Star } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import type { ReviewerDashboard } from "@/lib/api/reviewer";
+import type { ReviewerDashboard } from "@/lib/api/reviews/reviewer-dashboard";
 
 export interface DashboardStatsProps {
   stats: ReviewerDashboard["stats"];

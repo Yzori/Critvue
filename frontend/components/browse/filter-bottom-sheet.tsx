@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FilterChips } from "./filter-chips";
-import { ContentType, ReviewType } from "@/lib/api/reviews";
+import { ContentType, ReviewType } from "@/lib/api/reviews/requests";
 import { X } from "lucide-react";
 
 export interface FilterBottomSheetProps {

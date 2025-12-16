@@ -5,7 +5,7 @@
  * Enhanced with conversion-optimized UX features
  */
 
-import { ReviewType, ReviewTier, FeedbackPriority } from "@/lib/api/reviews";
+import { ReviewType, ReviewTier, FeedbackPriority } from "@/lib/api/reviews/requests";
 import { Sparkles, Award, Check, Clock, Star, Plus, X, Zap, Target, Compass, Shield, Lock, Users, Minus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";

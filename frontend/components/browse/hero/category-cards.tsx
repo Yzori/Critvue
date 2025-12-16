@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ContentType } from "@/lib/api/reviews";
+import { ContentType } from "@/lib/api/reviews/requests";
 import {
   Palette,
   Camera,

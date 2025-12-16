@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ContentType, ReviewType } from "@/lib/api/reviews";
+import { ContentType, ReviewType } from "@/lib/api/reviews/requests";
 import { X } from "lucide-react";
 
 export interface ActiveFilterChipsProps {

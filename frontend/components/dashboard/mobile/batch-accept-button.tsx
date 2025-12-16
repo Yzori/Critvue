@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { batchAcceptReviews } from "@/lib/api/dashboard";
+import { batchAcceptReviews } from "@/lib/api/dashboard/mobile";
 import { toast } from "sonner";
 
 interface BatchAcceptButtonProps {

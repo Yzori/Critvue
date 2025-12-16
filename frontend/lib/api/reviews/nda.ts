@@ -3,7 +3,7 @@
  * Handles all NDA-related API requests
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 // NDA sign request
 export interface NDASignRequest {

@@ -26,7 +26,7 @@ import {
   type Badge,
   type BadgeRarity,
   getBadgeRarityColor,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 import { BadgeIcon } from './badge-icon';
 
 /**

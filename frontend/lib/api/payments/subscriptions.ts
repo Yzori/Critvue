@@ -3,12 +3,13 @@
  * Functions for managing subscription and quota limits
  */
 
-import apiClient from "./client";
+import apiClient from "../client";
 
 export interface SubscriptionStatus {
   tier: string;
   status?: string;
   subscription_end_date?: string;
+  current_period_end?: string;
   monthly_reviews_used: number;
   monthly_reviews_limit: number;
   reviews_remaining: number;

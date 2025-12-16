@@ -7,7 +7,7 @@
  */
 
 import type { UserTier } from './tier';
-import type { Badge } from '@/lib/api/karma';
+import type { Badge } from '@/lib/api/gamification/karma';
 
 // ============================================
 // STAT CATEGORIES (Simplified from 5 to 3)

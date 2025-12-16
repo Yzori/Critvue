@@ -26,7 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ApplicationQueueItem } from "@/lib/api/admin";
+import type { ApplicationQueueItem } from "@/lib/api/admin/applications";
 import { formatDistanceToNow } from "date-fns";
 
 interface ApplicationQueueProps {

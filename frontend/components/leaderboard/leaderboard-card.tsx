@@ -11,7 +11,7 @@ import {
   RankChangeDirection,
   LeaderboardStatType,
   formatLeaderboardStat,
-} from '@/lib/api/leaderboard';
+} from '@/lib/api/gamification/leaderboard';
 
 export interface LeaderboardCardProps {
   entry: LeaderboardEntry;

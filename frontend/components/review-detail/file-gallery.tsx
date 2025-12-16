@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { ReviewFile } from "@/lib/api/reviews";
+import { ReviewFile } from "@/lib/api/reviews/requests";
 import { Button } from "@/components/ui/button";
 import {
   Download,

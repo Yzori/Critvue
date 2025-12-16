@@ -26,7 +26,7 @@ import {
   type KarmaTransaction,
   type SeasonType,
   type LeaderboardCategory,
-} from '@/lib/api/karma';
+} from '@/lib/api/gamification/karma';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import {

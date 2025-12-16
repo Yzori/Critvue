@@ -35,20 +35,20 @@ import { MobileReviewDrawer } from "@/components/reviewer/mobile-review-drawer";
 import {
   getMyReviews,
   type ReviewSlot,
-} from "@/lib/api/reviewer";
+} from "@/lib/api/reviews/reviewer-dashboard";
 import {
   ReviewSlotWithRequest,
   getPendingReviewsForRequester,
   acceptReviewSlot,
   rejectReviewSlot,
   requestElaboration,
-} from "@/lib/api/review-slots";
+} from "@/lib/api/reviews/slots";
 import { getErrorMessage, getFileUrl } from "@/lib/api/client";
 import { AcceptReviewModal, type AcceptReviewData } from "@/components/dashboard/accept-review-modal";
 import { RejectReviewModal, type RejectReviewData } from "@/components/dashboard/reject-review-modal";
 import { RequestElaborationModal } from "@/components/dashboard/request-elaboration-modal";
 import { ReviewStudio } from "@/components/reviewer/review-studio/ReviewStudio";
-import { getReviewDetail, type ReviewRequestDetail } from "@/lib/api/reviews";
+import { getReviewDetail, type ReviewRequestDetail } from "@/lib/api/reviews/requests";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

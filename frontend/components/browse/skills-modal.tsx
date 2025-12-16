@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SKILL_CATEGORIES } from "@/lib/expert-application/types";
-import { updateProfile } from "@/lib/api/profile";
+import { updateProfile } from "@/lib/api/profile/public";
 import { useSelection, useAsyncCallback } from "@/hooks";
 
 export interface SkillsModalProps {
