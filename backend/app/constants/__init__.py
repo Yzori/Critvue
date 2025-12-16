@@ -33,6 +33,7 @@ from app.constants import leaderboard
 from app.constants import payments
 from app.constants import committee
 from app.constants import review_slots
+from app.constants import rubrics
 
 __all__ = [
     # Time constants
@@ -55,4 +56,5 @@ __all__ = [
     "payments",
     "committee",
     "review_slots",
+    "rubrics",
 ]

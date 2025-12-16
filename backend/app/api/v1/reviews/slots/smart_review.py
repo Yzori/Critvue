@@ -64,7 +64,7 @@ async def get_rubric(
 
     **Rate Limit:** 120 requests per minute
     """
-    from app.constants.review_rubrics import get_rubric as get_rubric_config
+    from app.constants.rubrics import get_rubric as get_rubric_config
 
     try:
         rubric = get_rubric_config(content_type, subcategory)
