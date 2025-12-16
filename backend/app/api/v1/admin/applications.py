@@ -29,7 +29,7 @@ from app.schemas.committee import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/admin/applications", tags=["admin-applications"])
+router = APIRouter(prefix="/applications", tags=["admin-applications"])
 
 
 # ============ Dependencies ============
